@@ -17,6 +17,11 @@ class EducationDetail extends Model
         'employer_name',
         'annual_income',
         'working_city',
+        'education_level',
+        'employment_category',
+        'working_country',
+        'working_state',
+        'working_district',
     ];
 
     public function profile(): BelongsTo

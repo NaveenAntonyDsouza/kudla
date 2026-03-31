@@ -25,6 +25,8 @@ class Profile extends Model
         'creator_name',
         'creator_contact_number',
         'marital_status',
+        'children_with_me',
+        'children_not_with_me',
         'height_cm',
         'weight_kg',
         'physical_status',
@@ -53,6 +55,8 @@ class Profile extends Model
             'is_approved' => 'boolean',
             'is_verified' => 'boolean',
             'id_proof_verified' => 'boolean',
+            'children_with_me' => 'integer',
+            'children_not_with_me' => 'integer',
         ];
     }
 
@@ -139,6 +143,11 @@ class Profile extends Model
     public function socialMediaLink(): HasOne
     {
         return $this->hasOne(SocialMediaLink::class);
+    }
+
+    public function differentlyAbledInfo(): HasOne
+    {
+        return $this->hasOne(DifferentlyAbledInfo::class);
     }
 
     public function partnerPreference(): HasOne

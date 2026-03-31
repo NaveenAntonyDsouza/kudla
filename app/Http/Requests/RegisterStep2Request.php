@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class RegisterStep2Request extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'highest_education' => 'required|string|max:100',
+            'education_detail' => 'nullable|string|max:200',
+            'education_level' => 'nullable|string|max:50',
+            'college_name' => 'nullable|string|max:200',
+            'occupation' => 'required|string|max:100',
+            'occupation_detail' => 'nullable|string|max:200',
+            'employment_category' => 'nullable|string|max:100',
+            'employer_name' => 'nullable|string|max:200',
+            'annual_income' => 'nullable|string|max:50',
+            'working_country' => 'nullable|string|max:100',
+            'working_state' => 'nullable|string|max:100',
+            'working_district' => 'nullable|string|max:100',
+            'working_city' => 'nullable|string|max:100',
+        ];
+    }
+}

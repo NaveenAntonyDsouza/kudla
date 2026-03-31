@@ -1,7 +1,17 @@
+@props(['maxWidth' => 'md'])
 @php
     $theme = \App\Models\ThemeSetting::getTheme();
     $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
     $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
+    $maxWidthClass = match($maxWidth) {
+        'sm' => 'max-w-sm',
+        'md' => 'max-w-md',
+        'lg' => 'max-w-lg',
+        'xl' => 'max-w-xl',
+        '2xl' => 'max-w-2xl',
+        '3xl' => 'max-w-3xl',
+        default => 'max-w-md',
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -48,7 +58,7 @@
         </div>
 
         <!-- Auth Card -->
-        <div class="w-full max-w-md bg-white rounded-lg border border-gray-200 shadow-xs p-6 sm:p-8">
+        <div class="w-full {{ $maxWidthClass }} bg-white rounded-lg border border-gray-200 shadow-xs p-6 sm:p-8">
             {{ $slot }}
         </div>
 

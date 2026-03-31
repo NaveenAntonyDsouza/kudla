@@ -17,6 +17,12 @@ class LifestyleInfo extends Model
         'hobbies',
         'interests',
         'languages_known',
+        'cultural_background',
+        'favorite_music',
+        'preferred_books',
+        'preferred_movies',
+        'sports_fitness_games',
+        'favorite_cuisine',
     ];
 
     protected function casts(): array
@@ -25,6 +31,11 @@ class LifestyleInfo extends Model
             'hobbies' => 'array',
             'interests' => 'array',
             'languages_known' => 'array',
+            'favorite_music' => 'array',
+            'preferred_books' => 'array',
+            'preferred_movies' => 'array',
+            'sports_fitness_games' => 'array',
+            'favorite_cuisine' => 'array',
         ];
     }
 

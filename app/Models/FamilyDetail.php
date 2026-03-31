@@ -22,6 +22,16 @@ class FamilyDetail extends Model
         'sisters_married',
         'family_living_in',
         'about_family',
+        'father_house_name',
+        'father_native_place',
+        'mother_house_name',
+        'mother_native_place',
+        'brothers_unmarried',
+        'brothers_priest',
+        'sisters_unmarried',
+        'sisters_nun',
+        'candidate_asset_details',
+        'about_candidate_family',
     ];
 
     protected function casts(): array
@@ -31,6 +41,10 @@ class FamilyDetail extends Model
             'brothers_married' => 'integer',
             'num_sisters' => 'integer',
             'sisters_married' => 'integer',
+            'brothers_unmarried' => 'integer',
+            'brothers_priest' => 'integer',
+            'sisters_unmarried' => 'integer',
+            'sisters_nun' => 'integer',
         ];
     }
 

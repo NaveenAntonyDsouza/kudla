@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SocialMediaLink extends Model
+class DifferentlyAbledInfo extends Model
 {
+    protected $table = 'differently_abled_info';
+
     protected $fillable = [
         'profile_id',
-        'instagram_url',
-        'facebook_url',
-        'linkedin_url',
-        'youtube_url',
-        'website_url',
+        'category',
+        'specify',
+        'description',
     ];
 
     public function profile(): BelongsTo

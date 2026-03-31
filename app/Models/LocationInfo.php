@@ -21,6 +21,10 @@ class LocationInfo extends Model
         'is_nri',
         'outstation_leave_date_from',
         'outstation_leave_date_to',
+        'native_country',
+        'native_state',
+        'native_district',
+        'pin_zip_code',
     ];
 
     protected function casts(): array
