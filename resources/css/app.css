@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/forms";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/*
+ * White-Label Theme System
+ * Colors are injected from the database via <style> tag in the layout.
+ * These @theme values are build-time fallbacks (Anugraha Matrimony defaults).
+ * At runtime, CSS custom properties from the DB override these.
+ */
+@theme inline {
+    /* Brand colors - overridden per deployment via :root CSS vars in layout */
+    --color-primary: var(--brand-primary, #8B1D91);
+    --color-primary-hover: var(--brand-primary-hover, #6B1571);
+    --color-primary-light: var(--brand-primary-light, #F3E8F7);
+    --color-secondary: var(--brand-secondary, #00BCD4);
+    --color-secondary-hover: var(--brand-secondary-hover, #00ACC1);
+    --color-secondary-light: var(--brand-secondary-light, #E0F7FA);
+
+    /* Typography */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Playfair Display', Georgia, ui-serif, serif;
+}

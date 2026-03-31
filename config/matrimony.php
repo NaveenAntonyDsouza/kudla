@@ -1,0 +1,18 @@
+<?php
+
+return [
+    'id_prefix' => env('MATRI_ID_PREFIX', 'AM'),
+    'daily_interest_limit_free' => 5,
+    'otp_expiry_minutes' => 10,
+    'otp_max_attempts' => 5,
+    'otp_cooldown_seconds' => 30,
+    'max_profile_photos' => 1,
+    'max_album_photos' => 9,
+    'max_family_photos' => 3,
+    'max_photo_size_mb' => 30,
+    'cancel_interest_window_hours' => 24,
+    'resend_interest_cooldown_days' => 30,
+    'password_min_length' => 6,
+    'password_max_length' => 14,
+    'registration_min_age' => 18,
+];
