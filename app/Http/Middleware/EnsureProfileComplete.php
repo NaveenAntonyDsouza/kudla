@@ -16,10 +16,20 @@ class EnsureProfileComplete
             return redirect()->route('login');
         }
 
+        // Admin/moderator users don't need a profile — let them through
+        if (in_array($user->role, ['admin', 'moderator', 'support'])) {
+            return $next($request);
+        }
+
         $profile = $user->profile;
 
-        // No profile at all — send to registration
+        // No profile at all — send to registration step 1
         if (! $profile) {
+            // Prevent redirect loop: if already on a register route, let through
+            $currentRoute = $request->route()?->getName();
+            if ($currentRoute && str_starts_with($currentRoute, 'register')) {
+                return $next($request);
+            }
             return redirect()->route('register');
         }
 
