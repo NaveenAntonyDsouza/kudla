@@ -140,10 +140,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {{-- Height --}}
                 <div>
-                    <label for="height_cm" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
-                    <input type="number" name="height_cm" id="height_cm" value="{{ old('height_cm') }}" min="122" max="213"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                        placeholder="e.g. 170">
+                    <label for="height_cm" class="block text-sm font-medium text-gray-700 mb-1">Height</label>
+                    <select name="height_cm" id="height_cm"
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
+                        <option value="">Select Height</option>
+                        @foreach($heights as $h)
+                            <option value="{{ $h['cm'] }}" {{ old('height_cm') == $h['cm'] ? 'selected' : '' }}>{{ $h['display'] }} ({{ $h['cm'] }} cm)</option>
+                        @endforeach
+                    </select>
                     @error('height_cm') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 
@@ -179,11 +183,41 @@
                     <select name="physical_status" id="physical_status" x-model="physicalStatus"
                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
                         <option value="">Select</option>
-                        @foreach(['Normal', 'Differently Abled'] as $opt)
-                            <option value="{{ $opt }}" {{ old('physical_status') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
+                        <option value="normal" {{ old('physical_status') === 'normal' ? 'selected' : '' }}>Normal</option>
+                        <option value="physically_challenged" {{ old('physical_status') === 'physically_challenged' ? 'selected' : '' }}>Differently Abled</option>
                     </select>
                     @error('physical_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Differently Abled Details (shown when physically_challenged) --}}
+                <div x-show="physicalStatus === 'physically_challenged'" x-transition class="sm:col-span-2" x-data="{ daCategory: '{{ old('da_category', '') }}' }">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div>
+                            <label for="da_category" class="block text-sm font-medium text-gray-700 mb-1">Category of Differently Abled</label>
+                            <select name="da_category" id="da_category" x-model="daCategory"
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
+                                <option value="">Select</option>
+                                @foreach(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'] as $opt)
+                                    <option value="{{ $opt }}" {{ old('da_category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                            @error('da_category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div x-show="daCategory === 'Other'" x-transition>
+                            <label for="da_category_other" class="block text-sm font-medium text-gray-700 mb-1">Specify</label>
+                            <input type="text" name="da_category_other" id="da_category_other" value="{{ old('da_category_other') }}"
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
+                                placeholder="Specify category">
+                            @error('da_category_other') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label for="da_description" class="block text-sm font-medium text-gray-700 mb-1">Describe Differently Abled</label>
+                            <textarea name="da_description" id="da_description" rows="2"
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
+                                placeholder="Brief description">{{ old('da_description') }}</textarea>
+                            @error('da_description') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Marital Status --}}
@@ -192,15 +226,16 @@
                     <select name="marital_status" id="marital_status" x-model="maritalStatus" required
                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
                         <option value="">Select</option>
-                        @foreach(['Never Married', 'Divorced', 'Widowed', 'Awaiting Divorce', 'Annulled'] as $opt)
-                            <option value="{{ $opt }}" {{ old('marital_status') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
+                        <option value="never_married" {{ old('marital_status') === 'never_married' ? 'selected' : '' }}>Never Married / Unmarried</option>
+                        <option value="divorced" {{ old('marital_status') === 'divorced' ? 'selected' : '' }}>Divorced / Divorcee</option>
+                        <option value="widowed" {{ old('marital_status') === 'widowed' ? 'selected' : '' }}>Widowed / Widower</option>
+                        <option value="awaiting_divorce" {{ old('marital_status') === 'awaiting_divorce' ? 'selected' : '' }}>Awaiting Divorce</option>
                     </select>
                     @error('marital_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 {{-- Children fields (shown when not "Never Married") --}}
-                <template x-if="maritalStatus && maritalStatus !== 'Never Married'">
+                <template x-if="maritalStatus && maritalStatus !== 'never_married'">
                     <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="children_with_me" class="block text-sm font-medium text-gray-700 mb-1">Children Living With Me</label>
@@ -240,35 +275,8 @@
                 </div>
 
                 {{-- ── Christian Fields ──────────────── --}}
-                <div x-show="religion === 'Christian'" x-transition class="sm:col-span-2">
+                <div x-show="religion === 'Christian'" x-transition class="sm:col-span-2" x-data="{ selectedDiocese: '{{ old('diocese', '') }}' }">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                        {{-- Caste / Community (cascading from API) --}}
-                        <div>
-                            <label for="caste_christian" class="block text-sm font-medium text-gray-700 mb-1">Caste / Community</label>
-                            <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Community</option>
-                                <template x-for="community in communities" :key="community.id">
-                                    <option :value="community.community_name" x-text="community.community_name"
-                                        :selected="community.community_name === selectedCaste"></option>
-                                </template>
-                            </select>
-                            @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Sub-Caste / Sub-Community --}}
-                        <div x-show="subCommunities.length > 0" x-transition>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sub-Caste / Sub-Community</label>
-                            <select name="sub_caste" x-model="selectedSubCaste"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Sub-Community</option>
-                                <template x-for="sub in subCommunities" :key="sub">
-                                    <option :value="sub" x-text="sub" :selected="sub === selectedSubCaste"></option>
-                                </template>
-                            </select>
-                            @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
                         {{-- Denomination (grouped) --}}
                         <div>
                             <label for="denomination" class="block text-sm font-medium text-gray-700 mb-1">Denomination <span class="text-red-500">*</span></label>
@@ -289,7 +297,7 @@
                         {{-- Diocese (dropdown) --}}
                         <div>
                             <label for="diocese" class="block text-sm font-medium text-gray-700 mb-1">Diocese</label>
-                            <select name="diocese" id="diocese"
+                            <select name="diocese" id="diocese" x-model="selectedDiocese"
                                 class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
                                 <option value="">Select Diocese</option>
                                 @foreach($dioceses as $dio)
@@ -299,11 +307,12 @@
                             @error('diocese') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- Diocese Name --}}
-                        <div>
+                        {{-- Diocese Name (only when "Other" selected) --}}
+                        <div x-show="selectedDiocese === 'Other'" x-transition>
                             <label for="diocese_name" class="block text-sm font-medium text-gray-700 mb-1">Diocese Name</label>
                             <input type="text" name="diocese_name" id="diocese_name" value="{{ old('diocese_name') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
+                                placeholder="Enter diocese name">
                             @error('diocese_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
@@ -418,33 +427,6 @@
                 {{-- ── Muslim Fields ─────────────────── --}}
                 <div x-show="religion === 'Muslim'" x-transition class="sm:col-span-2">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                        {{-- Caste / Community (cascading from API) --}}
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Caste / Community</label>
-                            <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Community</option>
-                                <template x-for="community in communities" :key="community.id">
-                                    <option :value="community.community_name" x-text="community.community_name"
-                                        :selected="community.community_name === selectedCaste"></option>
-                                </template>
-                            </select>
-                            @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Sub-Caste / Sub-Community --}}
-                        <div x-show="subCommunities.length > 0" x-transition>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Sub-Caste / Sub-Community</label>
-                            <select name="sub_caste" x-model="selectedSubCaste"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Sub-Community</option>
-                                <template x-for="sub in subCommunities" :key="sub">
-                                    <option :value="sub" x-text="sub" :selected="sub === selectedSubCaste"></option>
-                                </template>
-                            </select>
-                            @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
                         <div>
                             <label for="muslim_sect" class="block text-sm font-medium text-gray-700 mb-1">Sect</label>
                             <select name="muslim_sect" id="muslim_sect"

@@ -29,6 +29,29 @@ class RegisterController extends Controller
     {
         $communities = Community::active()->orderBy('religion')->orderBy('sort_order')->get();
 
+        // Height list from 4'0" (122cm) to 7'0" (213cm)
+        $heights = [
+            ['display' => "4'0\"", 'cm' => 122], ['display' => "4'1\"", 'cm' => 124],
+            ['display' => "4'2\"", 'cm' => 127], ['display' => "4'3\"", 'cm' => 130],
+            ['display' => "4'4\"", 'cm' => 132], ['display' => "4'5\"", 'cm' => 135],
+            ['display' => "4'6\"", 'cm' => 137], ['display' => "4'7\"", 'cm' => 140],
+            ['display' => "4'8\"", 'cm' => 142], ['display' => "4'9\"", 'cm' => 145],
+            ['display' => "4'10\"", 'cm' => 147], ['display' => "4'11\"", 'cm' => 150],
+            ['display' => "5'0\"", 'cm' => 152], ['display' => "5'1\"", 'cm' => 155],
+            ['display' => "5'2\"", 'cm' => 157], ['display' => "5'3\"", 'cm' => 160],
+            ['display' => "5'4\"", 'cm' => 163], ['display' => "5'5\"", 'cm' => 165],
+            ['display' => "5'6\"", 'cm' => 168], ['display' => "5'7\"", 'cm' => 170],
+            ['display' => "5'8\"", 'cm' => 173], ['display' => "5'9\"", 'cm' => 175],
+            ['display' => "5'10\"", 'cm' => 178], ['display' => "5'11\"", 'cm' => 180],
+            ['display' => "6'0\"", 'cm' => 183], ['display' => "6'1\"", 'cm' => 185],
+            ['display' => "6'2\"", 'cm' => 188], ['display' => "6'3\"", 'cm' => 191],
+            ['display' => "6'4\"", 'cm' => 193], ['display' => "6'5\"", 'cm' => 196],
+            ['display' => "6'6\"", 'cm' => 198], ['display' => "6'7\"", 'cm' => 201],
+            ['display' => "6'8\"", 'cm' => 203], ['display' => "6'9\"", 'cm' => 206],
+            ['display' => "6'10\"", 'cm' => 208], ['display' => "6'11\"", 'cm' => 211],
+            ['display' => "7'0\"", 'cm' => 213],
+        ];
+
         // Diocese list for Christian denomination
         $dioceses = [
             'Adilabad', 'Agra', 'Ahmedabad', 'Aizawl', 'Ajmer', 'Allahabad',
@@ -74,7 +97,7 @@ class RegisterController extends Controller
             ],
         ];
 
-        return view('auth.register-step1', compact('communities', 'dioceses', 'denominations'));
+        return view('auth.register-step1', compact('communities', 'heights', 'dioceses', 'denominations'));
     }
 
     public function storeStep1(RegisterStep1Request $request)
