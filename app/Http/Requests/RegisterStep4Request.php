@@ -14,29 +14,18 @@ class RegisterStep4Request extends FormRequest
     public function rules(): array
     {
         return [
-            // Location
-            'country' => 'required|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'city' => 'nullable|string|max:100',
-            'native_place' => 'nullable|string|max:100',
-            'native_country' => 'nullable|string|max:100',
+            // Native place
+            'native_country' => 'required|string|max:100',
             'native_state' => 'nullable|string|max:100',
             'native_district' => 'nullable|string|max:100',
-            'pin_zip_code' => 'nullable|string|max:10',
-            'citizenship' => 'nullable|string|max:100',
-            'residency_status' => 'nullable|string|max:50',
-            'grew_up_in' => 'nullable|string|max:100',
             // Contact
-            'contact_person' => 'nullable|string|max:100',
-            'contact_relationship' => 'nullable|string|max:50',
-            'primary_phone' => 'nullable|string|max:15',
-            'secondary_phone' => 'nullable|string|max:15',
             'whatsapp_number' => 'nullable|string|max:15',
-            'communication_address' => 'nullable|string|max:500',
-            'present_address' => 'nullable|string|max:500',
-            'present_pin_zip_code' => 'nullable|string|max:10',
-            'permanent_address' => 'nullable|string|max:500',
-            'permanent_pin_zip_code' => 'nullable|string|max:10',
+            'mobile_number' => 'required|string|max:15',
+            'custodian_name' => 'required|string|max:100',
+            'custodian_relation' => 'required|string|max:100',
+            // Address
+            'communication_address' => 'required|string|max:200',
+            'pin_zip_code' => 'required|string|max:10',
         ];
     }
 }

@@ -15,9 +15,18 @@ class RegisterStep5Request extends FormRequest
     {
         return [
             'created_by' => 'required|string|max:50',
-            'creator_name' => 'nullable|string|max:100',
-            'creator_contact_number' => 'nullable|string|max:15',
-            'how_did_you_hear_about_us' => 'nullable|string|max:100',
+            'creator_name' => 'required|string|max:100',
+            'creator_contact_number' => 'required|string|max:15',
+            'how_did_you_hear_about_us' => 'required|string|max:100',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'creator_name.required' => 'Creator name is required.',
+            'creator_contact_number.required' => 'Creator contact number is required.',
+            'how_did_you_hear_about_us.required' => 'Please tell us how you heard about us.',
         ];
     }
 }

@@ -33,7 +33,11 @@ class LoginController extends Controller
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
 
-            return redirect()->route('register.step'.min($step + 1, 5));
+            if ($step >= 5) {
+                return redirect()->route('register.verifyemail');
+            }
+
+            return redirect()->route('register.step'.($step + 1));
         }
 
         return redirect()->intended('/dashboard');
@@ -75,7 +79,11 @@ class LoginController extends Controller
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
 
-            return redirect()->route('register.step'.min($step + 1, 5));
+            if ($step >= 5) {
+                return redirect()->route('register.verifyemail');
+            }
+
+            return redirect()->route('register.step'.($step + 1));
         }
 
         return redirect()->intended('/dashboard');

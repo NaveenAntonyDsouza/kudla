@@ -34,23 +34,8 @@
                 <form method="POST" action="{{ route('login.otp.send') }}">
                     @csrf
                     <div class="mb-4">
-                        <label for="login_phone" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                        <div class="flex">
-                            <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                                IN +91
-                            </span>
-                            <input
-                                type="tel"
-                                id="login_phone"
-                                name="phone"
-                                x-model="phone"
-                                maxlength="10"
-                                pattern="[0-9]{10}"
-                                placeholder="Enter 10-digit mobile number"
-                                class="flex-1 border border-gray-300 rounded-r-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)"
-                                required
-                            >
-                        </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                        <x-phone-input name="phone" variant="login" :required="true" maxlength="10" xModel="phone" />
                         @error('phone')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

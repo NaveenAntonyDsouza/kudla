@@ -60,11 +60,11 @@ return new class extends Migration
             $table->string('reference_name', 100)->nullable();
             $table->string('reference_relationship', 50)->nullable();
             $table->string('reference_mobile', 15)->nullable();
-            $table->boolean('present_address_same_as_comm')->default(true);
+            $table->boolean('present_address_same_as_comm')->default(false);
             $table->text('present_address')->nullable();
             $table->string('present_pin_zip_code', 10)->nullable();
-            $table->boolean('permanent_address_same_as_comm')->default(true);
-            $table->boolean('permanent_address_same_as_present')->default(true);
+            $table->boolean('permanent_address_same_as_comm')->default(false);
+            $table->boolean('permanent_address_same_as_present')->default(false);
             $table->text('permanent_address')->nullable();
             $table->string('permanent_pin_zip_code', 10)->nullable();
         });

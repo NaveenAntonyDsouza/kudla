@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/forms";
 
+/* Hide Alpine.js elements until initialized */
+[x-cloak] { display: none !important; }
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -12,6 +15,61 @@
  * These @theme values are build-time fallbacks (Anugraha Matrimony defaults).
  * At runtime, CSS custom properties from the DB override these.
  */
+/* Floating label field style (outlined inputs) */
+.float-field { position: relative; }
+.float-field input,
+.float-field select,
+.float-field textarea {
+    width: 100%;
+    padding: 14px 16px 6px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: white;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    appearance: auto;
+}
+.float-field input:focus,
+.float-field select:focus,
+.float-field textarea:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px rgba(139, 29, 145, 0.1);
+}
+.float-field label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #9ca3af;
+    pointer-events: none;
+    transition: all 0.15s ease;
+    background: white;
+    padding: 0 4px;
+}
+.float-field select ~ label,
+.float-field input:focus ~ label,
+.float-field input:not(:placeholder-shown) ~ label,
+.float-field select:focus ~ label,
+.float-field textarea:focus ~ label,
+.float-field textarea:not(:placeholder-shown) ~ label {
+    top: 0;
+    font-size: 12px;
+    color: var(--brand-primary);
+}
+/* For textareas, label should start at top */
+.float-field textarea ~ label {
+    top: 14px;
+    transform: none;
+}
+.float-field textarea:focus ~ label,
+.float-field textarea:not(:placeholder-shown) ~ label {
+    top: -8px;
+    transform: none;
+}
+
 @theme inline {
     /* Brand colors - overridden per deployment via :root CSS vars in layout */
     --color-primary: var(--brand-primary, #8B1D91);

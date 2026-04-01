@@ -39,17 +39,16 @@ class EnsureProfileComplete
             $currentRoute = $request->route()->getName();
 
             // Allow access to registration routes (so they don't get stuck in redirect loop)
-            if ($currentRoute && str_starts_with($currentRoute, 'register.')) {
+            if ($currentRoute && (str_starts_with($currentRoute, 'register.') || str_starts_with($currentRoute, 'onboarding.'))) {
                 return $next($request);
             }
 
             // Redirect to the next incomplete step
-            $nextStep = min($step + 1, 5);
-            if ($nextStep <= 4) {
-                return redirect()->route('register.step'.$nextStep);
+            if ($step < 5) {
+                return redirect()->route('register.step' . ($step + 1));
             }
 
-            return redirect()->route('register.verify');
+            return redirect()->route('register.verifyemail');
         }
 
         return $next($request);

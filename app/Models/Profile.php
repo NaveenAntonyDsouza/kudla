@@ -27,12 +27,13 @@ class Profile extends Model
         'marital_status',
         'children_with_me',
         'children_not_with_me',
-        'height_cm',
+        'height',
         'weight_kg',
         'physical_status',
         'body_type',
         'complexion',
         'blood_group',
+        'mother_tongue',
         'about_me',
         'profile_completion_pct',
         'onboarding_completed',
@@ -75,6 +76,22 @@ class Profile extends Model
                 $profile->matri_id = $prefix.$next;
             }
         });
+    }
+
+    // Profile Completion
+
+    public function calculateCompletion(): int
+    {
+        $pct = 10; // base for having an account
+        if ($this->full_name && $this->gender && $this->date_of_birth) $pct += 15;
+        if ($this->religiousInfo()->exists()) $pct += 10;
+        if ($this->educationDetail()->exists()) $pct += 15;
+        if ($this->familyDetail?->father_name) $pct += 10;
+        if ($this->locationInfo?->residing_country || $this->locationInfo?->native_country) $pct += 10;
+        if ($this->contactInfo()->exists()) $pct += 10;
+        if ($this->lifestyleInfo()->exists()) $pct += 10;
+        if ($this->partnerPreference()->exists()) $pct += 10;
+        return min($pct, 100);
     }
 
     // Accessors
@@ -163,6 +180,11 @@ class Profile extends Model
     public function profilePhotos(): HasMany
     {
         return $this->hasMany(ProfilePhoto::class);
+    }
+
+    public function primaryPhoto(): HasOne
+    {
+        return $this->hasOne(ProfilePhoto::class)->where('is_primary', true)->where('is_visible', true);
     }
 
     public function idProofs(): HasMany

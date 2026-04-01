@@ -11,26 +11,20 @@ class LocationInfo extends Model
 
     protected $fillable = [
         'profile_id',
-        'country',
-        'state',
-        'city',
+        'residing_country',
         'native_place',
-        'citizenship',
-        'residency_status',
-        'grew_up_in',
-        'is_nri',
         'outstation_leave_date_from',
         'outstation_leave_date_to',
         'native_country',
         'native_state',
         'native_district',
+        'residency_status',
         'pin_zip_code',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_nri' => 'boolean',
             'outstation_leave_date_from' => 'date',
             'outstation_leave_date_to' => 'date',
         ];

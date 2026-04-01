@@ -10,6 +10,7 @@ use App\Http\Requests\RegisterStep4Request;
 use App\Http\Requests\RegisterStep5Request;
 use App\Models\Community;
 use App\Models\ContactInfo;
+use App\Models\DifferentlyAbledInfo;
 use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
 use App\Models\LocationInfo;
@@ -23,86 +24,34 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    // ── Step 1: Basic Info + Religion ──────────────────────────────
+    // ── Step 1: Register Free (Account Only) ─────────────────────
 
     public function showStep1()
     {
-        $communities = Community::active()->orderBy('religion')->orderBy('sort_order')->get();
+        // Pre-fill from DB when authenticated user comes back to edit
+        $profile = null;
+        $user = auth()->user();
+        if ($user) {
+            $profile = $user->profile;
+        }
 
-        // Height list from 4'0" (122cm) to 7'0" (213cm)
-        $heights = [
-            ['display' => "4'0\"", 'cm' => 122], ['display' => "4'1\"", 'cm' => 124],
-            ['display' => "4'2\"", 'cm' => 127], ['display' => "4'3\"", 'cm' => 130],
-            ['display' => "4'4\"", 'cm' => 132], ['display' => "4'5\"", 'cm' => 135],
-            ['display' => "4'6\"", 'cm' => 137], ['display' => "4'7\"", 'cm' => 140],
-            ['display' => "4'8\"", 'cm' => 142], ['display' => "4'9\"", 'cm' => 145],
-            ['display' => "4'10\"", 'cm' => 147], ['display' => "4'11\"", 'cm' => 150],
-            ['display' => "5'0\"", 'cm' => 152], ['display' => "5'1\"", 'cm' => 155],
-            ['display' => "5'2\"", 'cm' => 157], ['display' => "5'3\"", 'cm' => 160],
-            ['display' => "5'4\"", 'cm' => 163], ['display' => "5'5\"", 'cm' => 165],
-            ['display' => "5'6\"", 'cm' => 168], ['display' => "5'7\"", 'cm' => 170],
-            ['display' => "5'8\"", 'cm' => 173], ['display' => "5'9\"", 'cm' => 175],
-            ['display' => "5'10\"", 'cm' => 178], ['display' => "5'11\"", 'cm' => 180],
-            ['display' => "6'0\"", 'cm' => 183], ['display' => "6'1\"", 'cm' => 185],
-            ['display' => "6'2\"", 'cm' => 188], ['display' => "6'3\"", 'cm' => 191],
-            ['display' => "6'4\"", 'cm' => 193], ['display' => "6'5\"", 'cm' => 196],
-            ['display' => "6'6\"", 'cm' => 198], ['display' => "6'7\"", 'cm' => 201],
-            ['display' => "6'8\"", 'cm' => 203], ['display' => "6'9\"", 'cm' => 206],
-            ['display' => "6'10\"", 'cm' => 208], ['display' => "6'11\"", 'cm' => 211],
-            ['display' => "7'0\"", 'cm' => 213],
-        ];
-
-        // Diocese list for Christian denomination
-        $dioceses = [
-            'Adilabad', 'Agra', 'Ahmedabad', 'Aizawl', 'Ajmer', 'Allahabad',
-            'Alleppey', 'Amravati', 'Aurangabad', 'Balasore', 'Bangalore',
-            'Baroda', 'Baruipur', 'Bellary', 'Bhopal', 'Bhagalpur',
-            'Bijnor', 'Bongaigaon', 'Buxar', 'Calicut', 'Chanda',
-            'Changanassery', 'Chingleput', 'Cochin', 'Coimbatore',
-            'Cuttack-Bhubaneshwar', 'Daltonganj', 'Darjeeling', 'Delhi',
-            'Dharmapuri', 'Dibrugarh', 'Dindigul', 'Diphu', 'Dumka',
-            'Eluru', 'Ernakulam-Angamaly', 'Faridabad', 'Ganjam',
-            'Gorakhpur', 'Gulbarga', 'Guntur', 'Guwahati', 'Gwalior',
-            'Hazaribag', 'Hyderabad', 'Idukki', 'Imphal', 'Indore',
-            'Itanagar', 'Jabalpur', 'Jaipur', 'Jalandhar', 'Jamshedpur',
-            'Jhansi', 'Kanjirapally', 'Kannur', 'Karwar', 'Khandwa',
-            'Khammam', 'Kohima', 'Kolhapur', 'Kollam', 'Kottapuram',
-            'Kottayam', 'Kumbakonam', 'Lucknow', 'Madras-Mylapore',
-            'Madurai', 'Mangalore', 'Mananthavady', 'Meerut', 'Miao',
-            'Muzaffarpur', 'Mysore', 'Nagpur', 'Nanded', 'Nashik',
-            'Nellore', 'Neyyattinkara', 'Nongstoin', 'Ootacamund',
-            'Palai', 'Palghat', 'Patna', 'Poona', 'Port Blair',
-            'Punalur', 'Raiganj', 'Raigarh', 'Raipur', 'Rajkot',
-            'Ranchi', 'Rewari', 'Rohtak', 'Rourkela', 'Sagar',
-            'Salem', 'Sambalpur', 'Satna', 'Shimla-Chandigarh',
-            'Shimoga', 'Simdega', 'Singhbhum', 'Sivagangai', 'Sultanpet',
-            'Surat', 'Tezpur', 'Thamarassery', 'Thanjavur', 'Thiruchirapalli',
-            'Thiruvananthapuram', 'Trichur', 'Tuticorin', 'Udaipur',
-            'Udupi', 'Ujjain', 'Varanasi', 'Verapoly', 'Vijayapuram',
-            'Vijayawada', 'Visakhapatnam', 'Warangal', 'Other',
-        ];
-
-        // Denominations grouped
-        $denominations = [
-            'Catholic' => [
-                'Syrian Catholic', 'Latin Catholic', 'Malankara Catholic',
-                'Anglo Indian', 'Knanaya Catholic', 'Nadar Christian', 'Cheramar Christian',
-            ],
-            'Non-Catholic' => [
-                'Jacobite', 'Orthodox', 'Marthomite', 'CSI Christian',
-                'Knanaya Jacobite', 'Chaldean Christian',
-                'Malabar Independent Syrian Church', 'Anglican Church of India',
-                'Pentecostal', 'Brethren', 'Protestant', 'Evangelist',
-                'Salvation Army', 'Other',
-            ],
-        ];
-
-        return view('auth.register-step1', compact('communities', 'heights', 'dioceses', 'denominations'));
+        return view('auth.register-step1', compact('profile', 'user'));
     }
 
     public function storeStep1(RegisterStep1Request $request)
     {
         $validated = $request->validated();
+
+        // If already authenticated, update existing user/profile instead of creating new
+        if ($existingUser = auth()->user()) {
+            $existingUser->profile?->update([
+                'full_name' => $validated['full_name'],
+                'gender' => $validated['gender'],
+                'date_of_birth' => $validated['date_of_birth'],
+            ]);
+
+            return redirect()->route('register.step2');
+        }
 
         // Create user
         $user = User::create([
@@ -114,43 +63,14 @@ class RegisterController extends Controller
             'is_active' => true,
         ]);
 
-        // Create profile
-        $profile = Profile::create([
+        // Create profile (basic info only)
+        Profile::create([
             'user_id' => $user->id,
             'full_name' => $validated['full_name'],
             'gender' => $validated['gender'],
             'date_of_birth' => $validated['date_of_birth'],
-            'marital_status' => $validated['marital_status'],
-            'height_cm' => $validated['height_cm'] ?? null,
-            'complexion' => $validated['complexion'] ?? null,
-            'body_type' => $validated['body_type'] ?? null,
-            'physical_status' => $validated['physical_status'] ?? null,
-            'children_with_me' => $validated['children_with_me'] ?? 0,
-            'children_not_with_me' => $validated['children_not_with_me'] ?? 0,
             'onboarding_step_completed' => 1,
-        ]);
-
-        // Create religious info
-        ReligiousInfo::create([
-            'profile_id' => $profile->id,
-            'religion' => $validated['religion'],
-            'caste' => $validated['caste'] ?? null,
-            'sub_caste' => $validated['sub_caste'] ?? null,
-            'gotra' => $validated['gotra'] ?? null,
-            'nakshatra' => $validated['nakshatra'] ?? null,
-            'rashi' => $validated['rashi'] ?? null,
-            'dosh' => $validated['dosh'] ?? null,
-            'denomination' => $validated['denomination'] ?? null,
-            'diocese' => $validated['diocese'] ?? null,
-            'diocese_name' => $validated['diocese_name'] ?? null,
-            'parish_name_place' => $validated['parish_name_place'] ?? null,
-            'time_of_birth' => $validated['time_of_birth'] ?? null,
-            'place_of_birth' => $validated['place_of_birth'] ?? null,
-            'muslim_sect' => $validated['muslim_sect'] ?? null,
-            'muslim_community' => $validated['muslim_community'] ?? null,
-            'religious_observance' => $validated['religious_observance'] ?? null,
-            'jain_sect' => $validated['jain_sect'] ?? null,
-            'other_religion_name' => $validated['other_religion_name'] ?? null,
+            'is_active' => true,
         ]);
 
         Auth::login($user);
@@ -158,39 +78,101 @@ class RegisterController extends Controller
         return redirect()->route('register.step2');
     }
 
-    // ── Step 2: Education & Professional ──────────────────────────
+    // ── Step 2: Primary & Religious Information ──────────────────
 
     public function showStep2()
     {
-        return view('auth.register-step2');
+        $profile = auth()->user()->profile;
+        $religiousInfo = $profile?->religiousInfo;
+        $familyDetail = $profile?->familyDetail;
+
+        return view('auth.register-step2', compact('profile', 'religiousInfo', 'familyDetail'));
     }
 
     public function storeStep2(RegisterStep2Request $request)
     {
         $profile = auth()->user()->profile;
+        $validated = $request->validated();
 
-        EducationDetail::updateOrCreate(
+        // Update profile with physical details
+        $profile->update([
+            'height' => $validated['height'],
+            'complexion' => $validated['complexion'],
+            'body_type' => $validated['body_type'],
+            'physical_status' => $validated['physical_status'] ?? null,
+            'marital_status' => $validated['marital_status'],
+            'children_with_me' => $validated['children_with_me'] ?? 0,
+            'children_not_with_me' => $validated['children_not_with_me'] ?? 0,
+            'onboarding_step_completed' => 2,
+        ]);
+
+        // Create family detail with family_status
+        FamilyDetail::updateOrCreate(
             ['profile_id' => $profile->id],
-            $request->validated()
+            ['family_status' => $validated['family_status'] ?? null]
         );
 
-        $profile->update(['onboarding_step_completed' => 2]);
+        // Create religious info
+        ReligiousInfo::updateOrCreate(
+            ['profile_id' => $profile->id],
+            [
+                'religion' => $validated['religion'],
+                'caste' => $validated['caste'] ?? null,
+                'sub_caste' => $validated['sub_caste'] ?? null,
+                'gotra' => $validated['gotra'] ?? null,
+                'nakshatra' => $validated['nakshatra'] ?? null,
+                'rashi' => $validated['rashi'] ?? null,
+                'dosh' => $validated['manglik'] ?? null,
+                'denomination' => $validated['denomination'] ?? null,
+                'diocese' => $validated['diocese'] ?? null,
+                'diocese_name' => $validated['diocese_name'] ?? null,
+                'parish_name_place' => $validated['parish_name_place'] ?? null,
+                'time_of_birth' => $validated['time_of_birth'] ?? null,
+                'place_of_birth' => $validated['place_of_birth'] ?? null,
+                'muslim_sect' => $validated['muslim_sect'] ?? null,
+                'muslim_community' => $validated['muslim_community'] ?? null,
+                'religious_observance' => $validated['religious_observance'] ?? null,
+                'jain_sect' => $validated['jain_sect'] ?? null,
+                'other_religion_name' => $validated['other_religion_name'] ?? null,
+            ]
+        );
+
+        // Save differently abled info
+        if (($validated['physical_status'] ?? '') === 'Differently Abled') {
+            DifferentlyAbledInfo::updateOrCreate(
+                ['profile_id' => $profile->id],
+                [
+                    'category' => $validated['da_category'] ?? null,
+                    'specify' => $validated['da_category_other'] ?? null,
+                    'description' => $validated['da_description'] ?? null,
+                ]
+            );
+        }
+
+        // Handle jathakam file upload
+        if ($request->hasFile('jathakam')) {
+            $path = $request->file('jathakam')->store('jathakam', 'public');
+            $profile->religiousInfo->update(['jathakam_upload_url' => $path]);
+        }
 
         return redirect()->route('register.step3');
     }
 
-    // ── Step 3: Family Details ────────────────────────────────────
+    // ── Step 3: Education & Professional ─────────────────────────
 
     public function showStep3()
     {
-        return view('auth.register-step3');
+        $profile = auth()->user()->profile;
+        $educationDetail = $profile?->educationDetail;
+
+        return view('auth.register-step3', compact('profile', 'educationDetail'));
     }
 
     public function storeStep3(RegisterStep3Request $request)
     {
         $profile = auth()->user()->profile;
 
-        FamilyDetail::updateOrCreate(
+        EducationDetail::updateOrCreate(
             ['profile_id' => $profile->id],
             $request->validated()
         );
@@ -200,11 +182,15 @@ class RegisterController extends Controller
         return redirect()->route('register.step4');
     }
 
-    // ── Step 4: Location & Contact ────────────────────────────────
+    // ── Step 4: Location & Contact ───────────────────────────────
 
     public function showStep4()
     {
-        return view('auth.register-step4');
+        $profile = auth()->user()->profile;
+        $locationInfo = $profile?->locationInfo;
+        $contactInfo = $profile?->contactInfo;
+
+        return view('auth.register-step4', compact('profile', 'locationInfo', 'contactInfo'));
     }
 
     public function storeStep4(RegisterStep4Request $request)
@@ -212,28 +198,28 @@ class RegisterController extends Controller
         $profile = auth()->user()->profile;
         $validated = $request->validated();
 
-        // Split location fields
-        $locationFields = [
-            'country', 'state', 'city', 'native_place',
-            'native_country', 'native_state', 'native_district',
-            'pin_zip_code', 'citizenship', 'residency_status', 'grew_up_in',
-        ];
-
-        $contactFields = [
-            'contact_person', 'contact_relationship',
-            'primary_phone', 'secondary_phone', 'whatsapp_number',
-            'communication_address', 'present_address', 'present_pin_zip_code',
-            'permanent_address', 'permanent_pin_zip_code',
-        ];
-
+        // Location fields
         LocationInfo::updateOrCreate(
             ['profile_id' => $profile->id],
-            collect($validated)->only($locationFields)->toArray()
+            [
+                'native_country' => $validated['native_country'] ?? null,
+                'native_state' => $validated['native_state'] ?? null,
+                'native_district' => $validated['native_district'] ?? null,
+                'pin_zip_code' => $validated['pin_zip_code'] ?? null,
+            ]
         );
 
+        // Contact fields (custodian = contact_person in DB)
         ContactInfo::updateOrCreate(
             ['profile_id' => $profile->id],
-            collect($validated)->only($contactFields)->toArray()
+            [
+                'whatsapp_number' => $validated['whatsapp_number'] ?? null,
+                'primary_phone' => $validated['mobile_number'] ?? null,
+                'contact_person' => $validated['custodian_name'] ?? null,
+                'contact_relationship' => $validated['custodian_relation'] ?? null,
+                'communication_address' => $validated['communication_address'] ?? null,
+                'pincode' => $validated['pin_zip_code'] ?? null,
+            ]
         );
 
         $profile->update(['onboarding_step_completed' => 4]);
@@ -241,29 +227,32 @@ class RegisterController extends Controller
         return redirect()->route('register.step5');
     }
 
-    // ── Step 5: Profile Creation Details ──────────────────────────
+    // ── Step 5: Profile Creation Details ─────────────────────────
 
     public function showStep5()
     {
-        return view('auth.register-step5');
+        $profile = auth()->user()->profile;
+
+        return view('auth.register-step5', compact('profile'));
     }
 
     public function storeStep5(RegisterStep5Request $request)
     {
         $profile = auth()->user()->profile;
+        $validated = $request->validated();
 
         $profile->update([
-            'created_by' => $request->created_by,
-            'creator_name' => $request->creator_name,
-            'creator_contact_number' => $request->creator_contact_number,
-            'how_did_you_hear_about_us' => $request->how_did_you_hear_about_us,
+            'created_by' => $validated['created_by'],
+            'creator_name' => $validated['creator_name'] ?? null,
+            'creator_contact_number' => $validated['creator_contact_number'] ?? null,
+            'how_did_you_hear_about_us' => $validated['how_did_you_hear_about_us'] ?? null,
             'onboarding_step_completed' => 5,
         ]);
 
-        return redirect()->route('register.verify');
+        return redirect()->route('register.verifyemail');
     }
 
-    // ── OTP Verification ──────────────────────────────────────────
+    // ── OTP Verification ─────────────────────────────────────────
 
     public function showVerify()
     {
@@ -296,9 +285,53 @@ class RegisterController extends Controller
         return redirect()->route('register.complete');
     }
 
+    // ── Email OTP Verification ───────────────────────────────────
+
+    public function showVerifyEmail()
+    {
+        return view('auth.register-verify-email');
+    }
+
+    public function sendEmailOtp(Request $request)
+    {
+        $email = auth()->user()->email;
+        $otp = random_int(100000, 999999);
+
+        session(['email_otp' => \Illuminate\Support\Facades\Hash::make((string) $otp), 'email_otp_expires' => now()->addMinutes(10)]);
+
+        // TODO: Send actual email with OTP
+        // Mail::to($email)->send(new EmailOtpMail($otp));
+
+        return back()->with('email_otp_sent', true);
+    }
+
+    public function verifyEmailOtp(Request $request)
+    {
+        $request->validate(['otp' => 'required|digits:6']);
+
+        $storedOtp = session('email_otp');
+        $expiresAt = session('email_otp_expires');
+
+        if (! $storedOtp || ! \Illuminate\Support\Facades\Hash::check((string) $request->otp, $storedOtp) || now()->gt($expiresAt)) {
+            return back()->withErrors(['otp' => 'Invalid or expired OTP. Please try again.'])->with('email_otp_sent', true);
+        }
+
+        $user = auth()->user();
+        $user->update(['email_verified_at' => now()]);
+
+        session()->forget(['email_otp', 'email_otp_expires']);
+
+        return redirect()->route('register.verify');
+    }
+
     public function complete()
     {
         $profile = auth()->user()->profile;
+
+        // Mark onboarding as complete (even if verification was skipped)
+        if (! $profile->onboarding_completed) {
+            $profile->update(['onboarding_completed' => true]);
+        }
 
         return view('auth.register-complete', compact('profile'));
     }

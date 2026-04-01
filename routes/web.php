@@ -5,6 +5,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -22,13 +25,14 @@ Route::middleware('guest')->group(function () {
     // Login
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
-    Route::post('/login/send-otp', [LoginController::class, 'sendLoginOtp'])->name('login.otp.send');
-    Route::post('/login/verify-otp', [LoginController::class, 'verifyLoginOtp'])->name('login.otp.verify');
+    Route::post('/login/send-otp', [LoginController::class, 'sendLoginOtp'])->name('login.otp.send')->middleware('throttle:5,1');
+    Route::post('/login/verify-otp', [LoginController::class, 'verifyLoginOtp'])->name('login.otp.verify')->middleware('throttle:10,1');
 
-    // Registration step 1
-    Route::get('/register', [RegisterController::class, 'showStep1'])->name('register');
-    Route::post('/register', [RegisterController::class, 'storeStep1'])->name('register.store1');
 });
+
+// Registration step 1 - accessible by both guests (new) and auth users (back button from step 2)
+Route::get('/register', [RegisterController::class, 'showStep1'])->name('register');
+Route::post('/register', [RegisterController::class, 'storeStep1'])->name('register.store1');
 
 // Logout (requires auth)
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
@@ -45,11 +49,40 @@ Route::middleware('auth')->group(function () {
     Route::post('/register/step-5', [RegisterController::class, 'storeStep5'])->name('register.store5');
     Route::get('/register/verify', [RegisterController::class, 'showVerify'])->name('register.verify');
     Route::post('/register/verify/send-otp', [RegisterController::class, 'sendOtp'])->name('register.sendotp');
-    Route::post('/register/verify', [RegisterController::class, 'verifyOtp'])->name('register.verifyotp');
+    Route::post('/register/verify', [RegisterController::class, 'verifyOtp'])->name('register.verifyotp')->middleware('throttle:10,1');
+    Route::get('/register/verify-email', [RegisterController::class, 'showVerifyEmail'])->name('register.verifyemail');
+    Route::post('/register/verify-email/send-otp', [RegisterController::class, 'sendEmailOtp'])->name('register.sendemailotp')->middleware('throttle:5,1');
+    Route::post('/register/verify-email', [RegisterController::class, 'verifyEmailOtp'])->name('register.verifyemailotp')->middleware('throttle:10,1');
     Route::get('/register/complete', [RegisterController::class, 'complete'])->name('register.complete');
+
+    // Onboarding (optional profile completion)
+    Route::get('/onboarding/step-1', [OnboardingController::class, 'showStep1'])->name('onboarding.step1');
+    Route::post('/onboarding/step-1', [OnboardingController::class, 'storeStep1'])->name('onboarding.store1');
+    Route::get('/onboarding/step-2', [OnboardingController::class, 'showStep2'])->name('onboarding.step2');
+    Route::post('/onboarding/step-2', [OnboardingController::class, 'storeStep2'])->name('onboarding.store2');
+    Route::get('/onboarding/partner-preferences', [OnboardingController::class, 'showPartnerPreferences'])->name('onboarding.preferences');
+    Route::post('/onboarding/partner-preferences', [OnboardingController::class, 'storePartnerPreferences'])->name('onboarding.storePreferences');
+    Route::get('/onboarding/lifestyle', [OnboardingController::class, 'showLifestyle'])->name('onboarding.lifestyle');
+    Route::post('/onboarding/lifestyle', [OnboardingController::class, 'storeLifestyle'])->name('onboarding.storeLifestyle');
+    Route::post('/onboarding/finish', [OnboardingController::class, 'finishOnboarding'])->name('onboarding.finish');
 });
 
 // Authenticated routes requiring completed profile
 Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Photo Management
+    Route::get('/manage-photos', [PhotoController::class, 'index'])->name('photos.manage');
+    Route::post('/manage-photos/upload', [PhotoController::class, 'upload'])->name('photos.upload')->middleware('throttle:10,1');
+    Route::delete('/manage-photos/{photo}', [PhotoController::class, 'destroy'])->name('photos.destroy');
+    Route::post('/manage-photos/{photo}/restore', [PhotoController::class, 'restore'])->name('photos.restore');
+    Route::post('/manage-photos/{photo}/primary', [PhotoController::class, 'setPrimary'])->name('photos.primary');
+    Route::post('/manage-photos/privacy', [PhotoController::class, 'updatePrivacy'])->name('photos.privacy');
+    Route::delete('/manage-photos/{photo}/permanent', [PhotoController::class, 'deletePermanently'])->name('photos.deletePermanent');
+
+    // Profile View & Edit
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/preview', [ProfileController::class, 'preview'])->name('profile.preview');
+    Route::get('/profile/{profile}', [ProfileController::class, 'viewProfile'])->name('profile.view');
+    Route::post('/profile/{section}', [ProfileController::class, 'update'])->name('profile.update');
 });

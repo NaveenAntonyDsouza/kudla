@@ -1,484 +1,219 @@
-<x-layouts.auth title="Step 1 - Registration" maxWidth="2xl">
-    {{-- Progress Bar --}}
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-semibold text-gray-700">Step 1 of 5</span>
-            <span class="text-sm text-gray-500">Basic Info</span>
-        </div>
-        <div class="flex gap-1">
-            <div class="h-2 flex-1 rounded-full bg-(--color-primary)"></div>
-            <div class="h-2 flex-1 rounded-full bg-gray-200"></div>
-            <div class="h-2 flex-1 rounded-full bg-gray-200"></div>
-            <div class="h-2 flex-1 rounded-full bg-gray-200"></div>
-            <div class="h-2 flex-1 rounded-full bg-gray-200"></div>
-        </div>
-    </div>
+@php
+    $theme = \App\Models\ThemeSetting::getTheme();
+    $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Register Free | {{ $siteName }}</title>
 
-    <h2 class="text-xl font-serif font-bold text-gray-900 mb-6">Create Your Account</h2>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
-    @if ($errors->any())
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p class="text-sm text-red-600 font-medium">Please fix the errors below.</p>
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('register.store1') }}" x-data="{
-        religion: '{{ old('religion', '') }}',
-        maritalStatus: '{{ old('marital_status', '') }}',
-        physicalStatus: '{{ old('physical_status', '') }}',
-        communities: [],
-        subCommunities: [],
-        selectedCaste: '{{ old('caste', '') }}',
-        selectedSubCaste: '{{ old('sub_caste', '') }}',
-
-        async fetchCommunities() {
-            if (!this.religion || this.religion === 'Other' || this.religion === 'No Religion') {
-                this.communities = [];
-                this.subCommunities = [];
-                this.selectedCaste = '';
-                this.selectedSubCaste = '';
-                return;
-            }
-            const response = await fetch(`/api/cascade/communities?religion=${encodeURIComponent(this.religion)}`);
-            this.communities = await response.json();
-            this.subCommunities = [];
-            this.selectedSubCaste = '';
-            if (this.selectedCaste) {
-                this.loadSubCommunities();
-            }
-        },
-
-        loadSubCommunities() {
-            const community = this.communities.find(c => c.community_name === this.selectedCaste);
-            this.subCommunities = community ? (community.sub_communities || []) : [];
-            this.selectedSubCaste = '';
-        },
-
-        init() {
-            if (this.religion) {
-                this.fetchCommunities();
-            }
+    <style>
+        :root {
+            --brand-primary: {{ $theme->primary_color ?? '#8B1D91' }};
+            --brand-primary-hover: {{ $theme->primary_hover ?? '#6B1571' }};
+            --brand-primary-light: {{ $theme->primary_light ?? '#F3E8F7' }};
+            --brand-secondary: {{ $theme->secondary_color ?? '#00BCD4' }};
+            --brand-secondary-hover: {{ $theme->secondary_hover ?? '#00ACC1' }};
+            --brand-secondary-light: {{ $theme->secondary_light ?? '#E0F7FA' }};
         }
-    }">
-        @csrf
+        /* Floating label CSS is in app.css */
+    </style>
 
-        {{-- ── Personal Details ─────────────────────────────── --}}
-        <fieldset class="mb-6">
-            <legend class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Personal Details</legend>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {{-- Full Name --}}
-                <div class="sm:col-span-2">
-                    <label for="full_name" class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="full_name" id="full_name" value="{{ old('full_name') }}" required
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                        placeholder="Enter your full name">
-                    @error('full_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+</head>
+<body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased min-h-screen flex flex-col">
 
-                {{-- Gender --}}
-                <div>
-                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender <span class="text-red-500">*</span></label>
-                    <select name="gender" id="gender" required
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select Gender</option>
-                        <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
-                        <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
-                    </select>
-                    @error('gender') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Date of Birth --}}
-                <div>
-                    <label for="date_of_birth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth <span class="text-red-500">*</span></label>
-                    <input type="date" name="date_of_birth" id="date_of_birth" value="{{ old('date_of_birth') }}" required
-                        max="{{ now()->subYears(18)->format('Y-m-d') }}"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                    @error('date_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Phone --}}
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
-                    <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" required
-                        pattern="[0-9]{10}" maxlength="10"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                        placeholder="10-digit mobile number">
-                    @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Email --}}
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" required
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                        placeholder="your@email.com">
-                    @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Password --}}
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
-                    <input type="password" name="password" id="password" required minlength="6" maxlength="14"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                        placeholder="6-14 characters">
-                    @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Confirm Password --}}
-                <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
-                    <input type="password" name="password_confirmation" id="password_confirmation" required
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                        placeholder="Re-enter password">
-                </div>
+    {{-- Header --}}
+    <header class="bg-white border-b border-gray-200 py-3 px-4 sm:px-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="/" class="inline-block">
+                @if($theme->logo_url ?? false)
+                    <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" class="h-10">
+                @else
+                    <h1 class="text-xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</h1>
+                @endif
+            </a>
+            <div class="hidden sm:flex items-center gap-4 text-sm text-gray-500">
+                <span>Need Assistance to Register?</span>
+                <span class="text-(--color-primary) font-medium">Call Us</span>
             </div>
-        </fieldset>
-
-        {{-- ── Physical Details ─────────────────────────────── --}}
-        <fieldset class="mb-6">
-            <legend class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Physical Details</legend>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {{-- Height --}}
-                <div>
-                    <label for="height_cm" class="block text-sm font-medium text-gray-700 mb-1">Height</label>
-                    <select name="height_cm" id="height_cm"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select Height</option>
-                        @foreach($heights as $h)
-                            <option value="{{ $h['cm'] }}" {{ old('height_cm') == $h['cm'] ? 'selected' : '' }}>{{ $h['display'] }} ({{ $h['cm'] }} cm)</option>
-                        @endforeach
-                    </select>
-                    @error('height_cm') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Complexion --}}
-                <div>
-                    <label for="complexion" class="block text-sm font-medium text-gray-700 mb-1">Complexion</label>
-                    <select name="complexion" id="complexion"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select</option>
-                        @foreach(['Very Fair', 'Fair', 'Wheatish', 'Wheatish Brown', 'Dark'] as $opt)
-                            <option value="{{ $opt }}" {{ old('complexion') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </select>
-                    @error('complexion') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Body Type --}}
-                <div>
-                    <label for="body_type" class="block text-sm font-medium text-gray-700 mb-1">Body Type</label>
-                    <select name="body_type" id="body_type"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select</option>
-                        @foreach(['Slim', 'Average', 'Athletic', 'Heavy'] as $opt)
-                            <option value="{{ $opt }}" {{ old('body_type') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </select>
-                    @error('body_type') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Physical Status --}}
-                <div>
-                    <label for="physical_status" class="block text-sm font-medium text-gray-700 mb-1">Physical Status</label>
-                    <select name="physical_status" id="physical_status" x-model="physicalStatus"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select</option>
-                        <option value="normal" {{ old('physical_status') === 'normal' ? 'selected' : '' }}>Normal</option>
-                        <option value="physically_challenged" {{ old('physical_status') === 'physically_challenged' ? 'selected' : '' }}>Differently Abled</option>
-                    </select>
-                    @error('physical_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Differently Abled Details (shown when physically_challenged) --}}
-                <div x-show="physicalStatus === 'physically_challenged'" x-transition class="sm:col-span-2" x-data="{ daCategory: '{{ old('da_category', '') }}' }">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                        <div>
-                            <label for="da_category" class="block text-sm font-medium text-gray-700 mb-1">Category of Differently Abled</label>
-                            <select name="da_category" id="da_category" x-model="daCategory"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'] as $opt)
-                                    <option value="{{ $opt }}" {{ old('da_category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                            @error('da_category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div x-show="daCategory === 'Other'" x-transition>
-                            <label for="da_category_other" class="block text-sm font-medium text-gray-700 mb-1">Specify</label>
-                            <input type="text" name="da_category_other" id="da_category_other" value="{{ old('da_category_other') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                                placeholder="Specify category">
-                            @error('da_category_other') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label for="da_description" class="block text-sm font-medium text-gray-700 mb-1">Describe Differently Abled</label>
-                            <textarea name="da_description" id="da_description" rows="2"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                                placeholder="Brief description">{{ old('da_description') }}</textarea>
-                            @error('da_description') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Marital Status --}}
-                <div>
-                    <label for="marital_status" class="block text-sm font-medium text-gray-700 mb-1">Marital Status <span class="text-red-500">*</span></label>
-                    <select name="marital_status" id="marital_status" x-model="maritalStatus" required
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select</option>
-                        <option value="never_married" {{ old('marital_status') === 'never_married' ? 'selected' : '' }}>Never Married / Unmarried</option>
-                        <option value="divorced" {{ old('marital_status') === 'divorced' ? 'selected' : '' }}>Divorced / Divorcee</option>
-                        <option value="widowed" {{ old('marital_status') === 'widowed' ? 'selected' : '' }}>Widowed / Widower</option>
-                        <option value="awaiting_divorce" {{ old('marital_status') === 'awaiting_divorce' ? 'selected' : '' }}>Awaiting Divorce</option>
-                    </select>
-                    @error('marital_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- Children fields (shown when not "Never Married") --}}
-                <template x-if="maritalStatus && maritalStatus !== 'never_married'">
-                    <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="children_with_me" class="block text-sm font-medium text-gray-700 mb-1">Children Living With Me</label>
-                            <input type="number" name="children_with_me" id="children_with_me" value="{{ old('children_with_me', 0) }}" min="0"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                            @error('children_with_me') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="children_not_with_me" class="block text-sm font-medium text-gray-700 mb-1">Children Not Living With Me</label>
-                            <input type="number" name="children_not_with_me" id="children_not_with_me" value="{{ old('children_not_with_me', 0) }}" min="0"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                            @error('children_not_with_me') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </fieldset>
-
-        {{-- ── Religion & Community ─────────────────────────── --}}
-        <fieldset class="mb-6">
-            <legend class="text-base font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Religion & Community</legend>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {{-- Religion --}}
-                <div class="sm:col-span-2">
-                    <label for="religion" class="block text-sm font-medium text-gray-700 mb-1">Religion <span class="text-red-500">*</span></label>
-                    <select name="religion" id="religion" x-model="religion" @change="fetchCommunities()" required
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                        <option value="">Select Religion</option>
-                        <option value="Hindu">Hindu</option>
-                        <option value="Christian">Christian</option>
-                        <option value="Muslim">Muslim</option>
-                        <option value="Jain">Jain</option>
-                        <option value="No Religion">No Religion</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    @error('religion') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-
-                {{-- ── Christian Fields ──────────────── --}}
-                <div x-show="religion === 'Christian'" x-transition class="sm:col-span-2" x-data="{ selectedDiocese: '{{ old('diocese', '') }}' }">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                        {{-- Denomination (grouped) --}}
-                        <div>
-                            <label for="denomination" class="block text-sm font-medium text-gray-700 mb-1">Denomination <span class="text-red-500">*</span></label>
-                            <select name="denomination" id="denomination"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach($denominations as $group => $items)
-                                    <optgroup label="{{ $group }}">
-                                        @foreach($items as $denom)
-                                            <option value="{{ $denom }}" {{ old('denomination') === $denom ? 'selected' : '' }}>{{ $denom }}</option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
-                            @error('denomination') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Diocese (dropdown) --}}
-                        <div>
-                            <label for="diocese" class="block text-sm font-medium text-gray-700 mb-1">Diocese</label>
-                            <select name="diocese" id="diocese" x-model="selectedDiocese"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Diocese</option>
-                                @foreach($dioceses as $dio)
-                                    <option value="{{ $dio }}" {{ old('diocese') === $dio ? 'selected' : '' }}>{{ $dio }}</option>
-                                @endforeach
-                            </select>
-                            @error('diocese') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Diocese Name (only when "Other" selected) --}}
-                        <div x-show="selectedDiocese === 'Other'" x-transition>
-                            <label for="diocese_name" class="block text-sm font-medium text-gray-700 mb-1">Diocese Name</label>
-                            <input type="text" name="diocese_name" id="diocese_name" value="{{ old('diocese_name') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                                placeholder="Enter diocese name">
-                            @error('diocese_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Parish Name & Place --}}
-                        <div>
-                            <label for="parish_name_place" class="block text-sm font-medium text-gray-700 mb-1">Parish Name & Place</label>
-                            <input type="text" name="parish_name_place" id="parish_name_place" value="{{ old('parish_name_place') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                                placeholder="e.g. St. Sebastian's, Bendur">
-                            @error('parish_name_place') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ── Hindu / Jain Fields ──────────── --}}
-                <div x-show="religion === 'Hindu' || religion === 'Jain'" x-transition class="sm:col-span-2">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                        {{-- Caste / Community (cascading from API) --}}
-                        <div>
-                            <label for="caste" class="block text-sm font-medium text-gray-700 mb-1">Caste / Community</label>
-                            <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Community</option>
-                                <template x-for="community in communities" :key="community.id">
-                                    <option :value="community.community_name" x-text="community.community_name"
-                                        :selected="community.community_name === selectedCaste"></option>
-                                </template>
-                            </select>
-                            @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Sub-Caste / Sub-Community --}}
-                        <div x-show="subCommunities.length > 0" x-transition>
-                            <label for="sub_caste" class="block text-sm font-medium text-gray-700 mb-1">Sub-Caste / Sub-Community</label>
-                            <select name="sub_caste" id="sub_caste" x-model="selectedSubCaste"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select Sub-Community</option>
-                                <template x-for="sub in subCommunities" :key="sub">
-                                    <option :value="sub" x-text="sub" :selected="sub === selectedSubCaste"></option>
-                                </template>
-                            </select>
-                            @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="gotra" class="block text-sm font-medium text-gray-700 mb-1">Gothram</label>
-                            <input type="text" name="gotra" id="gotra" value="{{ old('gotra') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                            @error('gotra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="nakshatra" class="block text-sm font-medium text-gray-700 mb-1">Nakshatra (Star)</label>
-                            <select name="nakshatra" id="nakshatra"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra', 'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni', 'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha', 'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana', 'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'] as $star)
-                                    <option value="{{ $star }}" {{ old('nakshatra') === $star ? 'selected' : '' }}>{{ $star }}</option>
-                                @endforeach
-                            </select>
-                            @error('nakshatra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="rashi" class="block text-sm font-medium text-gray-700 mb-1">Rashi (Moon Sign)</label>
-                            <select name="rashi" id="rashi"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Mesha (Aries)', 'Vrishabha (Taurus)', 'Mithuna (Gemini)', 'Karka (Cancer)', 'Simha (Leo)', 'Kanya (Virgo)', 'Tula (Libra)', 'Vrishchika (Scorpio)', 'Dhanu (Sagittarius)', 'Makara (Capricorn)', 'Kumbha (Aquarius)', 'Meena (Pisces)'] as $sign)
-                                    <option value="{{ $sign }}" {{ old('rashi') === $sign ? 'selected' : '' }}>{{ $sign }}</option>
-                                @endforeach
-                            </select>
-                            @error('rashi') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="dosh" class="block text-sm font-medium text-gray-700 mb-1">Manglik / Dosh</label>
-                            <select name="dosh" id="dosh"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Yes', 'No', 'Not Sure', 'Not Applicable'] as $opt)
-                                    <option value="{{ $opt }}" {{ old('dosh') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                            @error('dosh') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="time_of_birth" class="block text-sm font-medium text-gray-700 mb-1">Time of Birth</label>
-                            <input type="time" name="time_of_birth" id="time_of_birth" value="{{ old('time_of_birth') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                            @error('time_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="place_of_birth" class="block text-sm font-medium text-gray-700 mb-1">Place of Birth</label>
-                            <input type="text" name="place_of_birth" id="place_of_birth" value="{{ old('place_of_birth') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                                placeholder="City / Town">
-                            @error('place_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-
-                        {{-- Jain-specific --}}
-                        <div x-show="religion === 'Jain'" x-transition>
-                            <label for="jain_sect" class="block text-sm font-medium text-gray-700 mb-1">Jain Sect</label>
-                            <select name="jain_sect" id="jain_sect"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Digambar', 'Shwetambar', 'Other'] as $opt)
-                                    <option value="{{ $opt }}" {{ old('jain_sect') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                            @error('jain_sect') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ── Muslim Fields ─────────────────── --}}
-                <div x-show="religion === 'Muslim'" x-transition class="sm:col-span-2">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                        <div>
-                            <label for="muslim_sect" class="block text-sm font-medium text-gray-700 mb-1">Sect</label>
-                            <select name="muslim_sect" id="muslim_sect"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Sunni', 'Shia', 'Ahmadiyya', 'Sufi', 'Other'] as $opt)
-                                    <option value="{{ $opt }}" {{ old('muslim_sect') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                            @error('muslim_sect') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="muslim_community" class="block text-sm font-medium text-gray-700 mb-1">Community Detail</label>
-                            <input type="text" name="muslim_community" id="muslim_community" value="{{ old('muslim_community') }}"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                                placeholder="e.g. Beary, Nawayath">
-                            @error('muslim_community') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label for="religious_observance" class="block text-sm font-medium text-gray-700 mb-1">Religious Observance</label>
-                            <select name="religious_observance" id="religious_observance"
-                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full">
-                                <option value="">Select</option>
-                                @foreach(['Very Religious', 'Religious', 'Moderate', 'Liberal'] as $opt)
-                                    <option value="{{ $opt }}" {{ old('religious_observance') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                            @error('religious_observance') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ── Other Religion ────────────────── --}}
-                <div x-show="religion === 'Other'" x-transition class="sm:col-span-2">
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <label for="other_religion_name" class="block text-sm font-medium text-gray-700 mb-1">Specify Religion</label>
-                        <input type="text" name="other_religion_name" id="other_religion_name" value="{{ old('other_religion_name') }}"
-                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
-                            placeholder="Enter your religion">
-                        @error('other_religion_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-
-        {{-- ── Submit ───────────────────────────────────────── --}}
-        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-            <a href="{{ route('home') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
-            <button type="submit"
-                class="bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-6 py-2.5 font-semibold text-sm transition-colors">
-                Continue &rarr;
-            </button>
         </div>
-    </form>
-</x-layouts.auth>
+    </header>
+
+    {{-- Main: Two Panel Layout --}}
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 lg:py-14 lg:flex">
+
+            {{-- Left: Hero Image --}}
+            <div class="hidden lg:block lg:w-2/5 pr-8">
+                <div class="relative w-full h-full min-h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-(--color-primary) via-(--color-primary)/80 to-(--color-secondary)">
+                    <div class="absolute inset-0 bg-black/30"></div>
+                    <div class="relative z-10 flex flex-col justify-end h-full p-8 text-white">
+                        <h2 class="text-2xl lg:text-3xl font-normal leading-tight">Stop Waiting,</h2>
+                        <h2 class="text-2xl lg:text-3xl font-bold leading-tight mb-3">Free Register Now</h2>
+                        <p class="text-white/80 text-sm">Your future spouse is waiting;<br>take the first step by creating your free profile.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Right: Form --}}
+            <div class="lg:w-3/5">
+                @if ($errors->any())
+                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-sm text-red-600 font-medium">Please fix the errors below.</p>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('register.store1') }}" @submit="submitting = true" x-data="{
+                    submitting: false,
+                    dob: '{{ old('date_of_birth', $profile->date_of_birth ?? '') }}',
+                    gender: '{{ old('gender', $profile->gender ?? '') }}',
+                    get calculatedAge() {
+                        if (!this.dob) return '';
+                        const birth = new Date(this.dob);
+                        const today = new Date();
+                        let years = today.getFullYear() - birth.getFullYear();
+                        let months = today.getMonth() - birth.getMonth();
+                        if (months < 0 || (months === 0 && today.getDate() < birth.getDate())) {
+                            years--;
+                            months += 12;
+                        }
+                        if (today.getDate() < birth.getDate()) months--;
+                        if (months < 0) months = 0;
+                        return years >= 0 ? years + ' Yrs ' + months + ' Months' : '';
+                    }
+                }">
+                    @csrf
+
+                    <div class="space-y-5">
+                        {{-- Full Name --}}
+                        <div class="float-field">
+                            <input type="text" name="full_name" id="full_name" value="{{ old('full_name', $user->name ?? '') }}" required placeholder=" "
+                                class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
+                            <label for="full_name">Full Name <span class="text-red-500">*</span></label>
+                            @error('full_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Gender (icon buttons) --}}
+                        <div>
+                            <input type="hidden" name="gender" :value="gender">
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" @click="gender = 'male'"
+                                    :class="gender === 'male' ? 'border-(--color-primary) bg-(--color-primary)/5 text-(--color-primary)' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                    class="flex items-center justify-center gap-2 border rounded-lg px-4 py-3 text-sm font-medium transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                    </svg>
+                                    Male
+                                </button>
+                                <button type="button" @click="gender = 'female'"
+                                    :class="gender === 'female' ? 'border-(--color-primary) bg-(--color-primary)/5 text-(--color-primary)' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                    class="flex items-center justify-center gap-2 border rounded-lg px-4 py-3 text-sm font-medium transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                    </svg>
+                                    Female
+                                </button>
+                            </div>
+                            @error('gender') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Date of Birth + Age --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                            <div class="sm:col-span-3 float-field">
+                                <input type="date" name="date_of_birth" id="date_of_birth" x-model="dob" required placeholder=" "
+                                    max="{{ now()->subYears(18)->format('Y-m-d') }}"
+                                    class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
+                                <label for="date_of_birth">Date of Birth <span class="text-red-500">*</span></label>
+                                @error('date_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            </div>
+                            <div class="sm:col-span-2">
+                                <div class="border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 h-full flex flex-col justify-center">
+                                    <span class="text-[10px] text-gray-400 leading-tight">Age</span>
+                                    <span x-text="calculatedAge || '0 Yrs 0 Months'" class="text-sm font-medium text-gray-700"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Primary Mobile Number --}}
+                        <x-phone-input name="phone" label="Primary Mobile Number" :value="$user->phone ?? ''" :required="true" maxlength="10" />
+                        <p class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                            <svg class="w-3.5 h-3.5 text-(--color-primary)" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
+                            </svg>
+                            We will send OTP to this mobile number for verification
+                        </p>
+
+                        {{-- Email ID --}}
+                        <div class="float-field">
+                            <input type="email" name="email" id="email" value="{{ old('email', $user->email ?? '') }}" required placeholder=" "
+                                class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
+                            <label for="email">Email ID <span class="text-red-500">*</span></label>
+                            @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Create Password --}}
+                        <div class="float-field" x-data="{ show: false }">
+                            <div class="relative">
+                                <input :type="show ? 'text' : 'password'" name="password" id="password" required minlength="6" maxlength="14" placeholder=" "
+                                    class="border border-gray-300 rounded-lg w-full pr-10 focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
+                                <label for="password">Create Password <span class="text-red-500">*</span></label>
+                                <button type="button" @click="show = !show" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <svg x-show="!show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+                                    </svg>
+                                    <svg x-show="show" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                                <svg class="w-3.5 h-3.5 text-(--color-primary)" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
+                                </svg>
+                                Use 6-14 characters with uppercase, lowercase & numbers.
+                            </p>
+                            @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Continue Button --}}
+                    <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"
+                        class="w-full mt-6 bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-6 py-3.5 font-semibold text-sm uppercase tracking-wider transition-colors">
+                        <span x-show="!submitting">Continue</span>
+                        <span x-show="submitting" x-cloak>Please wait...</span>
+                    </button>
+
+                    {{-- Privacy Policy --}}
+                    <p class="mt-4 text-center text-xs text-gray-500">
+                        By clicking on continue button, you are agree to our<br>
+                        <a href="#" class="text-(--color-primary) hover:underline">Privacy Policy</a> &
+                        <a href="#" class="text-(--color-primary) hover:underline">Terms of Use</a>
+                    </p>
+
+                    {{-- Login Link --}}
+                    <p class="mt-4 text-center text-sm text-gray-600">
+                        Already have an account? <a href="{{ route('login') }}" class="text-(--color-primary) font-semibold hover:underline">LOGIN</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    {{-- Footer --}}
+    <footer class="bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center">
+        <p>&copy; {{ date('Y') }} {{ $siteName }}. All Rights Reserved.</p>
+    </footer>
+
+    @livewireScripts
+</body>
+</html>
