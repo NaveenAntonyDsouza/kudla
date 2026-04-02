@@ -57,10 +57,77 @@
                 <!-- Right side: Notification bell + Avatar dropdown -->
                 <div class="flex items-center gap-4">
                     <!-- Notification bell -->
-                    <button class="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        {{-- Notification count badge placeholder --}}
-                    </button>
+                    <div x-data="{ notifOpen: false }" @click.outside="notifOpen = false" class="relative">
+                        <button @click="notifOpen = !notifOpen" class="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            @if(($unreadNotificationCount ?? 0) > 0)
+                                <span class="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white rounded-full bg-red-500">{{ $unreadNotificationCount }}</span>
+                            @endif
+                        </button>
+
+                        {{-- Notification dropdown --}}
+                        <div x-show="notifOpen" x-cloak class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                                <h3 class="text-sm font-semibold text-gray-900">Notifications ({{ $unreadNotificationCount ?? 0 }})</h3>
+                                <div class="flex items-center gap-2">
+                                    @if(($unreadNotificationCount ?? 0) > 0)
+                                        <form method="POST" action="{{ route('notifications.readAll') }}">
+                                            @csrf
+                                            <button type="submit" class="text-xs text-(--color-primary) hover:underline font-medium">Mark all read</button>
+                                        </form>
+                                    @endif
+                                    <button @click="notifOpen = false" class="p-1 text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="max-h-96 overflow-y-auto">
+                                @php $notifs = $recentNotifications ?? ['today' => collect(), 'yesterday' => collect(), 'previous' => collect()]; @endphp
+                                @php $hasAny = $notifs['today']->count() + $notifs['yesterday']->count() + $notifs['previous']->count(); @endphp
+
+                                @if($hasAny > 0)
+                                    @foreach(['today' => 'Today', 'yesterday' => 'Yesterday', 'previous' => 'Previous'] as $key => $label)
+                                        @if($notifs[$key]->count() > 0)
+                                            <p class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">{{ $label }}</p>
+                                            @foreach($notifs[$key] as $notif)
+                                                <form method="POST" action="{{ route('notifications.read', $notif) }}">
+                                                    @csrf
+                                                    <button type="submit" class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left {{ !$notif->is_read ? 'bg-(--color-primary-light)/30' : '' }}">
+                                                        <div class="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0 mt-0.5">
+                                                            @if($notif->profile?->primaryPhoto)
+                                                                <img src="{{ $notif->profile->primaryPhoto->full_url }}" class="w-full h-full object-cover">
+                                                            @else
+                                                                <div class="w-full h-full flex items-center justify-center">
+                                                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-sm font-medium text-gray-900 {{ !$notif->is_read ? 'font-semibold' : '' }}">{{ $notif->title }}</p>
+                                                            <p class="text-xs text-gray-600 truncate">{{ $notif->message }}</p>
+                                                            <p class="text-[10px] text-gray-400 mt-0.5">{{ $notif->created_at->format('d/m/Y h:i A') }}</p>
+                                                        </div>
+                                                        @if(!$notif->is_read)
+                                                            <div class="w-2 h-2 rounded-full bg-(--color-primary) shrink-0 mt-2"></div>
+                                                        @endif
+                                                    </button>
+                                                </form>
+                                            @endforeach
+                                        @endif
+                                    @endforeach
+                                @else
+                                    <div class="p-6 text-center">
+                                        <p class="text-sm text-gray-400">No notifications yet</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <a href="{{ route('notifications.index') }}" class="block text-center text-xs text-(--color-primary) font-medium py-2.5 border-t border-gray-100 hover:bg-gray-50">
+                                View All Notifications
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- Avatar dropdown -->
                     <div x-data="{ open: false }" class="relative">

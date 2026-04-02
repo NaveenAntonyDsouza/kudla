@@ -9,6 +9,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InterestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -81,6 +82,11 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/manage-photos/{photo}/primary', [PhotoController::class, 'setPrimary'])->name('photos.primary');
     Route::post('/manage-photos/privacy', [PhotoController::class, 'updatePrivacy'])->name('photos.privacy');
     Route::delete('/manage-photos/{photo}/permanent', [PhotoController::class, 'deletePermanently'])->name('photos.deletePermanent');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');

@@ -12,6 +12,10 @@ class InterestService
 {
     const DAILY_LIMIT = 5;
 
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
+
     /**
      * Send an interest from one profile to another.
      */
@@ -87,6 +91,16 @@ class InterestService
             );
             $usage->increment('count');
 
+            // Notify receiver
+            $this->notificationService->send(
+                $receiver->user,
+                'interest_received',
+                'Interest Received',
+                "{$sender->matri_id} has sent you an interest.",
+                $sender->id,
+                ['interest_id' => $interest->id]
+            );
+
             return $interest;
         });
     }
@@ -103,13 +117,27 @@ class InterestService
         return DB::transaction(function () use ($interest, $templateId, $customMessage) {
             $interest->update(['status' => 'accepted']);
 
-            return InterestReply::create([
+            $reply = InterestReply::create([
                 'interest_id' => $interest->id,
                 'replier_profile_id' => $interest->receiver_profile_id,
                 'reply_type' => 'accept',
                 'template_id' => $templateId,
                 'custom_message' => $customMessage,
             ]);
+
+            // Notify sender that interest was accepted
+            $receiver = Profile::find($interest->receiver_profile_id);
+            $sender = Profile::find($interest->sender_profile_id);
+            $this->notificationService->send(
+                $sender->user,
+                'interest_accepted',
+                'Interest Accepted',
+                "{$receiver->matri_id} has accepted your interest.",
+                $receiver->id,
+                ['interest_id' => $interest->id]
+            );
+
+            return $reply;
         });
     }
 
@@ -125,7 +153,7 @@ class InterestService
         return DB::transaction(function () use ($interest, $templateId, $customMessage, $silent) {
             $interest->update(['status' => 'declined']);
 
-            return InterestReply::create([
+            $reply = InterestReply::create([
                 'interest_id' => $interest->id,
                 'replier_profile_id' => $interest->receiver_profile_id,
                 'reply_type' => 'decline',
@@ -133,6 +161,22 @@ class InterestService
                 'custom_message' => $silent ? null : $customMessage,
                 'is_silent_decline' => $silent,
             ]);
+
+            // Notify sender (skip for silent decline)
+            if (! $silent) {
+                $receiver = Profile::find($interest->receiver_profile_id);
+                $sender = Profile::find($interest->sender_profile_id);
+                $this->notificationService->send(
+                    $sender->user,
+                    'interest_declined',
+                    'Interest Declined',
+                    "{$receiver->matri_id} has declined your interest.",
+                    $receiver->id,
+                    ['interest_id' => $interest->id]
+                );
+            }
+
+            return $reply;
         });
     }
 
@@ -150,12 +194,29 @@ class InterestService
             throw new \RuntimeException('You are not part of this conversation.');
         }
 
-        return InterestReply::create([
+        $reply = InterestReply::create([
             'interest_id' => $interest->id,
             'replier_profile_id' => $sender->id,
             'reply_type' => 'message',
             'custom_message' => $message,
         ]);
+
+        // Notify the other party
+        $otherProfileId = $interest->sender_profile_id === $sender->id
+            ? $interest->receiver_profile_id
+            : $interest->sender_profile_id;
+        $otherProfile = Profile::find($otherProfileId);
+
+        $this->notificationService->send(
+            $otherProfile->user,
+            'interest_received',
+            'New Message',
+            "New message from {$sender->matri_id}.",
+            $sender->id,
+            ['interest_id' => $interest->id]
+        );
+
+        return $reply;
     }
 
     /**
