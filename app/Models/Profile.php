@@ -90,15 +90,16 @@ class Profile extends Model
 
     public function calculateCompletion(): int
     {
-        $pct = 10; // base for having an account
-        if ($this->full_name && $this->gender && $this->date_of_birth) $pct += 15;
+        $pct = 5; // base for having an account
+        if ($this->full_name && $this->gender && $this->date_of_birth) $pct += 10;
         if ($this->religiousInfo()->exists()) $pct += 10;
-        if ($this->educationDetail()->exists()) $pct += 15;
+        if ($this->educationDetail()->exists()) $pct += 10;
         if ($this->familyDetail?->father_name) $pct += 10;
         if ($this->locationInfo?->residing_country || $this->locationInfo?->native_country) $pct += 10;
         if ($this->contactInfo()->exists()) $pct += 10;
         if ($this->lifestyleInfo()->exists()) $pct += 10;
         if ($this->partnerPreference()->exists()) $pct += 10;
+        if ($this->profilePhotos()->visible()->exists()) $pct += 15;
         return min($pct, 100);
     }
 
