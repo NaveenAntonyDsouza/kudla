@@ -83,6 +83,20 @@
                             @if(!($isOwn ?? false))
                                 {{-- Action buttons for other users' profiles --}}
                                 <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                                    {{-- Shortlist heart --}}
+                                    @php
+                                        $isShortlisted = \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->where('shortlisted_profile_id', $profile->id)->exists();
+                                    @endphp
+                                    <form method="POST" action="{{ route('shortlist.toggle', $profile) }}">
+                                        @csrf
+                                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border rounded-lg transition-colors {{ $isShortlisted ? 'border-pink-300 text-pink-600 bg-pink-50 hover:bg-pink-100' : 'border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                                            <svg class="w-4 h-4" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                                            </svg>
+                                            {{ $isShortlisted ? 'Shortlisted' : 'Add to Shortlist' }}
+                                        </button>
+                                    </form>
+
                                     @php
                                         $interestStatus = app(\App\Services\InterestService::class)->getStatus(auth()->user()->profile, $profile);
                                     @endphp

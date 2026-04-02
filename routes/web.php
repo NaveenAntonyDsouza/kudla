@@ -10,6 +10,7 @@ use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InterestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ShortlistController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -87,6 +88,10 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+
+    // Shortlist
+    Route::get('/shortlist', [ShortlistController::class, 'index'])->name('shortlist.index');
+    Route::post('/shortlist/{profile}', [ShortlistController::class, 'toggle'])->name('shortlist.toggle');
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
