@@ -18,7 +18,7 @@
         <div class="flex flex-col lg:flex-row gap-8">
 
             {{-- ══ LEFT NAV ══ --}}
-            <div class="lg:w-48 shrink-0">
+            <div class="hidden lg:block lg:w-48 shrink-0">
                 <div class="sticky top-24 space-y-1">
                     <h2 class="text-base font-semibold text-gray-900 mb-3">Partner Search</h2>
                     <button @click="activeTab = 'partner'"
@@ -214,9 +214,9 @@
                             </div>
 
                             {{-- Actions --}}
-                            <div class="flex items-center gap-4 mt-8 pt-4 border-t border-gray-200">
-                                <a href="{{ route('search.index') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Clear</a>
-                                <button type="submit" class="flex-1 sm:flex-none px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 pt-4 border-t border-gray-200">
+                                <a href="{{ route('search.index') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">Clear</a>
+                                <button type="submit" class="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
                                     Search Partner
                                 </button>
                             </div>
@@ -229,14 +229,14 @@
                 <div x-show="activeTab === 'byid'" x-cloak>
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Search by Matrimony ID</h2>
-                        <form method="GET" action="{{ route('search.index') }}" class="flex items-end gap-4">
+                        <form method="GET" action="{{ route('search.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
                             <input type="hidden" name="tab" value="byid">
                             <div class="float-field flex-1">
                                 <input type="text" name="matri_id" value="{{ request('matri_id') }}" placeholder=" " required
                                     class="uppercase" maxlength="20">
                                 <label>Enter Matrimony ID (e.g. AM100001)</label>
                             </div>
-                            <button type="submit" class="px-6 py-3 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors shrink-0">
+                            <button type="submit" class="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors shrink-0">
                                 Search
                             </button>
                         </form>

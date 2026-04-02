@@ -107,7 +107,7 @@
         <div class="space-y-4 mb-6">
             {{-- Initial interest message --}}
             <div class="flex gap-3 {{ $isSender ? 'justify-end' : '' }}">
-                <div class="max-w-md {{ $isSender ? 'order-1 bg-(--color-primary-light) border-(--color-primary)/20' : 'bg-gray-50 border-gray-200' }} rounded-lg border p-4">
+                <div class="w-[85%] sm:max-w-md {{ $isSender ? 'order-1 bg-(--color-primary-light) border-(--color-primary)/20' : 'bg-gray-50 border-gray-200' }} rounded-lg border p-4">
                     <div class="flex items-center gap-2 mb-2">
                         <svg class="w-4 h-4 text-(--color-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
                         <span class="text-xs font-semibold text-(--color-primary)">Interest message sent</span>
@@ -136,7 +136,7 @@
 
                 @if(!$reply->is_silent_decline || $reply->replier_profile_id === $profile->id)
                     <div class="flex gap-3 {{ $isMyReply ? 'justify-end' : '' }}">
-                        <div class="max-w-md {{ $isMyReply ? 'bg-(--color-primary-light) border-(--color-primary)/20' : 'bg-gray-50 border-gray-200' }} rounded-lg border p-4">
+                        <div class="w-[85%] sm:max-w-md {{ $isMyReply ? 'bg-(--color-primary-light) border-(--color-primary)/20' : 'bg-gray-50 border-gray-200' }} rounded-lg border p-4">
                             <div class="flex items-center gap-2 mb-2">
                                 <span class="text-xs font-semibold {{ $replyColor }}">{{ $replyLabel }}</span>
                                 <span class="text-xs text-gray-400 ml-auto">{{ $reply->created_at->format('d M Y, h:i A') }}</span>

@@ -25,7 +25,7 @@
         <div class="flex flex-col lg:flex-row gap-8">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
-            <div class="lg:w-56 shrink-0">
+            <div class="hidden lg:block lg:w-56 shrink-0">
                 <div class="sticky top-24 space-y-1">
                     <h2 class="text-base font-semibold text-gray-900 mb-3">Interest Messages</h2>
 

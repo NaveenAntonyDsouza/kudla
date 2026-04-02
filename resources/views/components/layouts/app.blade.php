@@ -66,7 +66,7 @@
                         </button>
 
                         {{-- Notification dropdown --}}
-                        <div x-show="notifOpen" x-cloak class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+                        <div x-show="notifOpen" x-cloak class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
                             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                                 <h3 class="text-sm font-semibold text-gray-900">Notifications ({{ $unreadNotificationCount ?? 0 }})</h3>
                                 <div class="flex items-center gap-2">

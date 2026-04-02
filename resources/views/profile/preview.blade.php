@@ -27,16 +27,16 @@
         <div class="flex flex-col lg:flex-row gap-8" x-data="{ activeTab: '{{ $activeTab }}' }">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
-            <div class="shrink-0" style="width: 100%; max-width: 256px;">
+            <div class="w-full mx-auto max-w-64 lg:max-w-64 shrink-0">
                 <div class="sticky top-24">
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                         {{-- Photo --}}
-                        <div class="relative" style="max-width: 256px; overflow: hidden;">
+                        <div class="relative overflow-hidden">
                             @if($profile->primaryPhoto)
                                 <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
-                                    style="width: 100%; height: auto; max-width: 256px; aspect-ratio: 3/4; object-fit: cover;">
+                                    class="w-full aspect-[3/4] object-cover">
                             @else
-                                <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center" style="width: 100%; max-width: 256px;">
+                                <div class="w-full aspect-[3/4] bg-gray-100 flex items-center justify-center">
                                     <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
                                     </svg>

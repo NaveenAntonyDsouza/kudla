@@ -54,7 +54,7 @@
         <div class="flex flex-col lg:flex-row gap-8">
 
             {{-- ══ LEFT COLUMN: Profile Photo ══ --}}
-            <div class="lg:w-80 shrink-0">
+            <div class="w-full lg:w-80 shrink-0">
                 <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                     <div class="p-5">
                         <h2 class="text-base font-semibold text-gray-900 mb-4">Profile Photo</h2>
@@ -142,7 +142,7 @@
                 {{-- Tabs --}}
                 <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                     <div class="border-b border-gray-200">
-                        <div class="flex">
+                        <div class="flex overflow-x-auto">
                             <button @click="activeTab = 'album'"
                                 :class="activeTab === 'album' ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-gray-500 hover:text-gray-700'"
                                 class="px-6 py-3 text-sm font-semibold border-b-2 transition-colors">
