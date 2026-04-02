@@ -117,9 +117,29 @@
                                         class="w-5 h-5 rounded text-(--color-primary) focus:ring-(--color-primary) border-gray-300">
                                 </label>
                                 <label class="flex items-center justify-between cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                                    @php
+                                        $religion = $profile->religiousInfo?->religion;
+                                        if (in_array($religion, ['Christian'])) {
+                                            $subLabel = 'Same Denomination Only';
+                                            $subDesc = 'Only show my profile to users of my denomination';
+                                            $subValue = $profile->religiousInfo?->denomination;
+                                        } elseif (in_array($religion, ['Hindu', 'Jain'])) {
+                                            $subLabel = 'Same Caste Only';
+                                            $subDesc = 'Only show my profile to users of my caste';
+                                            $subValue = $profile->religiousInfo?->caste;
+                                        } elseif ($religion === 'Muslim') {
+                                            $subLabel = 'Same Sect Only';
+                                            $subDesc = 'Only show my profile to users of my sect';
+                                            $subValue = $profile->religiousInfo?->muslim_sect;
+                                        } else {
+                                            $subLabel = 'Same Caste / Denomination Only';
+                                            $subDesc = 'Only show my profile to users of my caste or denomination';
+                                            $subValue = $profile->religiousInfo?->denomination ?? $profile->religiousInfo?->caste;
+                                        }
+                                    @endphp
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Same Denomination / Caste Only</p>
-                                        <p class="text-xs text-gray-500 mt-0.5">Only show my profile to users of my denomination or caste{{ $profile->religiousInfo?->denomination ? ' (' . $profile->religiousInfo->denomination . ')' : ($profile->religiousInfo?->caste ? ' (' . $profile->religiousInfo->caste . ')' : '') }}</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $subLabel }}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">{{ $subDesc }}{{ $subValue ? ' (' . $subValue . ')' : '' }}</p>
                                     </div>
                                     <input type="checkbox" name="only_same_denomination" value="1"
                                         {{ ($profile->only_same_denomination ?? false) ? 'checked' : '' }}
