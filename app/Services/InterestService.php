@@ -34,6 +34,17 @@ class InterestService
             throw new \InvalidArgumentException('Cannot send interest to the same gender.');
         }
 
+        // Check block status (both directions)
+        $isBlocked = \App\Models\BlockedProfile::where(function ($q) use ($sender, $receiver) {
+            $q->where('profile_id', $sender->id)->where('blocked_profile_id', $receiver->id);
+        })->orWhere(function ($q) use ($sender, $receiver) {
+            $q->where('profile_id', $receiver->id)->where('blocked_profile_id', $sender->id);
+        })->exists();
+
+        if ($isBlocked) {
+            throw new \RuntimeException('Cannot send interest to this profile.');
+        }
+
         // Check daily limit
         $usage = $this->canSendToday($sender);
         if (! $usage['can_send']) {
@@ -199,6 +210,21 @@ class InterestService
         // Verify sender is part of this interest
         if ($interest->sender_profile_id !== $sender->id && $interest->receiver_profile_id !== $sender->id) {
             throw new \RuntimeException('You are not part of this conversation.');
+        }
+
+        // Check if either party has blocked the other
+        $otherProfileId = $interest->sender_profile_id === $sender->id
+            ? $interest->receiver_profile_id
+            : $interest->sender_profile_id;
+
+        $isBlocked = \App\Models\BlockedProfile::where(function ($q) use ($sender, $otherProfileId) {
+            $q->where('profile_id', $sender->id)->where('blocked_profile_id', $otherProfileId);
+        })->orWhere(function ($q) use ($sender, $otherProfileId) {
+            $q->where('profile_id', $otherProfileId)->where('blocked_profile_id', $sender->id);
+        })->exists();
+
+        if ($isBlocked) {
+            throw new \RuntimeException('This conversation is no longer available.');
         }
 
         $reply = InterestReply::create([

@@ -94,14 +94,8 @@
                                                 <form method="POST" action="{{ route('notifications.read', $notif) }}">
                                                     @csrf
                                                     <button type="submit" class="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left {{ !$notif->is_read ? 'bg-(--color-primary-light)/30' : '' }}">
-                                                        <div class="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0 mt-0.5">
-                                                            @if($notif->profile?->primaryPhoto)
-                                                                <img src="{{ $notif->profile->primaryPhoto->full_url }}" class="w-full h-full object-cover">
-                                                            @else
-                                                                <div class="w-full h-full flex items-center justify-center">
-                                                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
-                                                                </div>
-                                                            @endif
+                                                        <div class="w-8 h-8 rounded-full shrink-0 mt-0.5 flex items-center justify-center {{ match($notif->type) { 'interest_received' => 'bg-(--color-primary-light) text-(--color-primary)', 'interest_accepted' => 'bg-green-100 text-green-600', 'interest_declined' => 'bg-red-100 text-red-500', default => 'bg-gray-100 text-gray-400' } }}">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
                                                         </div>
                                                         <div class="flex-1 min-w-0">
                                                             <p class="text-sm font-medium text-gray-900 {{ !$notif->is_read ? 'font-semibold' : '' }}">{{ $notif->title }}</p>

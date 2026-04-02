@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\NotificationService;
+use App\Models\Notification;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,9 +15,25 @@ class ViewComposerServiceProvider extends ServiceProvider
             $recentNotifications = ['today' => collect(), 'yesterday' => collect(), 'previous' => collect()];
 
             if ($user = auth()->user()) {
-                $service = app(NotificationService::class);
-                $unreadNotificationCount = $service->getUnreadCount($user);
-                $recentNotifications = $service->getRecent($user, 15);
+                // Only count — lightweight query
+                $unreadNotificationCount = Notification::where('user_id', $user->id)
+                    ->where('is_read', false)
+                    ->count();
+
+                // Load recent notifications (no eager loading of photos for speed)
+                $notifications = Notification::where('user_id', $user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(10)
+                    ->get();
+
+                $today = now()->startOfDay();
+                $yesterday = now()->subDay()->startOfDay();
+
+                $recentNotifications = [
+                    'today' => $notifications->filter(fn($n) => $n->created_at >= $today)->values(),
+                    'yesterday' => $notifications->filter(fn($n) => $n->created_at >= $yesterday && $n->created_at < $today)->values(),
+                    'previous' => $notifications->filter(fn($n) => $n->created_at < $yesterday)->values(),
+                ];
             }
 
             $view->with('unreadNotificationCount', $unreadNotificationCount);

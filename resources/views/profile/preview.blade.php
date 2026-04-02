@@ -27,7 +27,7 @@
         <div class="flex flex-col lg:flex-row gap-8" x-data="{ activeTab: '{{ $activeTab }}' }">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
-            <div class="w-full mx-auto max-w-64 lg:max-w-64 shrink-0">
+            <div class="w-full shrink-0 mx-auto lg:mx-0" style="max-width: 256px;">
                 <div class="sticky top-24">
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                         {{-- Photo --}}
