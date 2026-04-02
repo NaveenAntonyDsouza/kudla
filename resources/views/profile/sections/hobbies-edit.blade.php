@@ -23,7 +23,13 @@
                 @endforeach
             </select><label>Drinking</label>
         </div>
-        <div class="float-field"><input type="text" name="cultural_background" value="{{ $h?->cultural_background ?? '' }}" maxlength="30" placeholder=" "><label>Cultural Background</label></div>
+        <div class="float-field">
+            <select name="cultural_background"><option value="">Select</option>
+                @foreach(config('reference_data.cultural_background_list', []) as $opt)
+                    <option value="{{ $opt }}" {{ ($h?->cultural_background ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                @endforeach
+            </select><label>Cultural Background</label>
+        </div>
     </div>
 
     <div class="space-y-4 mt-5">
