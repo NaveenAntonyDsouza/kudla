@@ -43,6 +43,11 @@ class Profile extends Model
         'is_verified',
         'id_proof_verified',
         'how_did_you_hear_about_us',
+        'show_profile_to',
+        'is_hidden',
+        'search_visible_to_older',
+        'search_visible_to_taller',
+        'deletion_reason',
     ];
 
     protected function casts(): array

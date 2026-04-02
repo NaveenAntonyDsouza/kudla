@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InterestController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShortlistController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
@@ -89,6 +90,15 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/filters', [SettingsController::class, 'updateFilters'])->name('settings.filters');
+    Route::post('/settings/alerts', [SettingsController::class, 'updateAlerts'])->name('settings.alerts');
+    Route::post('/settings/visibility', [SettingsController::class, 'updateVisibility'])->name('settings.visibility');
+    Route::post('/settings/hide', [SettingsController::class, 'hideProfile'])->name('settings.hide');
+    Route::post('/settings/password', [SettingsController::class, 'changePassword'])->name('settings.password');
+    Route::post('/settings/delete', [SettingsController::class, 'deleteProfile'])->name('settings.delete');
 
     // Shortlist
     Route::get('/shortlist', [ShortlistController::class, 'index'])->name('shortlist.index');
