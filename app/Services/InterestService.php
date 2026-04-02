@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Mail\InterestAcceptedMail;
+use App\Mail\InterestDeclinedMail;
+use App\Mail\InterestReceivedMail;
 use App\Models\DailyInterestUsage;
 use App\Models\Interest;
 use App\Models\InterestReply;
 use App\Models\Profile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class InterestService
 {
@@ -91,7 +95,7 @@ class InterestService
             );
             $usage->increment('count');
 
-            // Notify receiver
+            // Notify receiver (in-app + email)
             $this->notificationService->send(
                 $receiver->user,
                 'interest_received',
@@ -100,6 +104,7 @@ class InterestService
                 $sender->id,
                 ['interest_id' => $interest->id]
             );
+            Mail::to($receiver->user->email)->queue(new InterestReceivedMail($interest));
 
             return $interest;
         });
@@ -125,7 +130,7 @@ class InterestService
                 'custom_message' => $customMessage,
             ]);
 
-            // Notify sender that interest was accepted
+            // Notify sender that interest was accepted (in-app + email)
             $receiver = Profile::find($interest->receiver_profile_id);
             $sender = Profile::find($interest->sender_profile_id);
             $this->notificationService->send(
@@ -136,6 +141,7 @@ class InterestService
                 $receiver->id,
                 ['interest_id' => $interest->id]
             );
+            Mail::to($sender->user->email)->queue(new InterestAcceptedMail($interest));
 
             return $reply;
         });
@@ -174,6 +180,7 @@ class InterestService
                     $receiver->id,
                     ['interest_id' => $interest->id]
                 );
+                Mail::to($sender->user->email)->queue(new InterestDeclinedMail($interest));
             }
 
             return $reply;
