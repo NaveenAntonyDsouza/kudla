@@ -36,6 +36,21 @@ class DashboardController extends Controller
             ->whereNotNull('full_name')
             ->where('is_active', true)
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+            // Respect visibility preferences
+            ->where(function ($q) use ($profile) {
+                $q->where(function ($q2) use ($profile) {
+                    $q2->where('only_same_religion', false)->orWhereNull('only_same_religion')
+                        ->orWhereHas('religiousInfo', fn($q3) => $q3->where('religion', $profile->religiousInfo?->religion));
+                });
+                $q->where(function ($q2) use ($profile) {
+                    $q2->where('only_same_denomination', false)->orWhereNull('only_same_denomination')
+                        ->orWhereHas('religiousInfo', fn($q3) => $q3->where('denomination', $profile->religiousInfo?->denomination)->orWhere('caste', $profile->religiousInfo?->caste));
+                });
+                $q->where(function ($q2) use ($profile) {
+                    $q2->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue')
+                        ->orWhere('mother_tongue', $profile->mother_tongue);
+                });
+            })
             ->with(['locationInfo', 'primaryPhoto', 'educationDetail', 'religiousInfo'])
             ->orderBy('created_at', 'desc')
             ->limit(6)

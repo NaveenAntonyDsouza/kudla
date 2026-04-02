@@ -45,10 +45,11 @@ class SettingsController extends Controller
     public function updateVisibility(Request $request)
     {
         auth()->user()->profile->update([
-            'search_visible_to_older' => $request->boolean('search_visible_to_older'),
-            'search_visible_to_taller' => $request->boolean('search_visible_to_taller'),
+            'only_same_religion' => $request->boolean('only_same_religion'),
+            'only_same_denomination' => $request->boolean('only_same_denomination'),
+            'only_same_mother_tongue' => $request->boolean('only_same_mother_tongue'),
         ]);
-        return back()->with('success', 'Search visibility updated.');
+        return redirect()->route('settings.index', ['section' => 'search_visibility'])->with('success', 'Profile visibility updated.');
     }
 
     public function hideProfile(Request $request)

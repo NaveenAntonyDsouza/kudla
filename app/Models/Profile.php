@@ -47,6 +47,9 @@ class Profile extends Model
         'is_hidden',
         'search_visible_to_older',
         'search_visible_to_taller',
+        'only_same_religion',
+        'only_same_denomination',
+        'only_same_mother_tongue',
         'deletion_reason',
     ];
 

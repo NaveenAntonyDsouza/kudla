@@ -102,37 +102,41 @@
                         </form>
 
                     @elseif($section === 'search_visibility')
-                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Search Visibility</h2>
-                        <p class="text-sm text-gray-500 mb-6">Enhance search visibility by extending your age and height requirements.</p>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Profile Visibility</h2>
+                        <p class="text-sm text-gray-500 mb-6">Control who can see your profile in search results. When enabled, only matching users will find you.</p>
                         <form method="POST" action="{{ route('settings.visibility') }}">
                             @csrf
-                            <div class="space-y-6">
-                                <div class="flex items-center justify-between">
+                            <div class="space-y-4">
+                                <label class="flex items-center justify-between cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Age</p>
-                                        <p class="text-xs text-gray-500 mt-0.5">Display my profile to those who are older than me</p>
+                                        <p class="text-sm font-semibold text-gray-900">Same Religion Only</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Only show my profile to users of my religion{{ $profile->religiousInfo?->religion ? ' (' . $profile->religiousInfo->religion . ')' : '' }}</p>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" name="search_visible_to_older" value="1"
-                                            {{ $profile->search_visible_to_older ? 'checked' : '' }}
-                                            class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-(--color-primary)/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-(--color-primary) after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                                    </label>
-                                </div>
-                                <div class="flex items-center justify-between">
+                                    <input type="checkbox" name="only_same_religion" value="1"
+                                        {{ ($profile->only_same_religion ?? false) ? 'checked' : '' }}
+                                        class="w-5 h-5 rounded text-(--color-primary) focus:ring-(--color-primary) border-gray-300">
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Height</p>
-                                        <p class="text-xs text-gray-500 mt-0.5">Display my profile to those who are taller than me</p>
+                                        <p class="text-sm font-semibold text-gray-900">Same Denomination / Caste Only</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Only show my profile to users of my denomination or caste{{ $profile->religiousInfo?->denomination ? ' (' . $profile->religiousInfo->denomination . ')' : ($profile->religiousInfo?->caste ? ' (' . $profile->religiousInfo->caste . ')' : '') }}</p>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" name="search_visible_to_taller" value="1"
-                                            {{ $profile->search_visible_to_taller ? 'checked' : '' }}
-                                            class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-(--color-primary)/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-(--color-primary) after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                                    </label>
-                                </div>
+                                    <input type="checkbox" name="only_same_denomination" value="1"
+                                        {{ ($profile->only_same_denomination ?? false) ? 'checked' : '' }}
+                                        class="w-5 h-5 rounded text-(--color-primary) focus:ring-(--color-primary) border-gray-300">
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Same Mother Tongue Only</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Only show my profile to users who speak my language{{ $profile->mother_tongue ? ' (' . $profile->mother_tongue . ')' : '' }}</p>
+                                    </div>
+                                    <input type="checkbox" name="only_same_mother_tongue" value="1"
+                                        {{ ($profile->only_same_mother_tongue ?? false) ? 'checked' : '' }}
+                                        class="w-5 h-5 rounded text-(--color-primary) focus:ring-(--color-primary) border-gray-300">
+                                </label>
                             </div>
-                            <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Save</button>
+                            <p class="text-xs text-gray-400 mt-4">Note: Enabling these options may reduce your profile visibility. We recommend keeping them off for maximum matches.</p>
+                            <button type="submit" class="mt-4 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Save</button>
                         </form>
 
                     @elseif($section === 'hide_profile')

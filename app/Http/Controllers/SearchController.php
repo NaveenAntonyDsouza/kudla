@@ -77,6 +77,30 @@ class SearchController extends Controller
             ->where('gender', '!=', $profile->gender)
             ->whereDoesntHave('blockedByOthers', fn($q) => $q->where('profile_id', $profile->id))
             ->whereDoesntHave('blockedProfiles', fn($q) => $q->where('blocked_profile_id', $profile->id))
+            // Respect visibility preferences of target profiles
+            ->where(function ($q) use ($profile) {
+                // Same religion filter: if target wants same religion only, searcher must match
+                $q->where(function ($q2) use ($profile) {
+                    $q2->where('only_same_religion', false)
+                        ->orWhereNull('only_same_religion')
+                        ->orWhereHas('religiousInfo', fn($q3) =>
+                            $q3->where('religion', $profile->religiousInfo?->religion));
+                });
+                // Same denomination/caste: if target wants same, searcher must match
+                $q->where(function ($q2) use ($profile) {
+                    $q2->where('only_same_denomination', false)
+                        ->orWhereNull('only_same_denomination')
+                        ->orWhereHas('religiousInfo', fn($q3) =>
+                            $q3->where('denomination', $profile->religiousInfo?->denomination)
+                                ->orWhere('caste', $profile->religiousInfo?->caste));
+                });
+                // Same mother tongue: if target wants same, searcher must match
+                $q->where(function ($q2) use ($profile) {
+                    $q2->where('only_same_mother_tongue', false)
+                        ->orWhereNull('only_same_mother_tongue')
+                        ->orWhere('mother_tongue', $profile->mother_tongue);
+                });
+            })
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
 
         // Age filter
