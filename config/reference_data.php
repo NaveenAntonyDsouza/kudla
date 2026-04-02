@@ -257,7 +257,7 @@ return [
         'Bengali', 'Gujarati', 'Punjabi', 'Urdu', 'French', 'German', 'Spanish', 'Arabic',
     ],
 
-    'eating_habits' => ['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Jain', 'Vegan'],
+    'eating_habits' => ['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan'],
     'drinking_habits' => ['No', 'Yes', 'Socially'],
     'smoking_habits' => ['No', 'Yes', 'Occasionally'],
 

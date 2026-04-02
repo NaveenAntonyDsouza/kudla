@@ -4,7 +4,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field">
             <select name="diet"><option value="">Select</option>
-                @foreach(['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan', 'Jain'] as $opt)
+                @foreach(['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan'] as $opt)
                     <option value="{{ $opt }}" {{ ($h?->diet ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Diet</label>
