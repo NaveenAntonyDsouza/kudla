@@ -40,7 +40,14 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        return view('dashboard.index', compact('profile', 'user', 'completionPct', 'sections', 'recentProfiles'));
+        // Interest counts for stats
+        $interestStats = [
+            'sent' => $profile->sentInterests()->count(),
+            'accepted' => $profile->sentInterests()->where('status', 'accepted')->count(),
+            'received' => $profile->receivedInterests()->where('status', 'pending')->count(),
+        ];
+
+        return view('dashboard.index', compact('profile', 'user', 'completionPct', 'sections', 'recentProfiles', 'interestStats'));
     }
 
 }

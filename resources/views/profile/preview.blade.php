@@ -10,6 +10,20 @@
             <span class="text-gray-700 font-medium">Profile Preview</span>
         </p>
 
+        @if(session('success'))
+            <div class="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
+                @foreach($errors->all() as $error)
+                    <p class="text-sm text-red-600 font-medium">{{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
+
         <div class="flex flex-col lg:flex-row gap-8" x-data="{ activeTab: '{{ $activeTab }}' }">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
@@ -65,6 +79,42 @@
                                     Last Login : {{ $user->updated_at?->format('d M Y') }}
                                 </div>
                             </div>
+
+                            @if(!($isOwn ?? false))
+                                {{-- Action buttons for other users' profiles --}}
+                                <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                                    @php
+                                        $interestStatus = app(\App\Services\InterestService::class)->getStatus(auth()->user()->profile, $profile);
+                                    @endphp
+
+                                    @if(!$interestStatus)
+                                        <x-send-interest-modal :profile="$profile" />
+                                    @elseif($interestStatus['direction'] === 'sent' && $interestStatus['status'] === 'pending')
+                                        <div class="text-center py-2">
+                                            <span class="inline-flex items-center gap-1 text-sm text-amber-600 font-medium">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                Interest Sent — Awaiting Response
+                                            </span>
+                                        </div>
+                                    @elseif($interestStatus['direction'] === 'received' && $interestStatus['status'] === 'pending')
+                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-green-500 rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
+                                            Respond to Interest
+                                        </a>
+                                    @elseif($interestStatus['status'] === 'accepted')
+                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-(--color-primary) rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                                            Continue Chat
+                                        </a>
+                                    @elseif($interestStatus['status'] === 'declined')
+                                        <div class="text-center py-2">
+                                            <span class="text-sm text-gray-500">Interest was declined</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

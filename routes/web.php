@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\InterestController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,6 +84,17 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+
+    // Interests (specific routes first, parameterized last)
+    Route::get('/interests', [InterestController::class, 'inbox'])->name('interests.inbox');
+    Route::post('/interests/send/{profile}', [InterestController::class, 'send'])->name('interests.send');
+    Route::get('/interests/{interest}', [InterestController::class, 'show'])->name('interests.show')->whereNumber('interest');
+    Route::post('/interests/{interest}/accept', [InterestController::class, 'accept'])->name('interests.accept');
+    Route::post('/interests/{interest}/decline', [InterestController::class, 'decline'])->name('interests.decline');
+    Route::post('/interests/{interest}/cancel', [InterestController::class, 'cancel'])->name('interests.cancel');
+    Route::post('/interests/{interest}/message', [InterestController::class, 'sendMessage'])->name('interests.message');
+    Route::post('/interests/{interest}/star', [InterestController::class, 'toggleStar'])->name('interests.star');
+    Route::post('/interests/{interest}/trash', [InterestController::class, 'trash'])->name('interests.trash');
 
     // Profile View & Edit
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

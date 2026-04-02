@@ -50,7 +50,7 @@
                 <nav class="hidden md:flex items-center gap-6">
                     <a href="/dashboard" class="text-sm font-medium text-gray-700 hover:text-gray-900">Dashboard</a>
                     <a href="/search" class="text-sm font-medium text-gray-700 hover:text-gray-900">Search</a>
-                    <a href="/interests" class="text-sm font-medium text-gray-700 hover:text-gray-900">Interests</a>
+                    <a href="{{ route('interests.inbox') }}" class="text-sm font-medium text-gray-700 hover:text-gray-900">Interests</a>
                     <a href="{{ route('profile.show') }}" class="text-sm font-medium text-gray-700 hover:text-gray-900">My Profile</a>
                 </nav>
 
