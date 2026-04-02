@@ -14,7 +14,7 @@ class BlockController extends Controller
     {
         $myProfile = auth()->user()->profile;
 
-        if ($myProfile->id === $profile->id) {
+        if (! $myProfile || $myProfile->id === $profile->id) {
             return back()->withErrors(['block' => 'Cannot block yourself.']);
         }
 

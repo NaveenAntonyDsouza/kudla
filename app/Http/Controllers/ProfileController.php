@@ -81,10 +81,11 @@ class ProfileController extends Controller
     {
         $profile = auth()->user()->profile;
 
-        $method = 'update' . ucfirst($section);
-        if (! method_exists($this, $method)) {
+        $allowed = ['primary', 'religious', 'education', 'family', 'location', 'contact', 'hobbies', 'social', 'partner'];
+        if (! in_array($section, $allowed)) {
             abort(404, 'Unknown profile section.');
         }
+        $method = 'update' . ucfirst($section);
 
         $this->$method($request, $profile);
 

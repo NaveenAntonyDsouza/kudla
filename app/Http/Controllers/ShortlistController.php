@@ -15,7 +15,7 @@ class ShortlistController extends Controller
     {
         $myProfile = auth()->user()->profile;
 
-        if ($myProfile->id === $profile->id) {
+        if (! $myProfile || $myProfile->id === $profile->id) {
             return back()->withErrors(['shortlist' => 'Cannot shortlist yourself.']);
         }
 

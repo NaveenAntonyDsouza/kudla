@@ -131,8 +131,8 @@ class InterestService
             ]);
 
             // Notify sender that interest was accepted (in-app + email)
-            $receiver = Profile::find($interest->receiver_profile_id);
-            $sender = Profile::find($interest->sender_profile_id);
+            $receiver = $interest->receiverProfile;
+            $sender = $interest->senderProfile;
             $this->notificationService->send(
                 $sender->user,
                 'interest_accepted',
@@ -163,15 +163,15 @@ class InterestService
                 'interest_id' => $interest->id,
                 'replier_profile_id' => $interest->receiver_profile_id,
                 'reply_type' => 'decline',
-                'template_id' => $templateId,
+                'template_id' => $silent ? null : $templateId,
                 'custom_message' => $silent ? null : $customMessage,
                 'is_silent_decline' => $silent,
             ]);
 
             // Notify sender (skip for silent decline)
             if (! $silent) {
-                $receiver = Profile::find($interest->receiver_profile_id);
-                $sender = Profile::find($interest->sender_profile_id);
+                $receiver = $interest->receiverProfile;
+                $sender = $interest->senderProfile;
                 $this->notificationService->send(
                     $sender->user,
                     'interest_declined',
@@ -209,10 +209,9 @@ class InterestService
         ]);
 
         // Notify the other party
-        $otherProfileId = $interest->sender_profile_id === $sender->id
-            ? $interest->receiver_profile_id
-            : $interest->sender_profile_id;
-        $otherProfile = Profile::find($otherProfileId);
+        $otherProfile = $interest->sender_profile_id === $sender->id
+            ? $interest->receiverProfile
+            : $interest->senderProfile;
 
         $this->notificationService->send(
             $otherProfile->user,
