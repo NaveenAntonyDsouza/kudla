@@ -27,6 +27,12 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                         Partner Search
                     </button>
+                    <button @click="activeTab = 'keyword'"
+                        :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
+                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+                        Keyword Search
+                    </button>
                     <button @click="activeTab = 'byid'"
                         :class="activeTab === 'byid' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
@@ -223,6 +229,24 @@
                         </form>
                     </div>
 
+                </div>
+
+                {{-- ── KEYWORD SEARCH TAB ── --}}
+                <div x-show="activeTab === 'keyword'" x-cloak>
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Keyword Search</h2>
+                        <p class="text-sm text-gray-500 mb-6">Search profiles by name, profession, religion, or any keyword.</p>
+                        <form method="GET" action="{{ route('search.index') }}" class="space-y-4">
+                            <input type="hidden" name="tab" value="keyword">
+                            <div class="float-field">
+                                <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">
+                                <label>Enter Keyword (e.g. Doctor, Bangalore, Catholic)</label>
+                            </div>
+                            <button type="submit" class="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
+                                Search
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 {{-- ── SEARCH BY ID TAB ── --}}

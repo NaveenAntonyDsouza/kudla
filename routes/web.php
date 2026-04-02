@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InterestController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileViewController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShortlistController;
 use App\Http\Controllers\SearchController;
@@ -90,6 +91,9 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+
+    // Profile Views
+    Route::get('/views', [ProfileViewController::class, 'index'])->name('views.index');
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

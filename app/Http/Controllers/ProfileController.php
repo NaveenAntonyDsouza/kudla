@@ -74,6 +74,11 @@ class ProfileController extends Controller
 
         $activeTab = request('tab', 'personal');
 
+        // Track profile view
+        if (! $isOwn) {
+            ProfileViewController::track(auth()->user()->profile->id, $profile->id);
+        }
+
         return view('profile.preview', compact('user', 'profile', 'activeTab', 'isOwn'));
     }
 

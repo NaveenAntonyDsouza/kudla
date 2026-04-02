@@ -32,6 +32,26 @@ class SearchController extends Controller
             return view('search.results', compact('profile', 'results'));
         }
 
+        // Keyword search
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $results = Profile::where('id', '!=', $profile->id)
+                ->where('is_active', true)
+                ->where('gender', '!=', $profile->gender)
+                ->where(function ($q) use ($keyword) {
+                    $q->where('full_name', 'LIKE', "%{$keyword}%")
+                      ->orWhere('about_me', 'LIKE', "%{$keyword}%")
+                      ->orWhere('matri_id', 'LIKE', "%{$keyword}%")
+                      ->orWhereHas('educationDetail', fn($q2) => $q2->where('occupation_detail', 'LIKE', "%{$keyword}%")->orWhere('employer_name', 'LIKE', "%{$keyword}%"))
+                      ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'LIKE', "%{$keyword}%")->orWhere('denomination', 'LIKE', "%{$keyword}%"));
+                })
+                ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(20)
+                ->withQueryString();
+            return view('search.results', compact('profile', 'results'));
+        }
+
         // Search by ID
         $idResult = null;
         if ($request->filled('matri_id')) {
