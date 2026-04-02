@@ -9,6 +9,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InterestController;
+use App\Http\Controllers\BlockController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ShortlistController;
 use App\Http\Controllers\SearchController;
@@ -92,6 +93,11 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Shortlist
     Route::get('/shortlist', [ShortlistController::class, 'index'])->name('shortlist.index');
     Route::post('/shortlist/{profile}', [ShortlistController::class, 'toggle'])->name('shortlist.toggle');
+
+    // Block
+    Route::get('/blocked', [BlockController::class, 'index'])->name('blocked.index');
+    Route::post('/block/{profile}', [BlockController::class, 'block'])->name('block.profile');
+    Route::post('/unblock/{profile}', [BlockController::class, 'unblock'])->name('unblock.profile');
 
     // Search
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');

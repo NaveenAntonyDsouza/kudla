@@ -247,6 +247,11 @@ class Profile extends Model
         return $this->hasMany(BlockedProfile::class);
     }
 
+    public function blockedByOthers(): HasMany
+    {
+        return $this->hasMany(BlockedProfile::class, 'blocked_profile_id');
+    }
+
     public function ignoredProfiles(): HasMany
     {
         return $this->hasMany(IgnoredProfile::class);

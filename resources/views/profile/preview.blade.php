@@ -127,6 +127,15 @@
                                             <span class="text-sm text-gray-500">Interest was declined</span>
                                         </div>
                                     @endif
+
+                                    {{-- Block profile --}}
+                                    <form method="POST" action="{{ route('block.profile', $profile) }}" onsubmit="return confirm('Block this profile? You will no longer see each other.')">
+                                        @csrf
+                                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors mt-2">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                            Block Profile
+                                        </button>
+                                    </form>
                                 </div>
                             @endif
                         </div>

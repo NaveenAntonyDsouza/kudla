@@ -53,6 +53,8 @@ class SearchController extends Controller
             ->where('id', '!=', $profile->id)
             ->where('is_active', true)
             ->where('gender', '!=', $profile->gender)
+            ->whereDoesntHave('blockedByOthers', fn($q) => $q->where('profile_id', $profile->id))
+            ->whereDoesntHave('blockedProfiles', fn($q) => $q->where('blocked_profile_id', $profile->id))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
 
         // Age filter
