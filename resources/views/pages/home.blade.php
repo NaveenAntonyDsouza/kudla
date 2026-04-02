@@ -129,59 +129,29 @@
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Why Choose {{ $siteName }}?</h2>
             <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto">We understand the importance of finding the right life partner. Here's what makes us different.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach([
-                    ['icon' => 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z', 'title' => 'Verified Profiles', 'desc' => 'Every profile is verified to ensure authenticity and safety for our members.'],
-                    ['icon' => 'M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z', 'title' => '100% Privacy', 'desc' => 'Your personal information is protected. You control who sees your contact details.'],
-                    ['icon' => 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197', 'title' => 'Community Focused', 'desc' => 'Built specifically for Karnataka\'s Christian community with denomination-specific matching.'],
-                    ['icon' => 'M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3', 'title' => 'Easy to Use', 'desc' => 'Simple registration, powerful search, and instant messaging — all from your phone or computer.'],
-                ] as $feature)
-                    <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
-                        <div class="w-14 h-14 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center">
-                            <svg class="w-7 h-7 text-(--color-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $feature['icon'] }}"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-base font-semibold text-gray-900 mb-2">{{ $feature['title'] }}</h3>
-                        <p class="text-sm text-gray-500">{{ $feature['desc'] }}</p>
-                    </div>
-                @endforeach
+                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#10003;</div>
+                    <h3 class="text-base font-semibold text-gray-900 mb-2">Verified Profiles</h3>
+                    <p class="text-sm text-gray-500">Every profile is verified to ensure authenticity and safety for our members.</p>
+                </div>
+                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#128274;</div>
+                    <h3 class="text-base font-semibold text-gray-900 mb-2">100% Privacy</h3>
+                    <p class="text-sm text-gray-500">Your personal information is protected. You control who sees your contact details.</p>
+                </div>
+                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#9829;</div>
+                    <h3 class="text-base font-semibold text-gray-900 mb-2">Community Focused</h3>
+                    <p class="text-sm text-gray-500">Built specifically for Karnataka's Christian community with denomination-specific matching.</p>
+                </div>
+                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#9733;</div>
+                    <h3 class="text-base font-semibold text-gray-900 mb-2">Easy to Use</h3>
+                    <p class="text-sm text-gray-500">Simple registration, powerful search, and instant messaging — all from your phone or computer.</p>
+                </div>
             </div>
         </div>
     </section>
-
-    {{-- 5. Recently Joined Profiles --}}
-    @if($featuredProfiles->count() > 0)
-    <section class="py-16 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Recently Joined Profiles</h2>
-            <p class="text-center text-gray-500 mb-12">{{ $totalProfiles }}+ members and growing. Register to view full profiles.</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                @foreach($featuredProfiles as $fp)
-                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all">
-                        <div class="aspect-[3/4] bg-gray-100 relative overflow-hidden">
-                            @if($fp->primaryPhoto)
-                                <img src="{{ $fp->primaryPhoto->full_url }}" alt="" class="w-full h-full object-cover" loading="lazy">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="p-3">
-                            <p class="text-sm font-semibold text-(--color-primary)">{{ $fp->matri_id }}</p>
-                            <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ collect([$fp->age ? $fp->age . ' Yrs' : null, $fp->religiousInfo?->religion, $fp->religiousInfo?->denomination, $fp->locationInfo?->native_state])->filter()->implode(', ') }}</p>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-            <div class="text-center mt-8">
-                <a href="/register" class="inline-block bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-8 py-3 font-semibold text-sm transition-colors">
-                    Register Free to View Profiles
-                </a>
-            </div>
-        </div>
-    </section>
-    @endif
 
     {{-- 5. Community Browse --}}
     @if($communities->count() > 0)
