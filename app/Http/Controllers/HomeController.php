@@ -9,6 +9,10 @@ class HomeController extends Controller
 {
     public function index()
     {
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
         $communities = Community::active()
             ->orderBy('religion')
             ->orderBy('sort_order')
