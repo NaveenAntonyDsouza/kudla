@@ -142,7 +142,7 @@
                 <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
                     <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#9829;</div>
                     <h3 class="text-base font-semibold text-gray-900 mb-2">Community Focused</h3>
-                    <p class="text-sm text-gray-500">Built specifically for Karnataka's Christian community with denomination-specific matching.</p>
+                    <p class="text-sm text-gray-500">Designed for families seeking meaningful connections within their community and values.</p>
                 </div>
                 <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
                     <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#9733;</div>
