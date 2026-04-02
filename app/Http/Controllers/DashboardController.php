@@ -35,6 +35,7 @@ class DashboardController extends Controller
         $recentProfiles = Profile::where('id', '!=', $profile->id)
             ->whereNotNull('full_name')
             ->where('is_active', true)
+            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->with(['locationInfo', 'primaryPhoto', 'educationDetail', 'religiousInfo'])
             ->orderBy('created_at', 'desc')
             ->limit(6)

@@ -37,6 +37,7 @@ class SearchController extends Controller
             $keyword = $request->keyword;
             $results = Profile::where('id', '!=', $profile->id)
                 ->where('is_active', true)
+                ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
                 ->where('gender', '!=', $profile->gender)
                 ->where(function ($q) use ($keyword) {
                     $q->where('full_name', 'LIKE', "%{$keyword}%")
@@ -72,6 +73,7 @@ class SearchController extends Controller
         $query = Profile::query()
             ->where('id', '!=', $profile->id)
             ->where('is_active', true)
+            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->where('gender', '!=', $profile->gender)
             ->whereDoesntHave('blockedByOthers', fn($q) => $q->where('profile_id', $profile->id))
             ->whereDoesntHave('blockedProfiles', fn($q) => $q->where('blocked_profile_id', $profile->id))

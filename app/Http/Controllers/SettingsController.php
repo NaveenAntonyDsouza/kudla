@@ -54,10 +54,11 @@ class SettingsController extends Controller
     public function hideProfile(Request $request)
     {
         $profile = auth()->user()->profile;
-        $profile->update(['is_hidden' => ! $profile->is_hidden]);
+        $newState = ! $profile->is_hidden;
+        $profile->update(['is_hidden' => $newState]);
 
-        $msg = $profile->is_hidden ? 'Profile hidden from search.' : 'Profile is now visible in search.';
-        return back()->with('success', $msg);
+        $msg = $newState ? 'Profile hidden from search.' : 'Profile is now visible in search.';
+        return redirect()->route('settings.index', ['section' => 'hide_profile'])->with('success', $msg);
     }
 
     public function changePassword(Request $request)
