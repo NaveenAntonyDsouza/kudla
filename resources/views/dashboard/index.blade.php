@@ -142,44 +142,9 @@
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-lg font-semibold text-gray-900">Newly Joined Profiles</h2>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             @foreach($recentProfiles as $p)
-                                @php
-                                    $desc = collect([
-                                        $p->age ? $p->age . 'Yrs' : null,
-                                        $p->height,
-                                        $p->complexion,
-                                        $p->marital_status,
-                                        $p->religiousInfo?->religion,
-                                        $p->religiousInfo?->denomination ?? $p->religiousInfo?->caste,
-                                        $p->educationDetail?->highest_education,
-                                        $p->educationDetail?->occupation,
-                                        $p->locationInfo?->native_state ?? $p->locationInfo?->native_country,
-                                    ])->filter()->implode(', ');
-                                @endphp
-                                <a href="{{ route('profile.view', $p) }}" class="flex rounded-lg border border-gray-200 overflow-hidden hover:shadow-md hover:border-(--color-primary)/30 transition-all group">
-                                    {{-- Photo --}}
-                                    <div class="w-28 sm:w-32 shrink-0 bg-gray-100">
-                                        @if($p->primaryPhoto)
-                                            <img src="{{ $p->primaryPhoto->full_url }}" alt="{{ $p->full_name }}"
-                                                class="w-full h-full object-cover" style="min-height: 140px;">
-                                        @else
-                                            <div class="w-full flex items-center justify-center" style="min-height: 140px;">
-                                                <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
-                                                </svg>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    {{-- Details --}}
-                                    <div class="flex-1 min-w-0 p-3 flex flex-col justify-between">
-                                        <div>
-                                            <p class="text-sm font-semibold text-(--color-primary) group-hover:underline">{{ $p->matri_id }}</p>
-                                            <p class="text-xs text-gray-600 mt-1 line-clamp-3">{{ $desc ?: 'Profile details not available' }}</p>
-                                        </div>
-                                        <p class="text-[10px] text-gray-400 mt-2">Date Joined : {{ $p->created_at?->format('d M Y') }}</p>
-                                    </div>
-                                </a>
+                                <x-profile-card :profile="$p" />
                             @endforeach
                         </div>
                     </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -79,6 +80,9 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/manage-photos/{photo}/primary', [PhotoController::class, 'setPrimary'])->name('photos.primary');
     Route::post('/manage-photos/privacy', [PhotoController::class, 'updatePrivacy'])->name('photos.privacy');
     Route::delete('/manage-photos/{photo}/permanent', [PhotoController::class, 'deletePermanently'])->name('photos.deletePermanent');
+
+    // Search
+    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
     // Profile View & Edit
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
