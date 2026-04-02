@@ -276,6 +276,14 @@ class ProfileController extends Controller
             'favorite_cuisine' => 'nullable|array',
         ]);
 
+        // Ensure deselected arrays are saved as empty (not left unchanged)
+        $arrayFields = ['hobbies', 'favorite_music', 'preferred_books', 'preferred_movies', 'sports_fitness_games', 'favorite_cuisine'];
+        foreach ($arrayFields as $field) {
+            if (! isset($validated[$field])) {
+                $validated[$field] = null;
+            }
+        }
+
         $existing = $profile->lifestyleInfo;
         LifestyleInfo::updateOrCreate(
             ['profile_id' => $profile->id],
