@@ -97,7 +97,7 @@ class Profile extends Model
         if ($this->familyDetail?->father_name) $pct += 10;
         if ($this->locationInfo?->residing_country || $this->locationInfo?->native_country) $pct += 10;
         if ($this->contactInfo()->exists()) $pct += 10;
-        if ($this->lifestyleInfo()->exists()) $pct += 10;
+        if ($this->lifestyleInfo?->diet || $this->lifestyleInfo?->hobbies) $pct += 10;
         if ($this->partnerPreference()->exists()) $pct += 10;
         if ($this->profilePhotos()->visible()->exists()) $pct += 15;
         return min($pct, 100);
