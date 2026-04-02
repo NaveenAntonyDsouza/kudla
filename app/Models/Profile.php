@@ -92,13 +92,13 @@ class Profile extends Model
     {
         $pct = 5; // base for having an account
         if ($this->full_name && $this->gender && $this->date_of_birth) $pct += 10;
-        if ($this->religiousInfo()->exists()) $pct += 10;
-        if ($this->educationDetail()->exists()) $pct += 10;
+        if ($this->religiousInfo?->religion) $pct += 10;
+        if ($this->educationDetail?->highest_education || $this->educationDetail?->occupation) $pct += 10;
         if ($this->familyDetail?->father_name) $pct += 10;
         if ($this->locationInfo?->residing_country || $this->locationInfo?->native_country) $pct += 10;
-        if ($this->contactInfo()->exists()) $pct += 10;
+        if ($this->contactInfo?->contact_person || $this->contactInfo?->whatsapp_number) $pct += 10;
         if ($this->lifestyleInfo?->diet || $this->lifestyleInfo?->hobbies) $pct += 10;
-        if ($this->partnerPreference()->exists()) $pct += 10;
+        if ($this->partnerPreference?->age_from || $this->partnerPreference?->religions) $pct += 10;
         if ($this->profilePhotos()->visible()->exists()) $pct += 15;
         return min($pct, 100);
     }
