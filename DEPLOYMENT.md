@@ -77,7 +77,19 @@ php artisan migrate --force
 
 ---
 
-## Step 6: Create Storage Link
+## Step 6: Publish Livewire Assets (IMPORTANT)
+
+```bash
+php artisan livewire:publish --assets
+```
+
+This copies Livewire/Alpine.js files to `public/vendor/livewire/`. Without this, Alpine.js won't load and interactive features (tabs, dropdowns, modals) will be broken.
+
+**Run this after every `composer install` or `composer update`.**
+
+---
+
+## Step 7: Create Storage Link
 
 ```bash
 php artisan storage:link
