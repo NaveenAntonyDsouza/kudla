@@ -177,16 +177,21 @@
                     @elseif($section === 'delete_profile')
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Delete Profile</h2>
                         <p class="text-sm text-gray-500 mb-6">Choose the reason for deleting your profile.</p>
-                        <form method="POST" action="{{ route('settings.delete') }}" onsubmit="return confirm('Are you sure? This will deactivate your account.')">
+                        <form method="POST" action="{{ route('settings.delete') }}" onsubmit="return confirm('Are you sure? This will deactivate your account.')" x-data="{ selectedReason: '' }">
                             @csrf
                             <div class="space-y-3">
                                 @foreach(['I am Married', 'My Marriage is Fixed', 'Other Reasons'] as $reason)
-                                    <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
+                                        :class="selectedReason === '{{ $reason }}' && 'border-(--color-primary) bg-(--color-primary-light)'">
                                         <span class="text-sm text-gray-700">{{ $reason }}</span>
-                                        <input type="radio" name="reason" value="{{ $reason }}" required
+                                        <input type="radio" name="reason" value="{{ $reason }}" required x-model="selectedReason"
                                             class="text-(--color-primary) focus:ring-(--color-primary)">
                                     </label>
                                 @endforeach
+                            </div>
+                            <div x-show="selectedReason === 'Other Reasons'" x-cloak class="mt-4">
+                                <textarea name="other_reason" rows="3" maxlength="500" placeholder="Please tell us why you are leaving..."
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)"></textarea>
                             </div>
                             <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-500/90 rounded-lg transition-colors">Delete Profile</button>
                         </form>

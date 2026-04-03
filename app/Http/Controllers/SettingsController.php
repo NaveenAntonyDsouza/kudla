@@ -84,15 +84,20 @@ class SettingsController extends Controller
     {
         $request->validate([
             'reason' => 'required|string|max:200',
+            'other_reason' => 'nullable|string|max:500',
         ]);
 
         $user = auth()->user();
         $profile = $user->profile;
 
+        $reason = $request->reason === 'Other Reasons' && $request->other_reason
+            ? 'Other: ' . $request->other_reason
+            : $request->reason;
+
         $profile->update([
             'is_active' => false,
             'is_hidden' => true,
-            'deletion_reason' => $request->reason,
+            'deletion_reason' => $reason,
         ]);
 
         Auth::logout();
