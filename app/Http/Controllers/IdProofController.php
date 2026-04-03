@@ -21,18 +21,24 @@ class IdProofController extends Controller
         $request->validate([
             'document_type' => 'required|string|in:Passport,Voter ID,Aadhaar Card,Driving License,PAN Card',
             'document_number' => 'required|string|max:50',
-            'document' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
+            'document_front' => 'required|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
+            'document_back' => 'nullable|file|mimes:jpg,jpeg,png,pdf,webp|max:5120',
         ]);
 
         $profile = auth()->user()->profile;
+        $folder = 'id-proofs/' . $profile->id;
 
-        $path = $request->file('document')->store('id-proofs/' . $profile->id, 'public');
+        $frontPath = $request->file('document_front')->store($folder, 'public');
+        $backPath = $request->hasFile('document_back')
+            ? $request->file('document_back')->store($folder, 'public')
+            : null;
 
         IdProof::create([
             'profile_id' => $profile->id,
             'document_type' => $request->document_type,
             'document_number' => $request->document_number,
-            'document_url' => $path,
+            'document_url' => $frontPath,
+            'document_back_url' => $backPath,
             'verification_status' => 'pending',
         ]);
 

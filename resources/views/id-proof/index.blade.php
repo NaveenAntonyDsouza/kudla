@@ -93,10 +93,15 @@
                         </div>
 
                         <div class="mb-5">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Document <span class="text-red-500">*</span></label>
-                            <input type="file" name="document" required accept=".jpg,.jpeg,.png,.pdf,.webp"
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Front Side <span class="text-red-500">*</span></label>
+                            <input type="file" name="document_front" required accept=".jpg,.jpeg,.png,.pdf,.webp"
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-(--color-primary-light) file:text-(--color-primary) hover:file:bg-(--color-primary) hover:file:text-white file:cursor-pointer file:transition-colors">
-                            <p class="mt-1 text-xs text-gray-400">Only PNG/JPG/JPEG/WebP/PDF format with maximum 5MB size allowed.</p>
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Back Side <span class="text-xs text-gray-400">(Optional — required for Aadhaar)</span></label>
+                            <input type="file" name="document_back" accept=".jpg,.jpeg,.png,.pdf,.webp"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-(--color-primary-light) file:text-(--color-primary) hover:file:bg-(--color-primary) hover:file:text-white file:cursor-pointer file:transition-colors">
+                            <p class="mt-1 text-xs text-gray-400">PNG/JPG/JPEG/WebP/PDF format, max 5MB each.</p>
                         </div>
 
                         <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"

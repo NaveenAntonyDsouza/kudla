@@ -61,6 +61,8 @@
                                 <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Home</a>
                                 <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View & Edit Profile</a>
                                 <a href="{{ route('photos.manage') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Photos</a>
+                                <a href="{{ route('idproof.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Submit ID Proof</a>
+                                <a href="{{ route('membership.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Membership Plans</a>
                                 <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
                             </div>
                         </div>

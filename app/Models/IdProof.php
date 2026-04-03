@@ -12,6 +12,7 @@ class IdProof extends Model
         'document_type',
         'document_number',
         'document_url',
+        'document_back_url',
         'cloudinary_public_id',
         'verification_status',
         'rejection_reason',
