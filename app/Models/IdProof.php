@@ -10,6 +10,7 @@ class IdProof extends Model
     protected $fillable = [
         'profile_id',
         'document_type',
+        'document_number',
         'document_url',
         'cloudinary_public_id',
         'verification_status',

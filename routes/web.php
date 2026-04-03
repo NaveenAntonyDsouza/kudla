@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\IdProofController;
 use App\Http\Controllers\InterestController;
 use App\Http\Controllers\BlockController;
 use App\Http\Controllers\NotificationController;
@@ -94,6 +95,11 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
 
     // Profile Views
     Route::get('/views', [ProfileViewController::class, 'index'])->name('views.index');
+
+    // ID Proof
+    Route::get('/submit-id-proof', [IdProofController::class, 'index'])->name('idproof.index');
+    Route::post('/submit-id-proof', [IdProofController::class, 'store'])->name('idproof.store');
+    Route::delete('/submit-id-proof/{idProof}', [IdProofController::class, 'destroy'])->name('idproof.destroy');
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
