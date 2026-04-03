@@ -61,6 +61,7 @@ class DashboardController extends Controller
             'sent' => $profile->sentInterests()->count(),
             'accepted' => $profile->sentInterests()->where('status', 'accepted')->count(),
             'received' => $profile->receivedInterests()->where('status', 'pending')->count(),
+            'views' => $profile->viewedByOthers()->count(),
         ];
 
         return view('dashboard.index', compact('profile', 'user', 'completionPct', 'sections', 'recentProfiles', 'interestStats'));

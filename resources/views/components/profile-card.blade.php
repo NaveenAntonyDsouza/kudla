@@ -13,7 +13,12 @@
         $p->educationDetail?->occupation,
         $p->locationInfo?->native_district ?? $p->locationInfo?->native_state ?? $p->locationInfo?->native_country,
     ])->filter()->implode(', ');
-    $isShortlisted = auth()->check() && \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->where('shortlisted_profile_id', $p->id)->exists();
+    // Cache shortlisted IDs to avoid N+1 queries
+    static $shortlistedIds = null;
+    if ($shortlistedIds === null && auth()->check()) {
+        $shortlistedIds = \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->pluck('shortlisted_profile_id')->toArray();
+    }
+    $isShortlisted = $shortlistedIds !== null && in_array($p->id, $shortlistedIds);
 @endphp
 
 <div class="relative rounded-lg border border-gray-200 overflow-hidden hover:shadow-md hover:border-(--color-primary)/30 transition-all group bg-white">

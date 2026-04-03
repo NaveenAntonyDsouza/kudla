@@ -150,8 +150,11 @@
         </div>
     </div>
 
-    {{-- Register link --}}
-    <p class="mt-6 text-center text-sm text-gray-500">
+    {{-- Forgot password + Register --}}
+    <p class="mt-4 text-center text-sm">
+        <a href="{{ route('password.request') }}" class="text-gray-500 hover:text-(--color-primary) hover:underline">Forgot Password?</a>
+    </p>
+    <p class="mt-2 text-center text-sm text-gray-500">
         New here? <a href="{{ route('register') }}" class="text-(--color-primary) font-semibold hover:underline">Register Free</a>
     </p>
 </x-layouts.auth>
