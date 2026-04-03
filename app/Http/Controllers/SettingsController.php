@@ -13,6 +13,10 @@ class SettingsController extends Controller
         $user = auth()->user();
         $profile = $user->profile;
         $section = $request->get('section', 'search_visibility');
+        // Redirect old profile_filters URL to merged section
+        if ($section === 'profile_filters') {
+            return redirect()->route('settings.index', ['section' => 'search_visibility']);
+        }
         $prefs = $user->notification_preferences ?? $this->defaultPrefs();
 
         return view('settings.index', compact('user', 'profile', 'section', 'prefs'));
