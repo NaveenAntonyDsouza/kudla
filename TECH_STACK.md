@@ -1,14 +1,14 @@
 # Anugraha Matrimony — Tech Stack
 
 ## Core Framework
-- **Laravel 13.2** — PHP full-stack framework
-- **PHP 8.3** — Server-side language
+- **Laravel 13.2.0** — PHP full-stack framework
+- **PHP 8.3.30** — Server-side language
 
 ## Frontend
 - **Blade** — Laravel's templating engine (server-rendered HTML)
-- **Tailwind CSS 4** — Utility-first CSS framework (CSS-first config)
-- **Alpine.js 3.15** — Lightweight JavaScript framework (loaded via Livewire)
-- **Livewire 3** — Dynamic UI components (used for Alpine.js delivery + asset injection)
+- **Tailwind CSS 4.2.2** — Utility-first CSS framework (CSS-first config)
+- **Alpine.js 3.15.9** — Lightweight JavaScript framework (loaded via Livewire)
+- **Livewire 4.2.3** — Dynamic UI components (Alpine.js delivery + asset injection)
 
 ## Database
 - **MySQL 8.0** — Relational database
@@ -33,10 +33,10 @@
 - **Markdown Mailables** — Email templates for interest notifications
 
 ## Admin Panel
-- **Filament 5.4** — Admin panel framework (installed, not fully configured)
+- **Filament 5.4.3** — Admin panel framework (installed, not fully configured)
 
 ## Build Tools
-- **Vite 8** — Asset bundling (CSS + JS)
+- **Vite 8.0.3** — Asset bundling (CSS + JS)
 - **@tailwindcss/vite** — Tailwind CSS Vite plugin
 - **@tailwindcss/forms** — Form styling plugin
 - **npm** — Package manager
