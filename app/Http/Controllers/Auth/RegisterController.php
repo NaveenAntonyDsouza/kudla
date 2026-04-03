@@ -299,8 +299,10 @@ class RegisterController extends Controller
 
         session(['email_otp' => \Illuminate\Support\Facades\Hash::make((string) $otp), 'email_otp_expires' => now()->addMinutes(10)]);
 
-        // TODO: Send actual email with OTP
-        // Mail::to($email)->send(new EmailOtpMail($otp));
+        // Send OTP via email
+        \Illuminate\Support\Facades\Mail::raw("Your Anugraha Matrimony email verification code is: {$otp}\n\nThis code expires in 10 minutes.", function ($message) use ($email) {
+            $message->to($email)->subject('Email Verification OTP - Anugraha Matrimony');
+        });
 
         return back()->with('email_otp_sent', true);
     }
