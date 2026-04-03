@@ -32,7 +32,8 @@ class MembershipController extends Controller
         $amountInPaise = $plan['price'] * 100;
 
         // Create Razorpay order
-        $response = Http::withBasicAuth(config('services.razorpay.key'), config('services.razorpay.secret'))
+        $response = Http::withoutVerifying()
+            ->withBasicAuth(config('services.razorpay.key'), config('services.razorpay.secret'))
             ->post('https://api.razorpay.com/v1/orders', [
                 'amount' => $amountInPaise,
                 'currency' => 'INR',
