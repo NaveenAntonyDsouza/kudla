@@ -91,7 +91,7 @@
                             {{-- Show profile to --}}
                             <p class="text-sm font-semibold text-gray-700 mb-3">Show my profile to:</p>
                             <div class="space-y-2 mb-6">
-                                @foreach(['all' => 'To all members (Recommended)', 'premium' => 'To all premium members', 'matches' => 'Only to those whom I have included in my matches list'] as $val => $label)
+                                @foreach(['all' => 'To all members (Recommended)', 'premium' => 'To all premium members', 'matches' => 'Only to those who match my Partner Preferences'] as $val => $label)
                                     <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                                         <input type="radio" name="show_profile_to" value="{{ $val }}"
                                             {{ ($profile->show_profile_to ?? 'all') === $val ? 'checked' : '' }}
