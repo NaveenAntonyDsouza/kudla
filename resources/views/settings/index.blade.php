@@ -26,9 +26,8 @@
                 <div class="sticky top-24">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Profile Management</p>
                     @foreach([
-                        ['key' => 'profile_filters', 'label' => 'Profile Filters', 'icon' => 'M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z'],
+                        ['key' => 'search_visibility', 'label' => 'Who Can See My Profile', 'icon' => 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z'],
                         ['key' => 'manage_alerts', 'label' => 'Manage Alerts', 'icon' => 'M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0'],
-                        ['key' => 'search_visibility', 'label' => 'Search Visibility', 'icon' => 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z'],
                         ['key' => 'hide_profile', 'label' => 'Hide Profile', 'icon' => 'M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88'],
                         ['key' => 'delete_profile', 'label' => 'Delete Profile', 'icon' => 'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0'],
                     ] as $item)
@@ -59,25 +58,7 @@
             <div class="flex-1 min-w-0">
                 <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
 
-                    @if($section === 'profile_filters')
-                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Profile Filters</h2>
-                        <p class="text-sm text-gray-500 mb-6">Show my profile to :</p>
-                        <form method="POST" action="{{ route('settings.filters') }}">
-                            @csrf
-                            <div class="space-y-3">
-                                @foreach(['all' => 'To all members (Recommended)', 'premium' => 'To all premium members', 'matches' => 'Only to those whom I have included in my matches list'] as $val => $label)
-                                    <label class="flex items-center gap-3 cursor-pointer">
-                                        <input type="radio" name="show_profile_to" value="{{ $val }}"
-                                            {{ ($profile->show_profile_to ?? 'all') === $val ? 'checked' : '' }}
-                                            class="text-(--color-primary) focus:ring-(--color-primary)">
-                                        <span class="text-sm text-gray-700">{{ $label }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                            <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Submit</button>
-                        </form>
-
-                    @elseif($section === 'manage_alerts')
+                    @if($section === 'manage_alerts')
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Manage Alerts</h2>
                         <p class="text-sm text-gray-500 mb-6">Manage the notifications you receive via email.</p>
                         <form method="POST" action="{{ route('settings.alerts') }}">
@@ -102,10 +83,26 @@
                         </form>
 
                     @elseif($section === 'search_visibility')
-                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Profile Visibility</h2>
-                        <p class="text-sm text-gray-500 mb-6">Control who can see your profile in search results. When enabled, only matching users will find you.</p>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Who Can See My Profile</h2>
+                        <p class="text-sm text-gray-500 mb-6">Control who can find your profile in search results.</p>
                         <form method="POST" action="{{ route('settings.visibility') }}">
                             @csrf
+
+                            {{-- Show profile to --}}
+                            <p class="text-sm font-semibold text-gray-700 mb-3">Show my profile to:</p>
+                            <div class="space-y-2 mb-6">
+                                @foreach(['all' => 'To all members (Recommended)', 'premium' => 'To all premium members', 'matches' => 'Only to those whom I have included in my matches list'] as $val => $label)
+                                    <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                                        <input type="radio" name="show_profile_to" value="{{ $val }}"
+                                            {{ ($profile->show_profile_to ?? 'all') === $val ? 'checked' : '' }}
+                                            class="text-(--color-primary) focus:ring-(--color-primary)">
+                                        <span class="text-sm text-gray-700">{{ $label }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            {{-- Additional visibility filters --}}
+                            <p class="text-sm font-semibold text-gray-700 mb-3">Additional filters:</p>
                             <div class="space-y-4">
                                 <label class="flex items-center justify-between cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                                     <div>

@@ -12,7 +12,7 @@ class SettingsController extends Controller
     {
         $user = auth()->user();
         $profile = $user->profile;
-        $section = $request->get('section', 'profile_filters');
+        $section = $request->get('section', 'search_visibility');
         $prefs = $user->notification_preferences ?? $this->defaultPrefs();
 
         return view('settings.index', compact('user', 'profile', 'section', 'prefs'));
@@ -45,6 +45,7 @@ class SettingsController extends Controller
     public function updateVisibility(Request $request)
     {
         auth()->user()->profile->update([
+            'show_profile_to' => $request->input('show_profile_to', 'all'),
             'only_same_religion' => $request->boolean('only_same_religion'),
             'only_same_denomination' => $request->boolean('only_same_denomination'),
             'only_same_mother_tongue' => $request->boolean('only_same_mother_tongue'),
