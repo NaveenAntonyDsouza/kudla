@@ -1,4 +1,4 @@
-# 8. Moderation (Photos, Blocked & Reported Users)
+# 8. Moderation, Support & Reports
 
 ## 8a. Reported Photos
 
@@ -44,3 +44,35 @@ Auto-detect photos without human faces using image analysis.
 ## 8e. Banned Users
 
 Permanently banned users with reason and ban date.
+
+---
+
+## 8f. Contact Us / Support Inbox
+
+Manage inquiries submitted via the Contact Us page on the frontend.
+
+| Column | Filter | Details |
+|--------|--------|---------|
+| Name | Search | Submitter name |
+| Email | Search | Submitter email |
+| Subject | Search | Inquiry subject |
+| Message | Preview | First 80 chars |
+| User | Link | Matri ID (if logged-in user submitted) |
+| Date | Date Range | When submitted |
+| Status | Filter | New / In Progress / Replied / Closed |
+| Assigned To | Filter | Staff member handling it |
+| Actions | - | View, Reply, Assign, Close |
+
+**Reply flow:**
+- Admin clicks "Reply" → compose email reply (pre-filled with user's email)
+- Reply sent via platform's SMTP + saved in conversation thread
+- User sees reply in their email
+- Status auto-changes to "Replied"
+
+**Features:**
+- Assign inquiry to staff member (Support role)
+- Internal notes (visible to admin only, not sent to user)
+- Canned responses / quick reply templates (e.g., "How to upload photos", "Payment issue")
+- Auto-reply on submission: "We received your inquiry, we'll respond within 24 hours"
+- Overdue indicator: highlight inquiries not replied within 48 hours
+- Export inquiries to CSV

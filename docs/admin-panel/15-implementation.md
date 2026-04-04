@@ -29,6 +29,8 @@
 | VendorCategoryResource | VendorCategory (new) | LOW (Phase 2) |
 | VendorResource | Vendor (new) | LOW (Phase 2) |
 | VendorInquiryResource | VendorInquiry (new) | LOW (Phase 2) |
+| ContactInquiryResource | ContactInquiry (new) | MEDIUM |
+| HoroscopeCompatResource | HoroscopeCompat (new) | LOW |
 
 ## Filament Pages (custom)
 
@@ -47,38 +49,31 @@
 
 ## Estimated Build Time
 
-| Section | Effort |
+| Section (matches file #) | Effort |
 |---------|--------|
-| 1. Dashboard with charts | 3-4 hours |
-| 2. User Management (+ login history, VIP, profile sharing, card download) | 5-6 hours |
-| 3. Profile Approval | 1-2 hours |
-| 4. ID Proof Verification | 1-2 hours |
-| 5. Membership Plans + Coupons | 3-4 hours |
-| 5e. Revenue Reports | 1-2 hours |
-| 6. Site Settings (General, Branding, Email, SMS, Payment, Registration, Social, SEO) | 5-6 hours |
-| 7. Content Management (Reference Data, Static Pages, Email Templates, Happy Stories, Testimonials) | 5-6 hours |
-| 8. Interest & Match Management (+ Admin Recommend, Match Score) | 3-4 hours |
-| 9. Photo Management | 1-2 hours |
-| 10. Reports & Analytics | 3-4 hours |
-| 10 (System). System & Maintenance (logs, cache, backup) | 2-3 hours |
-| 10g. Installation Wizard + License Activation | 3-4 hours |
-| 10h. Update System (Phase 1 — zip upload) | 3-4 hours |
-| 10h. Update Server (Phase 2 — auto-update, separate app) | 4-6 hours |
-| 11. Blocked & Reported Users | 1-2 hours |
-| 12. Shortlist & Views Analytics | 1 hour |
-| 13. Franchise / Branch Management (+ Affiliate Link) | 3-4 hours |
-| 14. Staff / Telecaller Module (+ Charts) | 4-5 hours |
-| 15. Advertisement Management | 2-3 hours |
-| 16. Wedding Directory (Phase 2) | 6-8 hours |
+| 01. Dashboard with charts | 3-4 hours |
+| 02. User Management (login history, VIP, sharing, card download, bulk import) | 6-7 hours |
+| 03. Profile Approval + ID Proof Verification | 2-3 hours |
+| 04. Membership Plans + Coupons + Revenue Reports | 4-5 hours |
+| 05. Site Settings (General, Branding, Email, SMS, Payment, Registration, Social, SEO) | 5-6 hours |
+| 06. Content Management (Reference Data, Pages, Templates, Stories, Testimonials) | 5-6 hours |
+| 07. Interest & Match Management (Admin Recommend, Match Score, Horoscope Config) | 4-5 hours |
+| 08. Moderation (Photos, Blocked, Reported, Support Inbox) | 3-4 hours |
+| 09. Reports & Analytics (User, Engagement, Revenue, Shortlist, Views) | 3-4 hours |
+| 10. System & Maintenance (logs, cache, backup, install wizard, updates) | 8-10 hours |
+| 11. Franchise / Branch Management (+ Affiliate Link) | 3-4 hours |
+| 12. Staff / Telecaller Module (+ Charts) | 4-5 hours |
+| 13. Advertisement Management | 2-3 hours |
+| 14. Wedding Directory (Phase 2) | 6-8 hours |
 | Roles & Permissions | 1-2 hours |
 | Broadcast Notifications | 1-2 hours |
-| **Total (Core — without Wedding Dir & Auto-Update Server)** | **~56-66 hours** |
-| **Total (with Wedding Directory)** | **~62-74 hours** |
-| **Total (everything including Auto-Update Server)** | **~66-80 hours** |
+| **Total (Core — without Wedding Dir & Auto-Update Server)** | **~60-70 hours** |
+| **Total (with Wedding Directory)** | **~66-78 hours** |
+| **Total (everything including Auto-Update Server)** | **~70-84 hours** |
 
 ---
 
-## CodeCanyon Selling Points (38 Features)
+## CodeCanyon Selling Points (41 Features)
 
 When listing on CodeCanyon, highlight these:
 
@@ -120,6 +115,9 @@ When listing on CodeCanyon, highlight these:
 36. **Purchase Code Verification** — Envato API integration for license validation
 37. **One-Click Updates** — upload zip or auto-update from admin panel with backup + rollback
 38. **Version & Changelog** — full update history visible in admin
+39. **Support Inbox** — manage Contact Us inquiries with reply, assign, canned responses
+40. **Bulk Profile Import** — CSV upload with validation, branch assignment, credential delivery
+41. **Horoscope Matching** — configurable Nakshatra/Rasi compatibility with admin-editable chart
 
 ---
 
@@ -134,5 +132,10 @@ Features offered by some competitors that we chose **not** to include, with reas
 | User → Admin direct notification reply | Overcomplicates the notification system. Users can use Contact Us page or WhatsApp support instead |
 | Staff pending task assignment | Adds complexity without clear value. Lead management + follow-up dates already cover task tracking |
 | Franchise payout request flow | Too finance-heavy for an MVP. Commission tracking is enough — payouts handled offline via bank transfer |
+| Push notifications (Firebase/OneSignal) | Needs mobile app to be useful. Web push has low adoption. Add in v2 with Flutter app |
+| GDPR compliance tools | Target market is India. Can add data export/deletion tools in v2 for international buyers |
+| Multi-language / localization | Huge effort (~20+ hrs). Laravel supports it natively — can add as paid add-on |
+| Homepage drag-and-drop builder | Overkill for v1. Editable text fields + toggles is standard for CodeCanyon scripts |
+| Custom profile badges | VIP + Featured + Verified (ID proof) covers all use cases for v1 |
 
 These can be reconsidered in future versions based on customer demand.

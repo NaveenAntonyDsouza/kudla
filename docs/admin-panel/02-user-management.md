@@ -106,7 +106,37 @@ Generate a downloadable image card with key profile info:
 - Useful for parents sharing profiles offline (print/WhatsApp)
 - Admin can customize card template (logo, colors, which fields to show)
 
-## 2g. Login As User
+## 2g. Bulk Profile Import (CSV)
+
+Admin can import multiple profiles at once via CSV upload:
+
+**Import flow:**
+1. Download CSV template (with column headers)
+2. Fill in profile data (name, email, phone, DOB, gender, religion, etc.)
+3. Upload CSV → system validates each row
+4. Preview: shows valid rows (green) and errors (red with reason)
+5. Confirm → bulk create profiles + send credentials via email/SMS
+
+| Setting | Type | Description |
+|---------|------|-------------|
+| CSV File | File Upload | .csv or .xlsx |
+| Assign to Branch | Select | Optional — assign all imported profiles to a branch |
+| Registered By | Auto | Admin name / Staff name |
+| Send Credentials | Toggle | Email login details to each imported user |
+| Auto-Approve | Toggle | Skip approval queue for imported profiles |
+
+**Error handling:**
+- Duplicate email/phone → skip with warning
+- Missing required fields → skip row, report error
+- Invalid data format → highlight and suggest fix
+- Export error report as CSV
+
+**Use cases:**
+- Franchise migrating profiles from old system
+- Admin adding demo/test profiles
+- Bulk onboarding from offline registration drives
+
+## 2h. Login As User
 
 - Admin can login as any user to debug issues
 - Shows admin bar at top: "You are viewing as AM100008 [Return to Admin]"

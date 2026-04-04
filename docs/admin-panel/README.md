@@ -27,7 +27,7 @@ Customers buying a matrimony script on CodeCanyon expect:
 | 5 | Site Settings (White-Label) | [05-site-settings.md](05-site-settings.md) | HIGH |
 | 6 | Content Management | [06-content-management.md](06-content-management.md) | HIGH |
 | 7 | Interest & Match Management | [07-interests-matching.md](07-interests-matching.md) | MEDIUM |
-| 8 | Moderation (Photos, Blocks, Reports) | [08-moderation.md](08-moderation.md) | MEDIUM |
+| 8 | Moderation, Support & Reports | [08-moderation.md](08-moderation.md) | MEDIUM |
 | 9 | Reports & Analytics | [09-reports-analytics.md](09-reports-analytics.md) | MEDIUM |
 | 10 | System, Installation & Updates | [10-system.md](10-system.md) | HIGH |
 | 11 | Franchise / Branch Management | [11-franchise.md](11-franchise.md) | LOW |
@@ -41,9 +41,9 @@ Customers buying a matrimony script on CodeCanyon expect:
 ## Quick Stats
 
 - **15 sections** covering every admin function (files 01-14 + implementation)
-- **38 CodeCanyon selling points**
-- **25 Filament resources** to build
-- **~66-80 hours** estimated build time (everything)
+- **41 CodeCanyon selling points**
+- **27 Filament resources** to build
+- **~70-84 hours** estimated build time (everything)
 
 ---
 

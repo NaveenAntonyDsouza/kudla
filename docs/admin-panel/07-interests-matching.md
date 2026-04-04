@@ -58,9 +58,50 @@ Show compatibility percentage on every profile card and profile view:
   Education (10%) — Matches preference
   ...
   ```
-- Uses the MatchingService weights from NEXT_SESSION_PLAN.md
+- Uses the MatchingService weights (configurable from admin, see 7e)
 
-## 7e. Broadcast Notifications
+## 7e. Match Score Weight Configuration
+
+Admin can customize the matching algorithm weights from the admin panel:
+
+| Criteria | Default Weight | Configurable |
+|----------|---------------|--------------|
+| Age Range | 15% | Yes |
+| Religion | 15% | Yes |
+| Denomination / Caste | 10% | Yes |
+| Education | 10% | Yes |
+| Occupation | 10% | Yes |
+| Mother Tongue | 10% | Yes |
+| Height Range | 10% | Yes |
+| Location (native) | 10% | Yes |
+| Marital Status | 5% | Yes |
+| Family Status | 5% | Yes |
+| Horoscope (Nakshatra/Rasi) | 0% (off) | Yes |
+
+**Admin controls:**
+- Slider or number input for each weight (must total 100%)
+- "Reset to Default" button
+- Enable/disable individual criteria (set weight to 0%)
+
+### Horoscope / Kundli Matching
+
+When enabled (weight > 0%), the matching engine includes astrological compatibility:
+
+| Setting | Type | Description |
+|---------|------|-------------|
+| Enable Horoscope Matching | Toggle | Include in match score |
+| Horoscope Weight | Number | % weight in overall score (e.g., 10%) |
+| Match Type | Select | Nakshatra-based / Rasi-based / Both |
+| Compatible Pairs | Table | Admin-editable compatibility chart (which Nakshatra matches which) |
+| Show on Profile | Toggle | Display horoscope compatibility on profile view |
+
+**How it works:**
+- Uses Nakshatra (birth star) compatibility grid — traditional 10-point Guna matching simplified
+- Admin can edit the compatibility chart (e.g., Ashwini + Bharani = Compatible)
+- Score: Compatible = full points, Neutral = half points, Incompatible = 0
+- Shows on profile: "Horoscope: Compatible" / "Partially Compatible" / "Not Checked"
+
+## 7f. Broadcast Notifications
 
 Admin can send notifications to:
 - All users
