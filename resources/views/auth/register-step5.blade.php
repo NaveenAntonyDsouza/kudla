@@ -73,7 +73,7 @@
                         </optgroup>
                     @endforeach
                 </select>
-                <label for="how_did_you_hear_about_us">How Did You Hear About Us? <span class="text-red-500">*</span></label>
+                <label for="how_did_you_hear_about_us">How Did You Hear About Us?</label>
                 @error('how_did_you_hear_about_us') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
         </div>

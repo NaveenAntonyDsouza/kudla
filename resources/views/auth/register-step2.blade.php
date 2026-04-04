@@ -201,12 +201,12 @@
                                 <option value="{{ $dio }}" {{ old('diocese', $religiousInfo->diocese ?? '') === $dio ? 'selected' : '' }}>{{ $dio }}</option>
                             @endforeach
                         </select>
-                        <label for="diocese">Diocese <span class="text-red-500">*</span></label>
+                        <label for="diocese">Diocese</label>
                         @error('diocese') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div x-show="selectedDiocese === 'Other'" x-transition class="float-field">
                         <input type="text" name="diocese_name" id="diocese_name" value="{{ old('diocese_name', $religiousInfo->diocese_name ?? '') }}" placeholder=" ">
-                        <label for="diocese_name">Diocese Name <span class="text-red-500">*</span></label>
+                        <label for="diocese_name">Diocese Name</label>
                         @error('diocese_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div class="float-field">
@@ -229,7 +229,7 @@
                                     :selected="community.community_name === selectedCaste"></option>
                             </template>
                         </select>
-                        <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
+                        <label for="caste">Caste / Community</label>
                         @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div x-show="subCommunities.length > 0" x-transition class="float-field">
@@ -311,7 +311,7 @@
                                 <option value="{{ $opt }}" {{ old('jain_sect', $religiousInfo->jain_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
-                        <label for="jain_sect">Jain Sect <span class="text-red-500">*</span></label>
+                        <label for="jain_sect">Jain Sect</label>
                     </div>
                 </div>
             </template>
@@ -326,7 +326,7 @@
                                 <option value="{{ $opt }}" {{ old('muslim_sect', $religiousInfo->muslim_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
-                        <label for="muslim_sect">Sect <span class="text-red-500">*</span></label>
+                        <label for="muslim_sect">Sect</label>
                     </div>
                     <div class="float-field">
                         <select name="muslim_community" id="muslim_community">
@@ -335,7 +335,7 @@
                                 <option value="{{ $opt }}" {{ old('muslim_community', $religiousInfo->muslim_community ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
-                        <label for="muslim_community">Community / Jamath <span class="text-red-500">*</span></label>
+                        <label for="muslim_community">Community / Jamath</label>
                     </div>
                     <div class="float-field">
                         <select name="religious_observance" id="religious_observance">
@@ -344,7 +344,7 @@
                                 <option value="{{ $opt }}" {{ old('religious_observance', $religiousInfo->religious_observance ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
-                        <label for="religious_observance">Religious Observance <span class="text-red-500">*</span></label>
+                        <label for="religious_observance">Religious Observance</label>
                     </div>
                 </div>
             </template>
