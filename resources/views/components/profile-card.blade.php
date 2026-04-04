@@ -74,7 +74,12 @@
 
         {{-- Details --}}
         <div class="p-3">
-            <p class="text-sm font-semibold text-(--color-primary) group-hover:underline">{{ $p->matri_id }}</p>
+            <div class="flex items-center gap-1.5">
+                <p class="text-sm font-semibold text-(--color-primary) group-hover:underline">{{ $p->matri_id }}</p>
+                @if(!$isGuest && $p->user?->isPremium())
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-(--color-primary) text-white leading-none">Premium</span>
+                @endif
+            </div>
             <p class="text-xs text-gray-600 mt-1 line-clamp-3 min-h-[3rem]">{{ $desc ?: 'Profile details not available' }}</p>
             <p class="text-[10px] text-gray-400 mt-2">Joined {{ $p->created_at?->format('d M Y') }}</p>
         </div>

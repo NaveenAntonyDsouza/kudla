@@ -199,7 +199,10 @@ class SearchController extends Controller
             $query->whereHas('primaryPhoto');
         }
 
-        return $query->orderBy('created_at', 'desc');
+        // Premium/featured profiles first, then by date
+        return $query
+            ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
+            ->orderBy('created_at', 'desc');
     }
 
     /**
