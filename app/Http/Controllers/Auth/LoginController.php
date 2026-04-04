@@ -29,6 +29,7 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        $user->update(['last_login_at' => now()]);
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
@@ -75,6 +76,7 @@ class LoginController extends Controller
         $user = User::where('phone', $request->phone)->first();
         Auth::login($user, true);
         $request->session()->regenerate();
+        $user->update(['last_login_at' => now()]);
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
