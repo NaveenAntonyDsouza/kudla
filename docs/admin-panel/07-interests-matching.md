@@ -46,37 +46,52 @@ Admin/staff can manually recommend profiles to users:
 
 Show compatibility percentage on every profile card and profile view:
 
-**Match Score Display:**
-- Profile cards show "85% Match" badge (green if >80%, yellow 60-80%, grey <60%)
-- Profile view page shows detailed breakdown:
-  ```
-  Match Score: 85%
-  Age Range (15%) — Within preference
-  Religion (15%) — Same religion
-  Mother Tongue (10%) — Same language
-  Location (10%) — Different state
-  Education (10%) — Matches preference
-  ...
-  ```
-- Uses the MatchingService weights (configurable from admin, see 7e)
+**Scoring logic:**
+- Only criteria where the user HAS set a preference are scored
+- Unset preferences are skipped — weights redistribute proportionally
+- Each criteria scores 0 (no match) or 1 (match)
+- Final score = (weighted sum of matched criteria) / (sum of weights for set criteria) x 100%
+
+**Example:** User sets only Age, Religion, Education (total weight = 40).
+Candidate matches Age + Religion but not Education → score = 30/40 = 75%.
+
+**Badge display:**
+- 80%+ = Green badge "Great Match"
+- 60-79% = Yellow badge "Good Match"
+- 40-59% = Grey badge "Partial Match"
+- Below 40% = No badge (still shown unless filtered out)
+
+**Profile view breakdown:**
+```
+Match Score: 85%
+✅ Religion (15) — Same religion
+✅ Age Range (15) — Within preference
+✅ Mother Tongue (10) — Same language
+✅ Education (10) — Matches preference
+❌ Location (8) — Different state
+✅ Occupation (10) — Matches preference
+...
+```
 
 ## 7e. Match Score Weight Configuration
 
 Admin can customize the matching algorithm weights from the admin panel:
 
-| Criteria | Default Weight | Configurable |
-|----------|---------------|--------------|
-| Age Range | 15% | Yes |
-| Religion | 15% | Yes |
-| Denomination / Caste | 10% | Yes |
-| Education | 10% | Yes |
-| Occupation | 10% | Yes |
-| Mother Tongue | 10% | Yes |
-| Height Range | 10% | Yes |
-| Location (native) | 10% | Yes |
-| Marital Status | 5% | Yes |
-| Family Status | 5% | Yes |
-| Horoscope (Nakshatra/Rasi) | 0% (off) | Yes |
+| Criteria | Default Weight | Match Logic | Configurable |
+|----------|---------------|-------------|--------------|
+| Religion | 15 | Profile religion IN preferred religions | Yes |
+| Age Range | 15 | Profile age BETWEEN age_from AND age_to | Yes |
+| Denomination / Caste | 10 | Profile denomination/caste IN preferred list | Yes |
+| Mother Tongue | 10 | Profile mother_tongue IN preferred list | Yes |
+| Education | 10 | Profile education IN preferred education levels | Yes |
+| Occupation | 10 | Profile occupation IN preferred occupations | Yes |
+| Height Range | 8 | Profile height BETWEEN height_from AND height_to | Yes |
+| Location (native) | 8 | Profile native_state IN preferred states/countries | Yes |
+| Location (working) | 5 | Profile working_country IN preferred working countries | Yes |
+| Marital Status | 5 | Profile marital_status IN preferred list | Yes |
+| Diet | 2 | Profile diet IN preferred diet | Yes |
+| Family Status | 2 | Profile family_status IN preferred list | Yes |
+| Horoscope (Nakshatra/Rasi) | 0 (off) | Nakshatra compatibility chart lookup | Yes |
 
 **Admin controls:**
 - Slider or number input for each weight (must total 100%)
