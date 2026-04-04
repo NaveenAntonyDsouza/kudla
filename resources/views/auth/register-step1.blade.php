@@ -74,7 +74,7 @@
 
                 <form method="POST" action="{{ route('register.store1') }}" @submit="submitting = true" x-data="{
                     submitting: false,
-                    dob: '{{ old('date_of_birth', $profile->date_of_birth ?? '') }}',
+                    dob: '{{ old('date_of_birth', $profile?->date_of_birth?->format('Y-m-d') ?? '') }}',
                     gender: '{{ old('gender', $profile->gender ?? '') }}',
                     get calculatedAge() {
                         if (!this.dob) return '';
