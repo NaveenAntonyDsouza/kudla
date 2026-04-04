@@ -257,7 +257,23 @@ This is the **most important section for CodeCanyon customers**.
 | From Name | Text | Sender name |
 | **Test Email** | Button | Send test email to admin |
 
-#### 6e. Payment Gateway
+#### 6e. SMS / OTP Gateway
+| Setting | Type | Description |
+|---------|------|-------------|
+| SMS Provider | Select | Fast2SMS / Twilio / MSG91 / TextLocal / Custom |
+| API Key | Text | Encrypted |
+| API Secret | Password | Encrypted (if required) |
+| Sender ID | Text | e.g., "ANUGRA" (6 chars for India) |
+| OTP Length | Select | 4 / 6 digits |
+| OTP Expiry (minutes) | Number | e.g., 10 |
+| OTP Template | Text | "Your {{APP_NAME}} OTP is {{OTP}}. Valid for {{MINUTES}} minutes." |
+| Enable Phone OTP | Toggle | ON/OFF |
+| Enable WhatsApp OTP | Toggle | ON/OFF (via WhatsApp Business API) |
+| WhatsApp Provider | Select | Twilio / Gupshup / Meta Business API |
+| WhatsApp API Key | Text | Encrypted |
+| **Send Test OTP** | Button | Send test OTP to admin's phone |
+
+#### 6f. Payment Gateway
 | Setting | Type | Description |
 |---------|------|-------------|
 | Gateway | Select | Razorpay / Stripe / PayPal |
@@ -267,7 +283,7 @@ This is the **most important section for CodeCanyon customers**.
 | Currency | Select | INR / USD / EUR |
 | **Test Payment** | Button | Process ₹1 test payment |
 
-#### 6f. Registration Settings
+#### 6g. Registration Settings
 | Setting | Type | Description |
 |---------|------|-------------|
 | Phone OTP Required | Toggle | Require phone verification |
@@ -279,7 +295,7 @@ This is the **most important section for CodeCanyon customers**.
 | Max Photos (Album) | Number | e.g., 9 |
 | Max Photos (Family) | Number | e.g., 3 |
 
-#### 6g. SEO Settings
+#### 6h. SEO Settings
 | Setting | Type | Description |
 |---------|------|-------------|
 | Meta Title | Text | Homepage title tag |
