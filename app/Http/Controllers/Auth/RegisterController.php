@@ -44,6 +44,11 @@ class RegisterController extends Controller
 
         // If already authenticated, update existing user/profile instead of creating new
         if ($existingUser = auth()->user()) {
+            $existingUser->update([
+                'name' => $validated['full_name'],
+                'phone' => $validated['phone'],
+                'email' => $validated['email'],
+            ]);
             $existingUser->profile?->update([
                 'full_name' => $validated['full_name'],
                 'gender' => $validated['gender'],

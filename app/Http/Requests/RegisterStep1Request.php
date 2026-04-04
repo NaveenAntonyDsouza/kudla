@@ -13,6 +13,21 @@ class RegisterStep1Request extends FormRequest
 
     public function rules(): array
     {
+        $userId = auth()->id();
+
+        // If user is already authenticated (came back from step 2),
+        // ignore their own phone/email in unique check and make password optional
+        if ($userId) {
+            return [
+                'full_name' => 'required|string|min:2|max:100',
+                'gender' => 'required|in:male,female',
+                'date_of_birth' => 'required|date|before:-18 years',
+                'phone' => 'required|digits:10|unique:users,phone,' . $userId,
+                'email' => 'required|email|unique:users,email,' . $userId,
+                'password' => ['nullable', 'min:6', 'max:14', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'],
+            ];
+        }
+
         return [
             'full_name' => 'required|string|min:2|max:100',
             'gender' => 'required|in:male,female',
