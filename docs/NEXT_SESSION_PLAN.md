@@ -125,6 +125,11 @@ Pre-filtered search pages:
 
 ---
 
+## Future Scaling Reminders:
+- **Match score caching (10K+ users):** Switch `MatchingService` from on-the-fly to `match_scores` table. See `docs/admin-panel/07-interests-matching.md` → "Performance Scaling Note" for step-by-step instructions. Table + model already exist, just need to change service internals + add background job.
+
+---
+
 ## Key Files for Reference:
 - `docs/FEATURE_STATUS.md` — complete feature audit
 - `docs/DEPLOYMENT.md` — Hostinger deployment guide
