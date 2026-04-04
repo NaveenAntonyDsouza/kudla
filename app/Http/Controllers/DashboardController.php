@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Services\MatchingService;
 use App\Traits\ProfileQueryFilters;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     use ProfileQueryFilters;
+
+    public function __construct(
+        private MatchingService $matchingService,
+    ) {}
+
     public function index()
     {
         $user = auth()->user();
@@ -33,23 +38,40 @@ class DashboardController extends Controller
             ['label' => 'Photo Uploaded', 'done' => $profile->profilePhotos()->visible()->exists(), 'route' => 'photos.manage'],
         ];
 
-        // Recommended matches (top 6 by score) or fallback to recently joined
-        $showingRecent = false;
-        $recentProfiles = collect();
-
+        // Recommended matches (top 6 by score)
+        $recommendedMatches = collect();
         if ($profile->partnerPreference) {
-            $matchingService = app(\App\Services\MatchingService::class);
-            $recentProfiles = $matchingService->getRecommendations($profile, 6);
+            $recommendedMatches = $this->matchingService->getRecommendations($profile, 6);
         }
 
-        if ($recentProfiles->isEmpty()) {
-            $showingRecent = true;
-            $recentProfiles = $this->baseQuery($profile)
-                ->whereNotNull('full_name')
-                ->orderBy('created_at', 'desc')
-                ->limit(6)
-                ->get();
+        // Mutual matches (top 4)
+        $mutualMatches = collect();
+        if ($profile->partnerPreference) {
+            $mutualPaginator = $this->matchingService->getMutualMatches($profile, 4);
+            $mutualMatches = collect($mutualPaginator->items());
         }
+
+        // Recent profile views (who viewed me — last 6)
+        $recentViews = $profile->viewedByOthers()
+            ->with(['viewerProfile' => fn($q) => $q->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])])
+            ->orderByDesc('viewed_at')
+            ->limit(6)
+            ->get()
+            ->pluck('viewerProfile')
+            ->filter();
+
+        // Newly joined profiles (always show — latest 6 opposite gender)
+        $newlyJoined = $this->baseQuery($profile)
+            ->whereNotNull('full_name')
+            ->orderBy('created_at', 'desc')
+            ->limit(6)
+            ->get();
+
+        // Discover categories (first 6 for dashboard widget)
+        $discoverCategories = collect(config('discover'))
+            ->map(fn($cat, $slug) => ['label' => $cat['label'], 'slug' => $slug])
+            ->values()
+            ->take(6);
 
         // Interest counts for stats
         $interestStats = [
@@ -57,9 +79,13 @@ class DashboardController extends Controller
             'accepted' => $profile->sentInterests()->where('status', 'accepted')->count(),
             'received' => $profile->receivedInterests()->where('status', 'pending')->count(),
             'views' => $profile->viewedByOthers()->count(),
+            'shortlisted' => $profile->shortlists()->count(),
         ];
 
-        return view('dashboard.index', compact('profile', 'user', 'completionPct', 'sections', 'recentProfiles', 'showingRecent', 'interestStats'));
+        return view('dashboard.index', compact(
+            'profile', 'user', 'completionPct', 'sections',
+            'recommendedMatches', 'mutualMatches', 'recentViews',
+            'newlyJoined', 'discoverCategories', 'interestStats'
+        ));
     }
-
 }
