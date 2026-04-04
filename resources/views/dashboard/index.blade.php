@@ -117,6 +117,21 @@
                     </div>
                 @endif
 
+                {{-- Recommended Matches --}}
+                @if($recommendedMatches->count() > 0)
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Recommended Matches</h2>
+                            <a href="{{ route('matches.index') }}" class="text-sm font-medium text-(--color-primary) hover:underline">See All</a>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            @foreach($recommendedMatches as $p)
+                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Stats Bar --}}
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     @foreach([
@@ -132,21 +147,6 @@
                         </a>
                     @endforeach
                 </div>
-
-                {{-- Recommended Matches --}}
-                @if($recommendedMatches->count() > 0)
-                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-gray-900">Recommended Matches</h2>
-                            <a href="{{ route('matches.index') }}" class="text-sm font-medium text-(--color-primary) hover:underline">See All</a>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            @foreach($recommendedMatches as $p)
-                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
 
                 {{-- Mutual Matches --}}
                 @if($mutualMatches->count() > 0)
