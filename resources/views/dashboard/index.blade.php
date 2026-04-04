@@ -79,22 +79,45 @@
             {{-- Main Content --}}
             <div class="flex-1 min-w-0 space-y-6">
 
-                {{-- 1. Recommended Matches --}}
-                @if($recommendedMatches->count() > 0)
-                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-gray-900">Recommended Matches</h2>
-                            <a href="{{ route('matches.index') }}" class="text-sm font-medium text-(--color-primary) hover:underline">See All</a>
+                {{-- ═══ INCOMPLETE PROFILE: CTA + Sections first ═══ --}}
+                @if($completionPct < 80)
+                    {{-- Profile Completion CTA --}}
+                    <div class="bg-gradient-to-r from-(--color-primary) to-(--color-primary)/80 rounded-lg p-6 text-white">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="font-semibold text-lg mb-1">{{ $completionPct }}% — Complete Your Profile</h3>
+                                <p class="text-white/80 text-sm">Profiles with more details get 3x more responses.</p>
+                            </div>
+                            <a href="{{ route('onboarding.step1') }}"
+                                class="shrink-0 bg-white text-(--color-primary) hover:bg-gray-100 rounded-lg px-6 py-2.5 font-semibold text-sm transition-colors">
+                                Complete Now
+                            </a>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            @foreach($recommendedMatches as $p)
-                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
+                    </div>
+
+                    {{-- Profile Sections Checklist --}}
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile Sections</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @foreach($sections as $section)
+                                <a href="{{ route($section['route']) }}"
+                                    class="flex items-center justify-between p-3 rounded-lg border {{ $section['done'] ? 'border-green-200 bg-green-50' : 'border-gray-200 hover:border-gray-300' }} transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        @if($section['done'])
+                                            <svg class="w-5 h-5 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
+                                        @else
+                                            <div class="w-5 h-5 rounded-full border-2 border-gray-300 shrink-0"></div>
+                                        @endif
+                                        <span class="text-sm font-medium {{ $section['done'] ? 'text-green-700' : 'text-gray-700' }}">{{ $section['label'] }}</span>
+                                    </div>
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                                </a>
                             @endforeach
                         </div>
                     </div>
                 @endif
 
-                {{-- 2. Stats Bar --}}
+                {{-- Stats Bar --}}
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     @foreach([
                         ['label' => 'Interest Sent', 'count' => $interestStats['sent'], 'route' => route('interests.inbox', ['tab' => 'sent']), 'color' => 'text-(--color-primary)'],
@@ -110,7 +133,22 @@
                     @endforeach
                 </div>
 
-                {{-- 3. Mutual Matches --}}
+                {{-- Recommended Matches --}}
+                @if($recommendedMatches->count() > 0)
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Recommended Matches</h2>
+                            <a href="{{ route('matches.index') }}" class="text-sm font-medium text-(--color-primary) hover:underline">See All</a>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            @foreach($recommendedMatches as $p)
+                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Mutual Matches --}}
                 @if($mutualMatches->count() > 0)
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <div class="flex items-center justify-between mb-4">
@@ -125,23 +163,7 @@
                     </div>
                 @endif
 
-                {{-- 4. Profile Completion CTA --}}
-                @if($completionPct < 80)
-                    <div class="bg-gradient-to-r from-(--color-primary) to-(--color-primary)/80 rounded-lg p-6 text-white">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div>
-                                <h3 class="font-semibold text-lg mb-1">{{ $completionPct }}% — Complete Your Profile</h3>
-                                <p class="text-white/80 text-sm">Profiles with more details get 3x more responses.</p>
-                            </div>
-                            <a href="{{ route('onboarding.step1') }}"
-                                class="shrink-0 bg-white text-(--color-primary) hover:bg-gray-100 rounded-lg px-6 py-2.5 font-semibold text-sm transition-colors">
-                                Complete Now
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- 5. Recent Profile Views (who viewed me) --}}
+                {{-- Recent Profile Views (who viewed me) --}}
                 @if($recentViews->count() > 0)
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <div class="flex items-center justify-between mb-4">
@@ -181,30 +203,6 @@
                             <a href="{{ route('discover.category', $cat['slug']) }}"
                                 class="flex items-center justify-center px-4 py-3 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:border-(--color-primary) hover:text-(--color-primary) hover:bg-(--color-primary-light) transition-colors text-center">
                                 {{ $cat['label'] }}
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-
-                {{-- Profile Sections Status (collapsed by default) --}}
-                <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6" x-data="{ open: false }">
-                    <button @click="open = !open" class="w-full flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900">Profile Sections</h2>
-                        <svg class="w-5 h-5 text-gray-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div x-show="open" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                        @foreach($sections as $section)
-                            <a href="{{ route($section['route']) }}"
-                                class="flex items-center justify-between p-3 rounded-lg border {{ $section['done'] ? 'border-green-200 bg-green-50' : 'border-gray-200 hover:border-gray-300' }} transition-colors">
-                                <div class="flex items-center gap-3">
-                                    @if($section['done'])
-                                        <svg class="w-5 h-5 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
-                                    @else
-                                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 shrink-0"></div>
-                                    @endif
-                                    <span class="text-sm font-medium {{ $section['done'] ? 'text-green-700' : 'text-gray-700' }}">{{ $section['label'] }}</span>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                             </a>
                         @endforeach
                     </div>
