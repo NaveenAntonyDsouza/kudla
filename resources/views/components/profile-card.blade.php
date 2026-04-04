@@ -1,4 +1,4 @@
-@props(['profile'])
+@props(['profile', 'matchScore' => null, 'matchBadge' => null])
 
 @php
     $p = $profile;
@@ -43,6 +43,18 @@
                     <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
                     </svg>
+                </div>
+            @endif
+
+            {{-- Match Badge --}}
+            @if($matchBadge)
+                <div class="absolute bottom-2 left-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold shadow-sm
+                        {{ $matchBadge === 'great' ? 'bg-green-500 text-white' : '' }}
+                        {{ $matchBadge === 'good' ? 'bg-yellow-500 text-white' : '' }}
+                        {{ $matchBadge === 'partial' ? 'bg-gray-500 text-white' : '' }}">
+                        {{ $matchScore }}% Match
+                    </span>
                 </div>
             @endif
         </div>

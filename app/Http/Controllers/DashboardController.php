@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Traits\ProfileQueryFilters;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    use ProfileQueryFilters;
     public function index()
     {
         $user = auth()->user();
@@ -31,31 +33,23 @@ class DashboardController extends Controller
             ['label' => 'Photo Uploaded', 'done' => $profile->profilePhotos()->visible()->exists(), 'route' => 'photos.manage'],
         ];
 
-        // Recently joined profiles (exclude self)
-        $recentProfiles = Profile::where('id', '!=', $profile->id)
-            ->whereNotNull('full_name')
-            ->where('is_active', true)
-            ->where('gender', '!=', $profile->gender)
-            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-            // Respect visibility preferences
-            ->where(function ($q) use ($profile) {
-                $q->where(function ($q2) use ($profile) {
-                    $q2->where('only_same_religion', false)->orWhereNull('only_same_religion')
-                        ->orWhereHas('religiousInfo', fn($q3) => $q3->where('religion', $profile->religiousInfo?->religion));
-                });
-                $q->where(function ($q2) use ($profile) {
-                    $q2->where('only_same_denomination', false)->orWhereNull('only_same_denomination')
-                        ->orWhereHas('religiousInfo', fn($q3) => $q3->where('denomination', $profile->religiousInfo?->denomination)->orWhere('caste', $profile->religiousInfo?->caste));
-                });
-                $q->where(function ($q2) use ($profile) {
-                    $q2->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue')
-                        ->orWhere('mother_tongue', $profile->mother_tongue);
-                });
-            })
-            ->with(['locationInfo', 'primaryPhoto', 'educationDetail', 'religiousInfo'])
-            ->orderBy('created_at', 'desc')
-            ->limit(6)
-            ->get();
+        // Recommended matches (top 6 by score) or fallback to recently joined
+        $showingRecent = false;
+        $recentProfiles = collect();
+
+        if ($profile->partnerPreference) {
+            $matchingService = app(\App\Services\MatchingService::class);
+            $recentProfiles = $matchingService->getRecommendations($profile, 6);
+        }
+
+        if ($recentProfiles->isEmpty()) {
+            $showingRecent = true;
+            $recentProfiles = $this->baseQuery($profile)
+                ->whereNotNull('full_name')
+                ->orderBy('created_at', 'desc')
+                ->limit(6)
+                ->get();
+        }
 
         // Interest counts for stats
         $interestStats = [
@@ -65,7 +59,7 @@ class DashboardController extends Controller
             'views' => $profile->viewedByOthers()->count(),
         ];
 
-        return view('dashboard.index', compact('profile', 'user', 'completionPct', 'sections', 'recentProfiles', 'interestStats'));
+        return view('dashboard.index', compact('profile', 'user', 'completionPct', 'sections', 'recentProfiles', 'showingRecent', 'interestStats'));
     }
 
 }

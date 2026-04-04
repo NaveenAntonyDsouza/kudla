@@ -140,15 +140,22 @@
                     @endforeach
                 </div>
 
-                {{-- Newly Joined Profiles --}}
+                {{-- Recommended Matches / Newly Joined --}}
                 @if($recentProfiles->count() > 0)
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-gray-900">Newly Joined Profiles</h2>
+                            <h2 class="text-lg font-semibold text-gray-900">
+                                {{ ($showingRecent ?? true) ? 'Newly Joined Profiles' : 'Recommended Matches' }}
+                            </h2>
+                            @if(!($showingRecent ?? true))
+                                <a href="{{ route('matches.index') }}" class="text-sm font-medium text-(--color-primary) hover:underline">
+                                    View All Matches &rarr;
+                                </a>
+                            @endif
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             @foreach($recentProfiles as $p)
-                                <x-profile-card :profile="$p" />
+                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
                             @endforeach
                         </div>
                     </div>

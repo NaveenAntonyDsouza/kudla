@@ -84,7 +84,14 @@ class ProfileController extends Controller
             ProfileViewController::track(auth()->user()->profile->id, $profile->id);
         }
 
-        return view('profile.preview', compact('user', 'profile', 'activeTab', 'isOwn'));
+        // Match score breakdown
+        $matchResult = null;
+        if (! $isOwn) {
+            $matchResult = app(\App\Services\MatchingService::class)
+                ->getMatchBreakdown(auth()->user()->profile, $profile);
+        }
+
+        return view('profile.preview', compact('user', 'profile', 'activeTab', 'isOwn', 'matchResult'));
     }
 
     public function update(Request $request, string $section)

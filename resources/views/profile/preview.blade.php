@@ -138,6 +138,34 @@
                                     </form>
                                 </div>
                             @endif
+
+                            {{-- Match Score Breakdown --}}
+                            @if(!$isOwn && $matchResult && $matchResult['score'] > 0)
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <div class="text-center mb-3">
+                                        <span class="inline-flex items-center justify-center w-14 h-14 rounded-full text-lg font-bold text-white
+                                            {{ $matchResult['badge'] === 'great' ? 'bg-green-500' : '' }}
+                                            {{ $matchResult['badge'] === 'good' ? 'bg-yellow-500' : '' }}
+                                            {{ $matchResult['badge'] === 'partial' ? 'bg-gray-500' : '' }}
+                                            {{ !$matchResult['badge'] ? 'bg-gray-400' : '' }}">
+                                            {{ $matchResult['score'] }}%
+                                        </span>
+                                        <p class="text-xs font-medium text-gray-500 mt-1">Match Score</p>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        @foreach($matchResult['breakdown'] as $item)
+                                            <div class="flex items-center justify-between text-xs">
+                                                <span class="text-gray-600">{{ $item['label'] }}</span>
+                                                @if($item['matched'])
+                                                    <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                @else
+                                                    <svg class="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

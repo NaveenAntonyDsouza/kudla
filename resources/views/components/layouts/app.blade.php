@@ -80,6 +80,18 @@
                             </div>
                         </div>
 
+                        {{-- Matches --}}
+                        <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                            <button @click="open = !open" class="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50">
+                                Matches
+                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-cloak class="absolute left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                <a href="{{ route('matches.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Matches</a>
+                                <a href="{{ route('matches.mutual') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mutual Matches</a>
+                            </div>
+                        </div>
+
                         {{-- Messages --}}
                         <a href="{{ route('interests.inbox') }}" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50">Messages</a>
 
@@ -202,6 +214,8 @@
                 <div class="px-4 py-3 space-y-2">
                     <a href="/dashboard" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
                     <a href="/search" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Search</a>
+                    <a href="{{ route('matches.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Matches</a>
+                    <a href="{{ route('matches.mutual') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Mutual Matches</a>
                     <a href="{{ route('interests.inbox') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Interests</a>
                     <a href="{{ route('profile.show') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Profile</a>
                     <a href="{{ route('photos.manage') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Manage Photos</a>
