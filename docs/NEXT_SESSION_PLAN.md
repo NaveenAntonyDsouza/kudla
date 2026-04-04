@@ -126,7 +126,7 @@ Pre-filtered search pages:
 ---
 
 ## Future Scaling Reminders:
-- **Match score caching (10K+ users):** Switch `MatchingService` from on-the-fly to `match_scores` table. See `docs/admin-panel/07-interests-matching.md` → "Performance Scaling Note" for step-by-step instructions. Table + model already exist, just need to change service internals + add background job.
+- See `docs/SCALING_GUIDE.md` for full optimization guide (8 sections: match caching, DB indexing, photo CDN, email queue, search, caching, sessions, hosting upgrade)
 
 ---
 

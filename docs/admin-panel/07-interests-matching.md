@@ -118,37 +118,9 @@ When enabled (weight > 0%), the matching engine includes astrological compatibil
 
 ---
 
-### Performance Scaling Note (Developer Reference)
+### Performance Scaling Note
 
-The matching engine has two modes. **You don't need to do anything until performance becomes an issue.**
-
-**Current (v1 — under 10K users):**
-- Scores are calculated on-the-fly in PHP when user visits `/matches`
-- `app/Services/MatchingService.php` fetches up to 500 candidates, scores each in memory
-- Takes ~10-50ms — fast enough
-
-**When to upgrade (v2 — over 10K users):**
-- When `/matches` page starts taking more than 1-2 seconds
-- Or when active profiles exceed 10K
-
-**What to change (30-minute task):**
-1. Open `app/Services/MatchingService.php`
-2. Change `getMatches()` to query from `match_scores` table instead of calculating on-the-fly
-3. Add a Laravel Queue job that recalculates scores when:
-   - User updates their profile → dispatch `RecalculateMatchScores` job
-   - User updates partner preferences → dispatch job
-   - New user registers → dispatch job
-   - Admin changes match weights → dispatch job for all users
-4. The `match_scores` table already exists (migration created, table is empty)
-5. The `MatchScore` model already exists at `app/Models/MatchScore.php`
-
-**Nothing else changes** — controller, views, routes, badges all stay the same. Only the service internals change.
-
-**Files involved:**
-- `app/Services/MatchingService.php` — change `getMatches()`, `getMutualMatches()`, `getRecommendations()`
-- `app/Models/MatchScore.php` — already created
-- `database/migrations/2026_04_04_125409_create_match_scores_table.php` — already migrated
-- New: `app/Jobs/RecalculateMatchScores.php` — background job (create when needed)
+Matching currently calculates scores on-the-fly (~10-50ms). At 10K+ users, switch to pre-calculated `match_scores` table. **See `docs/SCALING_GUIDE.md` Section 1** for full step-by-step instructions. Table and model already exist — it's a 30-minute change.
 
 ---
 
