@@ -17,6 +17,8 @@ Profiles awaiting admin review before going live.
 - Auto-approve: ON/OFF (if ON, profiles go live immediately)
 - Require photo before approval: ON/OFF
 - Require ID proof before approval: ON/OFF
+- Require Email OTP verification before approval: ON/OFF
+- Require Mobile/Phone OTP verification before approval: ON/OFF
 
 ## 3b. Rejected Profiles
 
