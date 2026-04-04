@@ -316,10 +316,12 @@ Admin can edit all dropdown options WITHOUT touching code:
 - Diocese list (grouped by denomination)
 - Caste list (grouped by religion — e.g., Hindu → Brahmin, Nair)
 - Sub-caste list (grouped by caste)
-- Gotra/Gothram list (grouped by religion)
 - Muslim Sect list (grouped under Muslim)
 - Muslim Community/Jamath list (grouped under Muslim)
 - Jain Sect list (grouped under Jain)
+- Nakshatra (Star) list
+- Rasi (Zodiac) list
+- Gotra/Gothram list
 
 **Education & Profession (grouped):**
 - Education qualifications (grouped by level — e.g., Engineering → B.Tech, M.Tech)
@@ -343,8 +345,6 @@ Admin can edit all dropdown options WITHOUT touching code:
 - Weight list
 - Interest message templates (send + accept + decline)
 - "How did you hear about us" options
-- Nakshatra list
-- Rasi/Zodiac list
 
 #### 7c. Static Pages
 WYSIWYG editor for:
