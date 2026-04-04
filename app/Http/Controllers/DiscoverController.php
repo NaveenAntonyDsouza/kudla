@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Profile;
 use App\Traits\ProfileQueryFilters;
 use Illuminate\Support\Str;
 
@@ -76,12 +77,22 @@ class DiscoverController extends Controller
 
     /**
      * Shared results logic for both direct-filter categories and subcategory results.
+     * Works for both logged-in and guest users.
      */
     private function showResults(string $category, ?string $slug, string $title, array $filter)
     {
-        $profile = auth()->user()->profile;
+        $profile = auth()->check() ? auth()->user()->profile : null;
         $config = config("discover.{$category}");
-        $query = $this->baseQuery($profile);
+
+        // Logged-in: use baseQuery (gender filter, blocked, visibility prefs)
+        // Guest: simple public query (active profiles only)
+        if ($profile) {
+            $query = $this->baseQuery($profile);
+        } else {
+            $query = Profile::where('is_active', true)
+                ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+                ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
+        }
 
         // Apply filters
         foreach ($filter as $type => $value) {

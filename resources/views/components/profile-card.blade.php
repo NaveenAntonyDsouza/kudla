@@ -2,6 +2,7 @@
 
 @php
     $p = $profile;
+    $isGuest = !auth()->check();
     $desc = collect([
         $p->age ? $p->age . ' Yrs' : null,
         $p->height,
@@ -15,24 +16,27 @@
     ])->filter()->implode(', ');
     // Cache shortlisted IDs to avoid N+1 queries
     static $shortlistedIds = null;
-    if ($shortlistedIds === null && auth()->check()) {
+    if ($shortlistedIds === null && !$isGuest) {
         $shortlistedIds = \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->pluck('shortlisted_profile_id')->toArray();
     }
     $isShortlisted = $shortlistedIds !== null && in_array($p->id, $shortlistedIds);
+    $profileUrl = $isGuest ? route('login') : route('profile.view', $p);
 @endphp
 
 <div class="relative rounded-lg border border-gray-200 overflow-hidden hover:shadow-md hover:border-(--color-primary)/30 transition-all group bg-white">
-    {{-- Shortlist heart --}}
-    <form method="POST" action="{{ route('shortlist.toggle', $p) }}" class="absolute top-2 right-2 z-10" @click.stop>
-        @csrf
-        <button type="submit" class="p-1.5 rounded-full {{ $isShortlisted ? 'text-pink-500' : 'text-white/80 hover:text-pink-400' }} transition-colors" style="background: rgba(0,0,0,0.3);">
-            <svg class="w-4 h-4" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
-            </svg>
-        </button>
-    </form>
+    {{-- Shortlist heart (logged-in only) --}}
+    @if(!$isGuest)
+        <form method="POST" action="{{ route('shortlist.toggle', $p) }}" class="absolute top-2 right-2 z-10" @click.stop>
+            @csrf
+            <button type="submit" class="p-1.5 rounded-full {{ $isShortlisted ? 'text-pink-500' : 'text-white/80 hover:text-pink-400' }} transition-colors" style="background: rgba(0,0,0,0.3);">
+                <svg class="w-4 h-4" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                </svg>
+            </button>
+        </form>
+    @endif
 
-    <a href="{{ route('profile.view', $p) }}" class="block">
+    <a href="{{ $profileUrl }}" class="block">
         {{-- Photo --}}
         <div class="aspect-[3/4] bg-gray-100 relative overflow-hidden">
             @if($p->primaryPhoto)
@@ -54,6 +58,15 @@
                         {{ $matchBadge === 'good' ? 'bg-yellow-500 text-white' : '' }}
                         {{ $matchBadge === 'partial' ? 'bg-gray-500 text-white' : '' }}">
                         {{ $matchScore }}% Match
+                    </span>
+                </div>
+            @endif
+
+            {{-- Login prompt for guests --}}
+            @if($isGuest)
+                <div class="absolute bottom-2 right-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 text-(--color-primary) shadow-sm">
+                        Login to view
                     </span>
                 </div>
             @endif

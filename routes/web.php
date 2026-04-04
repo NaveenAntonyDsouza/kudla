@@ -25,6 +25,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/privacy-policy', 'pages.privacy')->name('privacy');
 Route::view('/terms-of-service', 'pages.terms')->name('terms');
 
+// Discover Profiles (public — accessible without login for SEO)
+Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
+Route::get('/discover/{category}', [DiscoverController::class, 'category'])->name('discover.category');
+Route::get('/discover/{category}/{slug}', [DiscoverController::class, 'results'])->name('discover.results');
+
 // Forgot Password
 Route::get('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showForm'])->name('password.request');
 Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
@@ -141,11 +146,6 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Matches
     Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
     Route::get('/matches/mutual', [MatchController::class, 'mutual'])->name('matches.mutual');
-
-    // Discover Profiles (category browsing)
-    Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
-    Route::get('/discover/{category}', [DiscoverController::class, 'category'])->name('discover.category');
-    Route::get('/discover/{category}/{slug}', [DiscoverController::class, 'results'])->name('discover.results');
 
     // Interests (specific routes first, parameterized last)
     Route::get('/interests', [InterestController::class, 'inbox'])->name('interests.inbox');
