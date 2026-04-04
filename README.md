@@ -36,10 +36,10 @@ See [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) for complete feature audit.
 | Document | Description |
 |----------|-------------|
 | [docs/TECH_STACK.md](docs/TECH_STACK.md) | Technology versions and dependencies |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hostinger deployment guide (11 steps) |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hostinger deployment guide (12 steps) |
 | [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) | Complete feature audit |
 | [docs/NEXT_SESSION_PLAN.md](docs/NEXT_SESSION_PLAN.md) | Roadmap and next priorities |
-| [docs/admin-panel/](docs/admin-panel/README.md) | Admin panel plan (15 sections, 38 selling points) |
+| [docs/admin-panel/](docs/admin-panel/README.md) | Admin panel plan (15 sections, 41 selling points) |
 | [docs/.env.production](docs/.env.production) | Production environment template |
 
 ## Quick Start

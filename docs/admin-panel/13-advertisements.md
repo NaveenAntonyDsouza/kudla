@@ -21,7 +21,7 @@ Pre-defined ad slots where ads appear on the website:
 | Field | Type | Description |
 |-------|------|-------------|
 | Ad Title | Text | Internal name (e.g., "Wedding Photography - March 2026") |
-| Ad Space | Select | Which slot (from 15a) |
+| Ad Space | Select | Which slot (from 13a) |
 | Ad Type | Select | Image / HTML / Google AdSense |
 | Image | File Upload | Banner image (for image type) |
 | Click URL | URL | Where ad links to |

@@ -23,7 +23,7 @@ Vendors register themselves (separate registration flow):
 | Field | Type | Description |
 |-------|------|-------------|
 | Business Name | Text | e.g., "Royal Wedding Photography" |
-| Category | Select | From 16a |
+| Category | Select | From 14a |
 | Owner Name | Text | Contact person |
 | Phone | Text | Business phone |
 | Email | Email | Business email |

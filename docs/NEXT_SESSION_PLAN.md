@@ -98,4 +98,4 @@ Pre-filtered search pages:
 - `docs/DEPLOYMENT.md` — Hostinger deployment guide
 - `docs/TECH_STACK.md` — technology versions
 - `docs/.env.production` — production environment template
-- `docs/admin-panel/` — admin panel plan (16 sections)
+- `docs/admin-panel/` — admin panel plan (15 sections)
