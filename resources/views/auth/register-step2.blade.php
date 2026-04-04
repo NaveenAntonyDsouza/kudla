@@ -245,11 +245,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="float-field">
                             <input type="time" name="time_of_birth" id="time_of_birth" value="{{ old('time_of_birth', $religiousInfo->time_of_birth ?? '') }}" placeholder=" ">
-                            <label for="time_of_birth">Time of Birth <span class="text-red-500">*</span></label>
+                            <label for="time_of_birth">Time of Birth</label>
                         </div>
                         <div class="float-field">
                             <input type="text" name="place_of_birth" id="place_of_birth" value="{{ old('place_of_birth', $religiousInfo->place_of_birth ?? '') }}" placeholder=" ">
-                            <label for="place_of_birth">Place of Birth <span class="text-red-500">*</span></label>
+                            <label for="place_of_birth">Place of Birth</label>
                         </div>
                     </div>
                     <div class="float-field">
@@ -259,7 +259,7 @@
                                 <option value="{{ $sign }}" {{ old('rashi', $religiousInfo->rashi ?? '') === $sign ? 'selected' : '' }}>{{ $sign }}</option>
                             @endforeach
                         </select>
-                        <label for="rashi">Rasi (Zodiac) <span class="text-red-500">*</span></label>
+                        <label for="rashi">Rasi (Zodiac)</label>
                     </div>
                     <div class="float-field">
                         <select name="nakshatra" id="nakshatra">
@@ -268,7 +268,7 @@
                                 <option value="{{ $star }}" {{ old('nakshatra', $religiousInfo->nakshatra ?? '') === $star ? 'selected' : '' }}>{{ $star }}</option>
                             @endforeach
                         </select>
-                        <label for="nakshatra">Nakshatra (Star) <span class="text-red-500">*</span></label>
+                        <label for="nakshatra">Nakshatra (Star)</label>
                     </div>
                     <div class="float-field">
                         <select name="gotra" id="gotra">
@@ -286,7 +286,7 @@
                                 <option value="{{ $opt }}" {{ old('manglik', $religiousInfo->dosh ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
-                        <label for="manglik">Manglik / Chovva Dosham <span class="text-red-500">*</span></label>
+                        <label for="manglik">Manglik / Chovva Dosham</label>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Jathakam / Horoscope</label>
