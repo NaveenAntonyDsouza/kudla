@@ -160,11 +160,21 @@
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-12">Browse by Community</h2>
 
             @foreach($communities as $religion => $group)
+                @php
+                    // Map religion to discover category
+                    $categorySlug = match($religion) {
+                        'Christian' => 'catholic-matrimony',
+                        'Hindu' => 'hindu-matrimony',
+                        'Muslim' => 'muslim-matrimony',
+                        'Jain' => 'jain-matrimony',
+                        default => 'community-matrimony',
+                    };
+                @endphp
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ $religion }}</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         @foreach($group as $community)
-                            <a href="/search?community={{ $community->id }}" class="bg-white rounded-lg border border-gray-200 shadow-xs p-4 text-center hover:border-(--color-primary) hover:shadow-sm transition-all group">
+                            <a href="{{ route('discover.results', [$categorySlug, Str::slug($community->community_name)]) }}" class="bg-white rounded-lg border border-gray-200 shadow-xs p-4 text-center hover:border-(--color-primary) hover:shadow-sm transition-all group">
                                 <p class="text-sm font-medium text-gray-900 group-hover:text-(--color-primary) transition-colors">{{ $community->community_name }}</p>
                             </a>
                         @endforeach
