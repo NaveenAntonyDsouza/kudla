@@ -1,0 +1,54 @@
+# Next Session Plan
+
+## Priority 1: Matchmaking Engine
+Build `MatchingService` with weighted scoring algorithm.
+
+### Pages to build:
+- **My Matches** (`/matches`) — profiles matching my partner preferences, sorted by match score
+- **Mutual Matches** (`/matches/mutual`) — profiles where BOTH sides match each other's preferences
+
+### Match Score Weights:
+| Criteria | Weight |
+|----------|--------|
+| Age range | 15% |
+| Religion | 15% |
+| Denomination/Caste | 10% |
+| Education | 10% |
+| Occupation | 10% |
+| Mother Tongue | 10% |
+| Height range | 10% |
+| Location (native) | 10% |
+| Marital Status | 5% |
+| Family Status | 5% |
+
+### Integration points:
+- Dashboard "Recommended Matches" section
+- "Only show to those who match my Partner Preferences" setting enforcement
+- Matches nav menu dropdown
+- Future: daily email "X new matches today"
+
+## Priority 2: Discover Profiles (Category Browsing)
+Pre-filtered search pages:
+- Karnataka Matrimony (native_state = Karnataka)
+- Catholic Matrimony (religion = Christian, denomination = Catholic variants)
+- NRI Matrimony (residing_country != India)
+- Second Marriage (marital_status != Unmarried)
+- By Occupation, Mother Tongue, Community
+
+## Priority 3: Admin Panel (Filament)
+- User management (list, edit, deactivate)
+- ID Proof review (approve/reject with reason)
+- Profile approval queue
+- Stats dashboard (registrations, interests, payments)
+- Subscription management
+
+## Priority 4: Subscription Feature Enforcement
+- Plan-based daily interest limits (5/15/50)
+- Contact view limits per plan
+- Middleware to check active subscription
+- Feature gates in controllers
+
+## Quick Fixes Remaining:
+- Hide action buttons (Send Interest, Shortlist) on same-gender profiles
+- Keyword search should also filter by gender
+- Mobile hamburger menu needs all dropdown items

@@ -35,6 +35,7 @@ class DashboardController extends Controller
         $recentProfiles = Profile::where('id', '!=', $profile->id)
             ->whereNotNull('full_name')
             ->where('is_active', true)
+            ->where('gender', '!=', $profile->gender)
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             // Respect visibility preferences
             ->where(function ($q) use ($profile) {
