@@ -361,8 +361,24 @@ Edit email content from admin:
 - Interest Accepted email
 - Interest Declined email
 - Password Reset email
-- Welcome email
+- Welcome email (after registration)
 - Email OTP template
+- New Match notification email
+- Profile View notification email
+
+#### 7e. SMS Templates (future)
+- Phone OTP template
+- Interest received SMS
+- Interest accepted SMS
+
+#### 7f. Notification Templates
+Edit in-app notification messages:
+- Interest received title/message
+- Interest accepted title/message
+- Interest declined title/message
+- New message notification
+- Profile view notification
+- System/admin broadcast notification
 
 ---
 
@@ -379,11 +395,52 @@ Edit email content from admin:
 | Actions | - | View conversation, Delete |
 
 #### 8b. Reported Messages
-Messages flagged by users (future feature but table should exist).
+Messages flagged by users for inappropriate content.
+
+| Column | Details |
+|--------|---------|
+| Reported By | Matri ID |
+| Reported User | Matri ID |
+| Message Content | Full text |
+| Reason | Harassment/Spam/Fake/Other |
+| Date | When reported |
+| Actions | Warn user / Block user / Dismiss report |
+
+#### 8c. Broadcast Notifications
+Admin can send notifications to:
+- All users
+- All male/female users
+- Users by religion
+- Users by state
+- Users by subscription status (free/paid)
+- Custom filter
+
+Message fields: Title, Message, Link (optional)
 
 ---
 
-### 9. REPORTS & ANALYTICS
+### 9. PHOTO MANAGEMENT
+
+#### 9a. Reported Photos
+Photos flagged by system or users:
+- Inappropriate content
+- Not a real photo
+- Group photo as profile
+
+| Column | Details |
+|--------|---------|
+| Matri ID | Link to profile |
+| Photo | Thumbnail (click to view full) |
+| Type | Profile/Album/Family |
+| Reason | Why flagged |
+| Actions | Approve / Remove photo / Warn user |
+
+#### 9b. Photos Without Faces (future)
+Auto-detect photos without human faces using image analysis.
+
+---
+
+### 10. REPORTS & ANALYTICS
 
 #### 9a. User Reports
 - Registration by date (chart)
@@ -442,6 +499,57 @@ One-click buttons:
 - Disk usage
 - Last backup date
 
+#### 10f. Scheduled Tasks / Cron Jobs
+View and manage scheduled tasks:
+- Expire old pending interests (after 30 days)
+- Clean up unverified accounts (after 7 days)
+- Send daily match emails
+- Generate daily/weekly reports
+- Database backup
+
+#### 10g. Update / Migration
+- Run pending migrations from admin
+- Check for updates (if distributed via CodeCanyon)
+- Version info
+
+---
+
+### 11. BLOCKED & REPORTED USERS
+
+#### 11a. Blocked Users List
+| Column | Details |
+|--------|---------|
+| Blocker | Matri ID |
+| Blocked | Matri ID |
+| Date | When blocked |
+| Actions | Unblock (admin override) |
+
+#### 11b. Reported Users
+| Column | Details |
+|--------|---------|
+| Reported By | Matri ID |
+| Reported User | Matri ID |
+| Reason | Why reported |
+| Date | When reported |
+| Status | Pending / Reviewed / Action Taken |
+| Actions | Warn / Suspend / Ban / Dismiss |
+
+#### 11c. Banned Users
+Permanently banned users with reason and ban date.
+
+---
+
+### 12. SHORTLIST & PROFILE VIEWS ANALYTICS
+
+#### 12a. Most Shortlisted Profiles
+Top profiles by shortlist count — useful for understanding what makes a good profile.
+
+#### 12b. Most Viewed Profiles
+Top profiles by view count.
+
+#### 12c. Least Active Users
+Users who registered but never completed profile or logged in again — for re-engagement campaigns.
+
 ---
 
 ## Admin Roles & Permissions
@@ -494,13 +602,18 @@ Uses `spatie/laravel-permission` (already installed).
 | Profile Approval | 1-2 hours |
 | ID Proof Verification | 1-2 hours |
 | Membership Plans CRUD | 2-3 hours |
-| Payment History | 1-2 hours |
+| Payment History + Manual Sub | 2-3 hours |
 | Site Settings (all tabs) | 4-5 hours |
-| Content Management | 3-4 hours |
+| Content Management + Reference Data | 4-5 hours |
+| Interest & Message Management | 2-3 hours |
+| Photo Management | 1-2 hours |
 | Reports & Analytics | 3-4 hours |
-| System & Maintenance | 1-2 hours |
+| Blocked & Reported Users | 1-2 hours |
+| Shortlist & Views Analytics | 1 hour |
+| System & Maintenance | 2-3 hours |
 | Roles & Permissions | 1-2 hours |
-| **Total** | **~25-35 hours** |
+| Broadcast Notifications | 1-2 hours |
+| **Total** | **~35-45 hours** |
 
 ---
 
@@ -516,6 +629,13 @@ When listing on CodeCanyon, highlight these:
 7. ✅ **Profile Approval** — manual or auto-approve modes
 8. ✅ **ID Verification** — built-in document review system
 9. ✅ **Content Management** — edit all pages, email templates, dropdown lists
-10. ✅ **Multi-Role Admin** — Super Admin, Admin, Moderator, Support roles
-11. ✅ **Export Reports** — CSV/Excel/PDF for all data
-12. ✅ **Activity Logging** — track all admin actions
+10. ✅ **Reference Data Management** — edit all dropdowns (religions, castes, locations, etc.) from admin
+11. ✅ **Multi-Role Admin** — Super Admin, Admin, Moderator, Support roles
+12. ✅ **Export Reports** — CSV/Excel/PDF for all data
+13. ✅ **Activity Logging** — track all admin actions
+14. ✅ **Broadcast Notifications** — send announcements to all or filtered users
+15. ✅ **Photo Moderation** — review and remove inappropriate photos
+16. ✅ **User Reports & Bans** — handle complaints, warn/suspend/ban users
+17. ✅ **Login As User** — debug user issues by viewing their account
+18. ✅ **Scheduled Tasks** — auto-expire interests, cleanup, daily emails
+19. ✅ **System Health** — PHP/MySQL versions, disk usage, error logs, cache management
