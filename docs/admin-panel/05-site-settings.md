@@ -1,8 +1,8 @@
-# 6. Site Settings (White-Label Configuration)
+# 5. Site Settings (White-Label Configuration)
 
 This is the **most important section for CodeCanyon customers**.
 
-## 6a. General Settings
+## 5a. General Settings
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -15,7 +15,7 @@ This is the **most important section for CodeCanyon customers**.
 | Address | Textarea | Office address |
 | Copyright Text | Text | Footer copyright |
 
-## 6b. Branding / Theme
+## 5b. Branding / Theme
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -30,7 +30,7 @@ This is the **most important section for CodeCanyon customers**.
 
 **Live preview** — admin sees color changes in real-time before saving.
 
-## 6c. Homepage Content
+## 5c. Homepage Content
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -43,7 +43,7 @@ This is the **most important section for CodeCanyon customers**.
 | CTA Title | Text | "Register Free Today" |
 | CTA Description | Text | Below CTA title |
 
-## 6d. Email Settings (SMTP)
+## 5d. Email Settings (SMTP)
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -57,7 +57,7 @@ This is the **most important section for CodeCanyon customers**.
 | From Name | Text | Sender name |
 | **Test Email** | Button | Send test email to admin |
 
-## 6e. SMS / OTP Gateway
+## 5e. SMS / OTP Gateway
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -74,7 +74,7 @@ This is the **most important section for CodeCanyon customers**.
 | WhatsApp API Key | Text | Encrypted |
 | **Send Test OTP** | Button | Send test OTP to admin's phone |
 
-## 6f. Payment Gateway
+## 5f. Payment Gateway
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -85,7 +85,7 @@ This is the **most important section for CodeCanyon customers**.
 | Currency | Select | INR / USD / EUR |
 | **Test Payment** | Button | Process ₹1 test payment |
 
-## 6g. Registration Settings
+## 5g. Registration Settings
 
 | Setting | Type | Description |
 |---------|------|-------------|
@@ -98,7 +98,7 @@ This is the **most important section for CodeCanyon customers**.
 | Max Photos (Album) | Number | e.g., 9 |
 | Max Photos (Family) | Number | e.g., 3 |
 
-## 6h. Social Links
+## 5h. Social Links
 
 Website-level social media links displayed in footer and contact page:
 
@@ -113,7 +113,7 @@ Website-level social media links displayed in footer and contact page:
 
 Displayed in: footer icons, contact page, about page.
 
-## 6i. SEO Settings (Global + Per-Page)
+## 5i. SEO Settings (Global + Per-Page)
 
 **Global SEO:**
 

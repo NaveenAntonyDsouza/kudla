@@ -1,8 +1,8 @@
-# 15. Advertisement Management
+# 13. Advertisement Management
 
 Monetize ad spaces on the platform. Admin can manage ads without touching code.
 
-## 15a. Ad Spaces (Frontend Locations)
+## 13a. Ad Spaces (Frontend Locations)
 
 Pre-defined ad slots where ads appear on the website:
 
@@ -16,7 +16,7 @@ Pre-defined ad slots where ads appear on the website:
 | Footer Banner | Above footer (all pages) | 728x90 | Image / HTML |
 | Mobile Banner | Between content on mobile | 320x50 (mobile leaderboard) | Image / HTML |
 
-## 15b. Ad Management
+## 13b. Ad Management
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -32,7 +32,7 @@ Pre-defined ad slots where ads appear on the website:
 | Is Active | Toggle | Enable/disable |
 | Priority | Number | Higher = shown first if multiple ads for same slot |
 
-## 15c. Ad Analytics
+## 13c. Ad Analytics
 
 | Metric | Description |
 |--------|-------------|
@@ -42,7 +42,7 @@ Pre-defined ad slots where ads appear on the website:
 | Revenue | If tracked (manual entry or per-click rate) |
 | By Date | Daily impression/click chart |
 
-## 15d. Google AdSense Integration
+## 13d. Google AdSense Integration
 
 - Admin can paste AdSense code for any ad space
 - Toggle: "Use Google AdSense" per slot (overrides manual ads)

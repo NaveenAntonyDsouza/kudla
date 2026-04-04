@@ -1,8 +1,8 @@
-# 14. Staff / Telecaller Module
+# 12. Staff / Telecaller Module
 
 For staff members who assist users with registration and profile management.
 
-## 14a. Staff Management
+## 12a. Staff Management
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -15,7 +15,7 @@ For staff members who assist users with registration and profile management.
 | Is Active | Toggle | Enable/disable |
 | Joined Date | Date | Employment start |
 
-## 14b. Telecaller Dashboard (with Charts)
+## 12b. Telecaller Dashboard (with Charts)
 
 What each telecaller sees after login:
 - My assigned leads (users to follow up)
@@ -30,7 +30,7 @@ What each telecaller sees after login:
 - Lead conversion funnel (pie chart — New → Contacted → Interested → Registered)
 - Target progress (progress bar — registrations vs monthly target, revenue vs target)
 
-## 14c. Lead Management
+## 12c. Lead Management
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -45,7 +45,7 @@ What each telecaller sees after login:
 | Converted | Toggle | Did they register? |
 | Linked Profile | Select | Matri ID (after registration) |
 
-## 14d. Register on Behalf
+## 12d. Register on Behalf
 
 Staff can register profiles for users who visit the branch:
 - Fill registration form on behalf of user
@@ -53,7 +53,7 @@ Staff can register profiles for users who visit the branch:
 - Mark profile as "Registered by: Staff Name (Branch)"
 - User receives credentials via SMS/Email
 
-## 14e. Call Log
+## 12e. Call Log
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -66,7 +66,7 @@ Staff can register profiles for users who visit the branch:
 | Follow-up Required | Toggle | Schedule next call |
 | Follow-up Date | Date | When to call next |
 
-## 14f. Staff Performance Reports
+## 12f. Staff Performance Reports
 
 | Metric | Description |
 |--------|-------------|
@@ -77,7 +77,7 @@ Staff can register profiles for users who visit the branch:
 | Active Users | How many of their users are still active |
 | Ranking | Staff leaderboard |
 
-## 14g. Targets & Incentives
+## 12g. Targets & Incentives
 
 Admin sets monthly targets per staff:
 

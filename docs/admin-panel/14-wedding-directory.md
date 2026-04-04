@@ -1,8 +1,8 @@
-# 16. Wedding Directory *(Low Priority — Phase 2)*
+# 14. Wedding Directory *(Low Priority — Phase 2)*
 
 A vendor marketplace for wedding-related services. Separate module that adds value but is not core to matrimony.
 
-## 16a. Vendor Categories
+## 14a. Vendor Categories
 
 Admin manages categories of wedding vendors:
 
@@ -16,7 +16,7 @@ Admin manages categories of wedding vendors:
 **Suggested categories:**
 Wedding Photography, Videography, Catering, Wedding Venues/Halls, Wedding Planners, Florists, Bridal Makeup, Mehendi Artists, DJs/Music, Wedding Cards/Invitations, Jewellers, Bridal Wear, Groom Wear, Cake & Bakery, Travel & Honeymoon
 
-## 16b. Vendor Registration & Profile
+## 14b. Vendor Registration & Profile
 
 Vendors register themselves (separate registration flow):
 
@@ -38,7 +38,7 @@ Vendors register themselves (separate registration flow):
 | Is Verified | Toggle | Admin-verified badge |
 | Is Active | Toggle | Show/hide listing |
 
-## 16c. Vendor Dashboard
+## 14c. Vendor Dashboard
 
 Each vendor gets their own dashboard after login:
 - Profile views count
@@ -47,7 +47,7 @@ Each vendor gets their own dashboard after login:
 - Edit profile/photos
 - Activity log
 
-## 16d. Browse & Search Vendors (Frontend)
+## 14d. Browse & Search Vendors (Frontend)
 
 - `/wedding-directory` — Browse all vendors by category
 - `/wedding-directory?category=photography&city=mangalore` — Filter by category + city
@@ -55,7 +55,7 @@ Each vendor gets their own dashboard after login:
 - Vendor detail page: full profile, portfolio gallery, inquiry form
 - "Similar Vendors" section on each vendor page
 
-## 16e. Vendor Inquiry
+## 14e. Vendor Inquiry
 
 Users can send inquiries to vendors:
 
@@ -69,7 +69,7 @@ Users can send inquiries to vendors:
 
 Vendor receives email + in-dashboard notification for each inquiry.
 
-## 16f. Admin: Vendor Management
+## 14f. Admin: Vendor Management
 
 - Approve/reject vendor registrations
 - View all vendor analytics

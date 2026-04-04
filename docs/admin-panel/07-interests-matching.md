@@ -1,6 +1,6 @@
-# 8. Interest & Match Management
+# 7. Interest & Match Management
 
-## 8a. All Interests
+## 7a. All Interests
 
 | Column | Filter | Details |
 |--------|--------|---------|
@@ -11,7 +11,7 @@
 | Date | Date Range | Created at |
 | Actions | - | View conversation, Delete |
 
-## 8b. Reported Messages
+## 7b. Reported Messages
 
 Messages flagged by users for inappropriate content.
 
@@ -24,7 +24,7 @@ Messages flagged by users for inappropriate content.
 | Date | When reported |
 | Actions | Warn user / Block user / Dismiss report |
 
-## 8c. Admin Recommend Matches
+## 7c. Admin Recommend Matches
 
 Admin/staff can manually recommend profiles to users:
 
@@ -42,7 +42,7 @@ Admin/staff can manually recommend profiles to users:
 - User can send interest directly from the recommendation
 - Track: recommendation sent, viewed, interest sent (conversion rate)
 
-## 8d. Partner Preference Match Count
+## 7d. Partner Preference Match Count
 
 Show compatibility percentage on every profile card and profile view:
 
@@ -60,7 +60,7 @@ Show compatibility percentage on every profile card and profile view:
   ```
 - Uses the MatchingService weights from NEXT_SESSION_PLAN.md
 
-## 8e. Broadcast Notifications
+## 7e. Broadcast Notifications
 
 Admin can send notifications to:
 - All users

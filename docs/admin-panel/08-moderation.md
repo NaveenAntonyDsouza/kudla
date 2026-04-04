@@ -1,6 +1,6 @@
-# 9. Photo Management & 11. Blocked/Reported Users
+# 8. Moderation (Photos, Blocked & Reported Users)
 
-## 9a. Reported Photos
+## 8a. Reported Photos
 
 Photos flagged by system or users:
 - Inappropriate content
@@ -15,13 +15,13 @@ Photos flagged by system or users:
 | Reason | Why flagged |
 | Actions | Approve / Remove photo / Warn user |
 
-## 9b. Photos Without Faces (future)
+## 8b. Photos Without Faces (future)
 
 Auto-detect photos without human faces using image analysis.
 
 ---
 
-## 11a. Blocked Users List
+## 8c. Blocked Users List
 
 | Column | Details |
 |--------|---------|
@@ -30,7 +30,7 @@ Auto-detect photos without human faces using image analysis.
 | Date | When blocked |
 | Actions | Unblock (admin override) |
 
-## 11b. Reported Users
+## 8d. Reported Users
 
 | Column | Details |
 |--------|---------|
@@ -41,6 +41,6 @@ Auto-detect photos without human faces using image analysis.
 | Status | Pending / Reviewed / Action Taken |
 | Actions | Warn / Suspend / Ban / Dismiss |
 
-## 11c. Banned Users
+## 8e. Banned Users
 
 Permanently banned users with reason and ban date.

@@ -1,6 +1,6 @@
-# 5. Membership & Payments
+# 4. Membership & Payments
 
-## 5a. Subscription Plans Management
+## 4a. Subscription Plans Management
 
 Full CRUD for membership plans — admin can create, edit, delete plans.
 
@@ -21,7 +21,7 @@ Full CRUD for membership plans — admin can create, edit, delete plans.
 | Sort Order | Number | Display order |
 | Is Active | Toggle | Show/hide plan |
 
-## 5b. Payment History
+## 4b. Payment History
 
 | Column | Filter | Details |
 |--------|--------|---------|
@@ -34,7 +34,7 @@ Full CRUD for membership plans — admin can create, edit, delete plans.
 | Expires | Date Range | Subscription expiry |
 | Actions | - | View receipt, Refund, Extend |
 
-## 5c. Manual Subscription
+## 4c. Manual Subscription
 
 Admin can manually activate a subscription for a user:
 - Select user
@@ -42,7 +42,7 @@ Admin can manually activate a subscription for a user:
 - Set start/end dates
 - Add admin note (e.g., "Complimentary for beta tester")
 
-## 5d. Discount Coupon Generation
+## 4d. Discount Coupon Generation
 
 Admin can create discount coupons for membership plans:
 
@@ -71,7 +71,7 @@ Admin can create discount coupons for membership plans:
 - Apply coupon → show discounted price with strikethrough original
 - Coupon validation: expired, max usage reached, invalid code, plan not eligible
 
-## 5e. Revenue Reports
+## 4e. Revenue Reports
 
 - Daily/Weekly/Monthly/Yearly revenue
 - Revenue by plan

@@ -99,7 +99,7 @@ This creates `public/storage` symlink pointing to `storage/app/public` (for uplo
 
 ---
 
-## Step 7: Set Permissions
+## Step 8: Set Permissions
 
 ```bash
 chmod -R 775 storage bootstrap/cache
@@ -107,7 +107,7 @@ chmod -R 775 storage bootstrap/cache
 
 ---
 
-## Step 8: Configure Document Root
+## Step 9: Configure Document Root
 
 **Important:** Laravel's entry point is `public/index.php`, not the project root.
 
@@ -127,7 +127,7 @@ Create `public_html/.htaccess`:
 
 ---
 
-## Step 9: Optimize for Production
+## Step 10: Optimize for Production
 
 ```bash
 php artisan config:cache
@@ -138,7 +138,7 @@ php artisan optimize
 
 ---
 
-## Step 10: Seed Initial Data (if needed)
+## Step 11: Seed Initial Data (if needed)
 
 ```bash
 php artisan db:seed
@@ -146,7 +146,7 @@ php artisan db:seed
 
 ---
 
-## Step 11: Test
+## Step 12: Test
 
 1. Visit https://anugrahamatrimony.com
 2. Register a new account

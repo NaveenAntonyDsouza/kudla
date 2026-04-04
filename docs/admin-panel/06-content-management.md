@@ -1,6 +1,6 @@
-# 7. Content Management
+# 6. Content Management
 
-## 7a. Communities / Castes
+## 6a. Communities / Castes
 
 CRUD for the community list shown in registration and home page.
 
@@ -11,7 +11,7 @@ CRUD for the community list shown in registration and home page.
 | Sort Order | Number |
 | Is Active | Toggle |
 
-## 7b. Reference Data Management
+## 6b. Reference Data Management
 
 Admin can edit all dropdown options WITHOUT touching code:
 
@@ -56,7 +56,7 @@ Admin can edit all dropdown options WITHOUT touching code:
 - Interest message templates (send + accept + decline)
 - "How did you hear about us" options
 
-## 7c. Static Pages
+## 6c. Static Pages
 
 WYSIWYG editor for:
 - Privacy Policy
@@ -66,7 +66,7 @@ WYSIWYG editor for:
 - FAQ / Help
 - Custom pages
 
-## 7d. Email Templates
+## 6d. Email Templates
 
 Edit email content from admin:
 - Interest Received email
@@ -78,13 +78,13 @@ Edit email content from admin:
 - New Match notification email
 - Profile View notification email
 
-## 7e. SMS Templates (future)
+## 6e. SMS Templates (future)
 
 - Phone OTP template
 - Interest received SMS
 - Interest accepted SMS
 
-## 7f. Happy Stories (Success Stories)
+## 6f. Happy Stories (Success Stories)
 
 Showcase couples who found their match through the platform:
 
@@ -106,7 +106,7 @@ Showcase couples who found their match through the platform:
 - Dedicated `/happy-stories` page with all stories (paginated)
 - Each story card: couple photo, names, date, excerpt → click for full story
 
-## 7g. Testimonials
+## 6g. Testimonials
 
 User reviews and feedback displayed on the website:
 
@@ -127,7 +127,7 @@ User reviews and feedback displayed on the website:
 - Dedicated `/testimonials` page (optional)
 - Star rating display
 
-## 7h. Notification Templates
+## 6h. Notification Templates
 
 Edit in-app notification messages:
 - Interest received title/message

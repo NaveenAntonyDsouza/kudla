@@ -1,6 +1,6 @@
-# 10. Reports & Analytics + 12. Shortlist & Views
+# 9. Reports & Analytics
 
-## User Reports
+## 9a. User Reports
 
 - Registration by date (chart)
 - Registration by gender (pie)
@@ -9,7 +9,7 @@
 - Profile completion distribution
 - Active vs inactive users
 
-## Engagement Reports
+## 9b. Engagement Reports
 
 - Interests sent per day (chart)
 - Interest acceptance rate (%)
@@ -17,7 +17,7 @@
 - Most active users
 - Most viewed profiles
 
-## Revenue Reports
+## 9c. Revenue Reports
 
 - Revenue by day/week/month (chart)
 - Revenue by plan (pie)
@@ -25,22 +25,20 @@
 - Subscription renewal rate
 - Average revenue per user
 
-## Export
+## 9d. Export
 
 All reports exportable to CSV/Excel/PDF.
 
 ---
 
-## 12. Shortlist & Profile Views Analytics
-
-### 12a. Most Shortlisted Profiles
+## 9e. Most Shortlisted Profiles
 
 Top profiles by shortlist count — useful for understanding what makes a good profile.
 
-### 12b. Most Viewed Profiles
+## 9f. Most Viewed Profiles
 
 Top profiles by view count.
 
-### 12c. Least Active Users
+## 9g. Least Active Users
 
 Users who registered but never completed profile or logged in again — for re-engagement campaigns.
