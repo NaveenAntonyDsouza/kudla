@@ -98,11 +98,78 @@ The first thing admin sees after login.
 - Verification status (Phone, Email, ID Proof)
 - Subscription history
 - Interest history (sent/received)
-- Login history
+- Login history with IP address (see 2d)
 - Activity log
 - Admin notes
 
-#### 2c. Login As User
+#### 2d. Login History with IP Address
+Track every user login for security and analytics:
+
+| Column | Details |
+|--------|---------|
+| User | Matri ID + Name |
+| Login Date/Time | Timestamp |
+| IP Address | e.g., 103.21.58.xx |
+| Device | Desktop / Mobile / Tablet |
+| Browser | Chrome / Safari / Firefox |
+| Location (approx.) | City, State (from IP) |
+| Status | Success / Failed |
+
+**Admin actions:**
+- Filter by user, date range, IP address
+- Flag suspicious logins (multiple IPs, rapid location changes)
+- Export login history to CSV
+
+#### 2e. VIP / Featured Profile
+Admin can mark profiles as VIP for premium visibility:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Profile | Select | Matri ID |
+| VIP Badge | Toggle | Show gold badge on profile |
+| Featured | Toggle | Appear in "Featured Profiles" section |
+| Featured Until | Date | Auto-remove after date |
+| Priority Boost | Number | Higher = appears first in search results |
+| Admin Note | Text | Why VIP (e.g., "Premium customer", "Brand ambassador") |
+
+**Where VIP shows:**
+- Gold "VIP" or "Featured" badge on profile card
+- "Featured Profiles" carousel on homepage
+- Boosted in search results (appears higher)
+- Featured section on dashboard for opposite gender
+
+#### 2c. Profile Link Sharing
+Each profile gets a public shareable link:
+
+- URL format: `https://yourdomain.com/profile/AM100008` (uses matri ID, not database ID)
+- Shareable via WhatsApp, Email, Copy Link button on profile view
+- Public link shows limited info (photo, age, religion, education, location) — no contact details
+- Visitor must register/login to see full profile or send interest
+- Share buttons: WhatsApp, Facebook, Email, Copy Link
+- Admin setting: Enable/disable public profile sharing (toggle in Site Settings)
+
+#### 2f. Profile Summary Card Download
+Generate a downloadable image card with key profile info:
+
+```
+┌─────────────────────────────┐
+│  [Photo]                    │
+│  John D. (AM100008)         │
+│  28 yrs, 5'10" | Male       │
+│  Catholic | Latin Catholic   │
+│  B.Tech, Software Engineer   │
+│  Mangalore, Karnataka        │
+│  ─────────────────────────── │
+│  anugrahamatrimony.com       │
+└─────────────────────────────┘
+```
+
+- Generated as PNG image (server-side using Intervention Image or similar)
+- "Download Profile Card" button on profile view page
+- Useful for parents sharing profiles offline (print/WhatsApp)
+- Admin can customize card template (logo, colors, which fields to show)
+
+#### 2g. Login As User
 - Admin can login as any user to debug issues
 - Shows admin bar at top: "You are viewing as AM100008 [Return to Admin]"
 
@@ -194,7 +261,35 @@ Admin can manually activate a subscription for a user:
 - Set start/end dates
 - Add admin note (e.g., "Complimentary for beta tester")
 
-#### 5d. Revenue Reports
+#### 5d. Discount Coupon Generation
+Admin can create discount coupons for membership plans:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Coupon Code | Text | e.g., "WELCOME50", "DIWALI2026" (auto-generate or manual) |
+| Discount Type | Select | Percentage (%) / Fixed Amount (₹) |
+| Discount Value | Number | e.g., 50 (for 50%) or 500 (for ₹500 off) |
+| Applicable Plans | Multi-select | All plans / specific plans only |
+| Min Purchase Amount | Number | e.g., ₹999 (optional) |
+| Max Discount Cap | Number | e.g., ₹1000 max (for percentage coupons) |
+| Usage Limit (total) | Number | e.g., 100 total uses |
+| Usage Limit (per user) | Number | e.g., 1 per user |
+| Valid From | Date | Start date |
+| Valid Until | Date | Expiry date |
+| Is Active | Toggle | Enable/disable |
+
+**Coupon tracking:**
+- Total times used
+- Revenue impact (total discount given)
+- Users who used the coupon
+- Export coupon usage report
+
+**Frontend integration:**
+- "Have a coupon?" input on checkout/payment page
+- Apply coupon → show discounted price with strikethrough original
+- Coupon validation: expired, max usage reached, invalid code, plan not eligible
+
+#### 5e. Revenue Reports
 - Daily/Weekly/Monthly/Yearly revenue
 - Revenue by plan
 - Revenue by payment method
@@ -295,14 +390,51 @@ This is the **most important section for CodeCanyon customers**.
 | Max Photos (Album) | Number | e.g., 9 |
 | Max Photos (Family) | Number | e.g., 3 |
 
-#### 6h. SEO Settings
+#### 6h. Social Links
+Website-level social media links displayed in footer and contact page:
+
 | Setting | Type | Description |
 |---------|------|-------------|
-| Meta Title | Text | Homepage title tag |
-| Meta Description | Textarea | Homepage meta description |
+| Facebook Page URL | URL | e.g., facebook.com/anugrahamatrimony |
+| Instagram URL | URL | e.g., instagram.com/anugrahamatrimony |
+| Twitter / X URL | URL | Optional |
+| YouTube Channel URL | URL | Optional |
+| LinkedIn URL | URL | Optional |
+| WhatsApp Chat Link | URL | Direct WhatsApp chat (wa.me/91XXXXXXXXXX) |
+
+Displayed in: footer icons, contact page, about page.
+
+#### 6i. SEO Settings (Global + Per-Page)
+
+**Global SEO:**
+| Setting | Type | Description |
+|---------|------|-------------|
+| Default Meta Title | Text | Fallback title tag |
+| Meta Title Suffix | Text | e.g., " | Anugraha Matrimony" (appended to all pages) |
+| Default Meta Description | Textarea | Fallback meta description |
 | Google Analytics ID | Text | e.g., GA-XXXXXXX |
+| Google Tag Manager ID | Text | e.g., GTM-XXXXXX |
 | Facebook Pixel ID | Text | For ads tracking |
-| OG Image | File Upload | Social sharing image |
+| OG Image | File Upload | Default social sharing image |
+| Robots.txt Content | Textarea | Editable robots.txt |
+| Sitemap Auto-Generate | Toggle | Auto-generate XML sitemap |
+
+**Per-Page SEO:**
+Admin can set custom SEO for each page:
+
+| Page | Meta Title | Meta Description | OG Image | Canonical URL |
+|------|-----------|-----------------|----------|---------------|
+| Home | ✏️ | ✏️ | ✏️ | Auto |
+| Search | ✏️ | ✏️ | ✏️ | Auto |
+| Login | ✏️ | ✏️ | - | Auto |
+| Register | ✏️ | ✏️ | - | Auto |
+| Happy Stories | ✏️ | ✏️ | ✏️ | Auto |
+| Privacy Policy | ✏️ | ✏️ | - | Auto |
+| Terms | ✏️ | ✏️ | - | Auto |
+| About Us | ✏️ | ✏️ | ✏️ | Auto |
+| Contact | ✏️ | ✏️ | - | Auto |
+| Membership Plans | ✏️ | ✏️ | ✏️ | Auto |
+| Custom Pages | ✏️ | ✏️ | ✏️ | Auto |
 
 ---
 
@@ -387,7 +519,48 @@ Edit email content from admin:
 - Interest received SMS
 - Interest accepted SMS
 
-#### 7f. Notification Templates
+#### 7f. Happy Stories (Success Stories)
+Showcase couples who found their match through the platform:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Groom Name | Text | e.g., "John" |
+| Bride Name | Text | e.g., "Mary" |
+| Groom Matri ID | Select | Link to profile (optional) |
+| Bride Matri ID | Select | Link to profile (optional) |
+| Couple Photo | File Upload | Wedding/engagement photo |
+| Marriage Date | Date | When they got married |
+| Story | Rich Text | Their story (WYSIWYG editor) |
+| Location | Text | e.g., "Mangalore, Karnataka" |
+| Sort Order | Number | Display order |
+| Is Active | Toggle | Show/hide on frontend |
+
+**Frontend display:**
+- Homepage: "Happy Stories" section with 3-4 featured stories
+- Dedicated `/happy-stories` page with all stories (paginated)
+- Each story card: couple photo, names, date, excerpt → click for full story
+
+#### 7g. Testimonials
+User reviews and feedback displayed on the website:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| User Name | Text | Display name |
+| User Matri ID | Select | Link to profile (optional, for verified badge) |
+| User Photo | File Upload | Or auto-pull from profile photo |
+| Rating | Number | 1-5 stars |
+| Testimonial Text | Textarea | What they said |
+| Designation | Text | Optional (e.g., "Software Engineer, Bangalore") |
+| Is Verified | Toggle | Verified user badge |
+| Sort Order | Number | Display order |
+| Is Active | Toggle | Show/hide |
+
+**Frontend display:**
+- Homepage: testimonial carousel (3-5 rotating)
+- Dedicated `/testimonials` page (optional)
+- Star rating display
+
+#### 7h. Notification Templates
 Edit in-app notification messages:
 - Interest received title/message
 - Interest accepted title/message
@@ -422,7 +595,41 @@ Messages flagged by users for inappropriate content.
 | Date | When reported |
 | Actions | Warn user / Block user / Dismiss report |
 
-#### 8c. Broadcast Notifications
+#### 8c. Admin Recommend Matches
+Admin/staff can manually recommend profiles to users:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| For User | Select | Who receives the recommendation (Matri ID) |
+| Recommended Profile | Select | Who is being recommended (Matri ID) |
+| Admin Note | Text | "We think this profile is a great match because..." |
+| Priority | Select | Normal / High (High shows as "Top Pick") |
+
+**How it works:**
+- Admin reviews two profiles and sees them as compatible
+- Creates a recommendation → user gets a notification: "Admin recommends AM100042 for you"
+- Recommended profiles appear in a dedicated "Admin Picks" section on the user's matches page
+- User can send interest directly from the recommendation
+- Track: recommendation sent, viewed, interest sent (conversion rate)
+
+#### 8d. Partner Preference Match Count
+Show compatibility percentage on every profile card and profile view:
+
+**Match Score Display:**
+- Profile cards show "85% Match" badge (green if >80%, yellow 60-80%, grey <60%)
+- Profile view page shows detailed breakdown:
+  ```
+  Match Score: 85%
+  ✅ Age Range (15%) — Within preference
+  ✅ Religion (15%) — Same religion
+  ✅ Mother Tongue (10%) — Same language
+  ❌ Location (10%) — Different state
+  ✅ Education (10%) — Matches preference
+  ...
+  ```
+- Uses the MatchingService weights from NEXT_SESSION_PLAN.md
+
+#### 8e. Broadcast Notifications
 Admin can send notifications to:
 - All users
 - All male/female users
@@ -597,7 +804,17 @@ Each branch sees only their own data:
 - Profiles show "Registered through: Mangalore Branch"
 - Branch staff can only view/manage users assigned to their branch
 
-#### 13d. Branch Revenue Tracking
+#### 13d. Franchise Affiliate Link
+Each franchise/branch gets a unique registration link for tracking:
+
+- URL format: `https://yourdomain.com/register?ref=MNG` (branch code)
+- Users who register via this link are auto-assigned to that branch
+- Branch dashboard shows: "X users registered via your affiliate link"
+- Franchise can share this link on their website, social media, printed materials
+- QR code auto-generated for each affiliate link (for print/offline use)
+- Tracking: clicks on link, registrations, conversions, revenue from referred users
+
+#### 13e. Branch Revenue Tracking
 | Metric | Description |
 |--------|-------------|
 | Total Registrations | Users registered via this branch |
@@ -623,13 +840,19 @@ For staff members who assist users with registration and profile management.
 | Is Active | Toggle | Enable/disable |
 | Joined Date | Date | Employment start |
 
-#### 14b. Telecaller Dashboard
+#### 14b. Telecaller Dashboard (with Charts)
 What each telecaller sees after login:
 - My assigned leads (users to follow up)
 - My registrations today / this week / this month
 - My call log
 - Pending follow-ups
 - Performance metrics vs targets
+
+**Dashboard Charts (Filament Widgets):**
+- Registrations trend (line chart — last 30 days, my registrations)
+- Calls made this week (bar chart — daily breakdown)
+- Lead conversion funnel (pie chart — New → Contacted → Interested → Registered)
+- Target progress (progress bar — registrations vs monthly target, revenue vs target)
 
 #### 14c. Lead Management
 | Field | Type | Description |
@@ -686,6 +909,128 @@ Admin sets monthly targets per staff:
 
 ---
 
+### 15. ADVERTISEMENT MANAGEMENT
+
+Monetize ad spaces on the platform. Admin can manage ads without touching code.
+
+#### 15a. Ad Spaces (Frontend Locations)
+Pre-defined ad slots where ads appear on the website:
+
+| Ad Space | Location | Size | Type |
+|----------|----------|------|------|
+| Homepage Banner | Below hero section | 728x90 (leaderboard) | Image / HTML |
+| Homepage Sidebar | Right column on homepage | 300x250 (medium rectangle) | Image / HTML |
+| Search Results | Between every 5th result | 728x90 | Image / HTML |
+| Profile View Sidebar | Right sidebar on profile view | 300x600 (half page) | Image / HTML |
+| Dashboard Sidebar | Right sidebar on dashboard | 300x250 | Image / HTML |
+| Footer Banner | Above footer (all pages) | 728x90 | Image / HTML |
+| Mobile Banner | Between content on mobile | 320x50 (mobile leaderboard) | Image / HTML |
+
+#### 15b. Ad Management
+| Field | Type | Description |
+|-------|------|-------------|
+| Ad Title | Text | Internal name (e.g., "Wedding Photography - March 2026") |
+| Ad Space | Select | Which slot (from 15a) |
+| Ad Type | Select | Image / HTML / Google AdSense |
+| Image | File Upload | Banner image (for image type) |
+| Click URL | URL | Where ad links to |
+| HTML Code | Textarea | Custom HTML/JS (for HTML/AdSense type) |
+| Advertiser Name | Text | Who placed the ad |
+| Start Date | Date | When to start showing |
+| End Date | Date | When to stop showing |
+| Is Active | Toggle | Enable/disable |
+| Priority | Number | Higher = shown first if multiple ads for same slot |
+
+#### 15c. Ad Analytics
+| Metric | Description |
+|--------|-------------|
+| Impressions | How many times ad was shown |
+| Clicks | How many times ad was clicked |
+| CTR | Click-through rate (%) |
+| Revenue | If tracked (manual entry or per-click rate) |
+| By Date | Daily impression/click chart |
+
+#### 15d. Google AdSense Integration
+- Admin can paste AdSense code for any ad space
+- Toggle: "Use Google AdSense" per slot (overrides manual ads)
+- Allows platform owners to monetize via Google AdSense without code changes
+
+---
+
+### 16. WEDDING DIRECTORY *(Low Priority — Phase 2)*
+
+A vendor marketplace for wedding-related services. Separate module that adds value but is not core to matrimony.
+
+#### 16a. Vendor Categories
+Admin manages categories of wedding vendors:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Category Name | Text | e.g., "Wedding Photography", "Catering", "Venues" |
+| Icon | Select/Upload | Category icon |
+| Sort Order | Number | Display order |
+| Is Active | Toggle | Show/hide |
+
+**Suggested categories:**
+Wedding Photography, Videography, Catering, Wedding Venues/Halls, Wedding Planners, Florists, Bridal Makeup, Mehendi Artists, DJs/Music, Wedding Cards/Invitations, Jewellers, Bridal Wear, Groom Wear, Cake & Bakery, Travel & Honeymoon
+
+#### 16b. Vendor Registration & Profile
+Vendors register themselves (separate registration flow):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| Business Name | Text | e.g., "Royal Wedding Photography" |
+| Category | Select | From 16a |
+| Owner Name | Text | Contact person |
+| Phone | Text | Business phone |
+| Email | Email | Business email |
+| Website | URL | Optional |
+| Address | Textarea | Business address |
+| City | Text | Service area |
+| State | Select | State |
+| Description | Rich Text | About the business |
+| Logo | File Upload | Business logo |
+| Portfolio Images | Multi-Upload | Up to 10 photos |
+| Starting Price | Text | e.g., "₹25,000 onwards" |
+| Is Verified | Toggle | Admin-verified badge |
+| Is Active | Toggle | Show/hide listing |
+
+#### 16c. Vendor Dashboard
+Each vendor gets their own dashboard after login:
+- Profile views count
+- Inquiry count
+- Inquiry list with user details
+- Edit profile/photos
+- Activity log
+
+#### 16d. Browse & Search Vendors (Frontend)
+- `/wedding-directory` — Browse all vendors by category
+- `/wedding-directory?category=photography&city=mangalore` — Filter by category + city
+- Each vendor card: logo, name, category, city, starting price, rating
+- Vendor detail page: full profile, portfolio gallery, inquiry form
+- "Similar Vendors" section on each vendor page
+
+#### 16e. Vendor Inquiry
+Users can send inquiries to vendors:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| User Name | Auto | From logged-in user |
+| Phone | Auto | From profile |
+| Event Date | Date | Wedding/event date |
+| Message | Textarea | Requirements |
+| Budget | Text | Optional |
+
+Vendor receives email + in-dashboard notification for each inquiry.
+
+#### 16f. Admin: Vendor Management
+- Approve/reject vendor registrations
+- View all vendor analytics
+- Feature vendors (homepage showcase)
+- Manage vendor categories
+
+---
+
 ## Admin Roles & Permissions
 
 | Role | Permissions |
@@ -707,23 +1052,39 @@ Uses `spatie/laravel-permission` (already installed).
 | ProfileApprovalResource | Profile | HIGH |
 | IdProofResource | IdProof | HIGH |
 | SubscriptionResource | Subscription | HIGH |
-| PlanResource | (new model) | HIGH |
-| PaymentResource | Subscription | MEDIUM |
+| PlanResource | MembershipPlan | HIGH |
+| PaymentResource | Payment | MEDIUM |
+| CouponResource | Coupon (new) | MEDIUM |
 | InterestResource | Interest | MEDIUM |
+| AdminRecommendationResource | AdminRecommendation (new) | MEDIUM |
+| VipProfileResource | Profile (scoped) | MEDIUM |
+| LoginHistoryResource | LoginHistory (new) | LOW |
 | NotificationResource | Notification | LOW |
 | CommunityResource | Community | MEDIUM |
 | SiteSettingResource | SiteSetting | HIGH |
 | ThemeSettingResource | ThemeSetting | HIGH |
-| ActivityLogResource | (new model) | LOW |
+| HappyStoryResource | HappyStory (new) | MEDIUM |
+| TestimonialResource | Testimonial (new) | MEDIUM |
+| AdvertisementResource | Advertisement (new) | MEDIUM |
+| ActivityLogResource | ActivityLog (new) | LOW |
+| BranchResource | Branch (new) | LOW |
+| StaffResource | Staff (new) | LOW |
+| LeadResource | Lead (new) | LOW |
+| VendorCategoryResource | VendorCategory (new) | LOW (Phase 2) |
+| VendorResource | Vendor (new) | LOW (Phase 2) |
+| VendorInquiryResource | VendorInquiry (new) | LOW (Phase 2) |
 
 **Filament Pages (custom):**
 - Dashboard (stats + charts)
-- Site Settings (tabs: General, Branding, Email, Payment, Registration, SEO)
+- Site Settings (tabs: General, Branding, Email, Payment, Registration, SEO, Social Links)
 - Reference Data Editor
 - Static Page Editor
 - Email Template Editor
+- SEO Manager (per-page SEO)
 - Reports (charts + exports)
 - System Maintenance
+- Staff/Telecaller Dashboard
+- Branch/Franchise Dashboard
 
 ---
 
@@ -731,23 +1092,28 @@ Uses `spatie/laravel-permission` (already installed).
 
 | Section | Effort |
 |---------|--------|
-| Dashboard with charts | 3-4 hours |
-| User Management | 3-4 hours |
-| Profile Approval | 1-2 hours |
-| ID Proof Verification | 1-2 hours |
-| Membership Plans CRUD | 2-3 hours |
-| Payment History + Manual Sub | 2-3 hours |
-| Site Settings (all tabs) | 4-5 hours |
-| Content Management + Reference Data | 4-5 hours |
-| Interest & Message Management | 2-3 hours |
-| Photo Management | 1-2 hours |
-| Reports & Analytics | 3-4 hours |
-| Blocked & Reported Users | 1-2 hours |
-| Shortlist & Views Analytics | 1 hour |
-| System & Maintenance | 2-3 hours |
+| 1. Dashboard with charts | 3-4 hours |
+| 2. User Management (+ login history, VIP, profile sharing, card download) | 5-6 hours |
+| 3. Profile Approval | 1-2 hours |
+| 4. ID Proof Verification | 1-2 hours |
+| 5. Membership Plans + Coupons | 3-4 hours |
+| 5e. Revenue Reports | 1-2 hours |
+| 6. Site Settings (General, Branding, Email, SMS, Payment, Registration, Social, SEO) | 5-6 hours |
+| 7. Content Management (Reference Data, Static Pages, Email Templates, Happy Stories, Testimonials) | 5-6 hours |
+| 8. Interest & Match Management (+ Admin Recommend, Match Score) | 3-4 hours |
+| 9. Photo Management | 1-2 hours |
+| 10. Reports & Analytics | 3-4 hours |
+| 10 (System). System & Maintenance | 2-3 hours |
+| 11. Blocked & Reported Users | 1-2 hours |
+| 12. Shortlist & Views Analytics | 1 hour |
+| 13. Franchise / Branch Management (+ Affiliate Link) | 3-4 hours |
+| 14. Staff / Telecaller Module (+ Charts) | 4-5 hours |
+| 15. Advertisement Management | 2-3 hours |
+| 16. Wedding Directory (Phase 2) | 6-8 hours |
 | Roles & Permissions | 1-2 hours |
 | Broadcast Notifications | 1-2 hours |
-| **Total** | **~35-45 hours** |
+| **Total (without Wedding Directory)** | **~50-60 hours** |
+| **Total (with Wedding Directory)** | **~56-68 hours** |
 
 ---
 
@@ -758,18 +1124,49 @@ When listing on CodeCanyon, highlight these:
 2. ✅ **White-Label Ready** — change branding, colors, logo from admin
 3. ✅ **No Coding Required** — all settings configurable from admin panel
 4. ✅ **Plan Management** — create unlimited membership plans with custom features
-5. ✅ **Payment Gateway** — Razorpay integrated, configurable from admin
-6. ✅ **SMTP Config from Admin** — no .env editing needed
-7. ✅ **Profile Approval** — manual or auto-approve modes
-8. ✅ **ID Verification** — built-in document review system
-9. ✅ **Content Management** — edit all pages, email templates, dropdown lists
-10. ✅ **Reference Data Management** — edit all dropdowns (religions, castes, locations, etc.) from admin
-11. ✅ **Multi-Role Admin** — Super Admin, Admin, Moderator, Support roles
-12. ✅ **Export Reports** — CSV/Excel/PDF for all data
-13. ✅ **Activity Logging** — track all admin actions
-14. ✅ **Broadcast Notifications** — send announcements to all or filtered users
-15. ✅ **Photo Moderation** — review and remove inappropriate photos
-16. ✅ **User Reports & Bans** — handle complaints, warn/suspend/ban users
-17. ✅ **Login As User** — debug user issues by viewing their account
-18. ✅ **Scheduled Tasks** — auto-expire interests, cleanup, daily emails
-19. ✅ **System Health** — PHP/MySQL versions, disk usage, error logs, cache management
+5. ✅ **Discount Coupons** — generate promo codes with percentage/fixed discounts, usage limits, expiry
+6. ✅ **Payment Gateway** — Razorpay integrated, configurable from admin
+7. ✅ **SMTP Config from Admin** — no .env editing needed
+8. ✅ **Profile Approval** — manual or auto-approve modes
+9. ✅ **ID Verification** — built-in document review system
+10. ✅ **Content Management** — edit all pages, email templates, dropdown lists
+11. ✅ **Reference Data Management** — edit all dropdowns (religions, castes, locations, etc.) from admin
+12. ✅ **Multi-Role Admin** — Super Admin, Admin, Moderator, Support roles
+13. ✅ **Export Reports** — CSV/Excel/PDF for all data
+14. ✅ **Activity Logging** — track all admin actions
+15. ✅ **Broadcast Notifications** — send announcements to all or filtered users
+16. ✅ **Photo Moderation** — review and remove inappropriate photos
+17. ✅ **User Reports & Bans** — handle complaints, warn/suspend/ban users
+18. ✅ **Login As User** — debug user issues by viewing their account
+19. ✅ **Scheduled Tasks** — auto-expire interests, cleanup, daily emails
+20. ✅ **System Health** — PHP/MySQL versions, disk usage, error logs, cache management
+21. ✅ **VIP / Featured Profiles** — admin-promoted premium visibility
+22. ✅ **Admin Recommend Matches** — manually curate match suggestions for users
+23. ✅ **Match Compatibility Score** — show percentage match on every profile
+24. ✅ **Happy Stories & Testimonials** — showcase success stories on homepage
+25. ✅ **Profile Link Sharing** — shareable public profile links via WhatsApp/email
+26. ✅ **Profile Summary Card** — downloadable profile image for offline sharing
+27. ✅ **Login History with IP** — security tracking of all user logins
+28. ✅ **Per-Page SEO** — custom meta title/description for every page
+29. ✅ **Social Links Management** — connect Facebook, Instagram, YouTube, WhatsApp
+30. ✅ **Advertisement Management** — manage ad banners + Google AdSense integration
+31. ✅ **Franchise / Branch System** — multi-location management with commission tracking
+32. ✅ **Franchise Affiliate Links** — unique registration links with QR codes per branch
+33. ✅ **Staff / Telecaller Module** — lead management, call logs, performance tracking
+34. ✅ **Wedding Directory** — vendor marketplace with categories, search, inquiries (Phase 2)
+
+---
+
+## Excluded Features (Consciously Omitted)
+
+Features offered by some competitors that we chose **not** to include, with reasoning:
+
+| Feature | Reason for Exclusion |
+|---------|---------------------|
+| Special case search (IIT/IIM) | Too niche — our keyword search already covers this. Users can search by education/college name |
+| Custom code injection (Plugin) | Security risk for white-label customers. Admin shouldn't inject arbitrary JS. Use Google Analytics/Tag Manager fields instead |
+| User → Admin direct notification reply | Overcomplicates the notification system. Users can use Contact Us page or WhatsApp support instead |
+| Staff pending task assignment | Adds complexity without clear value. Lead management + follow-up dates already cover task tracking |
+| Franchise payout request flow | Too finance-heavy for an MVP. Commission tracking is enough — payouts handled offline via bank transfer |
+
+These can be reconsidered in future versions based on customer demand.
