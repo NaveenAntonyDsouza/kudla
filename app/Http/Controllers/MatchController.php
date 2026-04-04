@@ -13,6 +13,9 @@ class MatchController extends Controller
     public function index()
     {
         $profile = auth()->user()->profile;
+        if (!$profile) {
+            return redirect()->route('register.step1');
+        }
         $hasPreferences = $profile->partnerPreference()->exists();
         $matches = $hasPreferences
             ? $this->matchingService->getMatches($profile)
@@ -24,6 +27,9 @@ class MatchController extends Controller
     public function mutual()
     {
         $profile = auth()->user()->profile;
+        if (!$profile) {
+            return redirect()->route('register.step1');
+        }
         $hasPreferences = $profile->partnerPreference()->exists();
         $matches = $hasPreferences
             ? $this->matchingService->getMutualMatches($profile)
