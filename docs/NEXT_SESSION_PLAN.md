@@ -94,7 +94,8 @@ Pre-filtered search pages:
 ---
 
 ## Key Files for Reference:
-- `FEATURE_STATUS.md` — complete feature audit
-- `DEPLOYMENT.md` — Hostinger deployment guide
-- `TECH_STACK.md` — technology versions
-- `.env.production` — production environment template
+- `docs/FEATURE_STATUS.md` — complete feature audit
+- `docs/DEPLOYMENT.md` — Hostinger deployment guide
+- `docs/TECH_STACK.md` — technology versions
+- `docs/.env.production` — production environment template
+- `docs/admin-panel/` — admin panel plan (16 sections)
