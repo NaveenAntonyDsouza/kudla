@@ -28,6 +28,18 @@ class SearchController extends Controller
 
         $activeTab = $request->get('tab', 'partner');
 
+        // Load partner preferences into search form
+        if ($request->boolean('load_prefs') && $prefs) {
+            $mapped = $this->prefsToSearchParams($prefs);
+            $request->merge($mapped);
+
+            // Override defaults for age/height selects
+            if ($prefs->age_from) $defaults['age_from'] = $prefs->age_from;
+            if ($prefs->age_to) $defaults['age_to'] = $prefs->age_to;
+            if ($prefs->height_from_cm) $defaults['height_from'] = $prefs->height_from_cm;
+            if ($prefs->height_to_cm) $defaults['height_to'] = $prefs->height_to_cm;
+        }
+
         // If search was submitted, show results page
         if ($request->has('search')) {
             $results = $this->buildSearchQuery($request, $profile)->paginate(20)->withQueryString();
@@ -188,5 +200,36 @@ class SearchController extends Controller
         }
 
         return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Map PartnerPreference fields to search form parameter names.
+     */
+    private function prefsToSearchParams($prefs): array
+    {
+        $params = [];
+
+        // Multi-select arrays → search form arrays
+        if ($prefs->religions) $params['religion'] = $prefs->religions;
+        if ($prefs->denomination) $params['denomination'] = $prefs->denomination;
+        if ($prefs->caste) $params['caste'] = $prefs->caste;
+        if ($prefs->marital_status) $params['marital_status'] = $prefs->marital_status;
+        if ($prefs->mother_tongues) $params['mother_tongue'] = $prefs->mother_tongues;
+        if ($prefs->education_levels) $params['education'] = $prefs->education_levels;
+        if ($prefs->occupations) $params['occupation'] = $prefs->occupations;
+        if ($prefs->diet) $params['diet'] = $prefs->diet;
+        if ($prefs->family_status) $params['family_status'] = $prefs->family_status;
+        if ($prefs->physical_status) $params['physical_status'] = $prefs->physical_status;
+        if ($prefs->body_type) $params['body_type'] = $prefs->body_type;
+
+        // Single-value selects
+        if ($prefs->working_countries) {
+            $params['working_country'] = $prefs->working_countries[0] ?? null;
+        }
+        if ($prefs->native_countries) {
+            $params['native_country'] = $prefs->native_countries[0] ?? null;
+        }
+
+        return $params;
     }
 }

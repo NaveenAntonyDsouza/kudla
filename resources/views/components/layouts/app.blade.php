@@ -211,21 +211,45 @@
 
             <!-- Mobile menu (logged-in) -->
             <div x-data="{ open: false }" x-on:toggle-mobile-menu.window="open = !open" x-show="open" x-cloak class="md:hidden border-t border-gray-200 bg-white">
-                <div class="px-4 py-3 space-y-2">
+                <div class="px-4 py-3 space-y-1">
+                    {{-- My Home --}}
+                    <p class="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">My Home</p>
                     <a href="/dashboard" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Dashboard</a>
-                    <a href="/search" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Search</a>
+                    <a href="{{ route('profile.show') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">View & Edit Profile</a>
+                    <a href="{{ route('photos.manage') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Manage Photos</a>
+                    <a href="{{ route('idproof.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Submit ID Proof</a>
+                    <a href="{{ route('membership.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Membership Plans</a>
+                    <a href="{{ route('settings.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Profile Settings</a>
+
+                    {{-- Search --}}
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <p class="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Search</p>
+                    <a href="{{ route('search.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Partner Search</a>
+                    <a href="{{ route('search.index', ['tab' => 'keyword']) }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Keyword Search</a>
+                    <a href="{{ route('search.index', ['tab' => 'byid']) }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Search by ID</a>
+
+                    {{-- Matches --}}
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <p class="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Matches</p>
                     <a href="{{ route('matches.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Matches</a>
                     <a href="{{ route('matches.mutual') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Mutual Matches</a>
-                    <a href="{{ route('interests.inbox') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Interests</a>
-                    <a href="{{ route('profile.show') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Profile</a>
-                    <a href="{{ route('photos.manage') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Manage Photos</a>
-                    <a href="{{ route('settings.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Settings</a>
-                    <a href="{{ route('shortlist.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Shortlist</a>
+
+                    {{-- Messages --}}
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <a href="{{ route('interests.inbox') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Messages</a>
+
+                    {{-- Activity --}}
+                    <div class="border-t border-gray-100 my-1"></div>
+                    <p class="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Activity</p>
                     <a href="{{ route('views.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Profile Views</a>
+                    <a href="{{ route('shortlist.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Shortlisted Profiles</a>
+                    <a href="{{ route('blocked.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Blocked Profiles</a>
+
+                    {{-- Logout --}}
                     <div class="border-t border-gray-100 my-1"></div>
                     <form method="POST" action="/logout">
                         @csrf
-                        <button type="submit" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Logout</button>
+                        <button type="submit" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">Logout</button>
                     </form>
                 </div>
             </div>
