@@ -304,16 +304,19 @@ CRUD for the community list shown in registration and home page.
 
 #### 7b. Reference Data Management
 Admin can edit all dropdown options WITHOUT touching code:
+- Country list (with phone codes)
+- State list (grouped by country)
+- District list (grouped by state)
 - Denomination list
 - Diocese list
 - Caste / Sub-caste list
 - Education qualifications
 - Occupation categories
 - Income ranges
-- Mother tongue list
+- Mother tongue / Language list
 - Hobbies, Music, Books, Movies, Sports, Cuisine lists
-- Country list
 - Height/Weight lists
+- Interest message templates (send + accept + decline)
 
 #### 7c. Static Pages
 WYSIWYG editor for:
