@@ -65,6 +65,11 @@ class ProfileController extends Controller
         $user = $profile->user;
         $isOwn = auth()->id() === $user->id;
 
+        // Block same-gender profile viewing (except own profile)
+        if (! $isOwn && auth()->user()->profile->gender === $profile->gender) {
+            abort(403, 'You cannot view this profile.');
+        }
+
         $profile->load([
             'religiousInfo', 'educationDetail', 'familyDetail',
             'locationInfo', 'contactInfo', 'lifestyleInfo',

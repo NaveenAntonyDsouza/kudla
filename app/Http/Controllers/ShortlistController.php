@@ -19,6 +19,10 @@ class ShortlistController extends Controller
             return back()->withErrors(['shortlist' => 'Cannot shortlist yourself.']);
         }
 
+        if ($myProfile->gender === $profile->gender) {
+            return back()->withErrors(['shortlist' => 'Cannot shortlist same gender.']);
+        }
+
         $existing = Shortlist::where('profile_id', $myProfile->id)
             ->where('shortlisted_profile_id', $profile->id)
             ->first();

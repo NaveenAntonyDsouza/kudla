@@ -18,6 +18,10 @@ class BlockController extends Controller
             return back()->withErrors(['block' => 'Cannot block yourself.']);
         }
 
+        if ($myProfile->gender === $profile->gender) {
+            return back()->withErrors(['block' => 'Cannot perform this action.']);
+        }
+
         BlockedProfile::firstOrCreate([
             'profile_id' => $myProfile->id,
             'blocked_profile_id' => $profile->id,
