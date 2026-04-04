@@ -16,6 +16,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileViewController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShortlistController;
+use App\Http\Controllers\DiscoverController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
@@ -140,6 +141,11 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Matches
     Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
     Route::get('/matches/mutual', [MatchController::class, 'mutual'])->name('matches.mutual');
+
+    // Discover Profiles (category browsing)
+    Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
+    Route::get('/discover/{category}', [DiscoverController::class, 'category'])->name('discover.category');
+    Route::get('/discover/{category}/{slug}', [DiscoverController::class, 'results'])->name('discover.results');
 
     // Interests (specific routes first, parameterized last)
     Route::get('/interests', [InterestController::class, 'inbox'])->name('interests.inbox');
