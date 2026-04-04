@@ -165,6 +165,12 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/preview', [ProfileController::class, 'preview'])->name('profile.preview');
     Route::get('/profile/{profile}', [ProfileController::class, 'viewProfile'])->name('profile.view');
+
+    // Photo Requests
+    Route::get('/photo-requests', [\App\Http\Controllers\PhotoRequestController::class, 'index'])->name('photo-requests.index');
+    Route::post('/photo-requests/{profile}/send', [\App\Http\Controllers\PhotoRequestController::class, 'send'])->name('photo-requests.send');
+    Route::post('/photo-requests/{photoRequest}/approve', [\App\Http\Controllers\PhotoRequestController::class, 'approve'])->name('photo-requests.approve');
+    Route::post('/photo-requests/{photoRequest}/ignore', [\App\Http\Controllers\PhotoRequestController::class, 'ignore'])->name('photo-requests.ignore');
     Route::get('/profile/{profile}/print', [ProfileController::class, 'printProfile'])->name('profile.print');
     Route::post('/profile/{section}', [ProfileController::class, 'update'])->name('profile.update')
         ->where('section', 'primary|religious|education|family|location|contact|hobbies|social|partner');
