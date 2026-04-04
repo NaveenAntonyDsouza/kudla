@@ -265,4 +265,9 @@ class Profile extends Model
     {
         return $this->hasMany(IgnoredProfile::class);
     }
+
+    public function ignoredByOthers(): HasMany
+    {
+        return $this->hasMany(IgnoredProfile::class, 'ignored_profile_id');
+    }
 }

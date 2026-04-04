@@ -171,6 +171,16 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/photo-requests/{profile}/send', [\App\Http\Controllers\PhotoRequestController::class, 'send'])->name('photo-requests.send');
     Route::post('/photo-requests/{photoRequest}/approve', [\App\Http\Controllers\PhotoRequestController::class, 'approve'])->name('photo-requests.approve');
     Route::post('/photo-requests/{photoRequest}/ignore', [\App\Http\Controllers\PhotoRequestController::class, 'ignore'])->name('photo-requests.ignore');
+
+    // Saved Searches
+    Route::get('/saved-searches', [\App\Http\Controllers\SavedSearchController::class, 'index'])->name('saved-searches.index');
+    Route::post('/saved-searches', [\App\Http\Controllers\SavedSearchController::class, 'store'])->name('saved-searches.store');
+    Route::get('/saved-searches/{savedSearch}/load', [\App\Http\Controllers\SavedSearchController::class, 'load'])->name('saved-searches.load');
+    Route::delete('/saved-searches/{savedSearch}', [\App\Http\Controllers\SavedSearchController::class, 'destroy'])->name('saved-searches.destroy');
+
+    // Ignored Profiles
+    Route::get('/ignored', [\App\Http\Controllers\IgnoredProfileController::class, 'index'])->name('ignored.index');
+    Route::post('/ignored/{profile}/toggle', [\App\Http\Controllers\IgnoredProfileController::class, 'toggle'])->name('ignored.toggle');
     Route::get('/profile/{profile}/print', [ProfileController::class, 'printProfile'])->name('profile.print');
     Route::post('/profile/{section}', [ProfileController::class, 'update'])->name('profile.update')
         ->where('section', 'primary|religious|education|family|location|contact|hobbies|social|partner');

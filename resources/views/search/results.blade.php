@@ -15,12 +15,32 @@
             <h1 class="text-lg font-semibold text-gray-900">
                 <span class="text-(--color-primary)">{{ $results->total() }}</span> {{ Str::plural('Matching Profile', $results->total()) }} found
             </h1>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3" x-data="{ showSave: false }">
                 <a href="{{ route('search.index', request()->except(['search', 'page'])) }}"
                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-(--color-primary) border border-(--color-primary) rounded-lg hover:bg-(--color-primary-light) transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                     Modify Search
                 </a>
+                <button @click="showSave = !showSave" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
+                    Save
+                </button>
+                {{-- Save search inline form --}}
+                <form method="POST" action="{{ route('saved-searches.store') }}" x-show="showSave" x-cloak class="flex items-center gap-2">
+                    @csrf
+                    @foreach(request()->except(['search', 'page', '_token']) as $key => $value)
+                        @if(is_array($value))
+                            @foreach($value as $v)
+                                <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+                    <input type="text" name="search_name" placeholder="Name this search..." required
+                        class="w-40 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-(--color-primary) focus:border-(--color-primary)">
+                    <button type="submit" class="px-3 py-1.5 text-xs font-semibold text-white bg-(--color-primary) rounded-lg hover:bg-(--color-primary-hover)">Save</button>
+                </form>
             </div>
         </div>
 

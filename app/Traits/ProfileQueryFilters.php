@@ -20,6 +20,8 @@ trait ProfileQueryFilters
             ->where('gender', '!=', $profile->gender)
             ->whereDoesntHave('blockedByOthers', fn($q) => $q->where('profile_id', $profile->id))
             ->whereDoesntHave('blockedProfiles', fn($q) => $q->where('blocked_profile_id', $profile->id))
+            // Exclude ignored profiles
+            ->whereDoesntHave('ignoredByOthers', fn($q) => $q->where('profile_id', $profile->id))
             // Enforce show_profile_to setting
             ->where(function ($q) use ($profile) {
                 $q->where('show_profile_to', 'all')
