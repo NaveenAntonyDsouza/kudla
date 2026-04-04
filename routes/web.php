@@ -162,6 +162,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/preview', [ProfileController::class, 'preview'])->name('profile.preview');
     Route::get('/profile/{profile}', [ProfileController::class, 'viewProfile'])->name('profile.view');
+    Route::get('/profile/{profile}/print', [ProfileController::class, 'printProfile'])->name('profile.print');
     Route::post('/profile/{section}', [ProfileController::class, 'update'])->name('profile.update')
         ->where('section', 'primary|religious|education|family|location|contact|hobbies|social|partner');
 });

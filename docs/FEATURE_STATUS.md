@@ -96,6 +96,13 @@
 - [x] Forgot Password
 - [x] Payment integration (Razorpay)
 - [x] ID Proof upload
-- [ ] Configure SMTP email (.env)
+- [x] Configure SMTP email (.env) — working (email OTP functional)
+- [x] Matchmaking Engine (My Matches, Mutual Matches, match score badges)
+- [x] Discover Profiles (13 categories, 3-level browsing)
+- [x] Dashboard redesign (7 widget sections matching Chavara reference)
+- [x] Load Partner Preferences on search
+- [x] Mobile hamburger menu (complete with labeled sections)
+- [x] Homepage community buttons linked to discover routes
+- [x] Discover pages public (SEO — no login required)
 - [ ] Admin Panel (Filament)
 - [ ] Subscription feature enforcement

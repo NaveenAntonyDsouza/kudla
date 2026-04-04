@@ -60,6 +60,26 @@ class ProfileController extends Controller
         return view('profile.preview', compact('user', 'profile', 'activeTab', 'isOwn'));
     }
 
+    public function printProfile(Profile $profile)
+    {
+        $isOwn = auth()->id() === $profile->user_id;
+
+        if (!$isOwn && auth()->user()->profile->gender === $profile->gender) {
+            abort(403, 'You cannot view this profile.');
+        }
+
+        $profile->load([
+            'religiousInfo', 'educationDetail', 'familyDetail',
+            'locationInfo', 'contactInfo', 'lifestyleInfo',
+            'partnerPreference', 'primaryPhoto',
+        ]);
+
+        $user = $profile->user;
+        $siteName = \App\Models\SiteSetting::getValue('site_name', 'Anugraha Matrimony');
+
+        return view('profile.print', compact('profile', 'user', 'isOwn', 'siteName'));
+    }
+
     public function viewProfile(Profile $profile)
     {
         $user = $profile->user;
