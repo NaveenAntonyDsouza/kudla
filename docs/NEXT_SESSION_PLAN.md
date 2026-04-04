@@ -114,6 +114,7 @@ Pre-filtered search pages:
 - ✅ Last login tracking
 - ✅ Deployed to https://anugrahamatrimony.com (Hostinger)
 - ✅ Matchmaking Engine (MatchingService, My Matches, Mutual Matches, Dashboard recommendations, Profile view breakdown)
+- ✅ Discover Profiles (13 categories, 3-level browsing: hub → subcategory list → results)
 
 ---
 
