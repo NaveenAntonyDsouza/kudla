@@ -304,19 +304,47 @@ CRUD for the community list shown in registration and home page.
 
 #### 7b. Reference Data Management
 Admin can edit all dropdown options WITHOUT touching code:
-- Country list (with phone codes)
+
+**Location (cascading):**
+- Country list (with phone codes, flag)
 - State list (grouped by country)
 - District list (grouped by state)
-- Denomination list
-- Diocese list
-- Caste / Sub-caste list
-- Education qualifications
-- Occupation categories
+
+**Religion (cascading):**
+- Religion list
+- Denomination list (grouped by religion — e.g., Christian → Latin Catholic, Syrian Catholic)
+- Diocese list (grouped by denomination)
+- Caste list (grouped by religion — e.g., Hindu → Brahmin, Nair)
+- Sub-caste list (grouped by caste)
+- Gotra/Gothram list (grouped by religion)
+- Muslim Sect list (grouped under Muslim)
+- Muslim Community/Jamath list (grouped under Muslim)
+- Jain Sect list (grouped under Jain)
+
+**Education & Profession (grouped):**
+- Education qualifications (grouped by level — e.g., Engineering → B.Tech, M.Tech)
+- Occupation categories (grouped by sector — e.g., IT → Software Engineer, Data Analyst)
+- Employment categories
 - Income ranges
+
+**Lifestyle & Preferences:**
 - Mother tongue / Language list
-- Hobbies, Music, Books, Movies, Sports, Cuisine lists
-- Height/Weight lists
+- Hobbies list
+- Music genres list
+- Books genres list
+- Movie genres list
+- Sports / Fitness list
+- Cuisine list
+- Diet options
+- Cultural background options
+
+**System:**
+- Height list
+- Weight list
 - Interest message templates (send + accept + decline)
+- "How did you hear about us" options
+- Nakshatra list
+- Rasi/Zodiac list
 
 #### 7c. Static Pages
 WYSIWYG editor for:
