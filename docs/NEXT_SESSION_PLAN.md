@@ -117,10 +117,10 @@ Pre-filtered search pages:
 
 ---
 
-## Quick Fixes Still Remaining:
-- Mobile hamburger menu needs all dropdown items
-- "Load Partner Preferences" button on search not functional
-- Keyword search should exclude blocked profiles (uses baseQuery, so already done)
+## Quick Fixes (All Resolved):
+- ✅ Mobile hamburger menu — all dropdown items with labeled sections
+- ✅ "Load Partner Preferences" button — pre-fills search form from saved preferences
+- ✅ Keyword search — already uses baseQuery (blocked profiles excluded)
 
 ---
 
