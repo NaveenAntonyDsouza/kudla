@@ -283,32 +283,51 @@ class InterestController extends Controller
     /**
      * Get counts for the inbox sidebar.
      */
+    /**
+     * Get all inbox counts in 2 queries instead of 13.
+     * Uses conditional aggregation (SUM + CASE) for efficiency.
+     */
     private function getInboxCounts(Profile $profile): array
     {
-        $sentBase = Interest::where('sender_profile_id', $profile->id)->where('is_trashed_by_sender', false);
-        $receivedBase = Interest::where('receiver_profile_id', $profile->id)->where('is_trashed_by_receiver', false);
+        $id = $profile->id;
+
+        $sent = \DB::selectOne("
+            SELECT
+                SUM(CASE WHEN is_trashed_by_sender = 0 THEN 1 ELSE 0 END) as not_trashed,
+                SUM(CASE WHEN is_trashed_by_sender = 0 AND status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
+                SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) as declined,
+                SUM(CASE WHEN is_starred_by_sender = 1 THEN 1 ELSE 0 END) as starred,
+                SUM(CASE WHEN is_trashed_by_sender = 1 THEN 1 ELSE 0 END) as trashed,
+                SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
+            FROM interests WHERE sender_profile_id = ?
+        ", [$id]);
+
+        $received = \DB::selectOne("
+            SELECT
+                SUM(CASE WHEN is_trashed_by_receiver = 0 THEN 1 ELSE 0 END) as not_trashed,
+                SUM(CASE WHEN is_trashed_by_receiver = 0 AND status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted,
+                SUM(CASE WHEN status = 'declined' THEN 1 ELSE 0 END) as declined,
+                SUM(CASE WHEN is_starred_by_receiver = 1 THEN 1 ELSE 0 END) as starred,
+                SUM(CASE WHEN is_trashed_by_receiver = 1 THEN 1 ELSE 0 END) as trashed,
+                SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
+            FROM interests WHERE receiver_profile_id = ?
+        ", [$id]);
 
         return [
-            'all' => (clone $sentBase)->count() + (clone $receivedBase)->count(),
-            'received' => (clone $receivedBase)->count(),
-            'sent' => (clone $sentBase)->count(),
-            'starred' => Interest::where(function ($q) use ($profile) {
-                $q->where(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('is_starred_by_sender', true))
-                  ->orWhere(fn($q2) => $q2->where('receiver_profile_id', $profile->id)->where('is_starred_by_receiver', true));
-            })->count(),
-            'trash' => Interest::where(function ($q) use ($profile) {
-                $q->where(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('is_trashed_by_sender', true))
-                  ->orWhere(fn($q2) => $q2->where('receiver_profile_id', $profile->id)->where('is_trashed_by_receiver', true));
-            })->count(),
-            'interest_received' => (clone $receivedBase)->where('status', 'pending')->count(),
-            'interest_sent' => (clone $sentBase)->where('status', 'pending')->count(),
-            'i_accepted' => Interest::where('receiver_profile_id', $profile->id)->where('status', 'accepted')->count(),
-            'accepted_me' => Interest::where('sender_profile_id', $profile->id)->where('status', 'accepted')->count(),
-            'i_declined' => Interest::where('receiver_profile_id', $profile->id)->where('status', 'declined')->count(),
-            'declined_me' => Interest::where('sender_profile_id', $profile->id)->where('status', 'declined')->count(),
-            'expired' => Interest::where(function ($q) use ($profile) {
-                $q->where('sender_profile_id', $profile->id)->orWhere('receiver_profile_id', $profile->id);
-            })->where('status', 'expired')->count(),
+            'all' => ($sent->not_trashed ?? 0) + ($received->not_trashed ?? 0),
+            'received' => $received->not_trashed ?? 0,
+            'sent' => $sent->not_trashed ?? 0,
+            'starred' => ($sent->starred ?? 0) + ($received->starred ?? 0),
+            'trash' => ($sent->trashed ?? 0) + ($received->trashed ?? 0),
+            'interest_received' => $received->pending ?? 0,
+            'interest_sent' => $sent->pending ?? 0,
+            'i_accepted' => $received->accepted ?? 0,
+            'accepted_me' => $sent->accepted ?? 0,
+            'i_declined' => $received->declined ?? 0,
+            'declined_me' => $sent->declined ?? 0,
+            'expired' => ($sent->expired ?? 0) + ($received->expired ?? 0),
         ];
     }
 }
