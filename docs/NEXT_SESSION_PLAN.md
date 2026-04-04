@@ -113,6 +113,7 @@ Pre-filtered search pages:
 - ✅ Profile visibility preferences (religion, denomination, mother tongue)
 - ✅ Last login tracking
 - ✅ Deployed to https://anugrahamatrimony.com (Hostinger)
+- ✅ Matchmaking Engine (MatchingService, My Matches, Mutual Matches, Dashboard recommendations, Profile view breakdown)
 
 ---
 
