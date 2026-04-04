@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/privacy-policy', 'pages.privacy')->name('privacy');
 Route::view('/terms-of-service', 'pages.terms')->name('terms');
+Route::view('/faq', 'pages.faq')->name('faq');
+Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
 
 // Discover Profiles (public — accessible without login for SEO)
 Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
