@@ -47,32 +47,6 @@
 
 ---
 
-## Estimated Build Time
-
-| Section (matches file #) | Effort |
-|---------|--------|
-| 01. Dashboard with charts | 3-4 hours |
-| 02. User Management (login history, VIP, sharing, card download, bulk import) | 6-7 hours |
-| 03. Profile Approval + ID Proof Verification | 2-3 hours |
-| 04. Membership Plans + Coupons + Revenue Reports | 4-5 hours |
-| 05. Site Settings (General, Branding, Email, SMS, Payment, Registration, Social, SEO) | 5-6 hours |
-| 06. Content Management (Reference Data, Pages, Templates, Stories, Testimonials) | 5-6 hours |
-| 07. Interest & Match Management (Admin Recommend, Match Score, Horoscope Config) | 4-5 hours |
-| 08. Moderation (Photos, Blocked, Reported, Support Inbox) | 3-4 hours |
-| 09. Reports & Analytics (User, Engagement, Revenue, Shortlist, Views) | 3-4 hours |
-| 10. System & Maintenance (logs, cache, backup, install wizard, updates) | 8-10 hours |
-| 11. Franchise / Branch Management (+ Affiliate Link) | 3-4 hours |
-| 12. Staff / Telecaller Module (+ Charts) | 4-5 hours |
-| 13. Advertisement Management | 2-3 hours |
-| 14. Wedding Directory (Phase 2) | 6-8 hours |
-| Roles & Permissions | 1-2 hours |
-| Broadcast Notifications | 1-2 hours |
-| **Total (Core — without Wedding Dir & Auto-Update Server)** | **~60-70 hours** |
-| **Total (with Wedding Directory)** | **~66-78 hours** |
-| **Total (everything including Auto-Update Server)** | **~70-84 hours** |
-
----
-
 ## CodeCanyon Selling Points (41 Features)
 
 When listing on CodeCanyon, highlight these:

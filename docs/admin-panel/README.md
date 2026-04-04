@@ -43,7 +43,6 @@ Customers buying a matrimony script on CodeCanyon expect:
 - **15 sections** covering every admin function (files 01-14 + implementation)
 - **41 CodeCanyon selling points**
 - **27 Filament resources** to build
-- **~70-84 hours** estimated build time (everything)
 
 ---
 
