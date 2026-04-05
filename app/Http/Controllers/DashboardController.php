@@ -18,6 +18,12 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $profile = $user->profile;
+
+        // Admin users without profiles → redirect to admin panel
+        if (!$profile) {
+            return redirect('/admin');
+        }
+
         $completionPct = $profile->calculateCompletion();
 
         // Update stored completion %
