@@ -82,14 +82,14 @@ class MembershipResource extends Resource
                     ->query(fn(Builder $query) => $query->where('ends_at', '<', now())),
             ])
             ->actions([
-                Tables\Actions\Action::make('toggleActive')
+                \Filament\Actions\Action::make('toggleActive')
                     ->label(fn(UserMembership $record): string => $record->is_active ? 'Deactivate' : 'Activate')
                     ->icon(fn(UserMembership $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
                     ->color(fn(UserMembership $record): string => $record->is_active ? 'danger' : 'success')
                     ->requiresConfirmation()
                     ->action(fn(UserMembership $record) => $record->update(['is_active' => !$record->is_active])),
 
-                Tables\Actions\Action::make('extend')
+                \Filament\Actions\Action::make('extend')
                     ->label('Extend')
                     ->icon('heroicon-o-clock')
                     ->color('info')
@@ -105,7 +105,7 @@ class MembershipResource extends Resource
                     ])),
             ])
             ->headerActions([
-                Tables\Actions\Action::make('manualActivate')
+                \Filament\Actions\Action::make('manualActivate')
                     ->label('Manual Activate')
                     ->icon('heroicon-o-plus-circle')
                     ->color('success')

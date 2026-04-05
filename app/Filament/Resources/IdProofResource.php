@@ -116,7 +116,7 @@ class IdProofResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\Action::make('approve')
+                \Filament\Actions\Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
@@ -132,7 +132,7 @@ class IdProofResource extends Resource
                         $record->profile->update(['id_proof_verified' => true]);
                     }),
 
-                Tables\Actions\Action::make('reject')
+                \Filament\Actions\Action::make('reject')
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
@@ -154,7 +154,7 @@ class IdProofResource extends Resource
                         $record->profile->update(['id_proof_verified' => false]);
                     }),
 
-                Tables\Actions\Action::make('viewDocument')
+                \Filament\Actions\Action::make('viewDocument')
                     ->label('View Full')
                     ->icon('heroicon-o-eye')
                     ->color('gray')

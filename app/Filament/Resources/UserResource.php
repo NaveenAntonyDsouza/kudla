@@ -127,9 +127,9 @@ class UserResource extends Resource
                     ->query(fn(Builder $query) => $query->whereDate('created_at', today())),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('toggleActive')
+                \Filament\Actions\ViewAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\Action::make('toggleActive')
                     ->label(fn(Profile $record): string => $record->is_active ? 'Deactivate' : 'Activate')
                     ->icon(fn(Profile $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
                     ->color(fn(Profile $record): string => $record->is_active ? 'danger' : 'success')
@@ -137,21 +137,21 @@ class UserResource extends Resource
                     ->action(fn(Profile $record) => $record->update(['is_active' => !$record->is_active])),
             ])
             ->bulkActions([
-                Tables\Actions\BulkAction::make('activate')
+                \Filament\Actions\BulkAction::make('activate')
                     ->label('Activate Selected')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->action(fn($records) => $records->each->update(['is_active' => true])),
 
-                Tables\Actions\BulkAction::make('deactivate')
+                \Filament\Actions\BulkAction::make('deactivate')
                     ->label('Deactivate Selected')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn($records) => $records->each->update(['is_active' => false])),
 
-                Tables\Actions\ExportBulkAction::make(),
+                \Filament\Actions\ExportBulkAction::make(),
             ])
             ->searchPlaceholder('Search by name, matri ID, email, phone...');
     }
