@@ -36,6 +36,10 @@ class SiteSettings extends Page implements HasForms
             'successful_marriages' => $settings['successful_marriages'] ?? '0',
             'years_of_service' => $settings['years_of_service'] ?? '1',
             'copyright_year_start' => $settings['copyright_year_start'] ?? date('Y'),
+            'social_facebook' => $settings['social_facebook'] ?? '',
+            'social_instagram' => $settings['social_instagram'] ?? '',
+            'social_youtube' => $settings['social_youtube'] ?? '',
+            'social_twitter' => $settings['social_twitter'] ?? '',
         ]);
     }
 
@@ -102,6 +106,27 @@ class SiteSettings extends Page implements HasForms
                     ->label('Copyright Year Start')
                     ->numeric()
                     ->helperText('e.g., 2024 shows "© 2024-2026"'),
+
+                // Social Links
+                Forms\Components\TextInput::make('social_facebook')
+                    ->label('Facebook Page URL')
+                    ->url()
+                    ->helperText('e.g., https://facebook.com/anugrahamatrimony'),
+
+                Forms\Components\TextInput::make('social_instagram')
+                    ->label('Instagram URL')
+                    ->url()
+                    ->helperText('e.g., https://instagram.com/anugrahamatrimony'),
+
+                Forms\Components\TextInput::make('social_youtube')
+                    ->label('YouTube Channel URL')
+                    ->url()
+                    ->helperText('e.g., https://youtube.com/@anugrahamatrimony'),
+
+                Forms\Components\TextInput::make('social_twitter')
+                    ->label('Twitter / X URL')
+                    ->url()
+                    ->helperText('e.g., https://x.com/anugrahamatrimony'),
             ])
             ->statePath('data');
     }
