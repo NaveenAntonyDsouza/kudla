@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MembershipPlan;
 use App\Models\Subscription;
+use App\Models\UserMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -10,13 +12,15 @@ class MembershipController extends Controller
 {
     public function index()
     {
-        $plans = config('plans');
-        $activeSub = Subscription::where('user_id', auth()->id())
-            ->where('is_active', true)
-            ->where('expires_at', '>=', today())
-            ->first();
+        $plans = MembershipPlan::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
 
-        return view('membership.index', compact('plans', 'activeSub'));
+        $user = auth()->user();
+        $activeMembership = $user->activeMembership();
+        $activePlanId = $activeMembership?->plan_id;
+
+        return view('membership.index', compact('plans', 'activeMembership', 'activePlanId'));
     }
 
     /**
@@ -24,12 +28,15 @@ class MembershipController extends Controller
      */
     public function checkout(Request $request)
     {
-        $request->validate(['plan' => 'required|string|in:basic,standard,premium']);
+        $request->validate(['plan_id' => 'required|exists:membership_plans,id']);
 
-        $plan = config("plans.{$request->plan}");
-        if (! $plan) abort(404);
+        $plan = MembershipPlan::findOrFail($request->plan_id);
 
-        $amountInPaise = $plan['price'] * 100;
+        if ($plan->price_inr <= 0) {
+            return back()->withErrors(['payment' => 'This is a free plan.']);
+        }
+
+        $amountInPaise = $plan->price_inr * 100;
 
         // Create Razorpay order
         $response = Http::withoutVerifying()
@@ -40,21 +47,22 @@ class MembershipController extends Controller
                 'receipt' => 'sub_' . auth()->id() . '_' . time(),
                 'notes' => [
                     'user_id' => auth()->id(),
-                    'plan_id' => $plan['id'],
+                    'plan_id' => $plan->id,
+                    'plan_name' => $plan->plan_name,
                 ],
             ]);
 
-        if (! $response->ok()) {
+        if (!$response->ok()) {
             return back()->withErrors(['payment' => 'Unable to create payment order. Please try again.']);
         }
 
         $order = $response->json();
 
-        // Save pending subscription
+        // Save pending subscription (payment audit trail)
         $subscription = Subscription::create([
             'user_id' => auth()->id(),
-            'plan_id' => $plan['id'],
-            'plan_name' => $plan['name'],
+            'plan_id' => (string) $plan->id,
+            'plan_name' => $plan->plan_name,
             'amount' => $amountInPaise,
             'razorpay_order_id' => $order['id'],
             'payment_status' => 'pending',
@@ -62,7 +70,12 @@ class MembershipController extends Controller
 
         return view('membership.checkout', [
             'order' => $order,
-            'plan' => $plan,
+            'plan' => [
+                'id' => $plan->id,
+                'name' => $plan->plan_name,
+                'price' => $plan->price_inr,
+                'duration_months' => $plan->duration_months,
+            ],
             'subscription' => $subscription,
             'razorpayKey' => config('services.razorpay.key'),
             'user' => auth()->user(),
@@ -95,23 +108,40 @@ class MembershipController extends Controller
             return redirect()->route('membership.index')->withErrors(['payment' => 'Payment verification failed.']);
         }
 
-        // Activate subscription
-        $plan = config("plans.{$subscription->plan_id}");
+        $plan = MembershipPlan::find($subscription->plan_id);
+        $durationMonths = $plan?->duration_months ?? 1;
+
+        // Update subscription record (payment audit)
         $subscription->update([
             'razorpay_payment_id' => $request->razorpay_payment_id,
             'razorpay_signature' => $request->razorpay_signature,
             'payment_status' => 'paid',
             'starts_at' => today(),
-            'expires_at' => today()->addMonths($plan['duration_months']),
+            'expires_at' => today()->addMonths($durationMonths),
             'is_active' => true,
         ]);
 
-        // Deactivate any previous subscriptions
+        // Deactivate previous subscriptions
         Subscription::where('user_id', auth()->id())
             ->where('id', '!=', $subscription->id)
             ->where('is_active', true)
             ->update(['is_active' => false]);
 
-        return redirect()->route('membership.index')->with('success', 'Payment successful! Your ' . $subscription->plan_name . ' plan is now active.');
+        // Create UserMembership (this is what isPremium() checks)
+        UserMembership::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->update(['is_active' => false]);
+
+        UserMembership::create([
+            'user_id' => auth()->id(),
+            'plan_id' => $plan->id,
+            'transaction_id' => null,
+            'starts_at' => today(),
+            'ends_at' => today()->addMonths($durationMonths),
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('membership.index')
+            ->with('success', 'Payment successful! Your ' . ($plan->plan_name ?? 'Premium') . ' plan is now active.');
     }
 }

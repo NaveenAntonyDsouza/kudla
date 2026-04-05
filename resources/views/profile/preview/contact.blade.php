@@ -5,8 +5,27 @@
     $isOwn = $isOwn ?? false;
 @endphp
 
-@if(!$isOwn)
-    {{-- Other user's profile — hide sensitive contact info --}}
+@php
+    $canViewContact = false;
+    if (!$isOwn && auth()->check()) {
+        // Premium members with can_view_contact plan can see contacts
+        $activeMembership = auth()->user()->activeMembership();
+        if ($activeMembership?->plan?->can_view_contact) {
+            $canViewContact = true;
+        }
+        // Also allow if interest is accepted between both parties
+        if (!$canViewContact) {
+            $canViewContact = \App\Models\Interest::where('status', 'accepted')
+                ->where(fn($q) => $q
+                    ->where(fn($q2) => $q2->where('sender_profile_id', auth()->user()->profile->id)->where('receiver_profile_id', $profile->id))
+                    ->orWhere(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('receiver_profile_id', auth()->user()->profile->id))
+                )->exists();
+        }
+    }
+@endphp
+
+@if(!$isOwn && !$canViewContact)
+    {{-- Contact details locked --}}
     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6 mb-6">
         <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Contact Details</h3>
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -15,8 +34,12 @@
                     <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                 </svg>
                 <div>
-                    <p class="text-sm font-medium text-amber-800">Contact details are private</p>
-                    <p class="text-xs text-amber-600 mt-1">Send an interest to this profile to view contact details after acceptance.</p>
+                    <p class="text-sm font-medium text-amber-800">Contact details are locked</p>
+                    <p class="text-xs text-amber-600 mt-1">Upgrade to a paid plan to view contact details, or send an interest and wait for acceptance.</p>
+                    <a href="{{ route('membership.index') }}" class="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-(--color-primary) hover:underline">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                        View Membership Plans
+                    </a>
                 </div>
             </div>
         </div>
@@ -26,6 +49,52 @@
     @if($s && ($s->facebook_url || $s->instagram_url || $s->linkedin_url))
     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
         <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Social Media Information</h3>
+        <div class="space-y-3">
+            @foreach([
+                ['label' => 'Facebook', 'url' => $s->facebook_url],
+                ['label' => 'Instagram', 'url' => $s->instagram_url],
+                ['label' => 'LinkedIn', 'url' => $s->linkedin_url],
+            ] as $social)
+                @if($social['url'])
+                    <div class="flex items-center gap-3 py-2">
+                        <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
+                        <a href="{{ $social['url'] }}" target="_blank" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+@elseif(!$isOwn && $canViewContact)
+    {{-- Premium member or interest accepted — show contact details --}}
+    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6 mb-6">
+        <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Contact Details</h3>
+        @if($c)
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                @foreach([
+                    'Contact Person' => $c->contact_person,
+                    'Relationship' => $c->contact_relationship,
+                    'Phone' => $c->primary_phone,
+                    'WhatsApp' => $c->whatsapp_number,
+                    'Email' => $c->email,
+                ] as $label => $value)
+                    @if($value)
+                        <div>
+                            <p class="text-xs text-gray-500">{{ $label }}</p>
+                            <p class="text-sm font-medium text-gray-900">{{ $value }}</p>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        @else
+            <p class="text-sm text-gray-500">Contact details not provided by this user.</p>
+        @endif
+    </div>
+
+    {{-- Social Media --}}
+    @if($s && ($s->facebook_url || $s->instagram_url || $s->linkedin_url))
+    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+        <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Social Media</h3>
         <div class="space-y-3">
             @foreach([
                 ['label' => 'Facebook', 'url' => $s->facebook_url],

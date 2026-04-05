@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 
 class InterestService
 {
-    const DAILY_LIMIT = 5;
+    const FREE_DAILY_LIMIT = 5;
 
     public function __construct(
         private NotificationService $notificationService
@@ -45,10 +45,15 @@ class InterestService
             throw new \RuntimeException('Cannot send interest to this profile.');
         }
 
-        // Check daily limit
+        // Check daily limit (plan-based)
         $usage = $this->canSendToday($sender);
         if (! $usage['can_send']) {
-            throw new \RuntimeException("Daily interest limit reached ({$usage['limit']}/day). Try again tomorrow.");
+            throw new \RuntimeException("Daily interest limit reached ({$usage['limit']}/day). Upgrade your plan for more interests.");
+        }
+
+        // Personalized messages require a paid plan
+        if ($customMessage && !$sender->user->isPremium()) {
+            throw new \RuntimeException('Upgrade to a paid plan to send personalized messages.');
         }
 
         // Check for existing active interest between these two profiles
@@ -273,18 +278,31 @@ class InterestService
      */
     public function canSendToday(Profile $profile): array
     {
+        $limit = $this->getDailyLimit($profile);
         $usage = DailyInterestUsage::where('profile_id', $profile->id)
             ->where('usage_date', today())
             ->first();
 
         $count = $usage?->count ?? 0;
-        $remaining = max(0, self::DAILY_LIMIT - $count);
+        $remaining = max(0, $limit - $count);
 
         return [
             'can_send' => $remaining > 0,
             'remaining' => $remaining,
-            'limit' => self::DAILY_LIMIT,
+            'limit' => $limit,
         ];
+    }
+
+    /**
+     * Get the daily interest limit based on the user's active plan.
+     */
+    private function getDailyLimit(Profile $profile): int
+    {
+        $membership = $profile->user->activeMembership();
+        if ($membership?->plan) {
+            return $membership->plan->daily_interest_limit ?? self::FREE_DAILY_LIMIT;
+        }
+        return self::FREE_DAILY_LIMIT;
     }
 
     /**
