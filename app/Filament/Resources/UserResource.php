@@ -249,60 +249,51 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Basic Information')
-                    ->columns(2)
-                    ->schema([
-                        Forms\Components\TextInput::make('full_name')
-                            ->required()
-                            ->maxLength(100),
+                Forms\Components\TextInput::make('full_name')
+                    ->required()
+                    ->maxLength(100),
 
-                        Forms\Components\Select::make('gender')
-                            ->options(['male' => 'Male', 'female' => 'Female'])
-                            ->required(),
+                Forms\Components\Select::make('gender')
+                    ->options(['male' => 'Male', 'female' => 'Female'])
+                    ->required(),
 
-                        Forms\Components\DatePicker::make('date_of_birth')
-                            ->required()
-                            ->maxDate(now()->subYears(18)),
+                Forms\Components\DatePicker::make('date_of_birth')
+                    ->required()
+                    ->maxDate(now()->subYears(18)),
 
-                        Forms\Components\TextInput::make('matri_id')
-                            ->disabled()
-                            ->dehydrated(false),
+                Forms\Components\TextInput::make('matri_id')
+                    ->disabled()
+                    ->dehydrated(false),
 
-                        Forms\Components\Select::make('marital_status')
-                            ->options([
-                                'Unmarried' => 'Unmarried',
-                                'Divorced' => 'Divorced',
-                                'Widow/Widower' => 'Widow/Widower',
-                                'Awaiting Divorce' => 'Awaiting Divorce',
-                                'Annulled' => 'Annulled',
-                            ]),
-
-                        Forms\Components\TextInput::make('mother_tongue')
-                            ->maxLength(50),
-
-                        Forms\Components\TextInput::make('height')
-                            ->maxLength(50),
-
-                        Forms\Components\Textarea::make('about_me')
-                            ->rows(3)
-                            ->columnSpanFull(),
+                Forms\Components\Select::make('marital_status')
+                    ->options([
+                        'Unmarried' => 'Unmarried',
+                        'Divorced' => 'Divorced',
+                        'Widow/Widower' => 'Widow/Widower',
+                        'Awaiting Divorce' => 'Awaiting Divorce',
+                        'Annulled' => 'Annulled',
                     ]),
 
-                Forms\Components\Section::make('Account Status')
-                    ->columns(3)
-                    ->schema([
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('Active'),
+                Forms\Components\TextInput::make('mother_tongue')
+                    ->maxLength(50),
 
-                        Forms\Components\Toggle::make('is_approved')
-                            ->label('Approved'),
+                Forms\Components\TextInput::make('height')
+                    ->maxLength(50),
 
-                        Forms\Components\Toggle::make('id_proof_verified')
-                            ->label('ID Proof Verified'),
+                Forms\Components\Textarea::make('about_me')
+                    ->rows(3),
 
-                        Forms\Components\Toggle::make('is_hidden')
-                            ->label('Hidden'),
-                    ]),
+                Forms\Components\Toggle::make('is_active')
+                    ->label('Active'),
+
+                Forms\Components\Toggle::make('is_approved')
+                    ->label('Approved'),
+
+                Forms\Components\Toggle::make('id_proof_verified')
+                    ->label('ID Proof Verified'),
+
+                Forms\Components\Toggle::make('is_hidden')
+                    ->label('Hidden'),
             ]);
     }
 
