@@ -3,106 +3,124 @@
 
 ---
 
-## A. In UI But NOT Functional (Users see it but it doesn't work)
+## A. In UI But NOT Functional
 
-| # | Feature | Where It Shows | What's Missing |
-|---|---------|---------------|----------------|
-| 1 | "To all premium members" visibility option | Settings > Who Can See My Profile | No premium membership enforcement in search |
-| 2 | "Only to those who match my Partner Preferences" | Settings > Who Can See My Profile | No matching engine to filter based on partner prefs |
-| 3 | Plan features (View Contacts, Interests/Day, etc.) | Membership Plans page | Payment works but features NOT enforced — all users get same access |
-| 4 | "Featured Profile" in plans | Plans comparison table | No implementation — premium profiles not highlighted in search |
-| 5 | "Priority Support" in plans | Plans comparison table | No support system exists |
-| 6 | "Personalized Messages" in plans | Plans comparison table | No restriction — free users can already send custom messages |
-| 7 | "Load Partner Preferences" on search | Search page header | Button exists but not connected to saved searches |
+| # | Feature | Status | Notes |
+|---|---------|--------|-------|
+| 1 | "To all premium members" visibility | **FIXED** | Enforced in baseQuery — non-premium users can't see premium-only profiles |
+| 2 | "Only to those who match my Partner Preferences" | **PARTIAL** | Enforced via religion/denomination/mother tongue toggles. Full reverse-matching deferred to v2 |
+| 3 | Plan features (View Contacts, Interests/Day) | **PENDING** | Payment works but limits NOT enforced — needs subscription enforcement |
+| 4 | "Featured Profile" in plans | **FIXED** | Premium profiles shown first in search + "Premium" badge on cards |
+| 5 | "Priority Support" in plans | **FIXED** | Contact Us page + FAQ built |
+| 6 | "Personalized Messages" in plans | **PENDING** | No restriction — needs subscription enforcement |
+| 7 | "Load Partner Preferences" on search | **FIXED** | Pre-fills search form from saved preferences |
 
-## B. Partially Built (Some backend exists but incomplete)
+## B. Partially Built
 
-| # | Feature | What Exists | What's Missing |
-|---|---------|------------|----------------|
-| 8 | Daily interest limit per plan | Hardcoded 5/day for everyone | Should vary by plan (5/15/50) based on subscription |
-| 9 | Subscription feature gating | Razorpay payment + subscription DB record | No middleware to check active subscription, no feature limits enforced |
-| 10 | Admin review of ID proofs | Upload + "pending" status saved | No admin panel to review/approve/reject |
-| 11 | Email notifications | Mail classes + templates ready | SMTP config set to log driver, update .env for real sending |
-| 12 | Profile visibility (show_profile_to) | Setting saves to DB | "premium" and "matches" options not enforced in search query |
+| # | Feature | Status | Notes |
+|---|---------|--------|-------|
+| 8 | Daily interest limit per plan | **PENDING** | Hardcoded 5/day — needs plan-based limits (5/15/50) |
+| 9 | Subscription feature gating | **PENDING** | No middleware to check subscription, no feature limits |
+| 10 | Admin review of ID proofs | **PENDING** | Upload works, needs admin panel to review |
+| 11 | Email notifications | **FIXED** | SMTP working on live (email OTP functional) |
+| 12 | Profile visibility (show_profile_to) | **FIXED** | "premium" and "matches" options enforced in baseQuery |
 
-## C. Backend Model Exists But No UI/Routes (Database ready, feature not accessible)
+## C. Backend Model — Now Built
 
-| # | Feature | Model | What's Needed |
-|---|---------|-------|--------------|
-| 13 | Photo Requests | PhotoRequest model + migration | Controller, routes, views, notification |
-| 14 | Saved Searches | SavedSearch model + migration | Controller, routes, views, load/save UI |
-| 15 | Ignored Profiles | IgnoredProfile model + migration | Controller, routes, search exclusion, UI |
+| # | Feature | Status |
+|---|---------|--------|
+| 13 | Photo Requests | **DONE** — Controller, views, send/approve/ignore, photo privacy enforcement (blur/hidden/request) |
+| 14 | Saved Searches | **DONE** — Save from search results, load, delete, summary preview |
+| 15 | Ignored Profiles | **DONE** — Toggle ignore, excluded from baseQuery (search, matches, discover) |
 
-## D. Not Built Yet (No code at all)
+## D. Feature Status
 
-| # | Feature | Priority | Notes |
-|---|---------|----------|-------|
-| 16 | Admin Panel | HIGH | Filament installed but no resources. Need: user management, ID proof review, profile approval, stats dashboard |
-| 17 | Help/FAQ page | MEDIUM | Static page with common questions |
-| 18 | Contact Us page | MEDIUM | Form or info page |
-| 19 | Discover Profiles (category browsing) | LOW | NRI, Second Marriage, by State, by Occupation, etc. |
-| 20 | Highlighted/Featured Profiles | LOW | Premium profiles shown first in search |
-| 21 | Print Profile | LOW | Print-friendly profile view |
-| 22 | Saved Searches UI | LOW | Save and load search criteria |
-| 23 | Mobile hamburger menu (full dropdown items) | MEDIUM | Mobile nav may not have all dropdown sub-items |
+| # | Feature | Status |
+|---|---------|--------|
+| 16 | Admin Panel (Filament) | **PENDING** — 15 sections planned in docs/admin-panel/ |
+| 17 | Help/FAQ page | **DONE** — 5 categories, 20 questions, accordion |
+| 18 | Contact Us page | **DONE** — Form with email + contact sidebar |
+| 19 | Discover Profiles | **DONE** — 13 categories, 3-level browsing, public for SEO |
+| 20 | Featured Profiles | **DONE** — Premium profiles first in search + badge |
+| 21 | Print Profile | **DONE** — Print-friendly view with @media print CSS |
+| 22 | Saved Searches UI | **DONE** — Save, load, delete from search results |
+| 23 | Mobile hamburger menu | **DONE** — All items with labeled sections |
 
-## E. Performance Issues
+## E. Performance
 
-| # | Issue | Status | Notes |
-|---|-------|--------|-------|
-| 24 | Shortlist query on every profile card | FIXED | Now uses single cached query |
-| 25 | Notification count on every page | OK | Uses lightweight count query |
-| 26 | Interest inbox counts (13+ queries) | KNOWN | Could optimize to single aggregate query |
+| # | Issue | Status |
+|---|-------|--------|
+| 24 | Shortlist query N+1 | **FIXED** — static cache |
+| 25 | Notification count | **OK** — lightweight query |
+| 26 | Interest inbox counts (13 queries) | **FIXED** — optimized to 2 queries |
 
 ## F. Completed Features
 
 - Registration (5 steps) + Email/Phone OTP verification
 - Login (email/password + OTP) + Forgot Password
 - Onboarding (4 steps: personal, location, preferences, lifestyle)
-- Dashboard with profile cards + real stats (interests, views)
-- Photo upload & management (profile, album, family)
+- Dashboard (7 sections: CTA, sections, stats, recommended, mutual, views, newly joined, discover)
+- Photo upload & management (profile, album, family) + photo privacy enforcement
 - View & Edit My Profile (9 accordion sections with inline editing)
-- Profile Preview (4 tabbed sections)
-- Public profile view (with privacy on contacts)
-- Search: Partner Search (15+ filters), Keyword Search, Search by ID
-- Interest Send/Accept/Decline with full inbox + chat
+- Profile Preview (4 tabbed sections) + Print Profile
+- Public profile view (with privacy on contacts + match score breakdown)
+- Search: Partner Search (15+ filters), Keyword Search, Search by ID + Load Partner Preferences + Save Search
+- Matchmaking Engine: My Matches, Mutual Matches, match score badges, dashboard recommendations
+- Discover Profiles: 13 categories, 3-level browsing (hub → subcategory → results), public for SEO
+- Interest Send/Accept/Decline with full inbox + chat (inbox optimized: 13→2 queries)
+- Photo Requests: send/approve/ignore with blurred photos + privacy overlays
 - In-app notifications (bell icon dropdown + full page)
-- Email notification templates (ready for SMTP)
+- Email notifications (SMTP configured, working on live)
 - Shortlist/Favorites (heart icon)
 - Block/Unblock with search exclusion
+- Ignored Profiles with search exclusion
+- Saved Searches (save, load, delete)
 - Profile Settings (visibility, alerts, hide, delete, password)
 - Who Viewed My Profile (tracking + views page)
 - Submit ID Proof (front + back upload)
-- Membership Plans (3 plans + Razorpay payment integration)
+- Membership Plans (3 plans + Razorpay payment) + Premium badge + Featured ordering
+- Profile visibility enforcement (premium only, same religion/denomination/mother tongue)
+- Help/FAQ page (5 categories, 20 questions)
+- Contact Us page (form + email to admin)
 - Searchable country code dropdown (phone inputs)
 - Privacy Policy + Terms of Service pages
-- Mobile responsiveness fixes
-- Security fixes (authorization, null checks, route validation)
+- Mobile responsive + complete hamburger menu
+- Security fixes (gender enforcement, authorization, N+1)
 - Profile completion calculation (with photo weight)
+- Homepage community buttons linked to discover routes
+- Last login tracking
+
+---
+
+## Still Pending (2 items)
+
+| # | Feature | Priority | Description |
+|---|---------|----------|-------------|
+| 1 | **Admin Panel (Filament)** | HIGH | 15 sections: users, approvals, ID proofs, payments, settings, content, reports, franchise, staff |
+| 2 | **Subscription Enforcement** | HIGH | Plan-based daily interest limits, contact view limits, personalized message restriction, middleware |
 
 ---
 
 ## Launch Checklist
 
 - [x] Core registration + login flow
-- [x] Profile creation + editing
-- [x] Photo upload
-- [x] Search (partner + keyword + ID)
+- [x] Profile creation + editing + print
+- [x] Photo upload + photo privacy + photo requests
+- [x] Search (partner + keyword + ID + load preferences + save search)
+- [x] Matchmaking engine (my matches + mutual matches + score breakdown)
+- [x] Discover profiles (13 categories)
 - [x] Interest send/accept/decline + chat
-- [x] Notifications
-- [x] Shortlist + Block
-- [x] Settings
-- [x] Privacy Policy + Terms
+- [x] Notifications (in-app + email)
+- [x] Shortlist + Block + Ignore
+- [x] Settings (visibility, alerts, hide, delete, password)
+- [x] Privacy Policy + Terms + FAQ + Contact Us
 - [x] Forgot Password
 - [x] Payment integration (Razorpay)
 - [x] ID Proof upload
-- [x] Configure SMTP email (.env) — working (email OTP functional)
-- [x] Matchmaking Engine (My Matches, Mutual Matches, match score badges)
-- [x] Discover Profiles (13 categories, 3-level browsing)
-- [x] Dashboard redesign (7 widget sections matching Chavara reference)
-- [x] Load Partner Preferences on search
-- [x] Mobile hamburger menu (complete with labeled sections)
-- [x] Homepage community buttons linked to discover routes
-- [x] Discover pages public (SEO — no login required)
-- [ ] Admin Panel (Filament)
-- [ ] Subscription feature enforcement
+- [x] SMTP email working
+- [x] Featured profiles + premium badge
+- [x] Mobile responsive
+- [x] Dashboard redesign (7 sections)
+- [x] Homepage → discover links
+- [ ] **Admin Panel (Filament)**
+- [ ] **Subscription feature enforcement**
