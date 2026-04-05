@@ -25,21 +25,14 @@ class MembershipResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.profile.matri_id')
-                    ->label('Matri ID')
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
                     ->searchable()
                     ->sortable()
-                    ->color('primary')
-                    ->weight('bold'),
-
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Name')
-                    ->searchable()
-                    ->limit(20),
+                    ->limit(25),
 
                 Tables\Columns\TextColumn::make('plan.plan_name')
                     ->label('Plan')
-                    ->badge()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('plan.price_inr')
@@ -167,6 +160,6 @@ class MembershipResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['user.profile', 'plan']);
+        return parent::getEloquentQuery()->with(['user', 'plan']);
     }
 }
