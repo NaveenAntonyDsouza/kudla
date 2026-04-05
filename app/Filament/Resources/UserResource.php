@@ -236,6 +236,29 @@ class UserResource extends Resource
                 Forms\Components\Textarea::make('about_me')
                     ->rows(3),
 
+                // Religious Info (from related table)
+                Forms\Components\TextInput::make('rel_religion')->label('Religion')->maxLength(50),
+                Forms\Components\TextInput::make('rel_denomination')->label('Denomination')->maxLength(100),
+                Forms\Components\TextInput::make('rel_caste')->label('Caste')->maxLength(100),
+
+                // Education (from related table)
+                Forms\Components\TextInput::make('edu_highest_education')->label('Education')->maxLength(100),
+                Forms\Components\TextInput::make('edu_occupation')->label('Occupation')->maxLength(100),
+                Forms\Components\TextInput::make('edu_employer_name')->label('Employer')->maxLength(200),
+                Forms\Components\TextInput::make('edu_annual_income')->label('Annual Income')->maxLength(50),
+                Forms\Components\TextInput::make('edu_working_country')->label('Working Country')->maxLength(100),
+
+                // Location (from related table)
+                Forms\Components\TextInput::make('loc_residing_country')->label('Residing Country')->maxLength(100),
+                Forms\Components\TextInput::make('loc_native_country')->label('Native Country')->maxLength(100),
+                Forms\Components\TextInput::make('loc_native_state')->label('Native State')->maxLength(100),
+                Forms\Components\TextInput::make('loc_native_district')->label('Native District')->maxLength(100),
+
+                // Contact (from user table)
+                Forms\Components\TextInput::make('user_email')->label('Email')->email(),
+                Forms\Components\TextInput::make('user_phone')->label('Phone')->tel(),
+
+                // Status toggles
                 Forms\Components\Toggle::make('is_active')
                     ->label('Active'),
 
