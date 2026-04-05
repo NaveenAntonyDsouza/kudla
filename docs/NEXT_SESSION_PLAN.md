@@ -3,136 +3,115 @@
 
 ---
 
-## Priority 1: Matchmaking Engine
-Build `MatchingService` with weighted scoring algorithm.
+## Current Status: COMPLETE for Client
 
-### Pages to build:
-- **My Matches** (`/matches`) — profiles matching my partner preferences, sorted by match score
-- **Mutual Matches** (`/matches/mutual`) — profiles where BOTH sides match each other's preferences
-
-### Match Score Algorithm:
-
-**Scoring logic:**
-- Only criteria where the user HAS set a preference are scored
-- Unset preferences are skipped (not penalized) — weights redistribute proportionally
-- Each criteria scores 0 (no match) or 1 (match)
-- Final score = (weighted sum of matched criteria) / (sum of weights for set criteria) x 100%
-
-**Example:** User sets only Age, Religion, Education preferences (total weight = 40%).
-Candidate matches Age + Religion but not Education → score = 30/40 = 75%.
-
-**Default Weights (admin-configurable from panel):**
-
-| Criteria | Weight | Match Logic |
-|----------|--------|-------------|
-| Religion | 15 | Profile religion IN preferred religions |
-| Age range | 15 | Profile age BETWEEN age_from AND age_to |
-| Denomination/Caste | 10 | Profile denomination/caste IN preferred list |
-| Mother Tongue | 10 | Profile mother_tongue IN preferred list |
-| Education | 10 | Profile education IN preferred education levels |
-| Occupation | 10 | Profile occupation IN preferred occupations |
-| Height range | 8 | Profile height BETWEEN height_from AND height_to |
-| Location (native) | 8 | Profile native_state IN preferred states OR native_country IN preferred countries |
-| Location (working) | 5 | Profile working_country IN preferred working countries |
-| Marital Status | 5 | Profile marital_status IN preferred list |
-| Diet | 2 | Profile diet IN preferred diet (if set) |
-| Family Status | 2 | Profile family_status IN preferred list |
-
-**Hard filters (exclude, don't just score low):**
-- Opposite gender (already enforced)
-- Blocked profiles (already enforced)
-- Hidden/inactive profiles (already enforced)
-- Profile visibility preferences (same religion/denomination/mother tongue settings)
-
-**Display:**
-- 80%+ = Green badge "Great Match"
-- 60-79% = Yellow badge "Good Match"
-- 40-59% = Grey badge "Partial Match"
-- Below 40% = No badge (still shown unless filtered out)
-- Profile view shows detailed breakdown with checkmarks
-
-### Integration points:
-- Dashboard "Recommended Matches" section (top 6 by score)
-- My Matches page (all matches sorted by score, paginated)
-- Mutual Matches page (both sides match each other's preferences)
-- "Only show to those who match my Partner Preferences" setting enforcement
-- Matches nav menu dropdown
-- Admin panel: configurable weights (see docs/admin-panel/07-interests-matching.md)
-- Future: daily email "X new matches today"
+All features for AnugrahaMatrimony.com are built, tested, and deployed to live.
+The only pending item is **Razorpay live credentials** (waiting for client's approval from Razorpay).
 
 ---
 
-## Priority 2: Discover Profiles (Category Browsing)
-Pre-filtered search pages:
-- Karnataka Matrimony (native_state = Karnataka)
-- Catholic Matrimony (religion = Christian, denomination = Catholic variants)
-- NRI Matrimony (residing_country != India)
-- Second Marriage (marital_status != Unmarried)
-- By Occupation, Mother Tongue, Community
+## What Was Completed (All Sessions Combined)
+
+### Previous Sessions
+- Registration (5 steps) + Login + Forgot Password + OTP
+- Onboarding (4 steps)
+- Profile CRUD (9 sections) + Preview (4 tabs)
+- Photo management (profile, album, family)
+- Search (Partner + Keyword + ID, 15+ filters)
+- Interest Send/Accept/Decline + Chat
+- Notifications (in-app + email)
+- Shortlist / Block / Who Viewed
+- Settings (visibility, alerts, hide, delete, password)
+- Membership Plans + Razorpay payment
+- ID Proof upload
+- Privacy Policy + Terms pages
+- Deployed to https://anugrahamatrimony.com
+
+### This Session
+- Matchmaking Engine (12-criteria weighted scoring, My Matches, Mutual Matches)
+- Discover Profiles (13 categories, 3-level browsing, public for SEO)
+- Dashboard redesign (7 widget sections, smart ordering for incomplete vs complete profiles)
+- Load Partner Preferences on search
+- Save Search (save, load, delete)
+- Photo Requests (send/approve/ignore, blurred photo privacy)
+- Ignored Profiles (with search exclusion)
+- Print Profile (print-friendly view with @media print CSS)
+- Premium visibility enforcement (show_profile_to: premium/matches)
+- Featured profiles in search (premium first + Premium badge)
+- Help/FAQ page (5 categories, 20 questions)
+- Contact Us page (form + email to admin)
+- Social media links (admin-configurable, footer display)
+- Photo privacy enforcement (3 modes: hidden/blur/request)
+- Inbox query optimization (13→2 queries)
+- Admin Panel (Filament 5): Dashboard, Users, ID Verification, Memberships, Site Settings
+- Subscription enforcement: plan-based daily limits, contact view, personalized messages
+- Silver plan (₹999/month) added
+- Homepage community buttons linked to discover routes
+- Discover pages made public (SEO)
+- Mobile hamburger menu completed
+- Multiple Filament 5 compatibility fixes
 
 ---
 
-## Priority 3: Admin Panel (Filament)
-- User management (list, edit, deactivate)
-- ID Proof review (approve/reject with reason)
-- Profile approval queue
-- Stats dashboard (registrations, interests, payments)
-- Subscription management
+## Pending: Only for CodeCanyon Launch
+
+These are NOT needed for the current client. Build when preparing for CodeCanyon listing.
+
+| Section | Priority |
+|---------|----------|
+| Admin: Content Management (reference data, pages, templates) | For CodeCanyon |
+| Admin: Interest & Match Management | For CodeCanyon |
+| Admin: Moderation & Support (contact inbox in admin) | For CodeCanyon |
+| Admin: Reports & Analytics (detailed charts, CSV export) | For CodeCanyon |
+| Admin: System (install wizard, license, updater) | For CodeCanyon |
+| Admin: Franchise / Branch Management | For CodeCanyon |
+| Admin: Staff / Telecaller Module | For CodeCanyon |
+| Admin: Advertisement Management | For CodeCanyon |
+| Admin: Wedding Directory | For CodeCanyon (Phase 2) |
 
 ---
 
-## Priority 4: Subscription Feature Enforcement
-- Plan-based daily interest limits (5/15/50)
-- Contact view limits per plan
-- Middleware to check active subscription
-- Feature gates in controllers
+## Pending: Razorpay Live
+
+When client gets Razorpay live credentials:
+1. Update `.env` on live server:
+   ```
+   RAZORPAY_KEY=rzp_live_XXXXXX
+   RAZORPAY_SECRET=XXXXXX
+   ```
+2. Remove `->withoutVerifying()` from MembershipController (production has proper SSL)
+3. Test with a real ₹999 Silver plan payment
+4. No code changes needed — just `.env` swap
 
 ---
 
-## Completed This Session (for reference):
-- ✅ Registration (5 steps) + Login + Forgot Password
-- ✅ Onboarding (4 steps)
-- ✅ Dashboard with real stats + opposite-gender cards
-- ✅ Photo management (profile, album, family)
-- ✅ Profile View/Edit (9 sections) + Preview (4 tabs)
-- ✅ Search (Partner + Keyword + ID) with 15+ filters
-- ✅ Interest Send/Accept/Decline + Chat
-- ✅ In-app Notifications (bell icon dropdown)
-- ✅ Email notifications (SMTP configured for Hostinger)
-- ✅ Shortlist/Favorites (heart icon)
-- ✅ Block/Unblock with search exclusion
-- ✅ Profile Settings (visibility, alerts, hide, delete, password)
-- ✅ Who Viewed My Profile
-- ✅ Submit ID Proof (front + back)
-- ✅ Membership Plans + Razorpay payment
-- ✅ Privacy Policy + Terms pages
-- ✅ Phone input with searchable country code + flags
-- ✅ Mobile responsiveness fixes
-- ✅ Security fixes (gender enforcement, authorization, N+1)
-- ✅ Profile completion calculation (with photo weight)
-- ✅ Profile visibility preferences (religion, denomination, mother tongue)
-- ✅ Last login tracking
-- ✅ Deployed to https://anugrahamatrimony.com (Hostinger)
-- ✅ Matchmaking Engine (MatchingService, My Matches, Mutual Matches, Dashboard recommendations, Profile view breakdown)
-- ✅ Discover Profiles (13 categories, 3-level browsing: hub → subcategory list → results)
+## Important Notes for Next Developer/Session
+
+1. **Filament 5 quirks:** See `docs/FEATURE_STATUS.md` → "Important Notes" section for all API differences (Schema vs Form, Actions namespace, property types)
+
+2. **Two subscription tables:** `subscriptions` (payment audit) + `user_memberships` (feature access). Both created on payment.
+
+3. **Livewire inject_assets = true:** Required for Filament. If main site Alpine.js breaks, check `config/livewire.php`.
+
+4. **Notifications type column:** Changed from ENUM to VARCHAR(50). New types: photo_request, photo_request_approved.
+
+5. **Admin user (id:1):** Has no profile. Redirected to `/admin` when visiting `/dashboard`.
 
 ---
 
-## Quick Fixes (All Resolved):
-- ✅ Mobile hamburger menu — all dropdown items with labeled sections
-- ✅ "Load Partner Preferences" button — pre-fills search form from saved preferences
-- ✅ Keyword search — already uses baseQuery (blocked profiles excluded)
+## Future Projects (Separate from this)
+
+- **Flutter Mobile App** — see `docs/MOBILE_APP_PLAN.md`
+- **NestJS Version** — see `D:\matrimony\platform\NEXTJS_NESTJS_PLAN.md`
+- **Performance Scaling** — see `docs/SCALING_GUIDE.md`
 
 ---
 
-## Future Scaling Reminders:
-- See `docs/SCALING_GUIDE.md` for full optimization guide (8 sections: match caching, DB indexing, photo CDN, email queue, search, caching, sessions, hosting upgrade)
-
----
-
-## Key Files for Reference:
-- `docs/FEATURE_STATUS.md` — complete feature audit
-- `docs/DEPLOYMENT.md` — Hostinger deployment guide
+## Key Files
+- `docs/FEATURE_STATUS.md` — complete feature audit + important notes
+- `docs/DEPLOYMENT.md` — Hostinger deployment guide (12 steps)
 - `docs/TECH_STACK.md` — technology versions
+- `docs/SCALING_GUIDE.md` — 8-section optimization guide
+- `docs/MOBILE_APP_PLAN.md` — Flutter app plan
+- `docs/admin-panel/` — admin panel plan (15 sections for CodeCanyon)
 - `docs/.env.production` — production environment template
-- `docs/admin-panel/` — admin panel plan (15 sections)

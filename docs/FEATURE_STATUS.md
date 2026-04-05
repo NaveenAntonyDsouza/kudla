@@ -3,124 +3,121 @@
 
 ---
 
-## A. In UI But NOT Functional
+## All Features — Complete
 
-| # | Feature | Status | Notes |
-|---|---------|--------|-------|
-| 1 | "To all premium members" visibility | **FIXED** | Enforced in baseQuery — non-premium users can't see premium-only profiles |
-| 2 | "Only to those who match my Partner Preferences" | **PARTIAL** | Enforced via religion/denomination/mother tongue toggles. Full reverse-matching deferred to v2 |
-| 3 | Plan features (View Contacts, Interests/Day) | **PENDING** | Payment works but limits NOT enforced — needs subscription enforcement |
-| 4 | "Featured Profile" in plans | **FIXED** | Premium profiles shown first in search + "Premium" badge on cards |
-| 5 | "Priority Support" in plans | **FIXED** | Contact Us page + FAQ built |
-| 6 | "Personalized Messages" in plans | **PENDING** | No restriction — needs subscription enforcement |
-| 7 | "Load Partner Preferences" on search | **FIXED** | Pre-fills search form from saved preferences |
+Every planned feature for this client is now built and deployed.
 
-## B. Partially Built
+### Core Platform
+- ✅ Registration (5 steps) + Email/Phone OTP verification
+- ✅ Login (email/password + OTP) + Forgot Password
+- ✅ Onboarding (4 steps: personal, location, preferences, lifestyle)
+- ✅ Dashboard (7 sections: CTA, sections, recommended, stats, mutual, views, newly joined, discover)
+- ✅ Photo upload & management (profile, album, family) + photo privacy enforcement
+- ✅ View & Edit My Profile (9 accordion sections with inline editing)
+- ✅ Profile Preview (4 tabbed sections) + Print Profile
+- ✅ Public profile view (with privacy on contacts + match score breakdown)
 
-| # | Feature | Status | Notes |
-|---|---------|--------|-------|
-| 8 | Daily interest limit per plan | **PENDING** | Hardcoded 5/day — needs plan-based limits (5/15/50) |
-| 9 | Subscription feature gating | **PENDING** | No middleware to check subscription, no feature limits |
-| 10 | Admin review of ID proofs | **PENDING** | Upload works, needs admin panel to review |
-| 11 | Email notifications | **FIXED** | SMTP working on live (email OTP functional) |
-| 12 | Profile visibility (show_profile_to) | **FIXED** | "premium" and "matches" options enforced in baseQuery |
+### Search & Discovery
+- ✅ Search: Partner Search (15+ filters), Keyword Search, Search by ID
+- ✅ Load Partner Preferences on search form
+- ✅ Save Search (save, load, delete from search results)
+- ✅ Matchmaking Engine: My Matches, Mutual Matches, match score badges, dashboard recommendations
+- ✅ Discover Profiles: 13 categories, 3-level browsing (hub → subcategory → results), public for SEO
 
-## C. Backend Model — Now Built
+### Communication & Interaction
+- ✅ Interest Send/Accept/Decline with full inbox + chat (inbox optimized: 13→2 queries)
+- ✅ Photo Requests: send/approve/ignore with blurred photos + privacy overlays
+- ✅ In-app notifications (bell icon dropdown + full page)
+- ✅ Email notifications (SMTP configured, working on live)
 
-| # | Feature | Status |
-|---|---------|--------|
-| 13 | Photo Requests | **DONE** — Controller, views, send/approve/ignore, photo privacy enforcement (blur/hidden/request) |
-| 14 | Saved Searches | **DONE** — Save from search results, load, delete, summary preview |
-| 15 | Ignored Profiles | **DONE** — Toggle ignore, excluded from baseQuery (search, matches, discover) |
+### Profile Management
+- ✅ Shortlist/Favorites (heart icon)
+- ✅ Block/Unblock with search exclusion
+- ✅ Ignored Profiles with search exclusion
+- ✅ Who Viewed My Profile (tracking + views page)
+- ✅ Profile Settings (visibility, alerts, hide, delete, password)
+- ✅ Profile visibility enforcement (premium only, same religion/denomination/mother tongue)
+- ✅ Profile completion calculation (with photo weight)
 
-## D. Feature Status
+### Membership & Payments
+- ✅ 5 Membership Plans: Free, Silver (₹999/1mo), Gold (₹2999/3mo), Diamond (₹4999/6mo), Diamond Plus (₹7999/12mo)
+- ✅ Razorpay payment integration
+- ✅ Subscription enforcement: plan-based daily interest limits (5/10/20/50)
+- ✅ Contact view restriction (premium or interest-accepted only)
+- ✅ Personalized message restriction (paid plans only)
+- ✅ Premium badge on profile cards
+- ✅ Featured profiles shown first in search
 
-| # | Feature | Status |
-|---|---------|--------|
-| 16 | Admin Panel (Filament) | **PENDING** — 15 sections planned in docs/admin-panel/ |
-| 17 | Help/FAQ page | **DONE** — 5 categories, 20 questions, accordion |
-| 18 | Contact Us page | **DONE** — Form with email + contact sidebar |
-| 19 | Discover Profiles | **DONE** — 13 categories, 3-level browsing, public for SEO |
-| 20 | Featured Profiles | **DONE** — Premium profiles first in search + badge |
-| 21 | Print Profile | **DONE** — Print-friendly view with @media print CSS |
-| 22 | Saved Searches UI | **DONE** — Save, load, delete from search results |
-| 23 | Mobile hamburger menu | **DONE** — All items with labeled sections |
+### Admin Panel (Filament 5)
+- ✅ Dashboard: 6 stat cards + registration chart + gender chart + recent registrations
+- ✅ User Management: list, view, edit (all fields including religious, education, location, contact), activate/deactivate, bulk actions
+- ✅ ID Verification: pending queue with badge count, approve/reject with reason
+- ✅ Membership Management: view all, manual activate, extend expiry
+- ✅ Site Settings: site name, tagline, contact info, homepage stats, social links
+- ✅ Admin access control (only role=admin can access /admin)
 
-## E. Performance
+### Static Pages
+- ✅ Help/FAQ page (5 categories, 20 questions, accordion)
+- ✅ Contact Us page (form + email to admin + contact sidebar)
+- ✅ Privacy Policy + Terms of Service
+- ✅ Homepage with community browse + discover links
 
-| # | Issue | Status |
-|---|-------|--------|
-| 24 | Shortlist query N+1 | **FIXED** — static cache |
-| 25 | Notification count | **OK** — lightweight query |
-| 26 | Interest inbox counts (13 queries) | **FIXED** — optimized to 2 queries |
-
-## F. Completed Features
-
-- Registration (5 steps) + Email/Phone OTP verification
-- Login (email/password + OTP) + Forgot Password
-- Onboarding (4 steps: personal, location, preferences, lifestyle)
-- Dashboard (7 sections: CTA, sections, stats, recommended, mutual, views, newly joined, discover)
-- Photo upload & management (profile, album, family) + photo privacy enforcement
-- View & Edit My Profile (9 accordion sections with inline editing)
-- Profile Preview (4 tabbed sections) + Print Profile
-- Public profile view (with privacy on contacts + match score breakdown)
-- Search: Partner Search (15+ filters), Keyword Search, Search by ID + Load Partner Preferences + Save Search
-- Matchmaking Engine: My Matches, Mutual Matches, match score badges, dashboard recommendations
-- Discover Profiles: 13 categories, 3-level browsing (hub → subcategory → results), public for SEO
-- Interest Send/Accept/Decline with full inbox + chat (inbox optimized: 13→2 queries)
-- Photo Requests: send/approve/ignore with blurred photos + privacy overlays
-- In-app notifications (bell icon dropdown + full page)
-- Email notifications (SMTP configured, working on live)
-- Shortlist/Favorites (heart icon)
-- Block/Unblock with search exclusion
-- Ignored Profiles with search exclusion
-- Saved Searches (save, load, delete)
-- Profile Settings (visibility, alerts, hide, delete, password)
-- Who Viewed My Profile (tracking + views page)
-- Submit ID Proof (front + back upload)
-- Membership Plans (3 plans + Razorpay payment) + Premium badge + Featured ordering
-- Profile visibility enforcement (premium only, same religion/denomination/mother tongue)
-- Help/FAQ page (5 categories, 20 questions)
-- Contact Us page (form + email to admin)
-- Searchable country code dropdown (phone inputs)
-- Privacy Policy + Terms of Service pages
-- Mobile responsive + complete hamburger menu
-- Security fixes (gender enforcement, authorization, N+1)
-- Profile completion calculation (with photo weight)
-- Homepage community buttons linked to discover routes
-- Last login tracking
+### Infrastructure
+- ✅ Submit ID Proof (front + back upload)
+- ✅ Searchable country code dropdown (phone inputs)
+- ✅ Mobile responsive + complete hamburger menu with labeled sections
+- ✅ Security fixes (gender enforcement, authorization, N+1)
+- ✅ Last login tracking
+- ✅ Social media links in footer (admin-configurable)
+- ✅ Deployed to https://anugrahamatrimony.com (Hostinger)
 
 ---
 
-## Still Pending (2 items)
+## Pending for CodeCanyon (NOT needed for this client)
 
-| # | Feature | Priority | Description |
-|---|---------|----------|-------------|
-| 1 | **Admin Panel (Filament)** | HIGH | 15 sections: users, approvals, ID proofs, payments, settings, content, reports, franchise, staff |
-| 2 | **Subscription Enforcement** | HIGH | Plan-based daily interest limits, contact view limits, personalized message restriction, middleware |
+| Section | Description |
+|---------|-------------|
+| Admin: Content Management | Reference data CRUD, static pages editor, email templates |
+| Admin: Interest Management | View/manage all interests from admin |
+| Admin: Moderation & Support | Contact inbox in admin, reported users |
+| Admin: Reports & Analytics | Detailed charts, CSV export |
+| Admin: System | Install wizard, license verification, update system |
+| Admin: Franchise | Branch management, affiliate links |
+| Admin: Staff/Telecaller | Lead management, call logs |
+| Admin: Advertisements | Ad spaces, banner management |
+| Admin: Wedding Directory | Vendor marketplace (Phase 2) |
+| Subscription: Razorpay live | Waiting for client's Razorpay approval |
 
 ---
 
-## Launch Checklist
+## Important Notes for Next Session
 
-- [x] Core registration + login flow
-- [x] Profile creation + editing + print
-- [x] Photo upload + photo privacy + photo requests
-- [x] Search (partner + keyword + ID + load preferences + save search)
-- [x] Matchmaking engine (my matches + mutual matches + score breakdown)
-- [x] Discover profiles (13 categories)
-- [x] Interest send/accept/decline + chat
-- [x] Notifications (in-app + email)
-- [x] Shortlist + Block + Ignore
-- [x] Settings (visibility, alerts, hide, delete, password)
-- [x] Privacy Policy + Terms + FAQ + Contact Us
-- [x] Forgot Password
-- [x] Payment integration (Razorpay)
-- [x] ID Proof upload
-- [x] SMTP email working
-- [x] Featured profiles + premium badge
-- [x] Mobile responsive
-- [x] Dashboard redesign (7 sections)
-- [x] Homepage → discover links
-- [ ] **Admin Panel (Filament)**
-- [ ] **Subscription feature enforcement**
+1. **Filament 5 API differences:** Many classes moved from `Forms\Components` and `Tables\Actions` to `Schemas\Components` and `Filament\Actions`. All current code is compatible — but if adding new admin resources, use:
+   - `Filament\Schemas\Schema` instead of `Filament\Forms\Form` for form() and infolist()
+   - `\Filament\Actions\Action` instead of `Tables\Actions\Action`
+   - `BackedEnum|string|null` for `$navigationIcon` type
+   - No `Section`, `Tabs`, `Fieldset` from `Forms\Components` — use flat fields or `Schemas\Components`
+
+2. **Notifications type column:** Changed from ENUM to VARCHAR(50) to support new notification types (photo_request, photo_request_approved). Run on live if not done:
+   ```sql
+   ALTER TABLE notifications MODIFY COLUMN type VARCHAR(50) NOT NULL;
+   ```
+
+3. **Two subscription tables exist:**
+   - `subscriptions` — Razorpay payment audit trail (keeps payment records)
+   - `user_memberships` — Feature access (what `isPremium()` checks)
+   - Both are created on payment. Admin panel shows `user_memberships`.
+
+4. **Match score caching:** Currently on-the-fly (fine for <10K users). See `docs/SCALING_GUIDE.md` Section 1 for migration to cached `match_scores` table.
+
+5. **Livewire inject_assets:** Set to `true` in `config/livewire.php`. Required for Filament admin panel. If Alpine.js double-loads on the main site, check this setting.
+
+---
+
+## Key Files
+- `docs/SCALING_GUIDE.md` — 8-section optimization guide
+- `docs/DEPLOYMENT.md` — Hostinger deployment (12 steps)
+- `docs/TECH_STACK.md` — Technology versions
+- `docs/MOBILE_APP_PLAN.md` — Flutter app plan (18 screens)
+- `docs/admin-panel/` — Admin panel plan (15 sections for CodeCanyon)
+- `docs/.env.production` — Production environment template
