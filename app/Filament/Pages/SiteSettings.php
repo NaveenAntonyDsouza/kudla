@@ -39,7 +39,7 @@ class SiteSettings extends Page implements HasForms
         ]);
     }
 
-    public function form(Forms\Form $form): Forms\Form
+    public function form(\Filament\Schemas\Schema|Forms\Form $form): \Filament\Schemas\Schema|Forms\Form
     {
         return $form
             ->schema([
