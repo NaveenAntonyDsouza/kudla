@@ -51,7 +51,7 @@ class ProfileController extends Controller
             'religiousInfo', 'educationDetail', 'familyDetail',
             'locationInfo', 'contactInfo', 'lifestyleInfo',
             'socialMediaLink', 'partnerPreference', 'primaryPhoto',
-            'profilePhotos', 'differentlyAbledInfo',
+            'profilePhotos', 'differentlyAbledInfo', 'photoPrivacySetting',
         ]);
 
         $activeTab = request('tab', 'personal');
@@ -94,7 +94,7 @@ class ProfileController extends Controller
             'religiousInfo', 'educationDetail', 'familyDetail',
             'locationInfo', 'contactInfo', 'lifestyleInfo',
             'socialMediaLink', 'partnerPreference', 'primaryPhoto',
-            'profilePhotos', 'differentlyAbledInfo',
+            'profilePhotos', 'differentlyAbledInfo', 'photoPrivacySetting',
         ]);
 
         $activeTab = request('tab', 'personal');

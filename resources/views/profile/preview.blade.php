@@ -30,23 +30,109 @@
             <div class="w-full shrink-0 mx-auto lg:mx-0" style="max-width: 256px;">
                 <div class="sticky top-24">
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
-                        {{-- Photo --}}
+                        {{-- Photo with privacy enforcement --}}
+                        @php
+                            $privacyLevel = $profile->photoPrivacySetting?->privacy_level ?? 'visible_to_all';
+                            $hasPhoto = (bool) $profile->primaryPhoto;
+                            $showFullPhoto = true;
+                            $photoOverlayType = null;
+
+                            if (!($isOwn ?? false)) {
+                                if (!$hasPhoto) {
+                                    $showFullPhoto = false;
+                                    $photoOverlayType = 'no_photo';
+                                } elseif ($privacyLevel === 'hidden') {
+                                    // Check if photo view request was approved
+                                    $photoRequestApproved = \App\Models\PhotoRequest::where('requester_profile_id', auth()->user()->profile->id)
+                                        ->where('target_profile_id', $profile->id)
+                                        ->where('status', 'approved')->exists();
+                                    if (!$photoRequestApproved) {
+                                        $showFullPhoto = false;
+                                        $photoOverlayType = 'hidden';
+                                    }
+                                } elseif ($privacyLevel === 'interest_accepted') {
+                                    $interestAccepted = \App\Models\Interest::where('status', 'accepted')
+                                        ->where(fn($q) => $q
+                                            ->where(fn($q2) => $q2->where('sender_profile_id', auth()->user()->profile->id)->where('receiver_profile_id', $profile->id))
+                                            ->orWhere(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('receiver_profile_id', auth()->user()->profile->id))
+                                        )->exists();
+                                    if (!$interestAccepted) {
+                                        $showFullPhoto = false;
+                                        $photoOverlayType = 'after_acceptance';
+                                    }
+                                }
+                            }
+
+                            $photoRequestSent = false;
+                            if ($photoOverlayType === 'hidden' || $photoOverlayType === 'no_photo') {
+                                $photoRequestSent = \App\Models\PhotoRequest::where('requester_profile_id', auth()->user()->profile->id ?? 0)
+                                    ->where('target_profile_id', $profile->id)->exists();
+                            }
+
+                            $photoCount = $profile->profilePhotos->where('is_visible', true)->count();
+                        @endphp
+
                         <div class="relative overflow-hidden">
-                            @if($profile->primaryPhoto)
+                            @if($showFullPhoto && $hasPhoto)
                                 <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
                                     class="w-full aspect-[3/4] object-cover">
+                                @if($photoCount > 1)
+                                    <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                                        {{ $photoCount }}
+                                    </div>
+                                @endif
+                            @elseif($photoOverlayType === 'hidden' && $hasPhoto)
+                                {{-- Blurred photo --}}
+                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
+                                    class="w-full aspect-[3/4] object-cover" style="filter: blur(20px); transform: scale(1.1);">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                                    <svg class="w-10 h-10 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                                    <p class="text-sm font-semibold text-gray-700">This photo is hidden</p>
+                                    @if(!$photoRequestSent)
+                                        <form method="POST" action="{{ route('photo-requests.send', $profile) }}" class="mt-2" onclick="event.stopPropagation()">
+                                            @csrf
+                                            <button type="submit" class="px-4 py-1.5 text-xs font-bold text-(--color-primary) bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors"
+                                                onclick="return confirm('Send a photo view request to this profile?')">
+                                                SEND VIEW REQUEST
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="mt-2 px-4 py-1.5 text-xs font-medium text-gray-500 bg-white/80 rounded-full">Request Sent</span>
+                                    @endif
+                                </div>
+                            @elseif($photoOverlayType === 'after_acceptance' && $hasPhoto)
+                                {{-- Blurred photo - visible after acceptance --}}
+                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
+                                    class="w-full aspect-[3/4] object-cover" style="filter: blur(20px); transform: scale(1.1);">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                                    <svg class="w-10 h-10 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                                    <p class="text-sm font-semibold text-gray-700">Visible only after acceptance</p>
+                                </div>
+                            @elseif($photoOverlayType === 'no_photo')
+                                {{-- No photo placeholder with request button --}}
+                                <div class="w-full aspect-[3/4] bg-gray-100 flex flex-col items-center justify-center">
+                                    <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
+                                    </svg>
+                                    @if(!$photoRequestSent)
+                                        <form method="POST" action="{{ route('photo-requests.send', $profile) }}" class="mt-3">
+                                            @csrf
+                                            <button type="submit" class="px-4 py-1.5 text-xs font-bold text-(--color-primary) bg-(--color-primary-light) rounded-full hover:bg-(--color-primary)/10 transition-colors"
+                                                onclick="return confirm('Send a photo request to this profile?')">
+                                                REQUEST PHOTO
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="mt-3 px-4 py-1.5 text-xs font-medium text-gray-500 bg-gray-200 rounded-full">Request Sent</span>
+                                    @endif
+                                </div>
                             @else
+                                {{-- Default placeholder (own profile, no overlay) --}}
                                 <div class="w-full aspect-[3/4] bg-gray-100 flex items-center justify-center">
                                     <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
                                     </svg>
-                                </div>
-                            @endif
-                            @php $photoCount = $profile->profilePhotos->where('is_visible', true)->count(); @endphp
-                            @if($photoCount > 1)
-                                <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
-                                    {{ $photoCount }}
                                 </div>
                             @endif
                         </div>

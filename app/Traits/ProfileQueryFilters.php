@@ -52,6 +52,6 @@ trait ProfileQueryFilters
                         ->orWhere('mother_tongue', $profile->mother_tongue);
                 });
             })
-            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo', 'user.userMemberships']);
+            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo', 'user.userMemberships', 'photoPrivacySetting']);
     }
 }

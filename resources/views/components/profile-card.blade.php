@@ -14,6 +14,7 @@
         $p->educationDetail?->occupation,
         $p->locationInfo?->native_district ?? $p->locationInfo?->native_state ?? $p->locationInfo?->native_country,
     ])->filter()->implode(', ');
+
     // Cache shortlisted IDs to avoid N+1 queries
     static $shortlistedIds = null;
     if ($shortlistedIds === null && !$isGuest) {
@@ -21,6 +22,39 @@
     }
     $isShortlisted = $shortlistedIds !== null && in_array($p->id, $shortlistedIds);
     $profileUrl = $isGuest ? route('login') : route('profile.view', $p);
+
+    // Photo privacy logic
+    $privacyLevel = $p->photoPrivacySetting?->privacy_level ?? 'visible_to_all';
+    $hasPhoto = (bool) $p->primaryPhoto;
+    $showPhoto = true; // default: show photo
+    $photoOverlay = null; // overlay message
+
+    if (!$isGuest && !($p->id === auth()->user()->profile->id)) {
+        if (!$hasPhoto) {
+            // No photo uploaded → show placeholder with "Request Photo"
+            $showPhoto = false;
+            $photoOverlay = 'request_photo';
+        } elseif ($privacyLevel === 'hidden') {
+            // Photo hidden → blur + "Send View Request"
+            $showPhoto = false;
+            $photoOverlay = 'hidden';
+        } elseif ($privacyLevel === 'interest_accepted') {
+            // Check if interest accepted between us
+            static $acceptedPartnerIds = null;
+            if ($acceptedPartnerIds === null) {
+                $myId = auth()->user()->profile->id;
+                $acceptedPartnerIds = \App\Models\Interest::where('status', 'accepted')
+                    ->where(fn($q) => $q->where('sender_profile_id', $myId)->orWhere('receiver_profile_id', $myId))
+                    ->get()
+                    ->map(fn($i) => $i->sender_profile_id === $myId ? $i->receiver_profile_id : $i->sender_profile_id)
+                    ->toArray();
+            }
+            if (!in_array($p->id, $acceptedPartnerIds)) {
+                $showPhoto = false;
+                $photoOverlay = 'after_acceptance';
+            }
+        }
+    }
 @endphp
 
 <div class="relative rounded-lg border border-gray-200 overflow-hidden hover:shadow-md hover:border-(--color-primary)/30 transition-all group bg-white">
@@ -39,10 +73,36 @@
     <a href="{{ $profileUrl }}" class="block">
         {{-- Photo --}}
         <div class="aspect-[3/4] bg-gray-100 relative overflow-hidden">
-            @if($p->primaryPhoto)
+            @if($showPhoto && $hasPhoto)
                 <img src="{{ $p->primaryPhoto->full_url }}" alt="{{ $p->matri_id }}"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
+            @elseif($photoOverlay === 'hidden' && $hasPhoto)
+                {{-- Blurred photo with "Photo is hidden" --}}
+                <img src="{{ $p->primaryPhoto->full_url }}" alt="{{ $p->matri_id }}"
+                    class="w-full h-full object-cover" style="filter: blur(20px); transform: scale(1.1);" loading="lazy">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <svg class="w-8 h-8 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    <p class="text-xs font-semibold text-gray-700">This photo is hidden</p>
+                    <span class="mt-2 inline-block px-3 py-1 text-[10px] font-bold text-(--color-primary) bg-white rounded-full shadow-sm">SEND VIEW REQUEST</span>
+                </div>
+            @elseif($photoOverlay === 'after_acceptance' && $hasPhoto)
+                {{-- Blurred photo with "Visible after acceptance" --}}
+                <img src="{{ $p->primaryPhoto->full_url }}" alt="{{ $p->matri_id }}"
+                    class="w-full h-full object-cover" style="filter: blur(20px); transform: scale(1.1);" loading="lazy">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <svg class="w-8 h-8 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    <p class="text-xs font-semibold text-gray-700">Visible only after acceptance</p>
+                </div>
+            @elseif($photoOverlay === 'request_photo')
+                {{-- No photo — placeholder with "Request Photo" --}}
+                <div class="w-full h-full flex flex-col items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
+                    </svg>
+                    <span class="mt-2 inline-block px-3 py-1 text-[10px] font-bold text-(--color-primary) bg-(--color-primary-light) rounded-full">REQUEST PHOTO</span>
+                </div>
             @else
+                {{-- Default placeholder (no photo, own profile, guest) --}}
                 <div class="w-full h-full flex items-center justify-center">
                     <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
