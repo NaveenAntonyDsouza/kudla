@@ -160,88 +160,41 @@ class UserResource extends Resource
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Basic Information')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('matri_id')->label('Matri ID')->weight('bold')->color('primary'),
-                        Infolists\Components\TextEntry::make('full_name')->label('Full Name'),
-                        Infolists\Components\TextEntry::make('gender')->badge()->color(fn(string $state): string => $state === 'male' ? 'info' : 'danger'),
-                        Infolists\Components\TextEntry::make('date_of_birth')->label('Date of Birth')->date('d M Y'),
-                        Infolists\Components\TextEntry::make('age')->label('Age')->suffix(' years'),
-                        Infolists\Components\TextEntry::make('height')->label('Height'),
-                        Infolists\Components\TextEntry::make('marital_status')->label('Marital Status'),
-                        Infolists\Components\TextEntry::make('mother_tongue')->label('Mother Tongue'),
-                        Infolists\Components\TextEntry::make('complexion'),
-                    ]),
-
-                Infolists\Components\Section::make('Account Status')
-                    ->columns(4)
-                    ->schema([
-                        Infolists\Components\IconEntry::make('is_active')->label('Active')->boolean(),
-                        Infolists\Components\IconEntry::make('is_approved')->label('Approved')->boolean(),
-                        Infolists\Components\IconEntry::make('id_proof_verified')->label('ID Verified')->boolean(),
-                        Infolists\Components\TextEntry::make('profile_completion_pct')->label('Completion')->suffix('%'),
-                    ]),
-
-                Infolists\Components\Section::make('Contact & Auth')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('user.email')->label('Email'),
-                        Infolists\Components\TextEntry::make('user.phone')->label('Phone'),
-                        Infolists\Components\TextEntry::make('user.email_verified_at')->label('Email Verified')->date('d M Y H:i')->default('Not verified'),
-                        Infolists\Components\TextEntry::make('user.phone_verified_at')->label('Phone Verified')->date('d M Y H:i')->default('Not verified'),
-                        Infolists\Components\TextEntry::make('user.last_login_at')->label('Last Login')->date('d M Y H:i')->default('Never'),
-                    ]),
-
-                Infolists\Components\Section::make('Religious Information')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('religiousInfo.religion')->label('Religion')->default('-'),
-                        Infolists\Components\TextEntry::make('religiousInfo.denomination')->label('Denomination')->default('-'),
-                        Infolists\Components\TextEntry::make('religiousInfo.caste')->label('Caste')->default('-'),
-                        Infolists\Components\TextEntry::make('religiousInfo.diocese_name')->label('Diocese')->default('-'),
-                    ]),
-
-                Infolists\Components\Section::make('Education & Profession')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('educationDetail.highest_education')->label('Education')->default('-'),
-                        Infolists\Components\TextEntry::make('educationDetail.occupation')->label('Occupation')->default('-'),
-                        Infolists\Components\TextEntry::make('educationDetail.employer_name')->label('Employer')->default('-'),
-                        Infolists\Components\TextEntry::make('educationDetail.annual_income')->label('Income')->default('-'),
-                        Infolists\Components\TextEntry::make('educationDetail.working_country')->label('Working Country')->default('-'),
-                    ]),
-
-                Infolists\Components\Section::make('Location')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('locationInfo.residing_country')->label('Residing Country')->default('-'),
-                        Infolists\Components\TextEntry::make('locationInfo.native_country')->label('Native Country')->default('-'),
-                        Infolists\Components\TextEntry::make('locationInfo.native_state')->label('Native State')->default('-'),
-                        Infolists\Components\TextEntry::make('locationInfo.native_district')->label('Native District')->default('-'),
-                    ]),
-
-                Infolists\Components\Section::make('Family')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('familyDetail.father_name')->label('Father')->default('-'),
-                        Infolists\Components\TextEntry::make('familyDetail.mother_name')->label('Mother')->default('-'),
-                        Infolists\Components\TextEntry::make('familyDetail.family_type')->label('Family Type')->default('-'),
-                        Infolists\Components\TextEntry::make('familyDetail.family_status')->label('Family Status')->default('-'),
-                    ]),
-
-                Infolists\Components\Section::make('About Me')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('about_me')->default('Not provided'),
-                    ]),
-
-                Infolists\Components\Section::make('Timestamps')
-                    ->columns(3)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('created_at')->label('Registered')->dateTime('d M Y, h:i A'),
-                        Infolists\Components\TextEntry::make('updated_at')->label('Last Updated')->dateTime('d M Y, h:i A'),
-                        Infolists\Components\TextEntry::make('created_by')->label('Created By')->default('Self'),
-                    ]),
+                Infolists\Components\TextEntry::make('matri_id')->label('Matri ID')->weight('bold')->color('primary'),
+                Infolists\Components\TextEntry::make('full_name')->label('Full Name'),
+                Infolists\Components\TextEntry::make('gender')->badge()->color(fn(string $state): string => $state === 'male' ? 'info' : 'danger'),
+                Infolists\Components\TextEntry::make('date_of_birth')->label('Date of Birth')->date('d M Y'),
+                Infolists\Components\TextEntry::make('age')->label('Age')->suffix(' years'),
+                Infolists\Components\TextEntry::make('height')->label('Height'),
+                Infolists\Components\TextEntry::make('marital_status')->label('Marital Status'),
+                Infolists\Components\TextEntry::make('mother_tongue')->label('Mother Tongue'),
+                Infolists\Components\TextEntry::make('complexion'),
+                Infolists\Components\TextEntry::make('is_active')->label('Active')->formatStateUsing(fn($state) => $state ? 'Yes' : 'No'),
+                Infolists\Components\TextEntry::make('is_approved')->label('Approved')->formatStateUsing(fn($state) => $state ? 'Yes' : 'No'),
+                Infolists\Components\TextEntry::make('id_proof_verified')->label('ID Verified')->formatStateUsing(fn($state) => $state ? 'Yes' : 'No'),
+                Infolists\Components\TextEntry::make('profile_completion_pct')->label('Completion')->suffix('%'),
+                Infolists\Components\TextEntry::make('user.email')->label('Email'),
+                Infolists\Components\TextEntry::make('user.phone')->label('Phone'),
+                Infolists\Components\TextEntry::make('user.email_verified_at')->label('Email Verified')->date('d M Y H:i')->default('Not verified'),
+                Infolists\Components\TextEntry::make('user.phone_verified_at')->label('Phone Verified')->date('d M Y H:i')->default('Not verified'),
+                Infolists\Components\TextEntry::make('user.last_login_at')->label('Last Login')->date('d M Y H:i')->default('Never'),
+                Infolists\Components\TextEntry::make('religiousInfo.religion')->label('Religion')->default('-'),
+                Infolists\Components\TextEntry::make('religiousInfo.denomination')->label('Denomination')->default('-'),
+                Infolists\Components\TextEntry::make('religiousInfo.caste')->label('Caste')->default('-'),
+                Infolists\Components\TextEntry::make('educationDetail.highest_education')->label('Education')->default('-'),
+                Infolists\Components\TextEntry::make('educationDetail.occupation')->label('Occupation')->default('-'),
+                Infolists\Components\TextEntry::make('educationDetail.employer_name')->label('Employer')->default('-'),
+                Infolists\Components\TextEntry::make('educationDetail.annual_income')->label('Income')->default('-'),
+                Infolists\Components\TextEntry::make('educationDetail.working_country')->label('Working Country')->default('-'),
+                Infolists\Components\TextEntry::make('locationInfo.residing_country')->label('Residing Country')->default('-'),
+                Infolists\Components\TextEntry::make('locationInfo.native_country')->label('Native Country')->default('-'),
+                Infolists\Components\TextEntry::make('locationInfo.native_state')->label('Native State')->default('-'),
+                Infolists\Components\TextEntry::make('familyDetail.father_name')->label('Father')->default('-'),
+                Infolists\Components\TextEntry::make('familyDetail.mother_name')->label('Mother')->default('-'),
+                Infolists\Components\TextEntry::make('familyDetail.family_status')->label('Family Status')->default('-'),
+                Infolists\Components\TextEntry::make('about_me')->label('About Me')->default('Not provided'),
+                Infolists\Components\TextEntry::make('created_at')->label('Registered')->dateTime('d M Y, h:i A'),
+                Infolists\Components\TextEntry::make('updated_at')->label('Last Updated')->dateTime('d M Y, h:i A'),
             ]);
     }
 
