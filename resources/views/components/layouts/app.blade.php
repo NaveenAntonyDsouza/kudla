@@ -309,7 +309,7 @@
                     <p class="text-sm">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
                     <div class="flex items-center gap-4 text-sm">
                         <a href="/privacy-policy" class="hover:text-white transition-colors">Privacy</a>
-                        <a href="/terms-of-service" class="hover:text-white transition-colors">Terms</a>
+                        <a href="/terms-condition" class="hover:text-white transition-colors">Terms</a>
                         <a href="/faq" class="hover:text-white transition-colors">Help</a>
                         @php
                             $socialFb = \App\Models\SiteSetting::getValue('social_facebook');
@@ -349,7 +349,7 @@
                         <h4 class="text-white font-semibold text-sm mb-3">Legal</h4>
                         <ul class="space-y-2 text-sm">
                             <li><a href="/privacy-policy" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                            <li><a href="/terms-of-service" class="hover:text-white transition-colors">Terms of Service</a></li>
+                            <li><a href="/terms-condition" class="hover:text-white transition-colors">Terms of Service</a></li>
                         </ul>
                     </div>
                     <div>

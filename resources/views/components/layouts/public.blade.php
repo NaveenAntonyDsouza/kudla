@@ -110,7 +110,7 @@
                     <ul class="space-y-2 text-sm">
                         <li><a href="/about" class="hover:text-white transition-colors">About Us</a></li>
                         <li><a href="/privacy-policy" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                        <li><a href="/terms-of-service" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="/terms-condition" class="hover:text-white transition-colors">Terms of Service</a></li>
                         <li><a href="/success-stories" class="hover:text-white transition-colors">Success Stories</a></li>
                     </ul>
                 </div>
