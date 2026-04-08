@@ -235,4 +235,28 @@ class SearchController extends Controller
 
         return $params;
     }
+
+    /**
+     * Public search page — accessible without login (for SEO + staff sharing).
+     * Logged-in users get redirected to the full search page.
+     * Non-logged-in users see profile cards with "Login to view" badges.
+     */
+    public function publicSearch(string $tab)
+    {
+        // If logged in, redirect to the authenticated search
+        if (auth()->check() && auth()->user()->profile) {
+            return redirect()->route('search.index', ['tab' => $tab]);
+        }
+
+        $activeTab = $tab;
+
+        // For guests: show recent active profiles (no filters, no partner prefs)
+        $results = Profile::where('is_active', true)
+            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('search.public', compact('results', 'activeTab'));
+    }
 }

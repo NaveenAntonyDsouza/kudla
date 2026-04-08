@@ -41,6 +41,12 @@ Route::permanentRedirect('/premium-member', '/membership-plans');
 Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
 
+// Search (public — accessible without login for SEO)
+Route::get('/search/quick-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.quick');
+Route::get('/search/advance-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.advance');
+Route::get('/search/keyword-search', fn() => app(SearchController::class)->publicSearch('keyword'))->name('search.keyword');
+Route::get('/search/id-search', fn() => app(SearchController::class)->publicSearch('byid'))->name('search.byid');
+
 // Discover Profiles (public — accessible without login for SEO)
 Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
 Route::get('/discover/{category}', [DiscoverController::class, 'category'])->name('discover.category');
@@ -156,12 +162,8 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/block/{profile}', [BlockController::class, 'block'])->name('block.profile');
     Route::post('/unblock/{profile}', [BlockController::class, 'unblock'])->name('unblock.profile');
 
-    // Search
+    // Search (authenticated — full functionality)
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
-    Route::get('/search/quick-search', fn() => app(SearchController::class)->index(request()->merge(['tab' => 'partner'])))->name('search.quick');
-    Route::get('/search/advance-search', fn() => app(SearchController::class)->index(request()->merge(['tab' => 'partner'])))->name('search.advance');
-    Route::get('/search/keyword-search', fn() => app(SearchController::class)->index(request()->merge(['tab' => 'keyword'])))->name('search.keyword');
-    Route::get('/search/id-search', fn() => app(SearchController::class)->index(request()->merge(['tab' => 'byid'])))->name('search.byid');
 
     // Matches
     Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
