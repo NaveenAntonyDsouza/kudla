@@ -76,7 +76,7 @@
             <div class="space-y-6">
                 @php
                     $contactEmail = \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com');
-                    $contactPhone = \App\Models\SiteSetting::getValue('contact_phone', '+91 484 408 0333');
+                    $contactPhone = \App\Models\SiteSetting::getValue('phone', '');
                     $whatsapp = \App\Models\SiteSetting::getValue('whatsapp_number', '');
                     $address = \App\Models\SiteSetting::getValue('address', '');
                 @endphp
