@@ -33,6 +33,11 @@ Route::view('/demograph', 'pages.demograph')->name('demograph');
 Route::view('/event', 'pages.event')->name('event');
 Route::view('/refund-policy', 'pages.refund-policy')->name('refund-policy');
 Route::view('/report-misuse', 'pages.report-misuse')->name('report-misuse');
+
+// 301 redirects from old URLs (SEO — pass link juice to new URLs)
+Route::permanentRedirect('/cms/index/child-safety-policy', '/child-safety');
+Route::permanentRedirect('/premium-member', '/membership-plans');
+
 Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
 
