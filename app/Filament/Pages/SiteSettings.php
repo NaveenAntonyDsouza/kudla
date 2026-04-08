@@ -34,6 +34,7 @@ class SiteSettings extends Page implements HasForms
         $this->form->fill([
             'site_name' => $settings['site_name'] ?? '',
             'tagline' => $settings['tagline'] ?? '',
+            'site_area' => $settings['site_area'] ?? '',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
             'email' => $settings['email'] ?? '',
@@ -67,6 +68,11 @@ class SiteSettings extends Page implements HasForms
                     ->label('Tagline')
                     ->maxLength(200)
                     ->helperText('Shown on homepage hero section'),
+
+                Forms\Components\TextInput::make('site_area')
+                    ->label('Site Area / Community')
+                    ->maxLength(200)
+                    ->helperText('e.g., "Coastal Karnataka" — shown on homepage hero as "Find Your Match in {area}"'),
 
                 // Logo Upload
                 Forms\Components\FileUpload::make('logo_upload')

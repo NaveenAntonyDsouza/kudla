@@ -77,7 +77,7 @@
                 @php
                     $contactEmail = \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com');
                     $contactPhone = \App\Models\SiteSetting::getValue('phone', '');
-                    $whatsapp = \App\Models\SiteSetting::getValue('whatsapp_number', '');
+                    $whatsapp = \App\Models\SiteSetting::getValue('whatsapp', '');
                     $address = \App\Models\SiteSetting::getValue('address', '');
                 @endphp
 
