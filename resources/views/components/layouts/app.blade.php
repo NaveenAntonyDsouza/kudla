@@ -307,13 +307,9 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p class="text-sm">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
-                    <div class="flex items-center flex-wrap gap-4 text-sm">
-                        <a href="/about-us" class="hover:text-white transition-colors">About</a>
+                    <div class="flex items-center gap-4 text-sm">
                         <a href="/privacy-policy" class="hover:text-white transition-colors">Privacy</a>
                         <a href="/terms-condition" class="hover:text-white transition-colors">Terms</a>
-                        <a href="/refund-policy" class="hover:text-white transition-colors">Refund</a>
-                        <a href="/child-safety" class="hover:text-white transition-colors">Child Safety</a>
-                        <a href="/contact" class="hover:text-white transition-colors">Contact</a>
                         <a href="/faq" class="hover:text-white transition-colors">Help</a>
                         @php
                             $socialFb = \App\Models\SiteSetting::getValue('social_facebook');
