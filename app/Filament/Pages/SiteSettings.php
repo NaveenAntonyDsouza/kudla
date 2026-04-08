@@ -3,15 +3,19 @@
 namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
+use App\Models\ThemeSetting;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Livewire\WithFileUploads;
 
 class SiteSettings extends Page implements HasForms
 {
-    use InteractsWithForms;
+    use InteractsWithForms, WithFileUploads;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Site Settings';
@@ -19,10 +23,13 @@ class SiteSettings extends Page implements HasForms
     protected string $view = 'filament.pages.site-settings';
 
     public ?array $data = [];
+    public $logoUpload = null;
+    public $faviconUpload = null;
 
     public function mount(): void
     {
         $settings = SiteSetting::pluck('value', 'key')->toArray();
+        $theme = ThemeSetting::first();
 
         $this->form->fill([
             'site_name' => $settings['site_name'] ?? '',
@@ -40,6 +47,8 @@ class SiteSettings extends Page implements HasForms
             'social_instagram' => $settings['social_instagram'] ?? '',
             'social_youtube' => $settings['social_youtube'] ?? '',
             'social_twitter' => $settings['social_twitter'] ?? '',
+            'current_logo_url' => $theme?->logo_url,
+            'current_favicon_url' => $theme?->favicon_url,
         ]);
     }
 
@@ -58,6 +67,26 @@ class SiteSettings extends Page implements HasForms
                     ->label('Tagline')
                     ->maxLength(200)
                     ->helperText('Shown on homepage hero section'),
+
+                // Logo Upload
+                Forms\Components\FileUpload::make('logo_upload')
+                    ->label('Site Logo')
+                    ->image()
+                    ->maxSize(2048) // 2MB
+                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'])
+                    ->directory('branding')
+                    ->disk('public')
+                    ->helperText('Recommended: PNG or SVG, max height 40px. Leave empty to keep current logo.'),
+
+                // Favicon Upload
+                Forms\Components\FileUpload::make('favicon_upload')
+                    ->label('Favicon')
+                    ->image()
+                    ->maxSize(512) // 512KB
+                    ->acceptedFileTypes(['image/png', 'image/x-icon', 'image/svg+xml'])
+                    ->directory('branding')
+                    ->disk('public')
+                    ->helperText('Recommended: 32x32 or 64x64 PNG. Leave empty to keep current.'),
 
                 Forms\Components\TextInput::make('profile_id_prefix')
                     ->label('Matri ID Prefix')
@@ -135,8 +164,40 @@ class SiteSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
+        // Handle logo upload
+        $logoUpload = $data['logo_upload'] ?? null;
+        $faviconUpload = $data['favicon_upload'] ?? null;
+
+        // Remove upload fields from site_settings save
+        unset($data['logo_upload'], $data['favicon_upload'], $data['current_logo_url'], $data['current_favicon_url']);
+
+        // Save text settings to site_settings table
         foreach ($data as $key => $value) {
             SiteSetting::setValue($key, $value ?? '');
+        }
+
+        // Save logo/favicon to theme_settings table
+        $theme = ThemeSetting::first();
+        if ($theme) {
+            $updateData = [];
+
+            if ($logoUpload) {
+                // $logoUpload is the stored path from FileUpload component
+                $updateData['logo_url'] = '/storage/' . $logoUpload;
+            }
+
+            if ($faviconUpload) {
+                $updateData['favicon_url'] = '/storage/' . $faviconUpload;
+            }
+
+            // Also sync site_name and tagline to theme_settings
+            $updateData['site_name'] = $data['site_name'] ?? $theme->site_name;
+            $updateData['tagline'] = $data['tagline'] ?? $theme->tagline;
+
+            $theme->update($updateData);
+
+            // Clear theme cache so changes appear immediately
+            Cache::forget('theme_settings');
         }
 
         Notification::make()
