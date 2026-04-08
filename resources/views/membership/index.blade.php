@@ -36,7 +36,7 @@
 
         {{-- Pricing Cards --}}
         @php
-            $paidPlans = $plans->where('price_inr', '>', 0);
+            $paidPlans = $plans->where('slug', '!=', 'free');
             $colors = ['#8B5CF6', '#8B1D91', '#D97706', '#059669'];
         @endphp
 
@@ -55,12 +55,16 @@
                             @if($plan->strike_price_inr)
                                 <span class="text-sm text-gray-400 line-through">&#8377;{{ number_format($plan->strike_price_inr) }}</span>
                             @endif
-                            <div class="text-3xl font-bold text-gray-900">&#8377;{{ number_format($plan->price_inr) }}</div>
+                            @if($plan->price_inr > 0)
+                                <div class="text-3xl font-bold text-gray-900">&#8377;{{ number_format($plan->price_inr) }}</div>
+                            @else
+                                <div class="text-3xl font-bold text-green-600">Free</div>
+                            @endif
                         </div>
 
                         @if($activePlanId === $plan->id)
                             <div class="mt-6 px-6 py-2.5 text-sm font-semibold text-green-700 bg-green-100 rounded-lg">Current Plan</div>
-                        @else
+                        @elseif($plan->price_inr > 0)
                             <form method="POST" action="{{ route('membership.checkout') }}" class="mt-6">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
@@ -68,6 +72,8 @@
                                     UPGRADE
                                 </button>
                             </form>
+                        @else
+                            <div class="mt-6 px-6 py-2.5 text-sm font-semibold text-green-700 bg-green-100 rounded-lg text-center">Free During Launch</div>
                         @endif
                     </div>
 
