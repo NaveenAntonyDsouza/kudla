@@ -102,7 +102,6 @@ When client gets Razorpay live credentials:
 ## Future Projects (Separate from this)
 
 - **Flutter Mobile App** — see `docs/MOBILE_APP_PLAN.md`
-- **NestJS Version** — see `D:\matrimony\platform\NEXTJS_NESTJS_PLAN.md`
 - **Performance Scaling** — see `docs/SCALING_GUIDE.md`
 
 ---
