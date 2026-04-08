@@ -37,6 +37,10 @@ Route::view('/report-misuse', 'pages.report-misuse')->name('report-misuse');
 // 301 redirects from old URLs (SEO — pass link juice to new URLs)
 Route::permanentRedirect('/cms/index/child-safety-policy', '/child-safety');
 Route::permanentRedirect('/premium-member', '/membership-plans');
+Route::permanentRedirect('/search/quick-search', '/search?tab=partner');
+Route::permanentRedirect('/search/advance-search', '/search?tab=partner');
+Route::permanentRedirect('/search/keyword-search', '/search?tab=keyword');
+Route::permanentRedirect('/search/id-search', '/search?tab=byid');
 
 Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
