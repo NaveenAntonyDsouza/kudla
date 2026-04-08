@@ -37,7 +37,7 @@
             <p>We use essential cookies to maintain your login session and remember your preferences. We do not use third-party tracking cookies for advertising.</p>
 
             <h2 class="text-lg font-semibold text-gray-900">7. Contact Us</h2>
-            <p>For any privacy-related concerns, please contact us at <strong>info@anugrahamatrimony.com</strong>.</p>
+            <p>For any privacy-related concerns, please contact us at <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com') }}</strong>.</p>
         </div>
     </div>
 </x-layouts.app>
