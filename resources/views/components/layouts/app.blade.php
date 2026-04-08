@@ -307,9 +307,13 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p class="text-sm">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
-                    <div class="flex items-center gap-4 text-sm">
+                    <div class="flex items-center flex-wrap gap-4 text-sm">
+                        <a href="/about-us" class="hover:text-white transition-colors">About</a>
                         <a href="/privacy-policy" class="hover:text-white transition-colors">Privacy</a>
                         <a href="/terms-condition" class="hover:text-white transition-colors">Terms</a>
+                        <a href="/refund-policy" class="hover:text-white transition-colors">Refund</a>
+                        <a href="/child-safety" class="hover:text-white transition-colors">Child Safety</a>
+                        <a href="/contact" class="hover:text-white transition-colors">Contact</a>
                         <a href="/faq" class="hover:text-white transition-colors">Help</a>
                         @php
                             $socialFb = \App\Models\SiteSetting::getValue('social_facebook');
@@ -343,20 +347,29 @@
                             <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
                             <li><a href="/register" class="hover:text-white transition-colors">Register Free</a></li>
                             <li><a href="/login" class="hover:text-white transition-colors">Login</a></li>
+                            <li><a href="/about-us" class="hover:text-white transition-colors">About Us</a></li>
+                            <li><a href="/membership-plans" class="hover:text-white transition-colors">Membership Plans</a></li>
+                            <li><a href="/demograph" class="hover:text-white transition-colors">Demographics</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-white font-semibold text-sm mb-3">Legal</h4>
+                        <h4 class="text-white font-semibold text-sm mb-3">Information</h4>
                         <ul class="space-y-2 text-sm">
                             <li><a href="/privacy-policy" class="hover:text-white transition-colors">Privacy Policy</a></li>
-                            <li><a href="/terms-condition" class="hover:text-white transition-colors">Terms of Service</a></li>
+                            <li><a href="/terms-condition" class="hover:text-white transition-colors">Terms & Conditions</a></li>
+                            <li><a href="/refund-policy" class="hover:text-white transition-colors">Refund Policy</a></li>
+                            <li><a href="/child-safety" class="hover:text-white transition-colors">Child Safety</a></li>
+                            <li><a href="/report-misuse" class="hover:text-white transition-colors">Report Misuse</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-white font-semibold text-sm mb-3">Contact</h4>
+                        <h4 class="text-white font-semibold text-sm mb-3">Reach Us</h4>
                         <ul class="space-y-2 text-sm">
-                            <li>info@anugrahamatrimony.com</li>
-                            <li><a href="/help" class="hover:text-white transition-colors">Help & Support</a></li>
+                            <li><a href="/contact" class="hover:text-white transition-colors">Contact Us</a></li>
+                            <li><a href="/faq" class="hover:text-white transition-colors">Help & FAQ</a></li>
+                            <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
+                            <li><a href="/event" class="hover:text-white transition-colors">Events</a></li>
+                            <li><a href="/add-with-us" class="hover:text-white transition-colors">Advertise With Us</a></li>
                         </ul>
                     </div>
                 </div>
