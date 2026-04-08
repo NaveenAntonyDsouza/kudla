@@ -17,7 +17,7 @@ class MembershipController extends Controller
             ->get();
 
         $user = auth()->user();
-        $activeMembership = $user->activeMembership();
+        $activeMembership = $user?->activeMembership();
         $activePlanId = $activeMembership?->plan_id;
 
         return view('membership.index', compact('plans', 'activeMembership', 'activePlanId'));

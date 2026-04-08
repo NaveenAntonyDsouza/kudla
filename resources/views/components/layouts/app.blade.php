@@ -274,6 +274,9 @@
                     <!-- Desktop Nav -->
                     <nav class="hidden md:flex items-center gap-6">
                         <a href="/" class="text-sm font-medium text-gray-700 hover:text-gray-900">Home</a>
+                        <a href="/membership-plans" class="text-sm font-medium text-gray-700 hover:text-gray-900">Membership</a>
+                        <a href="/about-us" class="text-sm font-medium text-gray-700 hover:text-gray-900">About Us</a>
+                        <a href="/contact" class="text-sm font-medium text-gray-700 hover:text-gray-900">Contact</a>
                         <a href="/register" class="text-sm font-medium text-(--color-primary) hover:text-(--color-primary-hover)">Register Free</a>
                         <a href="/login" class="px-5 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Login</a>
                     </nav>
@@ -289,6 +292,9 @@
             <div x-data="{ open: false }" x-on:toggle-guest-menu.window="open = !open" x-show="open" x-cloak class="md:hidden border-t border-gray-200 bg-white">
                 <div class="px-4 py-3 space-y-2">
                     <a href="/" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Home</a>
+                    <a href="/membership-plans" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Membership</a>
+                    <a href="/about-us" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">About Us</a>
+                    <a href="/contact" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Contact</a>
                     <a href="/register" class="block px-3 py-2 rounded-lg text-sm font-medium text-(--color-primary) hover:bg-gray-100">Register Free</a>
                     <a href="/login" class="block px-3 py-2 rounded-lg text-sm font-medium text-white bg-(--color-primary) text-center rounded-lg">Login</a>
                 </div>
