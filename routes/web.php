@@ -25,6 +25,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/privacy-policy', 'pages.privacy')->name('privacy');
 Route::view('/terms-condition', 'pages.terms')->name('terms');
 Route::view('/faq', 'pages.faq')->name('faq');
+Route::view('/about-us', 'pages.about-us')->name('about-us');
+Route::view('/add-with-us', 'pages.add-with-us')->name('add-with-us');
+Route::view('/blog', 'pages.blog')->name('blog');
+Route::view('/child-safety', 'pages.child-safety')->name('child-safety');
+Route::view('/demograph', 'pages.demograph')->name('demograph');
+Route::view('/event', 'pages.event')->name('event');
+Route::view('/refund-policy', 'pages.refund-policy')->name('refund-policy');
+Route::view('/report-misuse', 'pages.report-misuse')->name('report-misuse');
 Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
 
