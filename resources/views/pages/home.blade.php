@@ -5,60 +5,152 @@
         $siteArea = \App\Models\SiteSetting::getValue('site_area', 'Your Community');
     @endphp
 
-    {{-- 1. Hero Banner --}}
-    <section class="relative overflow-hidden py-20 sm:py-28" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight">
-                Find Your Perfect Match in {{ $siteArea }}
-            </h1>
-            <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-2xl mx-auto">{{ $siteTagline }}</p>
+    {{-- 1. Hero Banner with Registration Form --}}
+    <section class="relative overflow-hidden py-12 sm:py-16 lg:py-20" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                {{-- Left: Heading + Tagline --}}
+                <div class="text-center lg:text-left text-white">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight">
+                        Find Your Perfect Match in {{ $siteArea }}
+                    </h1>
+                    <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg">{{ $siteTagline }}</p>
+                    <div class="mt-6 hidden lg:block">
+                        <p class="text-white/70 text-sm">Already a member? <a href="/login" class="text-white font-semibold hover:underline">Login</a></p>
+                    </div>
+                </div>
 
-            {{-- Search Widget --}}
-            <div class="mt-10 max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <form action="/search" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                    <div class="text-left">
-                        <label class="block text-sm font-medium text-white/80 mb-1">I'm looking for</label>
-                        <select name="gender" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2.5 focus:ring-2 focus:ring-white">
-                            <option value="female">Bride</option>
-                            <option value="male">Groom</option>
-                        </select>
-                    </div>
-                    <div class="text-left">
-                        <label class="block text-sm font-medium text-white/80 mb-1">Age from</label>
-                        <select name="age_from" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2.5 focus:ring-2 focus:ring-white">
-                            @for($i = 18; $i <= 60; $i++)
-                                <option value="{{ $i }}" {{ $i === 21 ? 'selected' : '' }}>{{ $i }} yrs</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="text-left">
-                        <label class="block text-sm font-medium text-white/80 mb-1">Age to</label>
-                        <select name="age_to" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2.5 focus:ring-2 focus:ring-white">
-                            @for($i = 18; $i <= 60; $i++)
-                                <option value="{{ $i }}" {{ $i === 30 ? 'selected' : '' }}>{{ $i }} yrs</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="text-left">
-                        <label class="block text-sm font-medium text-white/80 mb-1">Community</label>
-                        <select name="community" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2.5 focus:ring-2 focus:ring-white">
-                            <option value="">All Communities</option>
-                            @foreach($communities as $religion => $group)
-                                <optgroup label="{{ $religion }}">
-                                    @foreach($group as $community)
-                                        <option value="{{ $community->id }}">{{ $community->community_name }}</option>
-                                    @endforeach
-                                </optgroup>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit" class="w-full bg-white text-gray-900 hover:bg-gray-100 rounded-lg px-4 py-2.5 font-semibold text-sm transition-colors">
-                            Search
+                {{-- Right: Registration Form --}}
+                <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto w-full">
+                    <h2 class="text-xl font-bold text-gray-900 mb-1">Register Free</h2>
+                    <p class="text-sm text-gray-500 mb-5">Create your profile in 2 minutes</p>
+
+                    <form method="POST" action="{{ route('register.store1') }}" class="space-y-4" x-data="{ gender: '', showPw: false }">
+                        @csrf
+
+                        {{-- Full Name --}}
+                        <div class="float-field">
+                            <input type="text" name="full_name" id="hero_full_name" value="{{ old('full_name') }}" required placeholder=" "
+                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
+                            <label for="hero_full_name" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Full Name *</label>
+                        </div>
+
+                        {{-- Gender --}}
+                        <div>
+                            <p class="text-xs text-gray-500 mb-2">Gender *</p>
+                            <input type="hidden" name="gender" :value="gender">
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" @click="gender = 'male'"
+                                    :class="gender === 'male' ? 'bg-(--color-primary) text-white border-(--color-primary)' : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'"
+                                    class="py-2.5 rounded-lg border text-sm font-medium transition-colors">Male</button>
+                                <button type="button" @click="gender = 'female'"
+                                    :class="gender === 'female' ? 'bg-(--color-primary) text-white border-(--color-primary)' : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'"
+                                    class="py-2.5 rounded-lg border text-sm font-medium transition-colors">Female</button>
+                            </div>
+                            @error('gender') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Date of Birth --}}
+                        <div class="float-field">
+                            <input type="date" name="date_of_birth" id="hero_dob" value="{{ old('date_of_birth') }}" required placeholder=" "
+                                max="{{ now()->subYears(18)->format('Y-m-d') }}"
+                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
+                            <label for="hero_dob" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Date of Birth *</label>
+                        </div>
+
+                        {{-- Phone --}}
+                        <div class="float-field">
+                            <input type="tel" name="phone" id="hero_phone" value="{{ old('phone') }}" required maxlength="10" placeholder=" "
+                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
+                            <label for="hero_phone" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Mobile Number *</label>
+                        </div>
+
+                        {{-- Email --}}
+                        <div class="float-field">
+                            <input type="email" name="email" id="hero_email" value="{{ old('email') }}" required placeholder=" "
+                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
+                            <label for="hero_email" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Email ID *</label>
+                        </div>
+
+                        {{-- Password --}}
+                        <div class="float-field relative">
+                            <input :type="showPw ? 'text' : 'password'" name="password" id="hero_password" required minlength="6" maxlength="14" placeholder=" "
+                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 pr-10 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
+                            <label for="hero_password" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Create Password *</label>
+                            <button type="button" @click="showPw = !showPw" class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600" tabindex="-1">
+                                <svg x-show="!showPw" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <svg x-show="showPw" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                            </button>
+                            <p class="mt-1 text-[10px] text-gray-400">6-14 characters</p>
+                        </div>
+
+                        @if($errors->any())
+                            <div class="rounded-lg bg-red-50 border border-red-200 p-3">
+                                @foreach($errors->all() as $error)
+                                    <p class="text-xs text-red-600">{{ $error }}</p>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <button type="submit" class="w-full py-3 text-sm font-bold text-white rounded-lg transition-colors" style="background: var(--brand-primary);">
+                            REGISTER FREE
                         </button>
-                    </div>
-                </form>
+
+                        <p class="text-xs text-gray-400 text-center">By registering, you agree to our <a href="/terms-condition" class="text-(--color-primary) hover:underline">Terms</a> & <a href="/privacy-policy" class="text-(--color-primary) hover:underline">Privacy Policy</a></p>
+                    </form>
+
+                    <p class="mt-4 text-center text-sm text-gray-500 lg:hidden">Already a member? <a href="/login" class="font-semibold text-(--color-primary) hover:underline">Login</a></p>
+                </div>
             </div>
+        </div>
+    </section>
+
+    {{-- 1b. Search Widget (moved below hero) --}}
+    <section class="py-6" style="background: linear-gradient(135deg, var(--brand-primary-hover) 0%, var(--brand-secondary) 100%);">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <form action="/search" method="GET" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
+                <div class="text-left">
+                    <label class="block text-xs font-medium text-white/80 mb-1">I'm looking for</label>
+                    <select name="gender" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2 focus:ring-2 focus:ring-white">
+                        <option value="female">Bride</option>
+                        <option value="male">Groom</option>
+                    </select>
+                </div>
+                <div class="text-left">
+                    <label class="block text-xs font-medium text-white/80 mb-1">Age from</label>
+                    <select name="age_from" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2 focus:ring-2 focus:ring-white">
+                        @for($i = 18; $i <= 60; $i++)
+                            <option value="{{ $i }}" {{ $i === 21 ? 'selected' : '' }}>{{ $i }} yrs</option>
+                        @endfor
+                    </select>
+                </div>
+                <div class="text-left">
+                    <label class="block text-xs font-medium text-white/80 mb-1">Age to</label>
+                    <select name="age_to" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2 focus:ring-2 focus:ring-white">
+                        @for($i = 18; $i <= 60; $i++)
+                            <option value="{{ $i }}" {{ $i === 30 ? 'selected' : '' }}>{{ $i }} yrs</option>
+                        @endfor
+                    </select>
+                </div>
+                <div class="text-left">
+                    <label class="block text-xs font-medium text-white/80 mb-1">Community</label>
+                    <select name="community" class="w-full rounded-lg border-0 bg-white text-gray-900 text-sm px-3 py-2 focus:ring-2 focus:ring-white">
+                        <option value="">All Communities</option>
+                        @foreach($communities as $religion => $group)
+                            <optgroup label="{{ $religion }}">
+                                @foreach($group as $community)
+                                    <option value="{{ $community->id }}">{{ $community->community_name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-white text-gray-900 hover:bg-gray-100 rounded-lg px-4 py-2 font-semibold text-sm transition-colors">
+                        Search
+                    </button>
+                </div>
+            </form>
         </div>
     </section>
 
