@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\SiteSetting;
 use App\Http\Requests\RegisterStep1Request;
 use App\Http\Requests\RegisterStep2Request;
 use App\Http\Requests\RegisterStep3Request;
@@ -254,13 +255,44 @@ class RegisterController extends Controller
             'onboarding_step_completed' => 5,
         ]);
 
-        return redirect()->route('register.verifyemail');
+        return $this->redirectAfterStep5();
+    }
+
+    /**
+     * Determine where to redirect after Step 5 based on verification settings.
+     */
+    private function redirectAfterStep5()
+    {
+        $emailEnabled = SiteSetting::getValue('email_verification_enabled', '1') === '1';
+        $phoneEnabled = SiteSetting::getValue('phone_verification_enabled', '0') === '1';
+
+        $user = auth()->user();
+
+        // Skip email verification if disabled or already verified
+        if ($emailEnabled && !$user->email_verified_at) {
+            return redirect()->route('register.verifyemail');
+        }
+
+        // Skip phone verification if disabled or already verified
+        if ($phoneEnabled && !$user->phone_verified_at) {
+            return redirect()->route('register.verify');
+        }
+
+        // Both disabled or already verified — go straight to complete
+        $user->profile->update(['onboarding_completed' => true]);
+        return redirect()->route('register.complete');
     }
 
     // ── OTP Verification ─────────────────────────────────────────
 
     public function showVerify()
     {
+        // Skip if phone verification is disabled
+        if (SiteSetting::getValue('phone_verification_enabled', '0') !== '1') {
+            auth()->user()->profile->update(['onboarding_completed' => true]);
+            return redirect()->route('register.complete');
+        }
+
         return view('auth.register-verify');
     }
 
@@ -294,6 +326,16 @@ class RegisterController extends Controller
 
     public function showVerifyEmail()
     {
+        // Skip if email verification is disabled
+        if (SiteSetting::getValue('email_verification_enabled', '1') !== '1') {
+            $phoneEnabled = SiteSetting::getValue('phone_verification_enabled', '0') === '1';
+            if ($phoneEnabled && !auth()->user()->phone_verified_at) {
+                return redirect()->route('register.verify');
+            }
+            auth()->user()->profile->update(['onboarding_completed' => true]);
+            return redirect()->route('register.complete');
+        }
+
         return view('auth.register-verify-email');
     }
 
@@ -305,8 +347,9 @@ class RegisterController extends Controller
         session(['email_otp' => \Illuminate\Support\Facades\Hash::make((string) $otp), 'email_otp_expires' => now()->addMinutes(10)]);
 
         // Send OTP via email
-        \Illuminate\Support\Facades\Mail::raw("Your Anugraha Matrimony email verification code is: {$otp}\n\nThis code expires in 10 minutes.", function ($message) use ($email) {
-            $message->to($email)->subject('Email Verification OTP - Anugraha Matrimony');
+        $siteName = SiteSetting::getValue('site_name', config('app.name'));
+        \Illuminate\Support\Facades\Mail::raw("Your {$siteName} email verification code is: {$otp}\n\nThis code expires in 10 minutes.", function ($message) use ($email, $siteName) {
+            $message->to($email)->subject("Email Verification OTP - {$siteName}");
         });
 
         return back()->with('email_otp_sent', true);
@@ -328,7 +371,15 @@ class RegisterController extends Controller
 
         session()->forget(['email_otp', 'email_otp_expires']);
 
-        return redirect()->route('register.verify');
+        // After email verified, check if phone verification is needed
+        $phoneEnabled = SiteSetting::getValue('phone_verification_enabled', '0') === '1';
+        if ($phoneEnabled && !$user->phone_verified_at) {
+            return redirect()->route('register.verify');
+        }
+
+        // Phone disabled or already verified — complete registration
+        $user->profile->update(['onboarding_completed' => true]);
+        return redirect()->route('register.complete');
     }
 
     public function complete()

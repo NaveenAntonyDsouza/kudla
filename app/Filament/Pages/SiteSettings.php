@@ -37,6 +37,9 @@ class SiteSettings extends Page implements HasForms
             'hero_heading' => $settings['hero_heading'] ?? '',
             'hero_subheading' => $settings['hero_subheading'] ?? '',
             'search_heading' => $settings['search_heading'] ?? '',
+            'email_verification_enabled' => $settings['email_verification_enabled'] ?? '1',
+            'phone_verification_enabled' => $settings['phone_verification_enabled'] ?? '0',
+            'auto_approve_profiles' => $settings['auto_approve_profiles'] ?? '1',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
             'email' => $settings['email'] ?? '',
@@ -85,6 +88,19 @@ class SiteSettings extends Page implements HasForms
                     ->label('Search Section Heading')
                     ->maxLength(200)
                     ->helperText('Text above search bar. e.g., "Search for Your Perfect Partner"'),
+
+                // Registration Settings
+                Forms\Components\Toggle::make('email_verification_enabled')
+                    ->label('Email Verification Required')
+                    ->helperText('ON = users must verify email OTP during registration. OFF = skip email verification.'),
+
+                Forms\Components\Toggle::make('phone_verification_enabled')
+                    ->label('Phone Verification Required')
+                    ->helperText('ON = users must verify phone OTP during registration. OFF = skip phone verification.'),
+
+                Forms\Components\Toggle::make('auto_approve_profiles')
+                    ->label('Auto-Approve Profiles')
+                    ->helperText('ON = profiles go live immediately. OFF = admin must approve each profile.'),
 
                 // Logo Upload
                 Forms\Components\FileUpload::make('logo_upload')
