@@ -2,7 +2,8 @@
     @php
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
         $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
-        $siteArea = \App\Models\SiteSetting::getValue('site_area', 'Your Community');
+        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
+        $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
     @endphp
 
     {{-- 1. Hero Banner with Registration Form --}}
@@ -12,9 +13,13 @@
                 {{-- Left: Heading + Tagline + Trust Signals --}}
                 <div class="flex-1 text-center md:text-left text-white">
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight">
-                        Find Your Perfect Match in {{ $siteArea }}
+                        {{ $heroHeading }}
                     </h1>
-                    <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg mx-auto md:mx-0">{{ $siteTagline }}</p>
+                    @if($heroSubheading)
+                        <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg mx-auto md:mx-0">{{ $heroSubheading }}</p>
+                    @elseif($siteTagline)
+                        <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg mx-auto md:mx-0">{{ $siteTagline }}</p>
+                    @endif
 
                     {{-- Trust Signals --}}
                     <div class="mt-8 hidden md:block">

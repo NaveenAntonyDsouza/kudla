@@ -34,7 +34,8 @@ class SiteSettings extends Page implements HasForms
         $this->form->fill([
             'site_name' => $settings['site_name'] ?? '',
             'tagline' => $settings['tagline'] ?? '',
-            'site_area' => $settings['site_area'] ?? '',
+            'hero_heading' => $settings['hero_heading'] ?? '',
+            'hero_subheading' => $settings['hero_subheading'] ?? '',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
             'email' => $settings['email'] ?? '',
@@ -69,10 +70,15 @@ class SiteSettings extends Page implements HasForms
                     ->maxLength(200)
                     ->helperText('Shown on homepage hero section'),
 
-                Forms\Components\TextInput::make('site_area')
-                    ->label('Site Area / Community')
+                Forms\Components\TextInput::make('hero_heading')
+                    ->label('Homepage Hero Heading')
                     ->maxLength(200)
-                    ->helperText('e.g., "Coastal Karnataka" — shown on homepage hero as "Find Your Match in {area}"'),
+                    ->helperText('Big text on homepage hero. e.g., "Find Your Perfect Match in Coastal Karnataka"'),
+
+                Forms\Components\TextInput::make('hero_subheading')
+                    ->label('Homepage Hero Subheading')
+                    ->maxLength(200)
+                    ->helperText('Smaller text below heading. e.g., "Register Free & Connect with 1000+ Profiles"'),
 
                 // Logo Upload
                 Forms\Components\FileUpload::make('logo_upload')
