@@ -6,22 +6,54 @@
     @endphp
 
     {{-- 1. Hero Banner with Registration Form --}}
-    <section class="relative overflow-hidden py-12 sm:py-16 lg:py-20" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
+    <section class="relative overflow-hidden py-10 sm:py-14 md:py-16" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-                {{-- Left: Heading + Tagline --}}
-                <div class="text-center lg:text-left text-white">
+            <div class="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+                {{-- Left: Heading + Tagline + Trust Signals --}}
+                <div class="flex-1 text-center md:text-left text-white">
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight">
                         Find Your Perfect Match in {{ $siteArea }}
                     </h1>
-                    <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg">{{ $siteTagline }}</p>
-                    <div class="mt-6 hidden lg:block">
-                        <p class="text-white/70 text-sm">Already a member? <a href="/login" class="text-white font-semibold hover:underline">Login</a></p>
+                    <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg mx-auto md:mx-0">{{ $siteTagline }}</p>
+
+                    {{-- Trust Signals --}}
+                    <div class="mt-8 hidden md:block">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">100% Verified Profiles</p>
+                                    <p class="text-xs text-white/70">Every profile is manually reviewed</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">Safe & Secure</p>
+                                    <p class="text-xs text-white/70">Your privacy is our priority</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">Smart Matchmaking</p>
+                                    <p class="text-xs text-white/70">AI-powered compatibility scoring</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="mt-8 text-white/60 text-sm">Already a member? <a href="/login" class="text-white font-semibold hover:underline">Login</a></p>
                     </div>
                 </div>
 
                 {{-- Right: Registration Form --}}
-                <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 max-w-md mx-auto lg:mx-0 lg:ml-auto w-full">
+                <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 w-full md:w-[400px] shrink-0">
                     <h2 class="text-xl font-bold text-gray-900 mb-1">Register Free</h2>
                     <p class="text-sm text-gray-500 mb-5">Create your profile in 2 minutes</p>
 
