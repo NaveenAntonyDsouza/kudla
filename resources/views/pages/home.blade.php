@@ -145,7 +145,7 @@
     {{-- 1b. Search Widget (moved below hero) --}}
     <section class="py-6" style="background: linear-gradient(135deg, var(--brand-primary-hover) 0%, var(--brand-secondary) 100%);">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-white font-semibold text-center mb-4">Search for Your Perfect Partner</h2>
+            <h2 class="text-white font-semibold text-center mb-4">{{ \App\Models\SiteSetting::getValue('search_heading', 'Search for Your Perfect Partner') }}</h2>
             <form action="/search" method="GET" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
                 <div class="text-left">
                     <label class="block text-xs font-medium text-white/80 mb-1">I'm looking for</label>

@@ -36,6 +36,7 @@ class SiteSettings extends Page implements HasForms
             'tagline' => $settings['tagline'] ?? '',
             'hero_heading' => $settings['hero_heading'] ?? '',
             'hero_subheading' => $settings['hero_subheading'] ?? '',
+            'search_heading' => $settings['search_heading'] ?? '',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
             'email' => $settings['email'] ?? '',
@@ -79,6 +80,11 @@ class SiteSettings extends Page implements HasForms
                     ->label('Homepage Hero Subheading')
                     ->maxLength(200)
                     ->helperText('Smaller text below heading. e.g., "Register Free & Connect with 1000+ Profiles"'),
+
+                Forms\Components\TextInput::make('search_heading')
+                    ->label('Search Section Heading')
+                    ->maxLength(200)
+                    ->helperText('Text above search bar. e.g., "Search for Your Perfect Partner"'),
 
                 // Logo Upload
                 Forms\Components\FileUpload::make('logo_upload')
