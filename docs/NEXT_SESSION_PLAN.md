@@ -1,5 +1,5 @@
 # Next Session Plan
-**Last Updated:** April 14, 2026
+**Last Updated:** April 16, 2026
 
 ---
 
@@ -23,7 +23,8 @@
 - No `tailwind.config.js` — config is in CSS file (`@theme` directive)
 - Classes in Filament admin Blade views get **purged** because Filament has its own CSS pipeline
 - Always use **inline styles** for custom HTML in Filament page views (not Tailwind classes like `bg-red-600`)
-- Frontend public pages (app layout) work fine with Tailwind classes
+- **CRITICAL:** Responsive classes like `md:flex-row`, `md:w-[380px]`, `hidden md:block` do NOT work in production because CSS isn't rebuilt on the server. The homepage uses a `<style>` block with media queries as a workaround. Running `npm run build` on server (or locally then uploading `public/build/`) would fix this.
+- Frontend public pages (app layout) work fine with Tailwind classes that existed at last build time
 
 ---
 
@@ -48,7 +49,7 @@ Both sites fully synced and deployed:
 | 9 | Reports & Analytics | User Reports, Engagement Reports, Revenue Reports — all with charts + CSV export |
 | - | Settings | Match Weight Configuration (admin-adjustable algorithm weights) |
 
-### Additional Features Built This Session
+### Additional Features Built (Previous Sessions)
 - Email OTP Login (3rd login method with admin toggles)
 - Sort-by dropdown on search/discover (5 options)
 - Last Active badge on profile cards (color-coded)
@@ -56,9 +57,27 @@ Both sites fully synced and deployed:
 - Caste dropdown consistency fix (all forms now read from DB `communities` table)
 - Tracking codes (GA, GTM, Facebook Pixel) across all 5 layouts
 
+### Built in April 16, 2026 Session
+- **Bug fixes:** Registration step 2 differently-abled fields not clearing on switch back; Partner preferences DA category & children status retaining hidden values; Nested form in onboarding lifestyle breaking Save button
+- **Search dropdown** in guest navigation (Quick, Advance, Keyword, ID Search)
+- **Public search pages** with full forms (previously showed results directly without forms)
+- **Homepage enhancements:** Animated counter stats, FAQ accordion, testimonial carousel (auto-scroll), app download CTA with admin-configurable Play Store/App Store URLs
+- **Hero background image** — admin-uploadable via Homepage Content settings (supports JPG, PNG, WebP, AVIF)
+- **Google Map** on Contact Us page (free iframe embed or interactive API — admin-configurable)
+- **PostHog integration** — session recording + product analytics, admin-configurable via SEO Settings
+- **Mobile responsiveness fixes** — hero, carousel, app CTA use CSS media queries (Tailwind responsive classes don't generate in production without `npm run build`)
+- **UI polish:** Compact registration form (340px), /contact → /contact-us with 301 redirect, Demographics hidden from footer, dynamic MatriID prefix, skip-for-now at top of all onboarding steps
+- **Admin panel additions:** Mobile App section (SiteSettings), Google Maps fields, PostHog fields, hero image upload
+
 ---
 
 ## What's Next — Priority Order
+
+### 0. Run `npm run build` (QUICK WIN)
+- Run locally: `npm run build` then upload the `public/build/` folder to live
+- This fixes ALL Tailwind responsive classes across the site
+- The homepage CSS media query workaround can then be removed
+- Takes 5 minutes, fixes mobile responsiveness globally
 
 ### 1. Cloudinary Integration (FIRST PRIORITY)
 - Use `cloudinary/cloudinary_php` (core SDK), NOT the Laravel wrapper
@@ -140,6 +159,16 @@ Both sites fully synced and deployed:
 - Community data: `app/Models/Community.php` (getCasteList, getSubCasteList)
 - Reference data: `config/reference_data.php` (heights, weights, education, occupation, etc.)
 - Tracking: `resources/views/components/partials/tracking-head.blade.php`, `tracking-body.blade.php`
+
+---
+
+## Admin Panel — Things to Configure
+- **Hero image:** Admin > Settings > Homepage Content — upload a couple photo (1920x800)
+- **Google Map:** Admin > General Settings > Contact Info — paste Google Maps embed URL
+- **PostHog:** Admin > SEO Settings > Tracking & Analytics — paste PostHog API key (phc_...)
+- **App Store URLs:** Admin > General Settings > Mobile App — replace dummy URLs with real ones
+- **Success Story photos:** Admin > Content Management > Success Stories — add couple photos
+- **Stats:** Admin > Homepage Content > Stats — update Members/Marriages/Years counts
 
 ---
 
