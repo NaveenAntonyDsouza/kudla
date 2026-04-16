@@ -10,20 +10,33 @@ class ProfileViewController extends Controller
     {
         $profile = auth()->user()->profile;
         $tab = request('tab', 'viewed_by');
+        $isPremium = auth()->user()->isPremium();
 
         if ($tab === 'viewed_by') {
-            $views = ProfileView::where('viewed_profile_id', $profile->id)
-                ->with(['viewerProfile.primaryPhoto', 'viewerProfile.religiousInfo', 'viewerProfile.educationDetail', 'viewerProfile.locationInfo'])
-                ->orderBy('viewed_at', 'desc')
-                ->paginate(20);
+            // Count is always available (even for free users)
+            $viewedByCount = ProfileView::where('viewed_profile_id', $profile->id)->count();
+
+            if ($isPremium) {
+                // Premium: show full profile list
+                $views = ProfileView::where('viewed_profile_id', $profile->id)
+                    ->with(['viewerProfile.primaryPhoto', 'viewerProfile.religiousInfo', 'viewerProfile.educationDetail', 'viewerProfile.locationInfo'])
+                    ->orderBy('viewed_at', 'desc')
+                    ->paginate(20);
+            } else {
+                // Free: empty paginator — view will show count + upgrade CTA
+                $views = ProfileView::where('viewed_profile_id', $profile->id)
+                    ->whereRaw('1 = 0') // empty result
+                    ->paginate(20);
+            }
         } else {
+            $viewedByCount = 0;
             $views = ProfileView::where('viewer_profile_id', $profile->id)
                 ->with(['viewedProfile.primaryPhoto', 'viewedProfile.religiousInfo', 'viewedProfile.educationDetail', 'viewedProfile.locationInfo'])
                 ->orderBy('viewed_at', 'desc')
                 ->paginate(20);
         }
 
-        return view('views.index', compact('views', 'tab'));
+        return view('views.index', compact('views', 'tab', 'isPremium', 'viewedByCount'));
     }
 
     /**

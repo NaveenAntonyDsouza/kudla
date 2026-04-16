@@ -35,8 +35,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @include('components.partials.tracking-head')
 </head>
 <body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased">
+    @include('components.partials.tracking-body')
     <!-- Public Header -->
     <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

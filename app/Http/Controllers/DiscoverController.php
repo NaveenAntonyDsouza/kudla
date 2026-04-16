@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Profile;
 use App\Traits\ProfileQueryFilters;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class DiscoverController extends Controller
@@ -90,6 +91,7 @@ class DiscoverController extends Controller
             $query = $this->baseQuery($profile);
         } else {
             $query = Profile::where('is_active', true)
+                ->approved()
                 ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
                 ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
         }
@@ -114,11 +116,36 @@ class DiscoverController extends Controller
             };
         }
 
-        $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $sort = request()->get('sort', 'newest');
+        $query = $this->applySortOrder($query, $sort);
+        $results = $query->paginate(20)->withQueryString();
+        $currentSort = $sort;
 
         return view('discover.results', compact(
-            'category', 'slug', 'title', 'config', 'results'
+            'category', 'slug', 'title', 'config', 'results', 'currentSort'
         ));
+    }
+
+    /**
+     * Apply sort order to query.
+     * Uses subqueries instead of JOINs to avoid ambiguous column issues with baseQuery.
+     */
+    private function applySortOrder(Builder $query, string $sort): Builder
+    {
+        return match ($sort) {
+            'recently_active' => $query
+                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
+                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC'),
+
+            'age_low' => $query
+                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
+
+            'age_high' => $query
+                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
+
+            // Default: newest first
+            default => $query->orderBy('profiles.created_at', 'desc'),
+        };
     }
 
     /**

@@ -48,13 +48,13 @@
             <label>Blood Group</label>
         </div>
         <div class="float-field">
-            <select name="mother_tongue">
+            <select name="mother_tongue" required>
                 <option value="">Select</option>
                 @foreach(config('reference_data.language_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($p->mother_tongue ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select>
-            <label>Mother Tongue</label>
+            <label>Mother Tongue <span class="text-red-500">*</span></label>
         </div>
     </div>
 

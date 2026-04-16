@@ -3,33 +3,39 @@
 namespace App\Mail;
 
 use App\Models\Interest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class InterestReceivedMail extends Mailable
+class InterestReceivedMail extends DatabaseMailable
 {
-    use Queueable, SerializesModels;
+    protected string $templateSlug = 'interest-received';
 
     public function __construct(public Interest $interest) {}
 
-    public function envelope(): Envelope
+    protected function templateVariables(): array
     {
-        return new Envelope(subject: 'New Interest Received - ' . config('app.name'));
+        return [
+            'RECEIVER_NAME' => $this->interest->receiverProfile->full_name,
+            'SENDER_MATRI_ID' => $this->interest->senderProfile->matri_id,
+            'ACTION_URL' => route('interests.show', $this->interest),
+        ];
     }
 
-    public function content(): Content
+    protected function fallbackView(): ?string
     {
-        return new Content(
-            markdown: 'emails.interest-received',
-            with: [
-                'senderMatriId' => $this->interest->senderProfile->matri_id,
-                'receiverName' => $this->interest->receiverProfile->full_name,
-                'url' => route('interests.show', $this->interest),
-                'siteName' => config('app.name'),
-            ],
-        );
+        return 'emails.interest-received';
+    }
+
+    protected function fallbackSubject(): string
+    {
+        return 'New Interest Received - ' . config('app.name');
+    }
+
+    protected function fallbackData(): array
+    {
+        return [
+            'senderMatriId' => $this->interest->senderProfile->matri_id,
+            'receiverName' => $this->interest->receiverProfile->full_name,
+            'url' => route('interests.show', $this->interest),
+            'siteName' => config('app.name'),
+        ];
     }
 }

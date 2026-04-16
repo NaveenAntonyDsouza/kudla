@@ -39,6 +39,7 @@
         {{-- ── Primary Requirements ──────────────────────────── --}}
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Primary Requirements</h2>
+            <a href="{{ route('onboarding.lifestyle') }}" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
         </div>
 
         <div class="space-y-5 mb-10">
@@ -102,7 +103,8 @@
                 :selected="$pref?->marital_status ?? []" :emitTo="true" />
 
             {{-- Children Status (conditional - inline checkboxes matching Chavara) --}}
-            <div x-show="hasNonUnmarried()" x-transition>
+            <div x-show="hasNonUnmarried()" x-transition
+                 x-effect="if (!hasNonUnmarried()) { $el.querySelectorAll('input[type=checkbox]').forEach(el => el.checked = false); }">
                 <label class="block text-xs font-medium text-gray-500 mb-2">Children Status</label>
                 <div class="flex flex-wrap gap-4">
                     @foreach(['Any', 'Having Children', 'No Children'] as $opt)
@@ -123,7 +125,8 @@
                 :selected="$pref?->physical_status ?? []" :emitTo="true" />
 
             {{-- DA Category (conditional) --}}
-            <div x-show="hasNonNormal()" x-transition>
+            <div x-show="hasNonNormal()" x-transition
+                 x-effect="if (!hasNonNormal()) { $dispatch('multiselect-clear', { name: 'da_category' }); }">
                 <x-multi-select name="da_category" label="Category of Differently Abled"
                     :options="['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other']"
                     :selected="$pref?->da_category ?? []" />
@@ -161,14 +164,14 @@
             {{-- Hindu/Jain: Caste --}}
             <div x-show="hasReligion('Hindu') || hasReligion('Jain')" x-transition>
                 <x-multi-select name="caste" label="Caste / Community"
-                    :options="config('reference_data.caste_list')" :searchable="true"
+                    :options="\App\Models\Community::getCasteList()" :searchable="true"
                     :selected="$pref?->caste ?? []" />
             </div>
 
             {{-- Hindu/Jain: Sub-Caste --}}
             <div x-show="hasReligion('Hindu') || hasReligion('Jain')" x-transition>
                 <x-multi-select name="sub_caste" label="Sub-Caste / Sub-Community"
-                    :options="config('reference_data.sub_caste_list')" :searchable="true"
+                    :options="\App\Models\Community::getSubCasteList()" :searchable="true"
                     :selected="$pref?->sub_caste ?? []" />
             </div>
 

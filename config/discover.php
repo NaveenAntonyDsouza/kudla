@@ -144,7 +144,7 @@ return [
         'label' => 'Community Matrimony',
         'show_search' => true,
         'subcategories' => function () {
-            return collect(config('reference_data.caste_list', []))
+            return collect(\App\Models\Community::getCasteList())
                 ->filter(fn($c) => $c !== 'Other')
                 ->map(fn($c) => [
                     'label' => "$c Profiles",
@@ -158,7 +158,7 @@ return [
         'label' => 'Hindu Matrimony',
         'show_search' => true,
         'subcategories' => function () {
-            return collect(config('reference_data.caste_list', []))
+            return collect(\App\Models\Community::getCasteList('Hindu'))
                 ->filter(fn($c) => $c !== 'Other')
                 ->map(fn($c) => [
                     'label' => "$c Profiles",
@@ -171,21 +171,29 @@ return [
     'muslim-matrimony' => [
         'label' => 'Muslim Matrimony',
         'show_search' => false,
-        'subcategories' => [
-            ['label' => 'Sunni Profiles', 'slug' => 'sunni', 'filter' => ['religion' => 'Muslim', 'muslim_sect' => 'Sunni']],
-            ['label' => 'Shia Profiles', 'slug' => 'shia', 'filter' => ['religion' => 'Muslim', 'muslim_sect' => 'Shia']],
-            ['label' => 'Sunni EK Profiles', 'slug' => 'sunni-ek', 'filter' => ['religion' => 'Muslim', 'muslim_sect' => 'Sunni EK']],
-            ['label' => 'Mujahid Profiles', 'slug' => 'mujahid', 'filter' => ['religion' => 'Muslim', 'muslim_sect' => 'Mujahid']],
-        ],
+        'subcategories' => function () {
+            return collect(config('reference_data.muslim_sect_list', []))
+                ->filter(fn($s) => $s !== 'Other')
+                ->map(fn($s) => [
+                    'label' => "$s Profiles",
+                    'slug' => \Str::slug($s),
+                    'filter' => ['religion' => 'Muslim', 'muslim_sect' => $s],
+                ])->values()->all();
+        },
     ],
 
     'jain-matrimony' => [
         'label' => 'Jain Matrimony',
         'show_search' => false,
-        'subcategories' => [
-            ['label' => 'Digambar Profiles', 'slug' => 'digambar', 'filter' => ['religion' => 'Jain', 'jain_sect' => 'Digambar']],
-            ['label' => 'Svetambara Profiles', 'slug' => 'svetambara', 'filter' => ['religion' => 'Jain', 'jain_sect' => 'Svetambara']],
-        ],
+        'subcategories' => function () {
+            return collect(config('reference_data.jain_sect_list', []))
+                ->filter(fn($s) => $s !== 'Other')
+                ->map(fn($s) => [
+                    'label' => "$s Profiles",
+                    'slug' => \Str::slug($s),
+                    'filter' => ['religion' => 'Jain', 'jain_sect' => $s],
+                ])->values()->all();
+        },
     ],
 
 ];

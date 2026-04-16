@@ -51,6 +51,11 @@ class Profile extends Model
         'only_same_denomination',
         'only_same_mother_tongue',
         'deletion_reason',
+        'suspension_status',
+        'suspension_reason',
+        'suspended_at',
+        'suspension_ends_at',
+        'suspended_by',
     ];
 
     protected function casts(): array
@@ -66,6 +71,8 @@ class Profile extends Model
             'id_proof_verified' => 'boolean',
             'children_with_me' => 'integer',
             'children_not_with_me' => 'integer',
+            'suspended_at' => 'datetime',
+            'suspension_ends_at' => 'datetime',
         ];
     }
 
@@ -193,7 +200,7 @@ class Profile extends Model
 
     public function primaryPhoto(): HasOne
     {
-        return $this->hasOne(ProfilePhoto::class)->where('is_primary', true)->where('is_visible', true);
+        return $this->hasOne(ProfilePhoto::class)->where('is_primary', true)->where('is_visible', true)->where('approval_status', 'approved');
     }
 
     public function idProofs(): HasMany
@@ -269,5 +276,10 @@ class Profile extends Model
     public function ignoredByOthers(): HasMany
     {
         return $this->hasMany(IgnoredProfile::class, 'ignored_profile_id');
+    }
+
+    public function profileNotes(): HasMany
+    {
+        return $this->hasMany(ProfileNote::class);
     }
 }

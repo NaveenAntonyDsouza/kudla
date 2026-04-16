@@ -41,8 +41,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @include('components.partials.tracking-head')
 </head>
 <body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased min-h-screen flex flex-col">
+    @include('components.partials.tracking-body')
     <!-- Centered Auth Content -->
     <div class="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <!-- Logo + Tagline -->

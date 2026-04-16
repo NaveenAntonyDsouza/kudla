@@ -1,116 +1,151 @@
 # Next Session Plan
-**Last Updated:** April 2026
+**Last Updated:** April 14, 2026
 
 ---
 
-## Current Status: COMPLETE for Client
+## Tech Stack
 
-All features for AnugrahaMatrimony.com are built, tested, and deployed to live.
-The only pending item is **Razorpay live credentials** (waiting for client's approval from Razorpay).
+| Technology | Version | Notes |
+|-----------|---------|-------|
+| PHP | 8.3.30 | |
+| Laravel | 13.2.0 | |
+| Filament | 5.4.3 | Admin panel. **Critical namespace changes — see gotchas below** |
+| Livewire | 4.2.3 | `inject_assets = true` required in config/livewire.php |
+| Tailwind CSS | 4.2.2 | **v4 uses CSS-first config, NOT tailwind.config.js**. Purges unused classes aggressively. Use inline styles in Filament admin Blade views. |
+| Alpine.js | 3.15.10 | Used in all frontend forms |
+| Vite | 8.0.0 | Build tool, `npm run build` for production |
+| MySQL | 8.x | Hostinger shared hosting |
+| Spatie Roles | 6.x | Role-based access (Super Admin, Admin, User) |
+| Razorpay | via API | Payments, amount stored in paise |
+| Hosting | Hostinger | `exec()` disabled — use `ln -s` for symlinks, not `php artisan storage:link` |
 
----
-
-## What Was Completed (All Sessions Combined)
-
-### Previous Sessions
-- Registration (5 steps) + Login + Forgot Password + OTP
-- Onboarding (4 steps)
-- Profile CRUD (9 sections) + Preview (4 tabs)
-- Photo management (profile, album, family)
-- Search (Partner + Keyword + ID, 15+ filters)
-- Interest Send/Accept/Decline + Chat
-- Notifications (in-app + email)
-- Shortlist / Block / Who Viewed
-- Settings (visibility, alerts, hide, delete, password)
-- Membership Plans + Razorpay payment
-- ID Proof upload
-- Privacy Policy + Terms pages
-- Deployed to https://anugrahamatrimony.com
-
-### This Session
-- Matchmaking Engine (12-criteria weighted scoring, My Matches, Mutual Matches)
-- Discover Profiles (13 categories, 3-level browsing, public for SEO)
-- Dashboard redesign (7 widget sections, smart ordering for incomplete vs complete profiles)
-- Load Partner Preferences on search
-- Save Search (save, load, delete)
-- Photo Requests (send/approve/ignore, blurred photo privacy)
-- Ignored Profiles (with search exclusion)
-- Print Profile (print-friendly view with @media print CSS)
-- Premium visibility enforcement (show_profile_to: premium/matches)
-- Featured profiles in search (premium first + Premium badge)
-- Help/FAQ page (5 categories, 20 questions)
-- Contact Us page (form + email to admin)
-- Social media links (admin-configurable, footer display)
-- Photo privacy enforcement (3 modes: hidden/blur/request)
-- Inbox query optimization (13→2 queries)
-- Admin Panel (Filament 5): Dashboard, Users, ID Verification, Memberships, Site Settings
-- Subscription enforcement: plan-based daily limits, contact view, personalized messages
-- Silver plan (₹999/month) added
-- Homepage community buttons linked to discover routes
-- Discover pages made public (SEO)
-- Mobile hamburger menu completed
-- Multiple Filament 5 compatibility fixes
+### Tailwind CSS 4 Notes
+- No `tailwind.config.js` — config is in CSS file (`@theme` directive)
+- Classes in Filament admin Blade views get **purged** because Filament has its own CSS pipeline
+- Always use **inline styles** for custom HTML in Filament page views (not Tailwind classes like `bg-red-600`)
+- Frontend public pages (app layout) work fine with Tailwind classes
 
 ---
 
-## Pending: Only for CodeCanyon Launch
+## Current Status — ADMIN PANEL 100% COMPLETE
 
-These are NOT needed for the current client. Build when preparing for CodeCanyon listing.
+Both sites fully synced and deployed:
+- https://anugrahamatrimony.com
+- https://kudlamatrimony.com
 
-| Section | Priority |
-|---------|----------|
-| Admin: Content Management (reference data, pages, templates) | For CodeCanyon |
-| Admin: Interest & Match Management | For CodeCanyon |
-| Admin: Moderation & Support (contact inbox in admin) | For CodeCanyon |
-| Admin: Reports & Analytics (detailed charts, CSV export) | For CodeCanyon |
-| Admin: System (install wizard, license, updater) | For CodeCanyon |
-| Admin: Franchise / Branch Management | For CodeCanyon |
-| Admin: Staff / Telecaller Module | For CodeCanyon |
-| Admin: Advertisement Management | For CodeCanyon |
-| Admin: Wedding Directory | For CodeCanyon (Phase 2) |
+### Admin Panel Sections (All Complete)
+
+| # | Section | Key Features |
+|---|---------|-------------|
+| 1 | Dashboard | 10 widgets (stats, charts, recent registrations/payments) |
+| 2 | User Management | Card list, 9 tabs, 14 filters, tabbed view, sectioned edit, admin notes, photos, **Admin Create Profile** |
+| 3 | Verification | Photo Approvals, ID Verification, Horoscope/Baptism with auto-approve toggles |
+| 4 | Membership & Payments | Plans CRUD, Payment History (read-only), Memberships list |
+| 5 | Site Settings | General, Theme & Branding (colors + logo), Homepage Content (Why Choose Us repeater), SEO (global + per-page) |
+| 6 | Content Management | Communities CRUD, FAQs CRUD, Success Stories CRUD, Email Templates (11 DB-editable), Notification Templates (12 DB-editable) |
+| 7 | Interests & Reports | All Interests (tabs), Profile Reports (resolve action), Recommend Matches, Blocked Users, Contact Inbox (reply action), Broadcast Notifications |
+| 8 | Moderation | Suspend/Ban/Unsuspend actions on profiles, Contact Inbox with DB persistence |
+| 9 | Reports & Analytics | User Reports, Engagement Reports, Revenue Reports — all with charts + CSV export |
+| - | Settings | Match Weight Configuration (admin-adjustable algorithm weights) |
+
+### Additional Features Built This Session
+- Email OTP Login (3rd login method with admin toggles)
+- Sort-by dropdown on search/discover (5 options)
+- Last Active badge on profile cards (color-coded)
+- Registration validation audit (mandatory/optional consistency)
+- Caste dropdown consistency fix (all forms now read from DB `communities` table)
+- Tracking codes (GA, GTM, Facebook Pixel) across all 5 layouts
 
 ---
 
-## Pending: Razorpay Live
+## What's Next — Priority Order
+
+### 1. Cloudinary Integration (FIRST PRIORITY)
+- Use `cloudinary/cloudinary_php` (core SDK), NOT the Laravel wrapper
+- Laravel wrapper has version compatibility issues with Laravel 13.x
+- Build a small `CloudinaryService` class (like existing `WatermarkService`)
+- Covers: photo upload, CDN delivery, image transformations
+- Biggest user-facing performance improvement
+
+### 2. Re-engagement Emails
+- Automated emails for inactive users (7d, 14d, 30d)
+- Use existing `DatabaseMailable` base class
+- Laravel scheduled commands
+
+### 3. Profile Completion Nudges
+- In-app notifications for incomplete profiles
+- Push users to complete onboarding steps
+
+### 4. Weekly Match Suggestion Emails
+- Scheduled email with top 5 matches
+- Use MatchingService to calculate
+
+---
+
+## Skipped by Choice (Not Needed Now)
+
+| Item | Reason |
+|------|--------|
+| SMTP/SMS/Payment admin settings | Kept in .env — works fine |
+| Reference Data to DB | config/reference_data.php works fine, only caste was mismatched (now fixed) |
+| Real-time notifications (WebSocket) | Not needed for 12-18 months |
+
+---
+
+## Deferred to Phase 2 / CodeCanyon
+
+- VIP/Featured Profiles
+- Login History
+- Bulk CSV Import
+- Meilisearch integration
+- Laravel Reverb for real-time
+- System (install wizard, license, updater)
+- Franchise / Branch Management
+- Staff / Telecaller Module
+- Advertisement Management
+- Wedding Directory
+
+---
+
+## Important Notes for Future Sessions
+
+### Filament 5 Namespace Gotchas (CRITICAL)
+1. **Section:** `\Filament\Schemas\Components\Section` (NOT `Filament\Forms\Components\Section`)
+2. **Actions:** `\Filament\Actions\EditAction`, `\Filament\Actions\DeleteAction`, `\Filament\Actions\Action`, `\Filament\Actions\BulkAction` (NOT `Tables\Actions\*`)
+3. **Form signature:** `public static function form(Schema $form): Schema`
+4. **Infolist signature:** `public static function infolist(Schema $infolist): Schema` (NOT `Infolist`)
+5. **Admin Blade views:** Use inline styles (NOT Tailwind classes — they get purged by Filament's CSS pipeline)
+6. **Tables\Columns and Tables\Filters** still work as-is (NOT moved)
+
+### Database & Architecture Notes
+7. **Two subscription tables:** `subscriptions` (Razorpay audit, paise) + `user_memberships` (feature access)
+8. **Toggle save fix:** SiteSettings saves toggles as '1'/'0' (not empty string)
+9. **Search sort:** Use subqueries instead of JOINs to avoid ambiguous column errors with baseQuery
+10. **Caste/Community:** ALL forms now read from `communities` DB table via `Community::getCasteList()`. Config `caste_list` is unused.
+11. **Email templates:** All Mailables extend `DatabaseMailable` — reads subject/body from `email_templates` table, falls back to Blade views
+12. **Match weights:** Admin-configurable via `match_weights` key in `site_settings`, read by `MatchingService::getWeights()`
+13. **Notification templates:** `notification_templates` table with slug-based lookup, same render pattern as email templates
+14. **Contact form:** Saves to `contact_submissions` table + sends email to admin
+15. **Suspension system:** `profiles` table has `suspension_status` (active/suspended/banned), `suspension_reason`, `suspended_at`, `suspension_ends_at`, `suspended_by`
+
+### Deployment Notes
+16. **After fresh upload:** Run `composer install --no-dev --optimize-autoloader && php artisan migrate && ln -s ../storage/app/public public/storage && php artisan config:clear && php artisan view:clear && php artisan cache:clear`
+17. **Never upload:** `vendor/`, `node_modules/`, `storage/`, `.env`, `public/storage` (it's a symlink)
+18. **Logo/Favicon:** Stored in `storage/app/public/branding/` — if storage is cleared, re-upload from Theme & Branding admin page
+
+### Key File Paths
+- Admin panel: `app/Filament/Resources/`, `app/Filament/Pages/`, `app/Filament/Widgets/`
+- Email system: `app/Mail/DatabaseMailable.php`, `app/Models/EmailTemplate.php`
+- Matching: `app/Services/MatchingService.php` (reads weights from DB)
+- Community data: `app/Models/Community.php` (getCasteList, getSubCasteList)
+- Reference data: `config/reference_data.php` (heights, weights, education, occupation, etc.)
+- Tracking: `resources/views/components/partials/tracking-head.blade.php`, `tracking-body.blade.php`
+
+---
+
+## Razorpay Live
 
 When client gets Razorpay live credentials:
-1. Update `.env` on live server:
-   ```
-   RAZORPAY_KEY=rzp_live_XXXXXX
-   RAZORPAY_SECRET=XXXXXX
-   ```
-2. Remove `->withoutVerifying()` from MembershipController (production has proper SSL)
-3. Test with a real ₹999 Silver plan payment
-4. No code changes needed — just `.env` swap
-
----
-
-## Important Notes for Next Developer/Session
-
-1. **Filament 5 quirks:** See `docs/FEATURE_STATUS.md` → "Important Notes" section for all API differences (Schema vs Form, Actions namespace, property types)
-
-2. **Two subscription tables:** `subscriptions` (payment audit) + `user_memberships` (feature access). Both created on payment.
-
-3. **Livewire inject_assets = true:** Required for Filament. If main site Alpine.js breaks, check `config/livewire.php`.
-
-4. **Notifications type column:** Changed from ENUM to VARCHAR(50). New types: photo_request, photo_request_approved.
-
-5. **Admin user (id:1):** Has no profile. Redirected to `/admin` when visiting `/dashboard`.
-
----
-
-## Future Projects (Separate from this)
-
-- **Flutter Mobile App** — see `docs/MOBILE_APP_PLAN.md`
-- **Performance Scaling** — see `docs/SCALING_GUIDE.md`
-
----
-
-## Key Files
-- `docs/FEATURE_STATUS.md` — complete feature audit + important notes
-- `docs/DEPLOYMENT.md` — Hostinger deployment guide (12 steps)
-- `docs/TECH_STACK.md` — technology versions
-- `docs/SCALING_GUIDE.md` — 8-section optimization guide
-- `docs/MOBILE_APP_PLAN.md` — Flutter app plan
-- `docs/admin-panel/` — admin panel plan (15 sections for CodeCanyon)
-- `docs/.env.production` — production environment template
+1. Update `.env` on live server with live keys
+2. Test with a real payment
+3. No code changes needed — just `.env` swap

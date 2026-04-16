@@ -125,7 +125,7 @@
                             {{-- Cascading: Hindu/Jain --}}
                             <div x-show="hasReligion('Hindu') || hasReligion('Jain')" class="mt-5 space-y-5">
                                 <x-multi-select name="caste" label="Caste"
-                                    :options="config('reference_data.caste_list', [])"
+                                    :options="\App\Models\Community::getCasteList()"
                                     :selected="(array) request('caste', [])" :searchable="true" />
                             </div>
 
@@ -258,7 +258,7 @@
                             <div class="float-field flex-1">
                                 <input type="text" name="matri_id" value="{{ request('matri_id') }}" placeholder=" " required
                                     class="uppercase" maxlength="20">
-                                <label>Enter Matrimony ID (e.g. AM100001)</label>
+                                <label>Enter Matrimony ID (e.g. {{ \App\Models\SiteSetting::getValue('profile_id_prefix', 'AM') }}100001)</label>
                             </div>
                             <button type="submit" class="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors shrink-0">
                                 Search

@@ -141,7 +141,48 @@
                 @endif
             </div>
             <p class="text-xs text-gray-600 mt-1 line-clamp-3 min-h-[3rem]">{{ $desc ?: 'Profile details not available' }}</p>
-            <p class="text-[10px] text-gray-400 mt-2">Joined {{ $p->created_at?->format('d M Y') }}</p>
+            <div class="flex items-center justify-between mt-2">
+                @php
+                    $lastLogin = $p->user?->last_login_at;
+                    if ($lastLogin) {
+                        $diffHours = $lastLogin->diffInHours(now());
+                        if ($diffHours < 1) {
+                            $activityLabel = 'Online now';
+                            $activityColor = 'bg-green-500';
+                            $activityTextColor = 'text-green-700';
+                        } elseif ($diffHours < 24) {
+                            $activityLabel = 'Today';
+                            $activityColor = 'bg-green-400';
+                            $activityTextColor = 'text-green-600';
+                        } elseif ($diffHours < 72) {
+                            $activityLabel = $lastLogin->diffInDays(now()) . 'd ago';
+                            $activityColor = 'bg-yellow-400';
+                            $activityTextColor = 'text-yellow-700';
+                        } elseif ($diffHours < 168) {
+                            $activityLabel = $lastLogin->diffInDays(now()) . 'd ago';
+                            $activityColor = 'bg-orange-400';
+                            $activityTextColor = 'text-orange-700';
+                        } else {
+                            $activityLabel = $lastLogin->diffInDays(now()) . 'd ago';
+                            $activityColor = 'bg-gray-300';
+                            $activityTextColor = 'text-gray-500';
+                        }
+                    } else {
+                        $activityLabel = null;
+                        $activityColor = '';
+                        $activityTextColor = '';
+                    }
+                @endphp
+                @if(!$isGuest && $activityLabel)
+                    <span class="inline-flex items-center gap-1 text-[10px] {{ $activityTextColor }}">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $activityColor }}"></span>
+                        {{ $activityLabel }}
+                    </span>
+                @else
+                    <span></span>
+                @endif
+                <span class="text-[10px] text-gray-400">{{ $p->created_at?->format('d M Y') }}</span>
+            </div>
         </div>
     </a>
 </div>

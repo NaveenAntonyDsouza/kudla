@@ -58,13 +58,20 @@ class DashboardController extends Controller
         }
 
         // Recent profile views (who viewed me — last 6)
-        $recentViews = $profile->viewedByOthers()
-            ->with(['viewerProfile' => fn($q) => $q->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])])
-            ->orderByDesc('viewed_at')
-            ->limit(6)
-            ->get()
-            ->pluck('viewerProfile')
-            ->filter();
+        $isPremium = $user->isPremium();
+        $viewCount = $profile->viewedByOthers()->count();
+
+        if ($isPremium) {
+            $recentViews = $profile->viewedByOthers()
+                ->with(['viewerProfile' => fn($q) => $q->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])])
+                ->orderByDesc('viewed_at')
+                ->limit(6)
+                ->get()
+                ->pluck('viewerProfile')
+                ->filter();
+        } else {
+            $recentViews = collect(); // Free users: show count only
+        }
 
         // Newly joined profiles (always show — latest 6 opposite gender)
         $newlyJoined = $this->baseQuery($profile)
@@ -91,7 +98,8 @@ class DashboardController extends Controller
         return view('dashboard.index', compact(
             'profile', 'user', 'completionPct', 'sections',
             'recommendedMatches', 'mutualMatches', 'recentViews',
-            'newlyJoined', 'discoverCategories', 'interestStats'
+            'newlyJoined', 'discoverCategories', 'interestStats',
+            'isPremium', 'viewCount'
         ));
     }
 }

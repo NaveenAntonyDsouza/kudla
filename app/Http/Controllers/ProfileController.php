@@ -141,7 +141,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'weight_kg' => 'nullable|string|max:20',
             'blood_group' => 'nullable|string|max:10',
-            'mother_tongue' => 'nullable|string|max:50',
+            'mother_tongue' => 'required|string|max:50',
             'languages_known' => 'nullable|array',
             'complexion' => 'nullable|string|max:30',
             'body_type' => 'nullable|string|max:30',
@@ -167,23 +167,23 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'religion' => 'required|string|max:50',
-            'caste' => 'nullable|string|max:50',
+            'caste' => 'nullable|required_if:religion,Hindu|required_if:religion,Jain|string|max:50',
             'sub_caste' => 'nullable|string|max:50',
             'gotra' => 'nullable|string|max:50',
             'nakshatra' => 'nullable|string|max:50',
             'rashi' => 'nullable|string|max:50',
             'manglik' => 'nullable|string|max:20',
-            'denomination' => 'nullable|string|max:50',
+            'denomination' => 'nullable|required_if:religion,Christian|string|max:50',
             'diocese' => 'nullable|string|max:100',
             'diocese_name' => 'nullable|string|max:100',
             'parish_name_place' => 'nullable|string|max:200',
             'time_of_birth' => 'nullable|string|max:20',
             'place_of_birth' => 'nullable|string|max:100',
-            'muslim_sect' => 'nullable|string|max:50',
+            'muslim_sect' => 'nullable|required_if:religion,Muslim|string|max:50',
             'muslim_community' => 'nullable|string|max:50',
             'religious_observance' => 'nullable|string|max:50',
             'jain_sect' => 'nullable|string|max:50',
-            'other_religion_name' => 'nullable|string|max:50',
+            'other_religion_name' => 'nullable|required_if:religion,Other|string|max:50',
             'jathakam' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 

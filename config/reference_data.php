@@ -67,7 +67,7 @@ return [
 
     'denomination_list' => [
         'Catholic' => [
-            'Syrian Catholic', 'Latin Catholic', 'Malankara Catholic', 'Anglo Indian',
+            'Syrian Catholic', 'Roman Catholic', 'Malankara Catholic', 'Anglo Indian',
             'Knanaya Catholic', 'Nadar Christian', 'Cheramar Christian',
         ],
         'Non-Catholic' => [
@@ -98,6 +98,14 @@ return [
         'Brahmin', 'Nair', 'Ezhava', 'Thiyya', 'Vishwakarma', 'Vokkaliga', 'Lingayat', 'Bunt', 'Billava', 'Devadiga', 'Mogaveera',
         'Kulal', 'Ganiga', 'Padmashali', 'Reddy', 'Naidu', 'Kamma', 'Kapu', 'Chettiar', 'Mudaliar', 'Gounder', 'Vanniyar', 'Nadar',
         'Yadav', 'Rajput', 'Kayastha', 'Maratha', 'Agarwal', 'Bania', 'Jat', 'SC', 'ST', 'Other',
+    ],
+
+    'muslim_sect_list' => [
+        'Sunni', 'Shia', 'Sunni EK', 'Mujahid', 'Beary', 'Nawayath', 'Mappila', 'Other',
+    ],
+
+    'jain_sect_list' => [
+        'Digambar', 'Svetambara', 'Other',
     ],
 
     'sub_caste_list' => [

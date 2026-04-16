@@ -4,25 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\PhotoPrivacySetting;
 use App\Models\ProfilePhoto;
+use App\Models\SiteSetting;
+use App\Services\WatermarkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PhotoController extends Controller
 {
+    public function __construct(
+        private WatermarkService $watermarkService,
+    ) {}
+
     public function index()
     {
         $profile = auth()->user()->profile;
         $photos = $profile->profilePhotos()->orderBy('display_order')->get();
 
-        $profilePhoto = $photos->where('photo_type', 'profile')->where('is_visible', true)->first();
-        $albumPhotos = $photos->where('photo_type', 'album')->where('is_visible', true)->values();
-        $familyPhotos = $photos->where('photo_type', 'family')->where('is_visible', true)->values();
-        $archivedPhotos = $photos->where('is_visible', false)->values();
+        $profilePhoto = $photos->where('photo_type', 'profile')->where('is_visible', true)->where('approval_status', 'approved')->first();
+        $albumPhotos = $photos->where('photo_type', 'album')->where('is_visible', true)->where('approval_status', 'approved')->values();
+        $familyPhotos = $photos->where('photo_type', 'family')->where('is_visible', true)->where('approval_status', 'approved')->values();
+        $pendingPhotos = $photos->where('approval_status', 'pending')->values();
+        $rejectedPhotos = $photos->where('approval_status', 'rejected')->values();
+        $archivedPhotos = $photos->where('is_visible', false)->where('approval_status', '!=', 'rejected')->values();
 
         $privacy = $profile->photoPrivacySetting;
 
         return view('photos.manage', compact(
-            'profile', 'profilePhoto', 'albumPhotos', 'familyPhotos', 'archivedPhotos', 'privacy'
+            'profile', 'profilePhoto', 'albumPhotos', 'familyPhotos',
+            'pendingPhotos', 'rejectedPhotos', 'archivedPhotos', 'privacy'
         ));
     }
 
@@ -37,6 +46,11 @@ class PhotoController extends Controller
 
         $type = $request->input('photo_type');
 
+        // Determine approval status based on site settings
+        $settingKey = 'auto_approve_' . $type . '_photos';
+        $autoApprove = SiteSetting::getValue($settingKey, '1') === '1';
+        $approvalStatus = $autoApprove ? ProfilePhoto::STATUS_APPROVED : ProfilePhoto::STATUS_PENDING;
+
         // For profile type, archive existing before uploading new
         if ($type === 'profile') {
             $profile->profilePhotos()->visible()->ofType('profile')
@@ -45,7 +59,7 @@ class PhotoController extends Controller
 
         // Check count limits (for album/family)
         if ($type !== 'profile') {
-            $currentCount = $profile->profilePhotos()->visible()->ofType($type)->count();
+            $currentCount = $profile->profilePhotos()->visible()->approved()->ofType($type)->count();
             $max = ProfilePhoto::maxForType($type);
             if ($currentCount >= $max) {
                 return back()->withErrors(['photo' => "Maximum {$max} {$type} photo(s) allowed."]);
@@ -56,9 +70,12 @@ class PhotoController extends Controller
         $folder = "photos/{$profile->id}";
         $path = $request->file('photo')->store($folder, 'public');
 
+        // Apply watermark to prevent photo theft
+        $this->watermarkService->apply($path);
+
         // For profile type, clear any primary flag and set this as primary
         $isPrimary = false;
-        if ($type === 'profile') {
+        if ($type === 'profile' && $autoApprove) {
             $profile->profilePhotos()->update(['is_primary' => false]);
             $isPrimary = true;
         }
@@ -70,16 +87,22 @@ class PhotoController extends Controller
             'profile_id' => $profile->id,
             'photo_type' => $type,
             'photo_url' => $path,
-            'thumbnail_url' => $path, // Same file, CSS handles sizing
+            'thumbnail_url' => $path,
             'is_primary' => $isPrimary,
             'is_visible' => true,
             'display_order' => $nextOrder,
+            'approval_status' => $approvalStatus,
+            'approved_at' => $autoApprove ? now() : null,
         ]);
 
         $tab = in_array($type, ['album', 'family']) ? $type : 'album';
 
+        $message = $autoApprove
+            ? ucfirst($type) . ' photo uploaded successfully!'
+            : ucfirst($type) . ' photo uploaded and sent for admin approval.';
+
         return redirect()->route('photos.manage', ['tab' => $request->input('tab', $tab)])
-            ->with('success', ucfirst($type) . ' photo uploaded successfully!');
+            ->with('success', $message);
     }
 
     public function destroy(ProfilePhoto $photo)
@@ -96,7 +119,7 @@ class PhotoController extends Controller
         $this->authorizePhoto($photo);
 
         // Check if restoring would exceed limit
-        $currentCount = $photo->profile->profilePhotos()->visible()->ofType($photo->photo_type)->count();
+        $currentCount = $photo->profile->profilePhotos()->visible()->approved()->ofType($photo->photo_type)->count();
         $max = ProfilePhoto::maxForType($photo->photo_type);
         if ($currentCount >= $max) {
             return back()->withErrors(['photo' => "Cannot restore: maximum {$max} {$photo->photo_type} photo(s) reached."]);
@@ -105,7 +128,7 @@ class PhotoController extends Controller
         $photo->update(['is_visible' => true]);
 
         // Auto-set as primary if no other photo is primary
-        if (! $photo->profile->profilePhotos()->where('is_primary', true)->where('is_visible', true)->exists()) {
+        if (! $photo->profile->profilePhotos()->where('is_primary', true)->where('is_visible', true)->approved()->exists()) {
             $photo->update(['is_primary' => true]);
         }
 
@@ -118,6 +141,10 @@ class PhotoController extends Controller
 
         if (! $photo->is_visible) {
             return back()->withErrors(['photo' => 'Cannot set archived photo as primary.']);
+        }
+
+        if (! $photo->isApproved()) {
+            return back()->withErrors(['photo' => 'Cannot set unapproved photo as primary.']);
         }
 
         // Unset all primary, set this one

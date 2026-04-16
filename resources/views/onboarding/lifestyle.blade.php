@@ -16,7 +16,10 @@
         @csrf
 
         {{-- ── Lifestyle & Habits ────────────────────────────── --}}
-        <h2 class="text-lg font-semibold text-gray-900 mb-6">Lifestyle & Habits</h2>
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">Lifestyle & Habits</h2>
+            <a href="#" @click.prevent="document.getElementById('skip-form-top').submit()" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
+        </div>
 
         <div class="space-y-5 mb-10">
             {{-- Eating Habits --}}
@@ -151,5 +154,10 @@
                 </button>
             </div>
         </div>
+    </form>
+
+    {{-- Hidden skip form (outside main form to avoid nesting) --}}
+    <form id="skip-form-top" action="{{ route('onboarding.finish') }}" method="POST" class="hidden">
+        @csrf
     </form>
 </x-layouts.onboarding>

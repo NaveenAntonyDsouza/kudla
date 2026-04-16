@@ -1,142 +1,80 @@
-# 2. User Management
+# 2. User Management — COMPLETED
 
-## 2a. All Users (Filament Table)
+## 2a. All Users (Card-Style List)
 
-| Column | Filter | Sortable | Actions |
-|--------|--------|----------|---------|
-| ID | - | Yes | - |
-| Matri ID | Search | Yes | Copy |
-| Full Name | Search | Yes | - |
-| Gender | Filter | Yes | - |
-| Email | Search | - | - |
-| Phone | Search | - | - |
-| Religion | Filter | Yes | - |
-| Registration Date | Date Range | Yes | - |
-| Profile Completion | Range | Yes | - |
-| Status | Filter (Active/Hidden/Deleted) | Yes | - |
-| Verified | Filter (Phone/Email/ID) | - | - |
-| Subscription | Filter (Free/Paid) | Yes | - |
-| Actions | - | - | View, Edit, Deactivate, Delete, Login As |
+Each profile displayed as a full-width card with 4 rows of info + action buttons.
 
-**Bulk Actions:**
-- Activate selected
-- Deactivate selected
-- Send email to selected
-- Export to CSV/Excel
+### Card Layout
+- **Row 1:** Name (Matri ID) | Plan Badge | Approved/Pending Status
+- **Row 2:** Gender | Age | Phone | Email | Education | Occupation
+- **Row 3:** Religion/Denomination | Location | Marital Status | Mother Tongue | Income | Created By
+- **Row 4:** Profile % | Registered Date+Time (x ago) | Last Login Date+Time (x ago) | Notes Count | ID Verified
 
-## 2b. User Detail Page
+### 9 Tab Filters
+All Members | Pending Approval (with count badge) | Incomplete (<60%) | Premium | Free Users | Expiring Soon (7 days) | Recent (7 days) | Inactive (30+ days) | Blocked/Deactivated
 
-- All profile information (read-only with edit button)
-- Photo gallery
-- Verification status (Phone, Email, ID Proof)
-- Subscription history
-- Interest history (sent/received)
-- Login history with IP address (see 2d)
-- Activity log
-- Admin notes
+### 14 Sidebar Filters
+Gender, Religion, Membership Plan, Profile Completion Range, Marital Status, Active Status, Approved, ID Verified, Has Photo, Hidden, Created By, Registration Date Range, Last Login Date Range, Native State
 
-## 2c. Profile Link Sharing
+### Row Actions
+View | Edit | WhatsApp (opens wa.me) | Quick Approve | Add Note (modal with text + follow-up date) | Activate/Deactivate
 
-Each profile gets a public shareable link:
+### Bulk Actions
+Approve Selected | Activate Selected | Deactivate Selected | Export
 
-- URL format: `https://yourdomain.com/profile/AM100008` (uses matri ID, not database ID)
-- Shareable via WhatsApp, Email, Copy Link button on profile view
-- Public link shows limited info (photo, age, religion, education, location) — no contact details
-- Visitor must register/login to see full profile or send interest
-- Share buttons: WhatsApp, Facebook, Email, Copy Link
-- Admin setting: Enable/disable public profile sharing (toggle in Site Settings)
+## 2b. View Profile (8 Tabs)
 
-## 2d. Login History with IP Address
+Header section with photo, matri ID, name, gender, completion %, status badges (Approved, Active, ID Verified), plan badge with expiry date.
 
-Track every user login for security and analytics:
+| Tab | Content |
+|-----|---------|
+| Personal | DOB, Age, Marital Status, Mother Tongue, Height, Weight, Complexion, Body Type, Blood Group, Physical Status, Created By, About Me |
+| Account & Contact | Email, Phone, Email/Phone Verified, Last Login, Registered, WhatsApp, Custodian, Preferred Call Time, Reference, Communication Address |
+| Religious | All 15 religion-specific fields (denomination, diocese, caste, gotra, nakshatra, rashi, muslim sect, jain sect, etc.) |
+| Education & Career | 12 fields (education, college, occupation, employer, income, working location) |
+| Family | Parents (4-column: name, occupation, house name, native place) + Siblings (married/unmarried/priest/nun) + Assets + About Family |
+| Location | Native Country/State/District, Residing Country, Residency Status, PIN Code |
+| Lifestyle & Social | Diet, Smoking, Drinking, Cultural Background + Instagram, Facebook, LinkedIn links |
+| Admin Notes | All notes with follow-up dates, overdue badge (red), added by, timestamp. Badge shows note count on tab. |
 
-| Column | Details |
-|--------|---------|
-| User | Matri ID + Name |
-| Login Date/Time | Timestamp |
-| IP Address | e.g., 103.21.58.xx |
-| Device | Desktop / Mobile / Tablet |
-| Browser | Chrome / Safari / Firefox |
-| Location (approx.) | City, State (from IP) |
-| Status | Success / Failed |
+### Header Actions
+Edit | WhatsApp | Approve | Add Note | Activate/Deactivate
 
-**Admin actions:**
-- Filter by user, date range, IP address
-- Flag suspicious logins (multiple IPs, rapid location changes)
-- Export login history to CSV
+## 2c. Edit Profile (9 Sections)
 
-## 2e. VIP / Featured Profile
+All fields from 7 related tables editable in organized sections:
 
-Admin can mark profiles as VIP for premium visibility:
+1. **Personal Information** (3-col) — Matri ID (readonly), Name, Gender, DOB, Marital Status, Mother Tongue, Height, Weight, Complexion, Body Type, Blood Group, Physical Status, About Me
+2. **Account & Contact** (3-col) — Email, Phone, WhatsApp, Custodian, Preferred Call Time, Communication Address, PIN, Reference
+3. **Religious Information** (3-col) — All 16 religion-specific fields
+4. **Education & Career** (3-col) — All 12 fields
+5. **Family Details** (3-col) — Father/Mother details, Siblings counts, Assets, About Family
+6. **Location** (3-col) — Native/Residing country/state/district, Residency Status, PIN
+7. **Lifestyle** (3-col, collapsed) — Diet, Smoking, Drinking, Cultural Background
+8. **Social Media** (3-col, collapsed) — Instagram, Facebook, LinkedIn URLs
+9. **Status & Admin Controls** (4-col) — Active, Approved, ID Verified, Hidden toggles
 
-| Field | Type | Description |
-|-------|------|-------------|
-| Profile | Select | Matri ID |
-| VIP Badge | Toggle | Show gold badge on profile |
-| Featured | Toggle | Appear in "Featured Profiles" section |
-| Featured Until | Date | Auto-remove after date |
-| Priority Boost | Number | Higher = appears first in search results |
-| Admin Note | Text | Why VIP (e.g., "Premium customer", "Brand ambassador") |
+Saves to: profiles, users, religious_info, education_details, family_details, location_info, contact_info, lifestyle_info, social_media_links
 
-**Where VIP shows:**
-- Gold "VIP" or "Featured" badge on profile card
-- "Featured Profiles" carousel on homepage
-- Boosted in search results (appears higher)
-- Featured section on dashboard for opposite gender
+## 2d. Admin Notes
 
-## 2f. Profile Summary Card Download
+- Add note with optional follow-up date from list page (row action) or view page (header action)
+- Notes stored in `profile_notes` table with admin_user_id
+- Upcoming Follow-ups widget on dashboard shows overdue items
+- Note count badge visible on list cards and view page tab
 
-Generate a downloadable image card with key profile info:
+## Deferred to Phase 2 (CodeCanyon / Staff Module)
 
-```
-┌─────────────────────────────┐
-│  [Photo]                    │
-│  John D. (AM100008)         │
-│  28 yrs, 5'10" | Male       │
-│  Catholic | Latin Catholic   │
-│  B.Tech, Software Engineer   │
-│  Mangalore, Karnataka        │
-│  ─────────────────────────── │
-│  anugrahamatrimony.com       │
-└─────────────────────────────┘
-```
+| Feature | Reason |
+|---------|--------|
+| **VIP / Featured Profiles** | Needs new DB column + search ranking change. Not needed until 1000+ profiles. |
+| **Login History** | Needs new table + middleware to log every login with IP/device/browser. Build with Staff/Telecaller module. |
+| **Bulk CSV Import** | Complex feature (template download, validation, preview, error handling). Build with Staff/Telecaller module. |
 
-- Generated as PNG image (server-side using Intervention Image or similar)
-- "Download Profile Card" button on profile view page
-- Useful for parents sharing profiles offline (print/WhatsApp)
-- Admin can customize card template (logo, colors, which fields to show)
-
-## 2g. Bulk Profile Import (CSV)
-
-Admin can import multiple profiles at once via CSV upload:
-
-**Import flow:**
-1. Download CSV template (with column headers)
-2. Fill in profile data (name, email, phone, DOB, gender, religion, etc.)
-3. Upload CSV → system validates each row
-4. Preview: shows valid rows (green) and errors (red with reason)
-5. Confirm → bulk create profiles + send credentials via email/SMS
-
-| Setting | Type | Description |
-|---------|------|-------------|
-| CSV File | File Upload | .csv or .xlsx |
-| Assign to Branch | Select | Optional — assign all imported profiles to a branch |
-| Registered By | Auto | Admin name / Staff name |
-| Send Credentials | Toggle | Email login details to each imported user |
-| Auto-Approve | Toggle | Skip approval queue for imported profiles |
-
-**Error handling:**
-- Duplicate email/phone → skip with warning
-- Missing required fields → skip row, report error
-- Invalid data format → highlight and suggest fix
-- Export error report as CSV
-
-**Use cases:**
-- Franchise migrating profiles from old system
-- Admin adding demo/test profiles
-- Bulk onboarding from offline registration drives
-
-## 2h. Login As User
-
-- Admin can login as any user to debug issues
-- Shows admin bar at top: "You are viewing as AM100008 [Return to Admin]"
+## Technical Notes
+- Card layout uses Filament `Tables\Columns\Layout\Split` and `Stack`
+- `contentGrid(['default' => 1])` for full-width cards
+- Plan badge uses `getStateUsing()` with `activeMembership()` method
+- Notes count via `->withCount('profileNotes')` on Eloquent query
+- Religion and Native State filters use manual `->options()` with `whereNotNull()` to avoid NULL crash
+- Table polls every 60 seconds for live updates

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             FaqSeeder::class,
             SiteSettingsSeeder::class,
             ThemeSettingsSeeder::class,
+            EmailTemplateSeeder::class,
         ]);
 
         // Create default admin user

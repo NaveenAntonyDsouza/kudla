@@ -124,15 +124,15 @@
 
             {{-- Custodian Name --}}
             <div class="float-field">
-                <input type="text" name="custodian_name" id="custodian_name" value="{{ old('custodian_name', $contactInfo?->contact_person ?? '') }}" required placeholder=" ">
-                <label for="custodian_name">Custodian Name <span class="text-red-500">*</span></label>
+                <input type="text" name="custodian_name" id="custodian_name" value="{{ old('custodian_name', $contactInfo?->contact_person ?? '') }}" placeholder=" ">
+                <label for="custodian_name">Custodian Name</label>
                 @error('custodian_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
             {{-- Custodian Relation --}}
             <div class="float-field">
-                <input type="text" name="custodian_relation" id="custodian_relation" value="{{ old('custodian_relation', $contactInfo?->contact_relationship ?? '') }}" required placeholder=" ">
-                <label for="custodian_relation">Custodian Relation <span class="text-red-500">*</span></label>
+                <input type="text" name="custodian_relation" id="custodian_relation" value="{{ old('custodian_relation', $contactInfo?->contact_relationship ?? '') }}" placeholder=" ">
+                <label for="custodian_relation">Custodian Relation</label>
                 @error('custodian_relation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 

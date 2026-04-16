@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContactSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -22,7 +23,18 @@ class ContactController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
-        // Send email to admin
+        // Save to database
+        ContactSubmission::create([
+            'user_id' => auth()->id(),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'ip_address' => $request->ip(),
+        ]);
+
+        // Also send email to admin
         $adminEmail = \App\Models\SiteSetting::getValue('contact_email', config('mail.from.address'));
 
         try {
@@ -43,7 +55,6 @@ class ContactController extends Controller
                 }
             );
         } catch (\Exception $e) {
-            // Log but don't fail — still show success to user
             \Log::error('Contact form email failed: ' . $e->getMessage());
         }
 

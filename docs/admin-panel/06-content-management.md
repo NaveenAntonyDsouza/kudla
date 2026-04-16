@@ -26,6 +26,13 @@ Admin can edit all dropdown options WITHOUT touching code:
 - Diocese list (grouped by denomination)
 - Caste list (grouped by religion — e.g., Hindu → Brahmin, Nair)
 - Sub-caste list (grouped by caste)
+
+> **NOTE — Sub-caste Implementation:**
+> When building 6b, also update user-facing forms (registration step 2, profile edit religious section, partner preferences) to use:
+> - Cascading dropdown: Caste → Sub-caste filters by selected caste
+> - "Other" option with free text input for sub-castes not in the list
+> - Same pattern as BharatMatrimony — dropdown + "Other" fallback
+> This is a combined admin + user-end change. Both must be done together.
 - Muslim Sect list (grouped under Muslim)
 - Muslim Community/Jamath list (grouped under Muslim)
 - Jain Sect list (grouped under Jain)

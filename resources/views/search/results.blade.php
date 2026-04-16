@@ -15,7 +15,36 @@
             <h1 class="text-lg font-semibold text-gray-900">
                 <span class="text-(--color-primary)">{{ $results->total() }}</span> {{ Str::plural('Matching Profile', $results->total()) }} found
             </h1>
-            <div class="flex items-center gap-3" x-data="{ showSave: false }">
+            <div class="flex items-center gap-3 flex-wrap" x-data="{ showSave: false }">
+                {{-- Sort By Dropdown --}}
+                <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                    @php
+                        $sortOptions = [
+                            'relevance' => 'Relevance',
+                            'newest' => 'Newest First',
+                            'recently_active' => 'Recently Active',
+                            'age_low' => 'Age: Low to High',
+                            'age_high' => 'Age: High to Low',
+                        ];
+                        $currentSortLabel = $sortOptions[$currentSort ?? 'relevance'] ?? 'Relevance';
+                    @endphp
+                    <button @click="open = !open" type="button"
+                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h6m0 0L6.5 4.5M9 7L6.5 9.5M21 17h-6m0 0l2.5 2.5M15 17l2.5-2.5M3 17h2m16-10h-2"/></svg>
+                        <span>{{ $currentSortLabel }}</span>
+                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak x-transition
+                        class="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+                        @foreach($sortOptions as $value => $label)
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => $value, 'page' => 1]) }}"
+                                class="block px-4 py-2 text-sm {{ ($currentSort ?? 'relevance') === $value ? 'text-(--color-primary) bg-(--color-primary-light) font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition-colors">
+                                {{ $label }}
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+
                 <a href="{{ route('search.index', request()->except(['search', 'page'])) }}"
                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-(--color-primary) border border-(--color-primary) rounded-lg hover:bg-(--color-primary-light) transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>

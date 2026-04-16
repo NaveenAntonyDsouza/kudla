@@ -13,9 +13,9 @@ class MatchingService
     use ProfileQueryFilters;
 
     /**
-     * Default weights for match criteria. Admin-configurable in v2.
+     * Default weights for match criteria.
      */
-    private const WEIGHTS = [
+    private const DEFAULT_WEIGHTS = [
         'religion'         => 15,
         'age'              => 15,
         'denomination'     => 10,
@@ -29,6 +29,16 @@ class MatchingService
         'diet'             => 2,
         'family_status'    => 2,
     ];
+
+    /**
+     * Get weights from admin settings, fallback to defaults.
+     */
+    private static function getWeights(): array
+    {
+        $saved = json_decode(\App\Models\SiteSetting::getValue('match_weights', '{}') ?: '{}', true);
+
+        return array_merge(self::DEFAULT_WEIGHTS, is_array($saved) ? $saved : []);
+    }
 
     private const LABELS = [
         'religion'         => 'Religion',
@@ -56,7 +66,7 @@ class MatchingService
         $earnedWeight = 0;
         $applicableWeight = 0;
 
-        foreach (self::WEIGHTS as $criterion => $weight) {
+        foreach (self::getWeights() as $criterion => $weight) {
             if (!$this->isPreferenceSet($prefs, $criterion)) {
                 continue;
             }

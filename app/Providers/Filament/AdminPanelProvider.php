@@ -8,6 +8,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -40,13 +41,35 @@ class AdminPanelProvider extends PanelProvider
                 'success' => Color::Emerald,
                 'warning' => Color::Orange,
             ])
+            ->navigationGroups([
+                NavigationGroup::make('Dashboard')->icon('heroicon-o-home')->collapsed(),
+                NavigationGroup::make('User Management')->icon('heroicon-o-users')->collapsed(),
+                NavigationGroup::make('Verification')->icon('heroicon-o-shield-check')->collapsed(),
+                NavigationGroup::make('Membership & Payments')->icon('heroicon-o-credit-card')->collapsed(),
+                NavigationGroup::make('Interests & Reports')->icon('heroicon-o-heart')->collapsed(),
+                NavigationGroup::make('Content Management')->icon('heroicon-o-document-text')->collapsed(),
+                NavigationGroup::make('Reports')->icon('heroicon-o-chart-bar')->collapsed(),
+                NavigationGroup::make('Settings')->icon('heroicon-o-cog-6-tooth')->collapsed(),
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
+            ->pages([])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
+            ->renderHook('panels::head.end', fn () => <<<'HTML'
+                <style>
+                    /* Reduce spacing between navigation groups */
+                    .fi-sidebar-nav .fi-sidebar-group { margin-top: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; }
+                    .fi-sidebar-nav .fi-sidebar-group + .fi-sidebar-group { border-top: 1px solid rgba(0,0,0,0.05); }
+                    .fi-sidebar-group > ul { gap: 0 !important; }
+                    /* Reduce group header padding */
+                    .fi-sidebar-group-button { padding-block: 0.4rem !important; }
+                    /* Reduce item padding */
+                    .fi-sidebar-item a { padding-block: 0.3rem !important; }
+                    /* Remove extra gap in nav */
+                    .fi-sidebar-nav > ul { gap: 0 !important; }
+                </style>
+            HTML)
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

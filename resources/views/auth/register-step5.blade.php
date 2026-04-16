@@ -63,7 +63,7 @@
 
             {{-- How did you hear about us --}}
             <div class="float-field">
-                <select name="how_did_you_hear_about_us" id="how_did_you_hear_about_us" required>
+                <select name="how_did_you_hear_about_us" id="how_did_you_hear_about_us">
                     <option value="">Select</option>
                     @foreach(config('reference_data.how_did_you_hear_list') as $group => $options)
                         <optgroup label="{{ $group }}">

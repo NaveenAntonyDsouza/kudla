@@ -1,2 +1,16 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /interests
+Disallow: /shortlist
+Disallow: /views
+Disallow: /photo-requests
+Disallow: /saved-searches
+Disallow: /submit-id-proof
+Disallow: /onboarding
+Disallow: /register/step*
+Disallow: /membership-plans/checkout
+Allow: /
+
+Sitemap: /sitemap.xml

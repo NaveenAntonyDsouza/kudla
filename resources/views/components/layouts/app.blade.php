@@ -11,7 +11,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? '' }} | {{ $siteName }}</title>
+    @php
+        // Determine current page slug for per-page SEO lookup
+        $currentRoute = request()->route()?->getName() ?? '';
+        $pageSlugMap = [
+            'home' => 'home',
+            'search.results' => 'search',
+            'search.index' => 'search',
+            'login' => 'login',
+            'register' => 'register',
+            'register.step1' => 'register',
+            'success-stories.index' => 'happy-stories',
+            'privacy-policy' => 'privacy-policy',
+            'terms' => 'terms',
+            'about' => 'about',
+            'contact.show' => 'contact',
+            'membership.plans' => 'membership-plans',
+        ];
+        $pageSlug = $pageSlugMap[$currentRoute] ?? null;
+        $pageSeo = $pageSlug ? \App\Models\PageSeoSetting::getForPage($pageSlug) : null;
+
+        // SEO values with per-page override > passed props > global defaults
+        $metaTitleSuffix = \App\Models\SiteSetting::getValue('meta_title_suffix', '');
+        $defaultMetaTitle = \App\Models\SiteSetting::getValue('meta_title_default', $siteName);
+        $defaultMetaDesc = \App\Models\SiteSetting::getValue('meta_description_default', $siteTagline . ' - ' . $siteName . '. Register free and find your perfect life partner.');
+
+        $pageTitle = $pageSeo?->meta_title ?? ($title ?? '');
+        if ($pageTitle) {
+            $fullTitle = str_contains($pageTitle, $siteName) ? $pageTitle : $pageTitle . ($metaTitleSuffix ?: " | {$siteName}");
+        } else {
+            $fullTitle = $defaultMetaTitle ?: $siteName;
+        }
+
+        $metaDescription = $pageSeo?->meta_description ?? ($metaDescription ?? $defaultMetaDesc);
+        $canonicalUrl = $canonicalUrl ?? url()->current();
+        $ogImage = $pageSeo?->og_image_url ?? ($theme->logo_url ?? null);
+
+        $siteEmail = \App\Models\SiteSetting::getValue('email', '');
+        $sitePhone = \App\Models\SiteSetting::getValue('phone', '');
+        $siteAddress = \App\Models\SiteSetting::getValue('address', '');
+
+        // Tracking IDs
+        $gaId = \App\Models\SiteSetting::getValue('google_analytics_id', '');
+        $gtmId = \App\Models\SiteSetting::getValue('google_tag_manager_id', '');
+        $fbPixelId = \App\Models\SiteSetting::getValue('facebook_pixel_id', '');
+    @endphp
+
+    <title>{{ $fullTitle }}</title>
+
+    {{-- SEO Meta Tags --}}
+    <meta name="description" content="{{ Str::limit(strip_tags($metaDescription), 160) }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:title" content="{{ $fullTitle }}">
+    <meta property="og:description" content="{{ Str::limit(strip_tags($metaDescription), 160) }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_IN">
+    @if($ogImage)
+        <meta property="og:image" content="{{ $ogImage }}">
+    @endif
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $fullTitle }}">
+    <meta name="twitter:description" content="{{ Str::limit(strip_tags($metaDescription), 160) }}">
+    @if($ogImage)
+        <meta name="twitter:image" content="{{ $ogImage }}">
+    @endif
+
+    {{-- Tracking & Analytics (GA, GTM, Facebook Pixel) --}}
+    @include('components.partials.tracking-head', ['gaId' => $gaId, 'gtmId' => $gtmId, 'fbPixelId' => $fbPixelId])
+
+    {{-- Structured Data: WebSite --}}
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => $siteName,
+        'url' => url('/'),
+        'description' => $siteTagline,
+        'potentialAction' => [
+            '@type' => 'SearchAction',
+            'target' => url('/search?q={search_term_string}'),
+            'query-input' => 'required name=search_term_string',
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+
+    {{-- Structured Data: Organization + LocalBusiness --}}
+    <script type="application/ld+json">
+    {!! json_encode(array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => $siteName,
+        'url' => url('/'),
+        'logo' => ($theme->logo_url ?? false) ? $theme->logo_url : null,
+        'email' => $siteEmail ?: null,
+        'telephone' => $sitePhone ?: null,
+        'address' => $siteAddress ? ['@type' => 'PostalAddress', 'streetAddress' => $siteAddress] : null,
+        'sameAs' => array_values(array_filter([
+            \App\Models\SiteSetting::getValue('social_facebook', ''),
+            \App\Models\SiteSetting::getValue('social_instagram', ''),
+            \App\Models\SiteSetting::getValue('social_youtube', ''),
+            \App\Models\SiteSetting::getValue('social_twitter', ''),
+        ])) ?: null,
+    ]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+
+    @if($theme->favicon_url ?? false)
+        <link rel="icon" href="{{ $theme->favicon_url }}" type="image/x-icon">
+    @endif
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +147,7 @@
     @livewireStyles
 </head>
 <body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased">
+    @include('components.partials.tracking-body', ['gtmId' => $gtmId])
 
     @if($isLoggedIn)
         {{-- ══ LOGGED-IN HEADER ══ --}}
@@ -274,6 +388,20 @@
                     <!-- Desktop Nav -->
                     <nav class="hidden md:flex items-center gap-6">
                         <a href="/" class="text-sm font-medium text-gray-700 hover:text-gray-900">Home</a>
+                        {{-- Search Dropdown --}}
+                        <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                            <button @click="open = !open" class="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-gray-900">
+                                Search
+                                <svg class="w-3.5 h-3.5 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-cloak
+                                class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                <a href="{{ route('search.quick') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Quick Search</a>
+                                <a href="{{ route('search.advance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Advance Search</a>
+                                <a href="{{ route('search.keyword') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Keyword Search</a>
+                                <a href="{{ route('search.byid') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Id Search</a>
+                            </div>
+                        </div>
                         <a href="/membership-plans" class="text-sm font-medium text-gray-700 hover:text-gray-900">Membership</a>
                         <a href="/about-us" class="text-sm font-medium text-gray-700 hover:text-gray-900">About Us</a>
                         <a href="/contact" class="text-sm font-medium text-gray-700 hover:text-gray-900">Contact</a>
@@ -292,6 +420,19 @@
             <div x-data="{ open: false }" x-on:toggle-guest-menu.window="open = !open" x-show="open" x-cloak class="md:hidden border-t border-gray-200 bg-white">
                 <div class="px-4 py-3 space-y-2">
                     <a href="/" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Home</a>
+                    {{-- Search accordion --}}
+                    <div x-data="{ open: false }">
+                        <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">
+                            Search
+                            <svg class="w-4 h-4 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div x-show="open" x-collapse class="ml-4 space-y-1 mt-1">
+                            <a href="{{ route('search.quick') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Quick Search</a>
+                            <a href="{{ route('search.advance') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Advance Search</a>
+                            <a href="{{ route('search.keyword') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Keyword Search</a>
+                            <a href="{{ route('search.byid') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Id Search</a>
+                        </div>
+                    </div>
                     <a href="/membership-plans" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Membership</a>
                     <a href="/about-us" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">About Us</a>
                     <a href="/contact" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Contact</a>
@@ -352,6 +493,7 @@
                             <li><a href="/about-us" class="hover:text-white transition-colors">About Us</a></li>
                             <li><a href="/membership-plans" class="hover:text-white transition-colors">Membership Plans</a></li>
                             <li><a href="/demograph" class="hover:text-white transition-colors">Demographics</a></li>
+                            <li><a href="/success-stories" class="hover:text-white transition-colors">Success Stories</a></li>
                         </ul>
                     </div>
                     <div>

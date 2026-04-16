@@ -264,20 +264,37 @@
                 </div>
             </div>
         @elseif($interest->status === 'accepted')
-            {{-- Chat input for accepted interests --}}
-            <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-5">
-                <form method="POST" action="{{ route('interests.message', $interest) }}" class="flex gap-3" x-data="{ msg: '', submitting: false }" @submit="submitting = true">
-                    @csrf
-                    <input type="text" name="message" x-model="msg" required maxlength="500" placeholder="Type a message..."
-                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
-                    <button type="submit" :disabled="submitting || msg.length === 0"
-                        :class="(submitting || msg.length === 0) && 'opacity-50 cursor-not-allowed'"
-                        class="px-6 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors shrink-0">
-                        <span x-show="!submitting">Send</span>
-                        <span x-show="submitting" x-cloak>Sending...</span>
-                    </button>
-                </form>
-            </div>
+            {{-- Chat input for accepted interests (premium only) --}}
+            @if(auth()->user()->isPremium())
+                <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-5">
+                    <form method="POST" action="{{ route('interests.message', $interest) }}" class="flex gap-3" x-data="{ msg: '', submitting: false }" @submit="submitting = true">
+                        @csrf
+                        <input type="text" name="message" x-model="msg" required maxlength="500" placeholder="Type a message..."
+                            class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
+                        <button type="submit" :disabled="submitting || msg.length === 0"
+                            :class="(submitting || msg.length === 0) && 'opacity-50 cursor-not-allowed'"
+                            class="px-6 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors shrink-0">
+                            <span x-show="!submitting">Send</span>
+                            <span x-show="submitting" x-cloak>Sending...</span>
+                        </button>
+                    </form>
+                </div>
+            @else
+                <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-5">
+                    <div class="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <svg class="w-5 h-5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-amber-800">Messaging is a premium feature</p>
+                            <p class="text-xs text-amber-600 mt-0.5">Upgrade to a paid plan to chat with your accepted interests.</p>
+                        </div>
+                        <a href="{{ route('membership.index') }}" class="shrink-0 px-4 py-2 text-xs font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
+                            Upgrade Now
+                        </a>
+                    </div>
+                </div>
+            @endif
         @elseif($interest->status === 'declined')
             <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
                 <p class="text-sm text-gray-500">This interest has been declined. The conversation is closed.</p>

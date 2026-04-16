@@ -24,6 +24,7 @@
         {{-- ── Additional Location Information ───────────────────── --}}
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Additional Location Information</h2>
+            <a href="{{ route('onboarding.preferences') }}" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
         </div>
 
         <div class="space-y-5 mb-10">

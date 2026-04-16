@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Profile;
 use App\Traits\ProfileQueryFilters;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
@@ -42,25 +43,28 @@ class SearchController extends Controller
 
         // If search was submitted, show results page
         if ($request->has('search')) {
-            $results = $this->buildSearchQuery($request, $profile)->paginate(20)->withQueryString();
-            return view('search.results', compact('profile', 'results'));
+            $query = $this->buildSearchQuery($request, $profile);
+            $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
+            $results = $query->paginate(20)->withQueryString();
+            $currentSort = $request->get('sort', 'relevance');
+            return view('search.results', compact('profile', 'results', 'currentSort'));
         }
 
         // Keyword search
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
-            $results = $this->baseQuery($profile)
+            $query = $this->baseQuery($profile)
                 ->where(function ($q) use ($keyword) {
                     $q->where('full_name', 'LIKE', "%{$keyword}%")
                       ->orWhere('about_me', 'LIKE', "%{$keyword}%")
                       ->orWhere('matri_id', 'LIKE', "%{$keyword}%")
                       ->orWhereHas('educationDetail', fn($q2) => $q2->where('occupation_detail', 'LIKE', "%{$keyword}%")->orWhere('employer_name', 'LIKE', "%{$keyword}%"))
                       ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'LIKE', "%{$keyword}%")->orWhere('denomination', 'LIKE', "%{$keyword}%"));
-                })
-                ->orderBy('created_at', 'desc')
-                ->paginate(20)
-                ->withQueryString();
-            return view('search.results', compact('profile', 'results'));
+                });
+            $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
+            $results = $query->paginate(20)->withQueryString();
+            $currentSort = $request->get('sort', 'relevance');
+            return view('search.results', compact('profile', 'results', 'currentSort'));
         }
 
         // Search by ID
@@ -199,10 +203,37 @@ class SearchController extends Controller
             $query->whereHas('primaryPhoto');
         }
 
-        // Premium/featured profiles first, then by date
-        return $query
-            ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
-            ->orderBy('created_at', 'desc');
+        return $query;
+    }
+
+    /**
+     * Apply sort order to query.
+     * "relevance" = Premium → Recently Active → Newest (default)
+     * Uses subqueries instead of JOINs to avoid ambiguous column issues with baseQuery.
+     */
+    private function applySortOrder(Builder $query, string $sort): Builder
+    {
+        return match ($sort) {
+            'newest' => $query->orderBy('profiles.created_at', 'desc'),
+
+            'recently_active' => $query
+                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
+                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC'),
+
+            'age_low' => $query
+                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
+
+            'age_high' => $query
+                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
+
+            // Default: relevance = Premium first → Recently Active → Newest
+            default => $query
+                ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships um JOIN membership_plans mp ON mp.id = um.plan_id WHERE um.user_id = profiles.user_id AND um.is_active = 1 AND (um.ends_at IS NULL OR um.ends_at > NOW()) AND mp.is_highlighted = 1) DESC')
+                ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
+                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
+                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
+                ->orderBy('profiles.created_at', 'desc'),
+        };
     }
 
     /**
@@ -243,20 +274,76 @@ class SearchController extends Controller
      */
     public function publicSearch(string $tab)
     {
-        // If logged in, redirect to the authenticated search
+        // If logged in, redirect to the authenticated search with query params preserved
         if (auth()->check() && auth()->user()->profile) {
-            return redirect()->route('search.index', ['tab' => $tab]);
+            return redirect()->route('search.index', request()->query());
         }
 
         $activeTab = $tab;
+        $filterLabel = null;
+        $results = null;
 
-        // For guests: show recent active profiles (no filters, no partner prefs)
-        $results = Profile::where('is_active', true)
-            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        // Only query results when search params are present (not on initial form load)
+        $hasSearchParams = request()->hasAny([
+            'gender', 'age_from', 'caste', 'denomination', 'religion',
+            'keyword', 'matri_id', 'mother_tongue', 'marital_status',
+            'education', 'occupation', 'working_country', 'height_from',
+        ]);
 
-        return view('search.public', compact('results', 'activeTab'));
+        if ($hasSearchParams) {
+            $query = Profile::where('is_active', true)
+                ->approved()
+                ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+                ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
+
+            // Apply filters from query params
+            if ($caste = request('caste')) {
+                $query->whereHas('religiousInfo', fn($q) => $q->where('caste', $caste));
+            }
+            if ($denomination = request('denomination')) {
+                $query->whereHas('religiousInfo', fn($q) => $q->where('denomination', $denomination));
+            }
+            if ($religion = request('religion')) {
+                if (is_array($religion)) {
+                    $query->whereHas('religiousInfo', fn($q) => $q->whereIn('religion', $religion));
+                } else {
+                    $query->whereHas('religiousInfo', fn($q) => $q->where('religion', $religion));
+                }
+            }
+            if ($gender = request('gender')) {
+                $query->where('gender', $gender);
+            }
+            if ($ageFrom = request('age_from')) {
+                $query->whereDate('date_of_birth', '<=', now()->subYears((int) $ageFrom));
+            }
+            if ($ageTo = request('age_to')) {
+                $query->whereDate('date_of_birth', '>=', now()->subYears((int) $ageTo + 1));
+            }
+            if ($motherTongue = request('mother_tongue')) {
+                $query->whereHas('lifestyleInfo', fn($q) => $q->where('mother_tongue', $motherTongue));
+            }
+            if ($keyword = request('keyword')) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('full_name', 'like', "%{$keyword}%")
+                      ->orWhere('about_me', 'like', "%{$keyword}%")
+                      ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'like', "%{$keyword}%")->orWhere('caste', 'like', "%{$keyword}%")->orWhere('denomination', 'like', "%{$keyword}%"))
+                      ->orWhereHas('educationDetail', fn($q2) => $q2->where('highest_qualification', 'like', "%{$keyword}%")->orWhere('occupation', 'like', "%{$keyword}%"))
+                      ->orWhereHas('locationInfo', fn($q2) => $q2->where('residing_city', 'like', "%{$keyword}%")->orWhere('residing_state', 'like', "%{$keyword}%"));
+                });
+            }
+            if ($matriId = request('matri_id')) {
+                $query->where('matri_id', strtoupper($matriId));
+            }
+
+            $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+            $filterLabel = request('caste') ?? request('denomination') ?? (is_string(request('religion')) ? request('religion') : null) ?? null;
+        }
+
+        // Provide empty paginator when no search performed
+        if (!$results) {
+            $results = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        }
+
+        return view('search.public', compact('results', 'activeTab', 'filterLabel'));
     }
 }

@@ -208,6 +208,11 @@ class InterestService
      */
     public function sendMessage(Interest $interest, Profile $sender, string $message): InterestReply
     {
+        // Premium check — free users cannot chat
+        if (!$sender->user->isPremium()) {
+            throw new \RuntimeException('Upgrade to a paid plan to send messages.');
+        }
+
         if ($interest->status !== 'accepted') {
             throw new \RuntimeException('Messages can only be sent in accepted interests.');
         }

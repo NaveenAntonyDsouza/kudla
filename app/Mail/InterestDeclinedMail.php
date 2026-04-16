@@ -3,33 +3,39 @@
 namespace App\Mail;
 
 use App\Models\Interest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
-class InterestDeclinedMail extends Mailable
+class InterestDeclinedMail extends DatabaseMailable
 {
-    use Queueable, SerializesModels;
+    protected string $templateSlug = 'interest-declined';
 
     public function __construct(public Interest $interest) {}
 
-    public function envelope(): Envelope
+    protected function templateVariables(): array
     {
-        return new Envelope(subject: 'Interest Update - ' . config('app.name'));
+        return [
+            'SENDER_NAME' => $this->interest->senderProfile->full_name,
+            'DECLINER_MATRI_ID' => $this->interest->receiverProfile->matri_id,
+            'ACTION_URL' => route('interests.inbox'),
+        ];
     }
 
-    public function content(): Content
+    protected function fallbackView(): ?string
     {
-        return new Content(
-            markdown: 'emails.interest-declined',
-            with: [
-                'declinerMatriId' => $this->interest->receiverProfile->matri_id,
-                'senderName' => $this->interest->senderProfile->full_name,
-                'url' => route('interests.inbox'),
-                'siteName' => config('app.name'),
-            ],
-        );
+        return 'emails.interest-declined';
+    }
+
+    protected function fallbackSubject(): string
+    {
+        return 'Interest Update - ' . config('app.name');
+    }
+
+    protected function fallbackData(): array
+    {
+        return [
+            'declinerMatriId' => $this->interest->receiverProfile->matri_id,
+            'senderName' => $this->interest->senderProfile->full_name,
+            'url' => route('interests.inbox'),
+            'siteName' => config('app.name'),
+        ];
     }
 }

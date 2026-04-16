@@ -34,9 +34,31 @@ Route::view('/event', 'pages.event')->name('event');
 Route::view('/refund-policy', 'pages.refund-policy')->name('refund-policy');
 Route::view('/report-misuse', 'pages.report-misuse')->name('report-misuse');
 
+// Success Stories (public listing)
+Route::get('/success-stories', [\App\Http\Controllers\SuccessStoryController::class, 'index'])->name('success-stories.index');
+
+// SEO: Sitemap
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 // 301 redirects from old URLs (SEO — pass link juice to new URLs)
 Route::permanentRedirect('/cms/index/child-safety-policy', '/child-safety');
 Route::permanentRedirect('/premium-member', '/membership-plans');
+Route::permanentRedirect('/contactUs', '/contact-us');
+Route::permanentRedirect('/index', '/');
+Route::permanentRedirect('/membershipplans', '/membership-plans');
+Route::permanentRedirect('/success-story', '/success-stories');
+// Old query-string CMS pages (handled via Route since Laravel can match query params)
+Route::get('/cms', function () {
+    return match(request('cms_id')) {
+        '13' => redirect('/faq', 301),
+        '16' => redirect('/refund-policy', 301),
+        '7' => redirect('/terms-condition', 301),
+        '6' => redirect('/privacy-policy', 301),
+        '15' => redirect('/report-misuse', 301),
+        '8' => redirect('/about-us', 301),
+        default => redirect('/', 301),
+    };
+});
 Route::get('/membership-plans', [MembershipController::class, 'index'])->name('membership.index');
 
 Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
@@ -44,7 +66,7 @@ Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit
 
 // Search (public — accessible without login for SEO)
 Route::get('/search/quick-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.quick');
-Route::get('/search/advance-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.advance');
+Route::get('/search/advance-search', fn() => app(SearchController::class)->publicSearch('advance'))->name('search.advance');
 Route::get('/search/keyword-search', fn() => app(SearchController::class)->publicSearch('keyword'))->name('search.keyword');
 Route::get('/search/id-search', fn() => app(SearchController::class)->publicSearch('byid'))->name('search.byid');
 
@@ -74,6 +96,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
     Route::post('/login/send-otp', [LoginController::class, 'sendLoginOtp'])->name('login.otp.send')->middleware('throttle:5,1');
     Route::post('/login/verify-otp', [LoginController::class, 'verifyLoginOtp'])->name('login.otp.verify')->middleware('throttle:10,1');
+    Route::post('/login/send-email-otp', [LoginController::class, 'sendEmailLoginOtp'])->name('login.email-otp.send')->middleware('throttle:5,1');
+    Route::post('/login/verify-email-otp', [LoginController::class, 'verifyEmailLoginOtp'])->name('login.email-otp.verify')->middleware('throttle:10,1');
 
 });
 
@@ -190,6 +214,14 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/photo-requests/{profile}/send', [\App\Http\Controllers\PhotoRequestController::class, 'send'])->name('photo-requests.send');
     Route::post('/photo-requests/{photoRequest}/approve', [\App\Http\Controllers\PhotoRequestController::class, 'approve'])->name('photo-requests.approve');
     Route::post('/photo-requests/{photoRequest}/ignore', [\App\Http\Controllers\PhotoRequestController::class, 'ignore'])->name('photo-requests.ignore');
+
+    // Report Profile
+    Route::get('/report/{profile}', [\App\Http\Controllers\ReportController::class, 'create'])->name('report.create');
+    Route::post('/report/{profile}', [\App\Http\Controllers\ReportController::class, 'store'])->name('report.store');
+
+    // Success Stories (submit)
+    Route::get('/success-stories/create', [\App\Http\Controllers\SuccessStoryController::class, 'create'])->name('success-stories.create');
+    Route::post('/success-stories', [\App\Http\Controllers\SuccessStoryController::class, 'store'])->name('success-stories.store');
 
     // Saved Searches
     Route::get('/saved-searches', [\App\Http\Controllers\SavedSearchController::class, 'index'])->name('saved-searches.index');

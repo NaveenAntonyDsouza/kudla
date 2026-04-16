@@ -7,20 +7,18 @@
 
 @php
     $canViewContact = false;
-    if (!$isOwn && auth()->check()) {
-        // Premium members with can_view_contact plan can see contacts
-        $activeMembership = auth()->user()->activeMembership();
-        if ($activeMembership?->plan?->can_view_contact) {
-            $canViewContact = true;
-        }
-        // Also allow if interest is accepted between both parties
-        if (!$canViewContact) {
-            $canViewContact = \App\Models\Interest::where('status', 'accepted')
-                ->where(fn($q) => $q
-                    ->where(fn($q2) => $q2->where('sender_profile_id', auth()->user()->profile->id)->where('receiver_profile_id', $profile->id))
-                    ->orWhere(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('receiver_profile_id', auth()->user()->profile->id))
-                )->exists();
-        }
+    $isPremium = false;
+    $interestAccepted = false;
+    if (!$isOwn && auth()->check() && auth()->user()->profile) {
+        $myProfileId = auth()->user()->profile->id;
+        $isPremium = auth()->user()->isPremium();
+        $interestAccepted = \App\Models\Interest::where('status', 'accepted')
+            ->where(fn($q) => $q
+                ->where(fn($q2) => $q2->where('sender_profile_id', $myProfileId)->where('receiver_profile_id', $profile->id))
+                ->orWhere(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('receiver_profile_id', $myProfileId))
+            )->exists();
+        // Both conditions required: must be premium AND interest accepted
+        $canViewContact = $isPremium && $interestAccepted;
     }
 @endphp
 
@@ -35,11 +33,19 @@
                 </svg>
                 <div>
                     <p class="text-sm font-medium text-amber-800">Contact details are locked</p>
-                    <p class="text-xs text-amber-600 mt-1">Upgrade to a paid plan to view contact details, or send an interest and wait for acceptance.</p>
-                    <a href="{{ route('membership.index') }}" class="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-(--color-primary) hover:underline">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                        View Membership Plans
-                    </a>
+                    @if(!$isPremium && !$interestAccepted)
+                        <p class="text-xs text-amber-600 mt-1">Upgrade to a paid plan and send an interest to view contact details.</p>
+                    @elseif($isPremium && !$interestAccepted)
+                        <p class="text-xs text-amber-600 mt-1">Send an interest and wait for acceptance to view contact details.</p>
+                    @elseif(!$isPremium && $interestAccepted)
+                        <p class="text-xs text-amber-600 mt-1">Upgrade to a paid plan to view contact details.</p>
+                    @endif
+                    @if(!$isPremium)
+                        <a href="{{ route('membership.index') }}" class="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-(--color-primary) hover:underline">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            View Membership Plans
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

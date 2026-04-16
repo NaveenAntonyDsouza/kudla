@@ -79,6 +79,21 @@
             {{-- Main Content --}}
             <div class="flex-1 min-w-0 space-y-6">
 
+                {{-- Pending Approval Banner --}}
+                @if(!$profile->is_approved)
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-5">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-amber-800">Your profile is pending approval</p>
+                                <p class="text-xs text-amber-600 mt-0.5">Our team is reviewing your profile. It will be visible to other members after approval. This usually takes 24-48 hours.</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- ═══ INCOMPLETE PROFILE: CTA + Sections first ═══ --}}
                 @if($completionPct < 80)
                     {{-- Profile Completion CTA --}}
@@ -164,7 +179,30 @@
                 @endif
 
                 {{-- Recent Profile Views (who viewed me) --}}
-                @if($recentViews->count() > 0)
+                @if(!$isPremium && $viewCount > 0)
+                    {{-- Free user with views: show count + upgrade CTA --}}
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Who Viewed Your Profile</h2>
+                        </div>
+                        <div class="flex items-center gap-4 p-5 bg-(--color-primary-light) rounded-lg">
+                            <div class="w-14 h-14 rounded-full bg-(--color-primary)/10 flex items-center justify-center shrink-0">
+                                <svg class="w-7 h-7 text-(--color-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xl font-bold text-(--color-primary)">{{ $viewCount }} {{ $viewCount === 1 ? 'person' : 'people' }}</p>
+                                <p class="text-sm text-gray-600">viewed your profile. Upgrade to see who they are.</p>
+                            </div>
+                            <a href="{{ route('membership.index') }}" class="shrink-0 px-5 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
+                                Upgrade
+                            </a>
+                        </div>
+                    </div>
+                @elseif($recentViews->count() > 0)
+                    {{-- Premium user: show profile cards --}}
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-lg font-semibold text-gray-900">Recent Profile Views</h2>

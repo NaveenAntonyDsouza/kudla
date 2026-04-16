@@ -8,7 +8,8 @@ use Filament\Widgets\ChartWidget;
 class GenderDistribution extends ChartWidget
 {
     protected ?string $heading = 'Gender Distribution';
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 5;
+    protected static bool $isLazy = true;
     protected ?string $maxHeight = '250px';
     protected int|string|array $columnSpan = 1;
 

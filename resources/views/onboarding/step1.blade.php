@@ -21,6 +21,7 @@
         {{-- ── Additional Primary Information ────────────────────── --}}
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Additional Primary Information</h2>
+            <a href="{{ route('onboarding.step2') }}" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
         </div>
 
         <div class="space-y-5 mb-10">
@@ -50,13 +51,13 @@
 
             {{-- Mother Tongue --}}
             <div class="float-field">
-                <select name="mother_tongue" id="mother_tongue">
+                <select name="mother_tongue" id="mother_tongue" required>
                     <option value="">Select</option>
                     @foreach(config('reference_data.language_list') as $lang)
                         <option value="{{ $lang }}" {{ old('mother_tongue', $profile?->mother_tongue ?? '') === $lang ? 'selected' : '' }}>{{ $lang }}</option>
                     @endforeach
                 </select>
-                <label for="mother_tongue">Mother Tongue</label>
+                <label for="mother_tongue">Mother Tongue <span class="text-red-500">*</span></label>
                 @error('mother_tongue') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 

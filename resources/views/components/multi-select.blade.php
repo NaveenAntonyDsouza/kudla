@@ -87,7 +87,7 @@
             @endif
         });
     }
-}" @click.away="open = false" class="relative">
+}" @click.away="open = false" @multiselect-clear.window="if ($event.detail.name === '{{ $name }}') { selected = []; }" class="relative">
 
     {{-- Label --}}
     <label class="block text-xs font-medium text-gray-500 mb-1">{{ $label }}</label>

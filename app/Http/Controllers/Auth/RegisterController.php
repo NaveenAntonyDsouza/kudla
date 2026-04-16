@@ -70,6 +70,9 @@ class RegisterController extends Controller
         ]);
 
         // Create profile (basic info only)
+        // Auto-approve if admin setting is enabled
+        $autoApprove = SiteSetting::getValue('auto_approve_profiles', '1') === '1';
+
         Profile::create([
             'user_id' => $user->id,
             'full_name' => $validated['full_name'],
@@ -77,6 +80,7 @@ class RegisterController extends Controller
             'date_of_birth' => $validated['date_of_birth'],
             'onboarding_step_completed' => 1,
             'is_active' => true,
+            'is_approved' => $autoApprove,
         ]);
 
         Auth::login($user);

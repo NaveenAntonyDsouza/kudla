@@ -69,7 +69,7 @@
                                     ->where('target_profile_id', $profile->id)->exists();
                             }
 
-                            $photoCount = $profile->profilePhotos->where('is_visible', true)->count();
+                            $photoCount = $profile->profilePhotos->where('is_visible', true)->where('approval_status', 'approved')->count();
                         @endphp
 
                         <div class="relative overflow-hidden">
@@ -223,14 +223,20 @@
                                         </div>
                                     @endif
 
-                                    {{-- Block profile --}}
-                                    <form method="POST" action="{{ route('block.profile', $profile) }}" onsubmit="return confirm('Block this profile? You will no longer see each other.')">
-                                        @csrf
-                                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors mt-2">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                            Block Profile
-                                        </button>
-                                    </form>
+                                    {{-- Report & Block --}}
+                                    <div class="flex items-center gap-1 mt-2">
+                                        <a href="{{ route('report.create', $profile) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-400 hover:text-amber-600 transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5"/></svg>
+                                            Report
+                                        </a>
+                                        <form method="POST" action="{{ route('block.profile', $profile) }}" onsubmit="return confirm('Block this profile? You will no longer see each other.')" class="flex-1">
+                                            @csrf
+                                            <button type="submit" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                                Block
+                                            </button>
+                                        </form>
+                                    </div>
 
                                     {{-- Print Profile --}}
                                     <a href="{{ route('profile.print', $profile) }}" target="_blank"

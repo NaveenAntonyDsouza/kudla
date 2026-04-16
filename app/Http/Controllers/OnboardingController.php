@@ -35,7 +35,7 @@ class OnboardingController extends Controller
             // Personal
             'weight_kg' => 'nullable|string|max:20',
             'blood_group' => 'nullable|string|max:10',
-            'mother_tongue' => 'nullable|string|max:50',
+            'mother_tongue' => 'required|string|max:50',
             'languages_known' => 'nullable|array',
             'languages_known.*' => 'string|max:50',
             'about_me' => 'nullable|string|max:5000',

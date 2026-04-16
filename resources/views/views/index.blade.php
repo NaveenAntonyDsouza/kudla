@@ -18,7 +18,29 @@
             </a>
         </div>
 
-        @if($views->count() > 0)
+        {{-- Premium gate for "Viewed By" tab --}}
+        @if($tab === 'viewed_by' && !$isPremium)
+            <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-8 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-(--color-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                @if($viewedByCount > 0)
+                    <p class="text-2xl font-bold text-(--color-primary) mb-1">{{ $viewedByCount }}</p>
+                    <p class="text-sm text-gray-700 font-medium mb-1">{{ $viewedByCount === 1 ? 'person has' : 'people have' }} viewed your profile</p>
+                    <p class="text-xs text-gray-500 mb-5">Upgrade to a paid plan to see who viewed your profile.</p>
+                @else
+                    <p class="text-sm text-gray-500 mb-1">No one has viewed your profile yet.</p>
+                    <p class="text-xs text-gray-400 mb-5">Complete your profile and add photos to get more views.</p>
+                @endif
+                <a href="{{ route('membership.index') }}" class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    Upgrade to See Viewers
+                </a>
+            </div>
+        @elseif($views->count() > 0)
             <div class="bg-white rounded-lg border border-gray-200 shadow-xs divide-y divide-gray-100">
                 @foreach($views as $view)
                     @php

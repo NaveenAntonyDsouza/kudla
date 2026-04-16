@@ -16,6 +16,7 @@ trait ProfileQueryFilters
         return Profile::query()
             ->where('id', '!=', $profile->id)
             ->where('is_active', true)
+            ->approved()
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->where('gender', '!=', $profile->gender)
             ->whereDoesntHave('blockedByOthers', fn($q) => $q->where('profile_id', $profile->id))

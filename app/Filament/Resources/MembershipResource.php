@@ -15,11 +15,12 @@ use Illuminate\Database\Eloquent\Builder;
 class MembershipResource extends Resource
 {
     protected static ?string $model = UserMembership::class;
-    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-credit-card';
+    protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Memberships';
     protected static ?string $modelLabel = 'Membership';
     protected static ?string $pluralModelLabel = 'Memberships';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
+    protected static ?int $navigationSort = 2;
 
     public static function table(Table $table): Table
     {
@@ -29,10 +30,20 @@ class MembershipResource extends Resource
                     ->label('User')
                     ->searchable()
                     ->sortable()
+                    ->description(fn (UserMembership $record) => $record->user?->profile?->matri_id)
                     ->limit(25),
 
                 Tables\Columns\TextColumn::make('plan.plan_name')
                     ->label('Plan')
+                    ->badge()
+                    ->color(fn (string $state): string => match (strtolower($state)) {
+                        'diamond plus' => 'success',
+                        'diamond' => 'info',
+                        'gold' => 'warning',
+                        'silver' => 'primary',
+                        'free' => 'gray',
+                        default => 'gray',
+                    })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('plan.price_inr')
@@ -160,6 +171,6 @@ class MembershipResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['user', 'plan']);
+        return parent::getEloquentQuery()->with(['user.profile', 'plan']);
     }
 }

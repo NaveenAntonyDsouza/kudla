@@ -10,7 +10,8 @@ use Filament\Widgets\TableWidget;
 class RecentRegistrations extends TableWidget
 {
     protected static ?string $heading = 'Recent Registrations';
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 8;
+    protected static bool $isLazy = true;
     protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table

@@ -1,13 +1,22 @@
-<x-layouts.app title="Home">
+<x-layouts.app
+    :title="$siteTitle"
+    :metaDescription="$siteMetaDesc">
     @php
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
         $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
         $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
         $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
+        $heroImageUrl = \App\Models\SiteSetting::getValue('hero_image_url', '');
     @endphp
 
     {{-- 1. Hero Banner with Registration Form --}}
     <section class="relative overflow-hidden py-10 sm:py-14 md:py-16" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
+        @if($heroImageUrl)
+            <div class="absolute inset-0">
+                <img src="{{ $heroImageUrl }}" alt="" class="w-full h-full object-cover">
+                <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.15) 100%);"></div>
+            </div>
+        @endif
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
                 {{-- Left: Heading + Tagline + Trust Signals --}}
@@ -53,16 +62,35 @@
                             </div>
                         </div>
 
-                        <p class="mt-8 text-white/60 text-sm">Already a member? <a href="/login" class="text-white font-semibold hover:underline">Login</a></p>
+                        <p class="mt-8 text-white/60 text-sm">Already a member? <a href="{{ route('login') }}" class="text-white font-semibold hover:underline">Login</a></p>
                     </div>
                 </div>
 
                 {{-- Right: Registration Form --}}
-                <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 w-full md:w-[400px] shrink-0">
+                <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 w-full md:w-[420px] shrink-0">
                     <h2 class="text-xl font-bold text-gray-900 mb-1">Register Free</h2>
                     <p class="text-sm text-gray-500 mb-5">Create your profile in 2 minutes</p>
 
-                    <form method="POST" action="{{ route('register.store1') }}" class="space-y-4" x-data="{ gender: '', showPw: false }">
+                    <form method="POST" action="{{ route('register.store1') }}" class="space-y-4" x-data="{
+                        gender: '{{ old('gender', '') }}',
+                        showPw: false,
+                        submitting: false,
+                        dob: '{{ old('date_of_birth', '') }}',
+                        get calculatedAge() {
+                            if (!this.dob) return '';
+                            const birth = new Date(this.dob);
+                            const today = new Date();
+                            let years = today.getFullYear() - birth.getFullYear();
+                            let months = today.getMonth() - birth.getMonth();
+                            if (months < 0 || (months === 0 && today.getDate() < birth.getDate())) {
+                                years--;
+                                months += 12;
+                            }
+                            if (today.getDate() < birth.getDate()) months--;
+                            if (months < 0) months = 0;
+                            return years >= 0 ? years + ' Yrs ' + months + ' Months' : '';
+                        }
+                    }" @submit="submitting = true">
                         @csrf
 
                         {{-- Full Name --}}
@@ -74,32 +102,50 @@
 
                         {{-- Gender --}}
                         <div>
-                            <p class="text-xs text-gray-500 mb-2">Gender *</p>
                             <input type="hidden" name="gender" :value="gender">
                             <div class="grid grid-cols-2 gap-3">
                                 <button type="button" @click="gender = 'male'"
-                                    :class="gender === 'male' ? 'bg-(--color-primary) text-white border-(--color-primary)' : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'"
-                                    class="py-2.5 rounded-lg border text-sm font-medium transition-colors">Male</button>
+                                    :class="gender === 'male' ? 'border-(--color-primary) bg-(--color-primary)/5 text-(--color-primary)' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                    class="flex items-center justify-center gap-2 border rounded-lg px-4 py-2.5 text-sm font-medium transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                    Male
+                                </button>
                                 <button type="button" @click="gender = 'female'"
-                                    :class="gender === 'female' ? 'bg-(--color-primary) text-white border-(--color-primary)' : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'"
-                                    class="py-2.5 rounded-lg border text-sm font-medium transition-colors">Female</button>
+                                    :class="gender === 'female' ? 'border-(--color-primary) bg-(--color-primary)/5 text-(--color-primary)' : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                    class="flex items-center justify-center gap-2 border rounded-lg px-4 py-2.5 text-sm font-medium transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                                    Female
+                                </button>
                             </div>
                             @error('gender') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- Date of Birth --}}
-                        <div class="float-field">
-                            <input type="date" name="date_of_birth" id="hero_dob" value="{{ old('date_of_birth') }}" required placeholder=" "
-                                max="{{ now()->subYears(18)->format('Y-m-d') }}"
-                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
-                            <label for="hero_dob" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Date of Birth *</label>
+                        {{-- Date of Birth + Age --}}
+                        <div class="grid grid-cols-5 gap-2">
+                            <div class="col-span-3 float-field">
+                                <input type="date" name="date_of_birth" id="hero_dob" x-model="dob" required placeholder=" "
+                                    max="{{ now()->subYears(18)->format('Y-m-d') }}"
+                                    class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
+                                <label for="hero_dob" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Date of Birth *</label>
+                            </div>
+                            <div class="col-span-2">
+                                <div class="border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 h-full flex flex-col justify-center">
+                                    <span class="text-[10px] text-gray-400 leading-tight">Age</span>
+                                    <span x-text="calculatedAge || '0 Yrs 0 Months'" class="text-xs font-medium text-gray-700"></span>
+                                </div>
+                            </div>
                         </div>
+                        @error('date_of_birth') <p class="-mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
 
-                        {{-- Phone --}}
-                        <div class="float-field">
-                            <input type="tel" name="phone" id="hero_phone" value="{{ old('phone') }}" required maxlength="10" placeholder=" "
-                                class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
-                            <label for="hero_phone" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Mobile Number *</label>
+                        {{-- Primary Mobile Number (with country code) --}}
+                        <div>
+                            <x-phone-input name="phone" label="Primary Mobile Number" :value="old('phone', '')" :required="true" maxlength="10" />
+                            <p class="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                                <svg class="w-3.5 h-3.5 text-(--color-primary) shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
+                                </svg>
+                                We will send OTP to this mobile number for verification
+                            </p>
                         </div>
 
                         {{-- Email --}}
@@ -118,7 +164,13 @@
                                 <svg x-show="!showPw" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 <svg x-show="showPw" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
                             </button>
-                            <p class="mt-1 text-[10px] text-gray-400">6-14 characters</p>
+                            <p class="mt-1 flex items-center gap-1 text-[10px] text-gray-400">
+                                <svg class="w-3 h-3 text-(--color-primary) shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
+                                </svg>
+                                Use 6-14 characters
+                            </p>
+                            @error('password') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
 
                         @if($errors->any())
@@ -129,14 +181,16 @@
                             </div>
                         @endif
 
-                        <button type="submit" class="w-full py-3 text-sm font-bold text-white rounded-lg transition-colors" style="background: var(--brand-primary);">
-                            REGISTER FREE
+                        <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"
+                            class="w-full py-3 text-sm font-bold text-white rounded-lg transition-colors" style="background: var(--brand-primary);">
+                            <span x-show="!submitting">REGISTER FREE</span>
+                            <span x-show="submitting" x-cloak>Please wait...</span>
                         </button>
 
                         <p class="text-xs text-gray-400 text-center">By registering, you agree to our <a href="/terms-condition" class="text-(--color-primary) hover:underline">Terms</a> & <a href="/privacy-policy" class="text-(--color-primary) hover:underline">Privacy Policy</a></p>
                     </form>
 
-                    <p class="mt-4 text-center text-sm text-gray-500 lg:hidden">Already a member? <a href="/login" class="font-semibold text-(--color-primary) hover:underline">Login</a></p>
+                    <p class="mt-4 text-center text-sm text-gray-600">Already have an account? <a href="{{ route('login') }}" class="text-(--color-primary) font-semibold hover:underline">LOGIN</a></p>
                 </div>
             </div>
         </div>
@@ -192,20 +246,55 @@
         </div>
     </section>
 
-    {{-- 2. Stats Row --}}
-    <section class="py-12 bg-white">
+    {{-- 2. Stats Row (animated counters) --}}
+    <section class="py-12 bg-white" x-data="{
+        started: false,
+        members: 0,
+        marriages: 0,
+        years: 0,
+        targetMembers: {{ (int) $stats['members'] }},
+        targetMarriages: {{ (int) $stats['marriages'] }},
+        targetYears: {{ (int) $stats['years'] }},
+        animateCount(prop, target, duration = 2000) {
+            const steps = 60;
+            const increment = target / steps;
+            let current = 0;
+            const interval = duration / steps;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    this[prop] = target;
+                    clearInterval(timer);
+                } else {
+                    this[prop] = Math.floor(current);
+                }
+            }, interval);
+        },
+        startAnimation() {
+            if (this.started) return;
+            this.started = true;
+            this.animateCount('members', this.targetMembers);
+            this.animateCount('marriages', this.targetMarriages);
+            this.animateCount('years', this.targetYears, 1500);
+        }
+    }" x-init="
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { startAnimation(); observer.disconnect(); } });
+        }, { threshold: 0.3 });
+        observer.observe($el);
+    ">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div class="text-center p-6 bg-white rounded-lg border border-gray-200 shadow-xs">
-                    <div class="text-3xl font-serif font-bold text-(--color-primary)">{{ number_format((int) $stats['members']) }}+</div>
+                    <div class="text-3xl font-serif font-bold text-(--color-primary)"><span x-text="members.toLocaleString()">0</span>+</div>
                     <p class="mt-1 text-sm text-gray-600">Members</p>
                 </div>
                 <div class="text-center p-6 bg-white rounded-lg border border-gray-200 shadow-xs">
-                    <div class="text-3xl font-serif font-bold text-(--color-primary)">{{ number_format((int) $stats['marriages']) }}+</div>
+                    <div class="text-3xl font-serif font-bold text-(--color-primary)"><span x-text="marriages.toLocaleString()">0</span>+</div>
                     <p class="mt-1 text-sm text-gray-600">Successful Marriages</p>
                 </div>
                 <div class="text-center p-6 bg-white rounded-lg border border-gray-200 shadow-xs">
-                    <div class="text-3xl font-serif font-bold text-(--color-primary)">{{ $stats['years'] }}+</div>
+                    <div class="text-3xl font-serif font-bold text-(--color-primary)"><span x-text="years">0</span>+</div>
                     <p class="mt-1 text-sm text-gray-600">Years of Service</p>
                 </div>
             </div>
@@ -253,37 +342,127 @@
         </div>
     </section>
 
-    {{-- 4. Why Choose Us --}}
+    {{-- 4. Why Choose Us (dynamic from admin settings) --}}
+    @php
+        $whyChooseUsJson = \App\Models\SiteSetting::getValue('why_choose_us', '');
+        $whyChooseUs = $whyChooseUsJson ? json_decode($whyChooseUsJson, true) : [];
+        if (empty($whyChooseUs)) {
+            $whyChooseUs = [
+                ['title' => 'Verified Profiles', 'description' => 'Every profile is verified to ensure authenticity and safety for our members.', 'icon' => 'check'],
+                ['title' => '100% Privacy', 'description' => 'Your personal information is protected. You control who sees your contact details.', 'icon' => 'lock'],
+                ['title' => 'Community Focused', 'description' => 'Designed for families seeking meaningful connections within their community and values.', 'icon' => 'heart'],
+                ['title' => 'Easy to Use', 'description' => 'Simple registration, powerful search, and instant messaging from your phone or computer.', 'icon' => 'star'],
+            ];
+        }
+        $iconMap = [
+            'check' => '&#10003;',
+            'lock' => '&#128274;',
+            'heart' => '&#9829;',
+            'star' => '&#9733;',
+            'shield' => '&#128737;',
+            'users' => '&#128101;',
+            'phone' => '&#128222;',
+            'globe' => '&#127760;',
+        ];
+        $colClass = count($whyChooseUs) <= 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
+    @endphp
     <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Why Choose {{ $siteName }}?</h2>
             <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto">We understand the importance of finding the right life partner. Here's what makes us different.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 {{ $colClass }} gap-6">
+                @foreach($whyChooseUs as $item)
                 <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
-                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#10003;</div>
-                    <h3 class="text-base font-semibold text-gray-900 mb-2">Verified Profiles</h3>
-                    <p class="text-sm text-gray-500">Every profile is verified to ensure authenticity and safety for our members.</p>
+                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">{!! $iconMap[$item['icon'] ?? 'check'] ?? '&#10003;' !!}</div>
+                    <h3 class="text-base font-semibold text-gray-900 mb-2">{{ $item['title'] }}</h3>
+                    <p class="text-sm text-gray-500">{{ $item['description'] }}</p>
                 </div>
-                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
-                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#128274;</div>
-                    <h3 class="text-base font-semibold text-gray-900 mb-2">100% Privacy</h3>
-                    <p class="text-sm text-gray-500">Your personal information is protected. You control who sees your contact details.</p>
-                </div>
-                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
-                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#9829;</div>
-                    <h3 class="text-base font-semibold text-gray-900 mb-2">Community Focused</h3>
-                    <p class="text-sm text-gray-500">Designed for families seeking meaningful connections within their community and values.</p>
-                </div>
-                <div class="text-center p-6 rounded-xl border border-gray-100 hover:border-(--color-primary)/30 hover:shadow-sm transition-all">
-                    <div class="w-12 h-12 mx-auto mb-4 bg-(--color-primary-light) rounded-full flex items-center justify-center text-(--color-primary) text-xl font-bold">&#9733;</div>
-                    <h3 class="text-base font-semibold text-gray-900 mb-2">Easy to Use</h3>
-                    <p class="text-sm text-gray-500">Simple registration, powerful search, and instant messaging — all from your phone or computer.</p>
-                </div>
+                @endforeach
             </div>
         </div>
     </section>
 
-    {{-- 5. Community Browse --}}
+    {{-- 5. Success Stories (Carousel) --}}
+    @php
+        $successStories = \App\Models\Testimonial::where('is_visible', true)->orderBy('display_order')->limit(8)->get();
+    @endphp
+    @if($successStories->count() > 0)
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Success Stories</h2>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto">Real couples who found their perfect match through {{ $siteName }}.</p>
+
+            <div x-data="{
+                current: 0,
+                total: {{ $successStories->count() }},
+                autoplay: null,
+                get maxIndex() {
+                    const perView = window.innerWidth >= 768 ? 3 : 1;
+                    return Math.max(0, this.total - perView);
+                },
+                next() { this.current = this.current >= this.maxIndex ? 0 : this.current + 1; },
+                prev() { this.current = this.current <= 0 ? this.maxIndex : this.current - 1; },
+                startAutoplay() { this.autoplay = setInterval(() => this.next(), 4000); },
+                stopAutoplay() { clearInterval(this.autoplay); }
+            }" x-init="startAutoplay()" @mouseenter="stopAutoplay()" @mouseleave="startAutoplay()" class="relative">
+
+                {{-- Carousel Track --}}
+                <div class="overflow-hidden">
+                    <div class="flex transition-transform duration-500 ease-in-out" :style="'transform: translateX(-' + (current * (100 / (window.innerWidth >= 768 ? 3 : 1))) + '%)'">
+                        @foreach($successStories as $story)
+                            <div class="w-full md:w-1/3 flex-shrink-0 px-3">
+                                <div class="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden h-full">
+                                    @if($story->photo_url)
+                                        <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+                                            <img src="{{ Storage::disk('public')->url($story->photo_url) }}" alt="{{ $story->couple_names }}" class="w-full h-full object-cover">
+                                        </div>
+                                    @else
+                                        <div class="aspect-[4/3] bg-gradient-to-br from-(--color-primary-light) to-(--color-secondary-light) flex items-center justify-center">
+                                            <svg class="w-16 h-16 text-(--color-primary)/30" fill="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                        </div>
+                                    @endif
+                                    <div class="p-5">
+                                        <h3 class="text-base font-semibold text-gray-900">{{ $story->couple_names }}</h3>
+                                        @if($story->location)
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $story->location }}</p>
+                                        @endif
+                                        <p class="mt-2 text-sm text-gray-600 line-clamp-3">{{ $story->story }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Prev/Next Buttons --}}
+                @if($successStories->count() > 3)
+                <button @click="prev()" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors z-10">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button @click="next()" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors z-10">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+                @endif
+
+                {{-- Dot Indicators --}}
+                <div class="flex justify-center gap-2 mt-6">
+                    @foreach($successStories as $index => $story)
+                        @if($index <= $successStories->count() - (3))
+                        <button @click="current = {{ $index }}" class="w-2 h-2 rounded-full transition-all duration-300"
+                            :class="current === {{ $index }} ? 'bg-(--color-primary) w-6' : 'bg-gray-300 hover:bg-gray-400'"></button>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <a href="{{ route('success-stories.index') }}" class="text-sm font-medium text-(--color-primary) hover:underline">View All Success Stories &rarr;</a>
+            </div>
+        </div>
+    </section>
+    @endif
+
+    {{-- 6. Community Browse --}}
     @if($communities->count() > 0)
     <section class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -291,20 +470,43 @@
 
             @foreach($communities as $religion => $group)
                 @php
-                    // Map religion to discover category
-                    $categorySlug = match($religion) {
+                    $filterField = in_array($religion, ['Christian']) ? 'denomination' : 'caste';
+                    $primaryCategory = match($religion) {
                         'Christian' => 'catholic-matrimony',
                         'Hindu' => 'hindu-matrimony',
                         'Muslim' => 'muslim-matrimony',
                         'Jain' => 'jain-matrimony',
                         default => 'community-matrimony',
                     };
+                    // For Christians, check both catholic and christian categories
+                    $discoverLookup = [];
+                    $categoriesToCheck = $religion === 'Christian'
+                        ? ['catholic-matrimony', 'christian-matrimony']
+                        : [$primaryCategory];
+                    foreach ($categoriesToCheck as $catKey) {
+                        $catConfig = config("discover.{$catKey}");
+                        if ($catConfig) {
+                            $subs = is_callable($catConfig['subcategories']) ? ($catConfig['subcategories'])() : $catConfig['subcategories'];
+                            foreach ($subs as $sub) {
+                                $discoverLookup[$sub['slug']] = $catKey;
+                            }
+                        }
+                    }
                 @endphp
                 <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">{{ $religion }}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <a href="{{ route('discover.category', $primaryCategory) }}" class="hover:text-(--color-primary)">{{ $religion }}</a>
+                    </h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         @foreach($group as $community)
-                            <a href="{{ route('discover.results', [$categorySlug, Str::slug($community->community_name)]) }}" class="bg-white rounded-lg border border-gray-200 shadow-xs p-4 text-center hover:border-(--color-primary) hover:shadow-sm transition-all group">
+                            @php
+                                $slug = Str::slug($community->community_name);
+                                $matchedCategory = $discoverLookup[$slug] ?? null;
+                                $href = $matchedCategory
+                                    ? route('discover.results', [$matchedCategory, $slug])
+                                    : url('/search/quick-search?' . $filterField . '=' . urlencode($community->community_name));
+                            @endphp
+                            <a href="{{ $href }}" class="bg-white rounded-lg border border-gray-200 shadow-xs p-4 text-center hover:border-(--color-primary) hover:shadow-sm transition-all group">
                                 <p class="text-sm font-medium text-gray-900 group-hover:text-(--color-primary) transition-colors">{{ $community->community_name }}</p>
                             </a>
                         @endforeach
@@ -315,13 +517,109 @@
     </section>
     @endif
 
-    {{-- 6. CTA Banner --}}
+    {{-- 7. FAQ Preview --}}
+    @if($faqs->count() > 0)
+    <section class="py-16 bg-white">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Frequently Asked Questions</h2>
+            <p class="text-center text-gray-500 mb-10 max-w-2xl mx-auto">Have questions? We've got answers.</p>
+
+            <div class="space-y-3">
+                @foreach($faqs as $index => $faq)
+                    <div x-data="{ open: {{ $index === 0 ? 'true' : 'false' }} }" class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button @click="open = !open" class="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors">
+                            <span class="text-sm font-medium text-gray-900 pr-4">{{ $faq->question }}</span>
+                            <svg class="w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse>
+                            <div class="px-5 pb-4 text-sm text-gray-600 leading-relaxed">{{ $faq->answer }}</div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="text-center mt-8">
+                <a href="/faq" class="text-sm font-medium text-(--color-primary) hover:underline">View All FAQs &rarr;</a>
+            </div>
+        </div>
+    </section>
+    @endif
+
+    {{-- 8. Download App CTA --}}
+    @php
+        $playStoreUrl = \App\Models\SiteSetting::getValue('app_play_store_url', '');
+        $appStoreUrl = \App\Models\SiteSetting::getValue('app_apple_store_url', '');
+    @endphp
+    @if($playStoreUrl || $appStoreUrl)
+    <section class="py-16 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+                {{-- Left: Phone Mockup --}}
+                <div class="flex-shrink-0 relative">
+                    <div class="w-56 h-96 rounded-[2.5rem] border-[6px] border-gray-800 bg-gradient-to-br from-(--color-primary-light) to-white shadow-2xl relative overflow-hidden">
+                        {{-- Notch --}}
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-800 rounded-b-2xl"></div>
+                        {{-- Screen Content --}}
+                        <div class="absolute inset-4 top-10 flex flex-col items-center justify-center text-center">
+                            <svg class="w-14 h-14 text-(--color-primary) mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                            <p class="text-sm font-bold text-(--color-primary)">{{ $siteName }}</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Find Your Match</p>
+                            <div class="mt-4 space-y-2 w-full">
+                                <div class="h-2 bg-(--color-primary)/20 rounded-full w-full"></div>
+                                <div class="h-2 bg-(--color-primary)/10 rounded-full w-3/4"></div>
+                                <div class="h-2 bg-(--color-primary)/15 rounded-full w-5/6"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Right: Content --}}
+                <div class="text-center md:text-left flex-1">
+                    <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 mb-4">Get the {{ $siteName }} App</h2>
+                    <p class="text-gray-500 mb-8 max-w-md">Find your perfect match on the go. Browse profiles, send interests, and chat — all from your mobile phone.</p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                        @if($playStoreUrl)
+                        <a href="{{ $playStoreUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-3 bg-gray-900 text-white rounded-xl px-6 py-3 hover:bg-gray-800 transition-colors">
+                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.302 2.302a1 1 0 010 1.38l-2.302 2.302L15.396 13l2.302-2.492zM5.864 2.658L16.8 9.39l-2.302 2.302L5.864 2.658z"/></svg>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-gray-400">Get it on</div>
+                                <div class="text-base font-semibold -mt-0.5">Google Play</div>
+                            </div>
+                        </a>
+                        @endif
+                        @if($appStoreUrl)
+                        <a href="{{ $appStoreUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-3 bg-gray-900 text-white rounded-xl px-6 py-3 hover:bg-gray-800 transition-colors">
+                            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-gray-400">Download on the</div>
+                                <div class="text-base font-semibold -mt-0.5">App Store</div>
+                            </div>
+                        </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    @endif
+
+    {{-- 9. CTA Banner (dynamic from admin settings) --}}
+    @php
+        $ctaTitle = \App\Models\SiteSetting::getValue('cta_title', 'Register Free Today');
+        $ctaDesc = \App\Models\SiteSetting::getValue('cta_description', 'Join thousands of members who have found their perfect match. Registration is free and takes just a few minutes.');
+        $ctaButton = \App\Models\SiteSetting::getValue('cta_button_text', 'Create Your Profile');
+    @endphp
     <section class="py-16" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-white mb-4">Register Free Today</h2>
-            <p class="text-white/80 text-lg mb-8 max-w-xl mx-auto">Join thousands of members who have found their perfect match. Registration is free and takes just a few minutes.</p>
+            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-white mb-4">{{ $ctaTitle }}</h2>
+            <p class="text-white/80 text-lg mb-8 max-w-xl mx-auto">{{ $ctaDesc }}</p>
             <a href="/register" class="inline-block bg-white text-gray-900 hover:bg-gray-100 rounded-lg px-8 py-3 font-semibold text-sm transition-colors">
-                Create Your Profile
+                {{ $ctaButton }}
             </a>
         </div>
     </section>

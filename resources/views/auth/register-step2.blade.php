@@ -93,7 +93,8 @@
             </div>
 
             {{-- Differently Abled Details --}}
-            <div x-show="physicalStatus === 'Differently Abled'" x-transition class="space-y-5 pl-4 border-l-2 border-(--color-primary)/30" x-data="{ daCategory: '{{ old('da_category', '') }}' }">
+            <div x-show="physicalStatus === 'Differently Abled'" x-transition class="space-y-5 pl-4 border-l-2 border-(--color-primary)/30" x-data="{ daCategory: '{{ old('da_category', '') }}' }"
+                 x-effect="if (physicalStatus !== 'Differently Abled') { daCategory = ''; $el.querySelectorAll('input, textarea').forEach(el => el.value = ''); }">
                 <div class="float-field">
                     <select name="da_category" id="da_category" x-model="daCategory">
                         <option value="">Select</option>
@@ -181,7 +182,7 @@
             <template x-if="religion === 'Christian'">
                 <div class="space-y-5" x-data="{ selectedDiocese: '{{ old('diocese', $religiousInfo->diocese ?? '') }}' }">
                     <div class="float-field">
-                        <select name="denomination" id="denomination">
+                        <select name="denomination" id="denomination" required>
                             <option value="">Select</option>
                             @foreach(config('reference_data.denomination_list') as $group => $items)
                                 <optgroup label="{{ $group }}">
@@ -222,14 +223,14 @@
             <template x-if="religion === 'Hindu' || religion === 'Jain'">
                 <div class="space-y-5">
                     <div class="float-field">
-                        <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()">
+                        <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
                             <option value="">Select</option>
                             <template x-for="community in communities" :key="community.id">
                                 <option :value="community.community_name" x-text="community.community_name"
                                     :selected="community.community_name === selectedCaste"></option>
                             </template>
                         </select>
-                        <label for="caste">Caste / Community</label>
+                        <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
                         @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     <div x-show="subCommunities.length > 0" x-transition class="float-field">
@@ -320,13 +321,13 @@
             <template x-if="religion === 'Muslim'">
                 <div class="space-y-5">
                     <div class="float-field">
-                        <select name="muslim_sect" id="muslim_sect">
+                        <select name="muslim_sect" id="muslim_sect" required>
                             <option value="">Select</option>
                             @foreach(['Sunni', 'Shia', 'Ahmadiyya', 'Sufi', 'Other', 'Prefer Not to Say'] as $opt)
                                 <option value="{{ $opt }}" {{ old('muslim_sect', $religiousInfo->muslim_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
-                        <label for="muslim_sect">Sect</label>
+                        <label for="muslim_sect">Sect <span class="text-red-500">*</span></label>
                     </div>
                     <div class="float-field">
                         <select name="muslim_community" id="muslim_community">
