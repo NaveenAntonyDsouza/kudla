@@ -404,7 +404,7 @@
                         </div>
                         <a href="/membership-plans" class="text-sm font-medium text-gray-700 hover:text-gray-900">Membership</a>
                         <a href="/about-us" class="text-sm font-medium text-gray-700 hover:text-gray-900">About Us</a>
-                        <a href="/contact" class="text-sm font-medium text-gray-700 hover:text-gray-900">Contact</a>
+                        <a href="/contact-us" class="text-sm font-medium text-gray-700 hover:text-gray-900">Contact</a>
                         <a href="/register" class="text-sm font-medium text-(--color-primary) hover:text-(--color-primary-hover)">Register Free</a>
                         <a href="/login" class="px-5 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Login</a>
                     </nav>
@@ -435,7 +435,7 @@
                     </div>
                     <a href="/membership-plans" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Membership</a>
                     <a href="/about-us" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">About Us</a>
-                    <a href="/contact" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Contact</a>
+                    <a href="/contact-us" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Contact</a>
                     <a href="/register" class="block px-3 py-2 rounded-lg text-sm font-medium text-(--color-primary) hover:bg-gray-100">Register Free</a>
                     <a href="/login" class="block px-3 py-2 rounded-lg text-sm font-medium text-white bg-(--color-primary) text-center rounded-lg">Login</a>
                 </div>
@@ -492,7 +492,7 @@
                             <li><a href="/login" class="hover:text-white transition-colors">Login</a></li>
                             <li><a href="/about-us" class="hover:text-white transition-colors">About Us</a></li>
                             <li><a href="/membership-plans" class="hover:text-white transition-colors">Membership Plans</a></li>
-                            <li><a href="/demograph" class="hover:text-white transition-colors">Demographics</a></li>
+                            {{-- <li><a href="/demograph" class="hover:text-white transition-colors">Demographics</a></li> --}}
                             <li><a href="/success-stories" class="hover:text-white transition-colors">Success Stories</a></li>
                         </ul>
                     </div>
@@ -509,7 +509,7 @@
                     <div>
                         <h4 class="text-white font-semibold text-sm mb-3">Reach Us</h4>
                         <ul class="space-y-2 text-sm">
-                            <li><a href="/contact" class="hover:text-white transition-colors">Contact Us</a></li>
+                            <li><a href="/contact-us" class="hover:text-white transition-colors">Contact Us</a></li>
                             <li><a href="/faq" class="hover:text-white transition-colors">Help & FAQ</a></li>
                             <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
                             <li><a href="/event" class="hover:text-white transition-colors">Events</a></li>

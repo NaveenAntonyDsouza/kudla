@@ -36,6 +36,8 @@ class SeoSettings extends Page implements HasForms
             'google_analytics_id' => $settings['google_analytics_id'] ?? '',
             'google_tag_manager_id' => $settings['google_tag_manager_id'] ?? '',
             'facebook_pixel_id' => $settings['facebook_pixel_id'] ?? '',
+            'posthog_api_key' => $settings['posthog_api_key'] ?? '',
+            'posthog_host' => $settings['posthog_host'] ?? 'https://us.i.posthog.com',
             'robots_txt' => $settings['robots_txt'] ?? "User-agent: *\nAllow: /\n\nSitemap: " . url('/sitemap.xml'),
         ]);
 
@@ -117,6 +119,16 @@ class SeoSettings extends Page implements HasForms
                             ->label('Facebook Pixel ID')
                             ->placeholder('XXXXXXXXXXXXXXXX')
                             ->helperText('For Meta/Facebook ads tracking'),
+
+                        Forms\Components\TextInput::make('posthog_api_key')
+                            ->label('PostHog API Key')
+                            ->placeholder('phc_XXXXXXXXXXXXXXXX')
+                            ->helperText('Project API key from PostHog > Settings > Project API Key. Enables session recording + analytics.'),
+
+                        Forms\Components\TextInput::make('posthog_host')
+                            ->label('PostHog Host')
+                            ->placeholder('https://us.i.posthog.com')
+                            ->helperText('Default: https://us.i.posthog.com (US) or https://eu.i.posthog.com (EU)'),
                     ])
                     ->columns(3),
 

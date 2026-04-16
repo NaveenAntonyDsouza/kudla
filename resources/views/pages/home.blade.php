@@ -10,17 +10,34 @@
     @endphp
 
     {{-- 1. Hero Banner with Registration Form --}}
+    <style>
+        .hero-layout { display: flex; flex-direction: column; gap: 2rem; align-items: center; }
+        .hero-left { text-align: center; }
+        .hero-form { width: 100%; }
+        .carousel-card { width: 100%; }
+        .phone-mockup { display: none; }
+        .app-cta-layout { display: flex; align-items: center; flex-direction: column; gap: 2.5rem; }
+        @media (min-width: 640px) { .phone-mockup { display: block; } }
+        @media (min-width: 768px) {
+            .app-cta-layout { flex-direction: row; gap: 4rem; }
+            .hero-layout { flex-direction: row; gap: 3rem; }
+            .hero-left { text-align: left; flex: 1; }
+            .hero-form { width: 340px; min-width: 340px; }
+            .carousel-card { width: 33.333%; }
+            .trust-signals { display: block !important; }
+        }
+    </style>
     <section class="relative overflow-hidden py-10 sm:py-14 md:py-16" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
         @if($heroImageUrl)
             <div class="absolute inset-0">
                 <img src="{{ $heroImageUrl }}" alt="" class="w-full h-full object-cover">
-                <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.15) 100%);"></div>
+                <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.05) 100%);"></div>
             </div>
         @endif
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+            <div class="hero-layout">
                 {{-- Left: Heading + Tagline + Trust Signals --}}
-                <div class="flex-1 text-center md:text-left text-white">
+                <div class="hero-left text-white">
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold leading-tight">
                         {{ $heroHeading }}
                     </h1>
@@ -31,7 +48,7 @@
                     @endif
 
                     {{-- Trust Signals --}}
-                    <div class="mt-8 hidden md:block">
+                    <div class="trust-signals" style="display: none;">
                         <div class="space-y-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -67,11 +84,11 @@
                 </div>
 
                 {{-- Right: Registration Form --}}
-                <div class="bg-white rounded-xl shadow-xl p-6 sm:p-8 w-full md:w-[420px] shrink-0">
-                    <h2 class="text-xl font-bold text-gray-900 mb-1">Register Free</h2>
-                    <p class="text-sm text-gray-500 mb-5">Create your profile in 2 minutes</p>
+                <div class="hero-form bg-white rounded-xl shadow-xl p-5 sm:p-6 shrink-0">
+                    <h2 class="text-lg font-bold text-gray-900 mb-0.5">Register Free</h2>
+                    <p class="text-xs text-gray-500 mb-4">Create your profile in 2 minutes</p>
 
-                    <form method="POST" action="{{ route('register.store1') }}" class="space-y-4" x-data="{
+                    <form method="POST" action="{{ route('register.store1') }}" class="space-y-3" x-data="{
                         gender: '{{ old('gender', '') }}',
                         showPw: false,
                         submitting: false,
@@ -121,17 +138,17 @@
                         </div>
 
                         {{-- Date of Birth + Age --}}
-                        <div class="grid grid-cols-5 gap-2">
-                            <div class="col-span-3 float-field">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <div class="float-field" style="flex: 1;">
                                 <input type="date" name="date_of_birth" id="hero_dob" x-model="dob" required placeholder=" "
                                     max="{{ now()->subYears(18)->format('Y-m-d') }}"
                                     class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
                                 <label for="hero_dob" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Date of Birth *</label>
                             </div>
-                            <div class="col-span-2">
-                                <div class="border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 h-full flex flex-col justify-center">
-                                    <span class="text-[10px] text-gray-400 leading-tight">Age</span>
-                                    <span x-text="calculatedAge || '0 Yrs 0 Months'" class="text-xs font-medium text-gray-700"></span>
+                            <div style="width: 100px; min-width: 100px;">
+                                <div class="border border-gray-200 rounded-lg bg-gray-50 flex flex-col justify-center" style="padding: 0.5rem 0.75rem; height: 100%;">
+                                    <span style="font-size: 10px; color: #9ca3af; line-height: 1;">Age</span>
+                                    <span x-text="calculatedAge || '—'" style="font-size: 12px; font-weight: 500; color: #374151;"></span>
                                 </div>
                             </div>
                         </div>
@@ -140,11 +157,11 @@
                         {{-- Primary Mobile Number (with country code) --}}
                         <div>
                             <x-phone-input name="phone" label="Primary Mobile Number" :value="old('phone', '')" :required="true" maxlength="10" />
-                            <p class="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                                <svg class="w-3.5 h-3.5 text-(--color-primary) shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <p style="margin-top: 3px; display: flex; align-items: center; gap: 3px; font-size: 10px; color: #9ca3af; white-space: nowrap;">
+                                <svg style="width: 12px; height: 12px; color: var(--color-primary); flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
                                 </svg>
-                                We will send OTP to this mobile number for verification
+                                OTP will be sent to this number for verification
                             </p>
                         </div>
 
@@ -410,7 +427,7 @@
                 <div class="overflow-hidden">
                     <div class="flex transition-transform duration-500 ease-in-out" :style="'transform: translateX(-' + (current * (100 / (window.innerWidth >= 768 ? 3 : 1))) + '%)'">
                         @foreach($successStories as $story)
-                            <div class="w-full md:w-1/3 flex-shrink-0 px-3">
+                            <div class="carousel-card flex-shrink-0 px-3"
                                 <div class="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden h-full">
                                     @if($story->photo_url)
                                         <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
@@ -555,10 +572,10 @@
     @if($playStoreUrl || $appStoreUrl)
     <section class="py-16 bg-white overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+            <div class="app-cta-layout">
                 {{-- Left: Phone Mockup --}}
-                <div class="flex-shrink-0 relative">
-                    <div class="w-56 h-96 rounded-[2.5rem] border-[6px] border-gray-800 bg-gradient-to-br from-(--color-primary-light) to-white shadow-2xl relative overflow-hidden">
+                <div class="phone-mockup flex-shrink-0 relative">
+                    <div class="rounded-[2.5rem] border-[6px] border-gray-800 bg-gradient-to-br from-(--color-primary-light) to-white shadow-2xl relative overflow-hidden" style="width: 14rem; height: 24rem;">
                         {{-- Notch --}}
                         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-800 rounded-b-2xl"></div>
                         {{-- Screen Content --}}

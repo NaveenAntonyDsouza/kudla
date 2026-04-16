@@ -61,8 +61,9 @@ Route::get('/cms', function () {
 });
 Route::get('/membership-plans', [MembershipController::class, 'index'])->name('membership.index');
 
-Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
-Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+Route::get('/contact-us', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
+Route::post('/contact-us', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+Route::permanentRedirect('/contact', '/contact-us');
 
 // Search (public — accessible without login for SEO)
 Route::get('/search/quick-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.quick');

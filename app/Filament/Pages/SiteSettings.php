@@ -38,6 +38,10 @@ class SiteSettings extends Page implements HasForms
             'whatsapp' => $settings['whatsapp'] ?? '',
             'address' => $settings['address'] ?? '',
             'copyright_year_start' => $settings['copyright_year_start'] ?? date('Y'),
+            'google_maps_embed_url' => $settings['google_maps_embed_url'] ?? '',
+            'google_maps_api_key' => $settings['google_maps_api_key'] ?? '',
+            'google_maps_lat' => $settings['google_maps_lat'] ?? '',
+            'google_maps_lng' => $settings['google_maps_lng'] ?? '',
 
             // Registration Settings
             'profile_id_prefix' => $settings['profile_id_prefix'] ?? 'AM',
@@ -106,6 +110,29 @@ class SiteSettings extends Page implements HasForms
                             ->rows(3)
                             ->helperText('Shown on contact page')
                             ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('google_maps_embed_url')
+                            ->label('Google Maps Embed URL')
+                            ->url()
+                            ->placeholder('https://www.google.com/maps/embed?pb=...')
+                            ->helperText('Paste the iframe src URL from Google Maps "Share > Embed". Shown on Contact Us page.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('google_maps_api_key')
+                            ->label('Google Maps API Key (Optional)')
+                            ->placeholder('AIzaSy...')
+                            ->helperText('For interactive map. Leave blank to use the embed URL above instead.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('google_maps_lat')
+                            ->label('Latitude')
+                            ->placeholder('12.9141')
+                            ->helperText('Required only if using API key'),
+
+                        Forms\Components\TextInput::make('google_maps_lng')
+                            ->label('Longitude')
+                            ->placeholder('74.8560')
+                            ->helperText('Required only if using API key'),
 
                         Forms\Components\TextInput::make('copyright_year_start')
                             ->label('Copyright Year Start')

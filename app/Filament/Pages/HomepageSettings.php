@@ -69,7 +69,7 @@ class HomepageSettings extends Page implements HasForms
                             ->label('Hero Background Image')
                             ->image()
                             ->maxSize(5120)
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
                             ->directory('branding')
                             ->disk('public')
                             ->helperText('Recommended: 1920x800 landscape photo of a couple. Leave empty to keep current or use gradient fallback.')

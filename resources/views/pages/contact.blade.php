@@ -133,5 +133,31 @@
                 </div>
             </div>
         </div>
+        {{-- Google Map --}}
+        @php
+            $mapEmbedUrl = \App\Models\SiteSetting::getValue('google_maps_embed_url', '');
+            $mapApiKey = \App\Models\SiteSetting::getValue('google_maps_api_key', '');
+            $mapLat = \App\Models\SiteSetting::getValue('google_maps_lat', '');
+            $mapLng = \App\Models\SiteSetting::getValue('google_maps_lng', '');
+        @endphp
+        @if($mapApiKey && $mapLat && $mapLng)
+            {{-- Interactive Google Maps API --}}
+            <div class="mt-10 rounded-lg overflow-hidden border border-gray-200 shadow-xs">
+                <div id="google-map" style="width: 100%; height: 350px;"></div>
+            </div>
+            <script>
+                function initMap() {
+                    const loc = { lat: {{ $mapLat }}, lng: {{ $mapLng }} };
+                    const map = new google.maps.Map(document.getElementById('google-map'), { zoom: 15, center: loc });
+                    new google.maps.Marker({ position: loc, map: map });
+                }
+            </script>
+            <script async src="https://maps.googleapis.com/maps/api/js?key={{ $mapApiKey }}&callback=initMap"></script>
+        @elseif($mapEmbedUrl)
+            {{-- Free iframe embed --}}
+            <div class="mt-10 rounded-lg overflow-hidden border border-gray-200 shadow-xs">
+                <iframe src="{{ $mapEmbedUrl }}" width="100%" height="350" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        @endif
     </div>
 </x-layouts.app>
