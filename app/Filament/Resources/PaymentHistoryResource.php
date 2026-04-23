@@ -22,9 +22,38 @@ class PaymentHistoryResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
     protected static ?int $navigationSort = 3;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_payment_history');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_payment_history');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
     public static function canCreate(): bool
     {
-        return false;
+        return static::canAccess();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::canAccess();
     }
 
     public static function table(Table $table): Table
@@ -87,6 +116,8 @@ class PaymentHistoryResource extends Resource
                     ->color(fn ($state) => $state && $state < now() ? 'danger' : null)
                     ->placeholder('—'),
 
+                \App\Filament\Tables\BranchTableComponents::column(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Payment Date')
                     ->since()
@@ -95,6 +126,8 @@ class PaymentHistoryResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                \App\Filament\Tables\BranchTableComponents::filter(),
+
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->label('Status')
                     ->options([
@@ -138,6 +171,9 @@ class PaymentHistoryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['user.profile']);
+        // Branch scoping: Branch Manager / Branch Staff see only payments in their branch.
+        return parent::getEloquentQuery()
+            ->with(['user.profile'])
+            ->forUserBranch();
     }
 }

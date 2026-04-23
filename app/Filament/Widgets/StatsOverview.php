@@ -16,6 +16,11 @@ class StatsOverview extends StatsOverviewWidget
     protected static ?int $sort = 1;
     protected static bool $isLazy = true;
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_user_reports');
+    }
+
     protected function getStats(): array
     {
         $stats = Cache::remember('admin_dashboard_stats', 300, function () {

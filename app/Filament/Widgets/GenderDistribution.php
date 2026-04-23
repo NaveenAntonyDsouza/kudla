@@ -13,6 +13,11 @@ class GenderDistribution extends ChartWidget
     protected ?string $maxHeight = '250px';
     protected int|string|array $columnSpan = 1;
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_user_reports');
+    }
+
     protected function getData(): array
     {
         $male = Profile::where('is_active', true)->where('gender', 'male')->count();

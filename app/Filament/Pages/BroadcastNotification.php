@@ -25,6 +25,20 @@ class BroadcastNotification extends Page implements HasForms
 
     public ?array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('send_broadcast');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('send_broadcast');
+    }
+
     public function form(\Filament\Schemas\Schema|Forms\Form $form): \Filament\Schemas\Schema|Forms\Form
     {
         return $form

@@ -18,6 +18,11 @@ class RevenueChart extends ChartWidget
 
     public ?string $filter = '30d';
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_revenue_reports');
+    }
+
     protected function getFilters(): ?array
     {
         return [

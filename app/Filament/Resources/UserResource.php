@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Models\MembershipPlan;
 use App\Models\Profile;
 use App\Models\ProfileNote;
+use App\Traits\LogsAdminActivity;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
+    use LogsAdminActivity;
     protected static ?string $model = Profile::class;
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'All Members';
@@ -26,6 +28,40 @@ class UserResource extends Resource
     protected static ?string $pluralModelLabel = 'Users';
     protected static \UnitEnum|string|null $navigationGroup = 'User Management';
     protected static ?int $navigationSort = 1;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_member');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_member');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::canAccess();
+    }
 
     public static function table(Table $table): Table
     {
@@ -75,6 +111,18 @@ class UserResource extends Resource
                                 ->getStateUsing(fn (Profile $record): string => $record->is_approved ? 'APPROVED' : 'PENDING')
                                 ->icon(fn (string $state): string => $state === 'APPROVED' ? 'heroicon-o-check-badge' : 'heroicon-o-clock')
                                 ->color(fn (string $state): string => $state === 'APPROVED' ? 'success' : 'warning')
+                                ->grow(false),
+
+                            Tables\Columns\TextColumn::make('vip_featured_badges')
+                                ->label('')
+                                ->getStateUsing(function (Profile $record): ?string {
+                                    if ($record->is_vip) return 'VIP';
+                                    if ($record->is_featured) return 'Featured';
+                                    return null;
+                                })
+                                ->badge()
+                                ->color(fn (?string $state): string => $state === 'VIP' ? 'warning' : 'info')
+                                ->icon(fn (?string $state): ?string => $state === 'VIP' ? 'heroicon-o-trophy' : ($state === 'Featured' ? 'heroicon-o-sparkles' : null))
                                 ->grow(false),
                         ]),
 
@@ -226,6 +274,9 @@ class UserResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                // Branch (visible only to Super Admin / HO Manager)
+                \App\Filament\Tables\BranchTableComponents::filter(),
+
                 // Gender
                 Tables\Filters\SelectFilter::make('gender')
                     ->options([
@@ -433,8 +484,11 @@ class UserResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Approve Profile')
                     ->modalDescription(fn (Profile $record) => "Approve {$record->full_name} ({$record->matri_id})?")
-                    ->action(fn (Profile $record) => $record->update(['is_approved' => true]))
-                    ->visible(fn (Profile $record): bool => !$record->is_approved)
+                    ->action(function (Profile $record) {
+                        $record->update(['is_approved' => true]);
+                        self::logActivity('profile_approved', $record);
+                    })
+                    ->visible(fn (Profile $record): bool => !$record->is_approved && \App\Support\Permissions::can('approve_member'))
                     ->successNotificationTitle('Profile approved'),
 
                 // Add Note
@@ -472,8 +526,13 @@ class UserResource extends Resource
                     ->color(fn(Profile $record): string => $record->is_active ? 'danger' : 'success')
                     ->button()
                     ->size('sm')
+                    ->visible(fn (): bool => \App\Support\Permissions::can('toggle_active'))
                     ->requiresConfirmation()
-                    ->action(fn(Profile $record) => $record->update(['is_active' => !$record->is_active])),
+                    ->action(function (Profile $record) {
+                        $wasActive = $record->is_active;
+                        $record->update(['is_active' => !$wasActive]);
+                        self::logActivity($wasActive ? 'profile_deactivated' : 'profile_activated', $record);
+                    }),
 
                 // Suspend
                 \Filament\Actions\Action::make('suspend')
@@ -482,7 +541,7 @@ class UserResource extends Resource
                     ->color('warning')
                     ->button()
                     ->size('sm')
-                    ->visible(fn (Profile $record): bool => ! $record->trashed() && ($record->suspension_status ?? 'active') === 'active')
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && ($record->suspension_status ?? 'active') === 'active' && \App\Support\Permissions::can('suspend_member'))
                     ->form([
                         Forms\Components\Textarea::make('suspension_reason')
                             ->label('Reason for Suspension')
@@ -503,6 +562,7 @@ class UserResource extends Resource
                             'suspended_by' => auth()->id(),
                             'is_active' => false,
                         ]);
+                        self::logActivity('profile_suspended', $record, ['reason' => $data['suspension_reason']]);
                     })
                     ->successNotificationTitle('User suspended'),
 
@@ -513,7 +573,7 @@ class UserResource extends Resource
                     ->color('danger')
                     ->button()
                     ->size('sm')
-                    ->visible(fn (Profile $record): bool => ! $record->trashed() && ($record->suspension_status ?? 'active') !== 'banned')
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && ($record->suspension_status ?? 'active') !== 'banned' && \App\Support\Permissions::can('ban_member'))
                     ->form([
                         Forms\Components\Textarea::make('suspension_reason')
                             ->label('Reason for Ban')
@@ -532,6 +592,7 @@ class UserResource extends Resource
                             'suspended_by' => auth()->id(),
                             'is_active' => false,
                         ]);
+                        self::logActivity('profile_banned', $record, ['reason' => $data['suspension_reason']]);
                     })
                     ->successNotificationTitle('User banned permanently'),
 
@@ -542,9 +603,10 @@ class UserResource extends Resource
                     ->color('success')
                     ->button()
                     ->size('sm')
-                    ->visible(fn (Profile $record): bool => in_array($record->suspension_status ?? 'active', ['suspended', 'banned']))
+                    ->visible(fn (Profile $record): bool => in_array($record->suspension_status ?? 'active', ['suspended', 'banned']) && \App\Support\Permissions::can('suspend_member'))
                     ->requiresConfirmation()
                     ->action(function (Profile $record): void {
+                        $previousStatus = $record->suspension_status;
                         $record->update([
                             'suspension_status' => 'active',
                             'suspension_reason' => null,
@@ -553,8 +615,49 @@ class UserResource extends Resource
                             'suspended_by' => null,
                             'is_active' => true,
                         ]);
+                        self::logActivity($previousStatus === 'banned' ? 'profile_unbanned' : 'profile_unsuspended', $record);
                     })
                     ->successNotificationTitle('User restored to active'),
+
+                // Toggle VIP
+                \Filament\Actions\Action::make('toggleVip')
+                    ->label(fn(Profile $record): string => $record->is_vip ? 'Remove VIP' : 'Mark VIP')
+                    ->icon('heroicon-o-star')
+                    ->color(fn(Profile $record): string => $record->is_vip ? 'gray' : 'warning')
+                    ->button()
+                    ->size('sm')
+                    ->visible(fn (): bool => \App\Support\Permissions::can('mark_vip'))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn(Profile $record): string => $record->is_vip ? 'Remove VIP Status' : 'Mark as VIP')
+                    ->modalDescription(fn(Profile $record): string => $record->is_vip
+                        ? "Remove VIP status from {$record->full_name}?"
+                        : "Mark {$record->full_name} as VIP? They will appear first in search results with a gold badge.")
+                    ->action(function (Profile $record) {
+                        $wasVip = $record->is_vip;
+                        $record->update(['is_vip' => !$wasVip]);
+                        self::logActivity($wasVip ? 'profile_vip_removed' : 'profile_marked_vip', $record);
+                    })
+                    ->successNotificationTitle(fn(Profile $record): string => $record->is_vip ? 'Marked as VIP' : 'VIP status removed'),
+
+                // Toggle Featured
+                \Filament\Actions\Action::make('toggleFeatured')
+                    ->label(fn(Profile $record): string => $record->is_featured ? 'Unfeature' : 'Feature')
+                    ->icon('heroicon-o-sparkles')
+                    ->color(fn(Profile $record): string => $record->is_featured ? 'gray' : 'info')
+                    ->button()
+                    ->size('sm')
+                    ->visible(fn (): bool => \App\Support\Permissions::can('feature_profile'))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn(Profile $record): string => $record->is_featured ? 'Unfeature Profile' : 'Feature Profile')
+                    ->modalDescription(fn(Profile $record): string => $record->is_featured
+                        ? "Remove featured status from {$record->full_name}?"
+                        : "Feature {$record->full_name}? They will appear on the homepage and boosted in search results.")
+                    ->action(function (Profile $record) {
+                        $wasFeatured = $record->is_featured;
+                        $record->update(['is_featured' => !$wasFeatured]);
+                        self::logActivity($wasFeatured ? 'profile_unfeatured' : 'profile_featured', $record);
+                    })
+                    ->successNotificationTitle(fn(Profile $record): string => $record->is_featured ? 'Profile featured' : 'Featured status removed'),
 
                 // Restore (for soft-deleted records)
                 \Filament\Actions\Action::make('restore')
@@ -981,6 +1084,56 @@ class UserResource extends Resource
                                     ->contained(false)
                                     ->placeholder('No admin notes yet. Use "Add Note" action from the list page.'),
                             ]),
+
+                        // Tab 11: Login History
+                        \Filament\Schemas\Components\Tabs\Tab::make('Login History')
+                            ->icon('heroicon-o-clock')
+                            ->badge(fn (Profile $record): ?string => $record->user?->loginHistory->count() > 0 ? (string) $record->user->loginHistory->count() : null)
+                            ->schema([
+                                Infolists\Components\RepeatableEntry::make('user.loginHistory')
+                                    ->label('')
+                                    ->schema([
+                                        \Filament\Schemas\Components\Grid::make(5)->schema([
+                                            Infolists\Components\TextEntry::make('logged_in_at')
+                                                ->label('When')
+                                                ->since()
+                                                ->tooltip(fn ($record) => $record->logged_in_at?->format('M j, Y g:i:s A')),
+                                            Infolists\Components\TextEntry::make('login_method')
+                                                ->label('Method')
+                                                ->badge()
+                                                ->formatStateUsing(fn (string $state): string => match ($state) {
+                                                    'password' => 'Password',
+                                                    'mobile_otp' => 'Mobile OTP',
+                                                    'email_otp' => 'Email OTP',
+                                                    default => $state,
+                                                })
+                                                ->color(fn (string $state): string => match ($state) {
+                                                    'password' => 'info',
+                                                    'mobile_otp' => 'success',
+                                                    'email_otp' => 'warning',
+                                                    default => 'gray',
+                                                }),
+                                            Infolists\Components\TextEntry::make('ip_address')
+                                                ->label('IP')
+                                                ->copyable()
+                                                ->color('gray'),
+                                            Infolists\Components\TextEntry::make('device_type')
+                                                ->label('Device')
+                                                ->badge()
+                                                ->color(fn (string $state): string => match ($state) {
+                                                    'Mobile' => 'success',
+                                                    'Tablet' => 'warning',
+                                                    'Desktop' => 'info',
+                                                    default => 'gray',
+                                                }),
+                                            Infolists\Components\TextEntry::make('device_label')
+                                                ->label('Browser / OS')
+                                                ->color('gray'),
+                                        ]),
+                                    ])
+                                    ->contained(false)
+                                    ->placeholder('No login history yet. Will populate after the user logs in.'),
+                            ]),
                     ]),
 
             ]);
@@ -1168,9 +1321,13 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        // Branch scoping: Branch Manager / Branch Staff see only profiles in their branch.
+        // Note: this resource manages Profile (member-facing), not the User model directly.
         return parent::getEloquentQuery()
             ->whereNotNull('full_name')
+            ->whereHas('user', fn ($q) => $q->whereNull('staff_role_id'))
             ->with(['user', 'religiousInfo', 'educationDetail', 'locationInfo', 'primaryPhoto'])
-            ->withCount('profileNotes');
+            ->withCount('profileNotes')
+            ->forUserBranch();
     }
 }

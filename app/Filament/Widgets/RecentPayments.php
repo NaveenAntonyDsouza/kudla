@@ -14,6 +14,11 @@ class RecentPayments extends TableWidget
     protected static bool $isLazy = true;
     protected int|string|array $columnSpan = 'full';
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_revenue_reports');
+    }
+
     public function table(Table $table): Table
     {
         return $table

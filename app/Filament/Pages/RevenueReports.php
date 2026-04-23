@@ -25,6 +25,20 @@ class RevenueReports extends Page
     public array $failedPayments = [];
     public array $expiringSubscriptions = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_revenue_reports');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_revenue_reports');
+    }
+
     public function mount(): void
     {
         $this->loadStats();

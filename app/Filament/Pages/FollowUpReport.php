@@ -15,6 +15,20 @@ class FollowUpReport extends Page
     protected static ?string $title = 'Follow-up Report';
     protected string $view = 'filament.pages.follow-up-report';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_member');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_member');
+    }
+
     public static function getNavigationBadge(): ?string
     {
         $count = ProfileNote::whereNotNull('follow_up_date')

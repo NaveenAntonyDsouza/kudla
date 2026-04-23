@@ -16,6 +16,20 @@ class ActiveToPaid extends Page
     protected static ?string $title = 'Active to Paid — Conversion Targets';
     protected string $view = 'filament.pages.active-to-paid';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_member');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_member');
+    }
+
     public function getProfiles()
     {
         return Profile::query()

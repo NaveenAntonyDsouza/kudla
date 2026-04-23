@@ -15,6 +15,11 @@ class ReligionDistribution extends ChartWidget
     protected ?string $maxHeight = '250px';
     protected int|string|array $columnSpan = 1;
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_user_reports');
+    }
+
     protected function getData(): array
     {
         return Cache::remember('admin_religion_dist', 300, function () {

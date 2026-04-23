@@ -25,6 +25,20 @@ class ChangeMembershipPlan extends Page implements HasForms
     protected static ?string $title = 'Change Membership Plan';
     protected string $view = 'filament.pages.change-membership-plan';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('edit_plan');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('edit_plan');
+    }
+
     public ?string $matri_id = null;
     public ?string $plan_id = null;
     public ?string $duration_override = null;

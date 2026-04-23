@@ -15,6 +15,20 @@ class ExpiredMembers extends Page
     protected static ?string $title = 'Expired & Expiring Memberships';
     protected string $view = 'filament.pages.expired-members';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_payment_history');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_payment_history');
+    }
+
     public function getExpiring()
     {
         return UserMembership::query()

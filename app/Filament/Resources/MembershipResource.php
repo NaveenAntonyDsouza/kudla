@@ -22,6 +22,40 @@ class MembershipResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
     protected static ?int $navigationSort = 2;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('view_payment_history');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('view_payment_history');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::canAccess();
+    }
+
     public static function table(Table $table): Table
     {
         return $table

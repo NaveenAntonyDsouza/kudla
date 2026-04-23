@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SiteSetting;
 use App\Models\Testimonial;
 use Illuminate\Http\Response;
 
@@ -9,6 +10,10 @@ class SitemapController extends Controller
 {
     public function index(): Response
     {
+        if (SiteSetting::getValue('sitemap_enabled', '1') !== '1') {
+            abort(404);
+        }
+
         $urls = collect();
 
         // Static pages

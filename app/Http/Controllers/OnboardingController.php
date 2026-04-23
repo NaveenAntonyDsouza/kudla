@@ -228,8 +228,8 @@ class OnboardingController extends Controller
             // Primary
             'age_from' => 'nullable|integer|min:18|max:70',
             'age_to' => 'nullable|integer|min:18|max:70|gte:age_from',
-            'height_from' => 'nullable|string|max:20',
-            'height_to' => 'nullable|string|max:20',
+            'height_from' => 'nullable|string|max:50',
+            'height_to' => 'nullable|string|max:50',
             'complexion' => 'nullable|array',
             'body_type' => 'nullable|array',
             'marital_status' => 'nullable|array',

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContactSubmissionResource\Pages;
 use App\Models\ContactSubmission;
+use App\Traits\LogsAdminActivity;
 use BackedEnum;
 use Filament\Forms;
 use Filament\Infolists;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ContactSubmissionResource extends Resource
 {
+    use LogsAdminActivity;
     protected static ?string $model = ContactSubmission::class;
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Contact Inbox';
@@ -25,9 +27,38 @@ class ContactSubmissionResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
     protected static ?int $navigationSort = 4;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('reply_contact');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('reply_contact');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
     public static function canCreate(): bool
     {
-        return false;
+        return static::canAccess();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::canAccess();
     }
 
     public static function table(Table $table): Table
@@ -99,11 +130,30 @@ class ContactSubmissionResource extends Resource
                     ->color('success')
                     ->visible(fn (ContactSubmission $record) => in_array($record->status, ['new', 'in_progress']))
                     ->form([
+                        Forms\Components\Select::make('canned_response')
+                            ->label('Quick Reply Template')
+                            ->placeholder('Select a template to pre-fill...')
+                            ->options(function () {
+                                $responses = json_decode(\App\Models\SiteSetting::getValue('canned_responses', '[]'), true);
+                                return collect($responses ?: [])->pluck('label', 'label')->toArray();
+                            })
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                if ($state) {
+                                    $responses = json_decode(\App\Models\SiteSetting::getValue('canned_responses', '[]'), true);
+                                    $match = collect($responses ?: [])->firstWhere('label', $state);
+                                    if ($match) {
+                                        $set('admin_reply', $match['body']);
+                                    }
+                                }
+                            })
+                            ->dehydrated(false),
+
                         Forms\Components\Textarea::make('admin_reply')
                             ->label('Reply Message')
                             ->required()
                             ->rows(5)
-                            ->placeholder('Type your reply to the user...'),
+                            ->placeholder('Type your reply or select a template above...'),
                     ])
                     ->action(function (ContactSubmission $record, array $data) {
                         // Send reply email
@@ -124,6 +174,8 @@ class ContactSubmissionResource extends Resource
                             'status' => 'replied',
                             'replied_at' => now(),
                         ]);
+
+                        self::logActivity('contact_replied', $record);
 
                         Notification::make()
                             ->title('Reply sent to ' . $record->email)

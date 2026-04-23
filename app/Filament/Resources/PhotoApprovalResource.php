@@ -23,6 +23,40 @@ class PhotoApprovalResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Verification';
     protected static ?int $navigationSort = 1;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('photo_approval');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('photo_approval');
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return static::canAccess();
+    }
+
     public static function getNavigationBadge(): ?string
     {
         $count = ProfilePhoto::where('approval_status', 'pending')->count();

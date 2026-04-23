@@ -25,6 +25,20 @@ class AdvancedUserSearch extends Page implements HasForms
     protected static ?int $navigationSort = 2;
     protected string $view = 'filament.pages.advanced-user-search';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('advanced_search');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('advanced_search');
+    }
+
     // Form state
     public ?string $keyword = null;
     public ?string $gender = null;

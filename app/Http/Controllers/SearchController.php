@@ -226,8 +226,10 @@ class SearchController extends Controller
             'age_high' => $query
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
 
-            // Default: relevance = Premium first → Recently Active → Newest
+            // Default: relevance = VIP → Featured → Premium → Recently Active → Newest
             default => $query
+                ->orderBy('profiles.is_vip', 'desc')
+                ->orderBy('profiles.is_featured', 'desc')
                 ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships um JOIN membership_plans mp ON mp.id = um.plan_id WHERE um.user_id = profiles.user_id AND um.is_active = 1 AND (um.ends_at IS NULL OR um.ends_at > NOW()) AND mp.is_highlighted = 1) DESC')
                 ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
@@ -280,70 +282,95 @@ class SearchController extends Controller
         }
 
         $activeTab = $tab;
-        $filterLabel = null;
-        $results = null;
 
-        // Only query results when search params are present (not on initial form load)
-        $hasSearchParams = request()->hasAny([
-            'gender', 'age_from', 'caste', 'denomination', 'religion',
-            'keyword', 'matri_id', 'mother_tongue', 'marital_status',
-            'education', 'occupation', 'working_country', 'height_from',
-        ]);
+        return view('search.public', compact('activeTab'));
+    }
 
-        if ($hasSearchParams) {
-            $query = Profile::where('is_active', true)
-                ->approved()
-                ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-                ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
-
-            // Apply filters from query params
-            if ($caste = request('caste')) {
-                $query->whereHas('religiousInfo', fn($q) => $q->where('caste', $caste));
-            }
-            if ($denomination = request('denomination')) {
-                $query->whereHas('religiousInfo', fn($q) => $q->where('denomination', $denomination));
-            }
-            if ($religion = request('religion')) {
-                if (is_array($religion)) {
-                    $query->whereHas('religiousInfo', fn($q) => $q->whereIn('religion', $religion));
-                } else {
-                    $query->whereHas('religiousInfo', fn($q) => $q->where('religion', $religion));
-                }
-            }
-            if ($gender = request('gender')) {
-                $query->where('gender', $gender);
-            }
-            if ($ageFrom = request('age_from')) {
-                $query->whereDate('date_of_birth', '<=', now()->subYears((int) $ageFrom));
-            }
-            if ($ageTo = request('age_to')) {
-                $query->whereDate('date_of_birth', '>=', now()->subYears((int) $ageTo + 1));
-            }
-            if ($motherTongue = request('mother_tongue')) {
-                $query->whereHas('lifestyleInfo', fn($q) => $q->where('mother_tongue', $motherTongue));
-            }
-            if ($keyword = request('keyword')) {
-                $query->where(function ($q) use ($keyword) {
-                    $q->where('full_name', 'like', "%{$keyword}%")
-                      ->orWhere('about_me', 'like', "%{$keyword}%")
-                      ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'like', "%{$keyword}%")->orWhere('caste', 'like', "%{$keyword}%")->orWhere('denomination', 'like', "%{$keyword}%"))
-                      ->orWhereHas('educationDetail', fn($q2) => $q2->where('highest_qualification', 'like', "%{$keyword}%")->orWhere('occupation', 'like', "%{$keyword}%"))
-                      ->orWhereHas('locationInfo', fn($q2) => $q2->where('residing_city', 'like', "%{$keyword}%")->orWhere('residing_state', 'like', "%{$keyword}%"));
-                });
-            }
-            if ($matriId = request('matri_id')) {
-                $query->where('matri_id', strtoupper($matriId));
-            }
-
-            $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
-            $filterLabel = request('caste') ?? request('denomination') ?? (is_string(request('religion')) ? request('religion') : null) ?? null;
+    /**
+     * Public search results page (separate from form).
+     */
+    public function publicResults()
+    {
+        // If logged in, redirect to the authenticated search
+        if (auth()->check() && auth()->user()->profile) {
+            return redirect()->route('search.index', request()->query());
         }
 
-        // Provide empty paginator when no search performed
-        if (!$results) {
-            $results = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $query = Profile::where('is_active', true)
+            ->approved()
+            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
+
+        // Apply filters from query params
+        if ($caste = request('caste')) {
+            $query->whereHas('religiousInfo', fn($q) => $q->where('caste', $caste));
+        }
+        if ($denomination = request('denomination')) {
+            $query->whereHas('religiousInfo', fn($q) => $q->where('denomination', $denomination));
+        }
+        if ($religion = request('religion')) {
+            if (is_array($religion)) {
+                $query->whereHas('religiousInfo', fn($q) => $q->whereIn('religion', $religion));
+            } else {
+                $query->whereHas('religiousInfo', fn($q) => $q->where('religion', $religion));
+            }
+        }
+        if ($gender = request('gender')) {
+            $query->where('gender', $gender);
+        }
+        if ($ageFrom = request('age_from')) {
+            $query->whereDate('date_of_birth', '<=', now()->subYears((int) $ageFrom));
+        }
+        if ($ageTo = request('age_to')) {
+            $query->whereDate('date_of_birth', '>=', now()->subYears((int) $ageTo + 1));
+        }
+        if ($motherTongue = request('mother_tongue')) {
+            $query->whereHas('lifestyleInfo', fn($q) => $q->where('mother_tongue', $motherTongue));
+        }
+        if ($keyword = request('keyword')) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('full_name', 'like', "%{$keyword}%")
+                  ->orWhere('about_me', 'like', "%{$keyword}%")
+                  ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'like', "%{$keyword}%")->orWhere('caste', 'like', "%{$keyword}%")->orWhere('denomination', 'like', "%{$keyword}%"))
+                  ->orWhereHas('educationDetail', fn($q2) => $q2->where('highest_qualification', 'like', "%{$keyword}%")->orWhere('occupation', 'like', "%{$keyword}%"))
+                  ->orWhereHas('locationInfo', fn($q2) => $q2->where('residing_city', 'like', "%{$keyword}%")->orWhere('residing_state', 'like', "%{$keyword}%"));
+            });
+        }
+        if ($matriId = request('matri_id')) {
+            $query->where('matri_id', strtoupper($matriId));
+        }
+        if ($maritalStatus = request('marital_status')) {
+            $query->where('marital_status', $maritalStatus);
+        }
+        if ($education = request('education')) {
+            $query->whereHas('educationDetail', fn($q) => $q->where('highest_education', $education));
+        }
+        if ($occupation = request('occupation')) {
+            $query->whereHas('educationDetail', fn($q) => $q->where('occupation', $occupation));
+        }
+        if ($workingCountry = request('working_country')) {
+            $query->whereHas('educationDetail', fn($q) => $q->where('working_country', $workingCountry));
+        }
+        if ($heightFrom = request('height_from')) {
+            $query->whereRaw('CAST(height AS UNSIGNED) >= ?', [(int) $heightFrom]);
+        }
+        if ($heightTo = request('height_to')) {
+            $query->whereRaw('CAST(height AS UNSIGNED) <= ?', [(int) $heightTo]);
         }
 
-        return view('search.public', compact('results', 'activeTab', 'filterLabel'));
+        $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+
+        $filterLabel = request('caste') ?? request('denomination') ?? (is_string(request('religion')) ? request('religion') : null) ?? null;
+
+        // Determine which search form to link back to
+        $searchType = request('search_type', 'quick');
+        $modifySearchUrl = match ($searchType) {
+            'advance' => route('search.advance', request()->except(['page', 'search_type'])),
+            'keyword' => route('search.keyword', request()->except(['page', 'search_type'])),
+            'byid' => route('search.byid', request()->except(['page', 'search_type'])),
+            default => route('search.quick', request()->except(['page', 'search_type'])),
+        };
+
+        return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl'));
     }
 }

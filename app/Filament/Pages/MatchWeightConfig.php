@@ -22,6 +22,20 @@ class MatchWeightConfig extends Page implements HasForms
 
     public ?array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('manage_site_settings');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('manage_site_settings');
+    }
+
     private const DEFAULTS = [
         'religion' => 15,
         'age' => 15,
@@ -35,6 +49,7 @@ class MatchWeightConfig extends Page implements HasForms
         'marital_status' => 5,
         'diet' => 2,
         'family_status' => 2,
+        'horoscope' => 0,
     ];
 
     private const LABELS = [
@@ -50,6 +65,7 @@ class MatchWeightConfig extends Page implements HasForms
         'marital_status' => 'Marital Status',
         'diet' => 'Diet / Eating Habit',
         'family_status' => 'Family Status',
+        'horoscope' => 'Horoscope (Nakshatra)',
     ];
 
     public function mount(): void

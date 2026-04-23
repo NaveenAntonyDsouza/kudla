@@ -18,6 +18,11 @@ class RegistrationChart extends ChartWidget
 
     public ?string $filter = '30d';
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_user_reports');
+    }
+
     protected function getFilters(): ?array
     {
         return [

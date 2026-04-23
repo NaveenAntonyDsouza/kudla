@@ -16,6 +16,11 @@ class PlanSalesChart extends ChartWidget
 
     public ?string $filter = 'all';
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_revenue_reports');
+    }
+
     protected function getFilters(): ?array
     {
         return [
