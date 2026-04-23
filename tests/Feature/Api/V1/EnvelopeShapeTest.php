@@ -1,6 +1,7 @@
 <?php
 
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\postJson;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,13 +14,8 @@ use function Pest\Laravel\getJson;
 | Success envelope:  { "success": true,  "data": ..., "meta"?: {...} }
 | Error envelope:    { "success": false, "error": { "code": "...", "message": "...", "fields"?: {...} } }
 |
-| Design reference: docs/mobile-app/design/01-api-foundations.md §1.4
-|
-| Note on DB-dependent tests: the authenticated-token scenario is covered
-| by tinker-based manual verification in step-01 and curl verification
-| in step-02. A full auth integration test lands in Phase 2a Week 2 once
-| we set up a test MySQL DB (SQLite :memory: can't run MySQL-specific
-| migrations like FULLTEXT indexes that the app uses).
+| Design reference:  docs/mobile-app/design/01-api-foundations.md §1.4
+| Error codes:       docs/mobile-app/reference/error-codes.md
 */
 
 it('wraps success responses in the canonical envelope shape', function () {
@@ -39,11 +35,52 @@ it('wraps success responses in the canonical envelope shape', function () {
         ]);
 });
 
-it('returns 401 when accessing protected endpoint without a token', function () {
-    // Step 2 state: Laravel's default {"message":"Unauthenticated."} shape.
-    // Step 4 (ApiExceptionHandler) converts this into envelope shape; this
-    // test will be expanded then to assert error.code === 'UNAUTHENTICATED'.
+it('returns envelope-shaped 401 when accessing protected endpoint without a token', function () {
     $response = getJson('/api/v1/auth/ping');
 
-    $response->assertStatus(401);
+    $response->assertStatus(401)
+        ->assertJsonStructure([
+            'success',
+            'error' => ['code', 'message'],
+        ])
+        ->assertJson([
+            'success' => false,
+            'error' => ['code' => 'UNAUTHENTICATED'],
+        ]);
+});
+
+it('returns envelope-shaped 404 when accessing nonexistent endpoint', function () {
+    $response = getJson('/api/v1/no-such-endpoint');
+
+    $response->assertNotFound()
+        ->assertJsonStructure([
+            'success',
+            'error' => ['code', 'message'],
+        ])
+        ->assertJson([
+            'success' => false,
+            'error' => ['code' => 'NOT_FOUND'],
+        ]);
+});
+
+it('returns envelope-shaped 405 on wrong HTTP method', function () {
+    // /health is defined as GET only — hitting it with POST should return 405
+    $response = postJson('/api/v1/health');
+
+    $response->assertStatus(405)
+        ->assertJson([
+            'success' => false,
+            'error' => ['code' => 'METHOD_NOT_ALLOWED'],
+        ]);
+});
+
+it('leaves web route exceptions alone (does not hijack non-api)', function () {
+    // Hit a nonexistent web path — should return Laravel's default 404 behaviour,
+    // NOT the API envelope.
+    $response = $this->get('/no-such-web-page');
+
+    $response->assertNotFound();
+
+    // Response should NOT contain our envelope shape
+    expect($response->headers->get('Content-Type'))->not->toBe('application/json');
 });

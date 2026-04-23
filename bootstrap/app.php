@@ -1,8 +1,10 @@
 <?php
 
+use App\Exceptions\ApiExceptionHandler;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,5 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Map all /api/* exceptions to envelope-shaped JSON with stable error codes.
+        // Web routes fall through to Laravel's default rendering.
+        // See: docs/mobile-app/design/01-api-foundations.md §1.4
+        $exceptions->render(function (Throwable $e, Request $request) {
+            return ApiExceptionHandler::render($e, $request);
+        });
     })->create();
