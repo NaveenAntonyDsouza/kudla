@@ -126,7 +126,8 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 - **Hotfix required**: 20 min after deploy, homepage crashed with `Undefined array key "subcategories"` at `home/classic.blade.php:512`. Root cause: the discover refactor changed the config shape, and I updated the controller's `resolveSubcategories()` helper but missed an inline `@php` block in the Blade that did its own subcategory resolution. Fixed both `home/classic.blade.php` and orphan `home.blade.php` to handle the new `subcategories_source` key. Recovery via tiny hotfix ZIP + `php artisan view:clear` on live. ~5 minute downtime.
 - Hotfix commit: `054c9a6` on main
 - **DEPLOY_CHECKLIST.md updated** with 4 new lessons from today (grep-all-consumers for refactors, npm run build as mandatory step 1, hotfix-ZIP pattern, Network-tab CSS hash verification)
-- Final state: zero post-deploy errors, site working cleanly, all 6 commits on `main`, working tree clean
+- **Git hygiene cleanup**: untracked legacy `public/build/manifest.json` + `public/build/assets/app-BU6mFzGd.js` so they stop showing up as modified after every `npm run build`. Files remain on disk; `.gitignore` now fully consistent with tracking.
+- Final state: zero post-deploy errors, site working cleanly, 8 commits on `main`, working tree clean, tag `deploy-2026-04-23` preserved
 
 ---
 
