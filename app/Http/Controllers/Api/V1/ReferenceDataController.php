@@ -72,6 +72,34 @@ class ReferenceDataController extends BaseApiController
         'phone-codes' => 'phone_codes',
     ];
 
+    /**
+     * Get a reference list
+     *
+     * Returns the items for a specific reference dropdown (religions, castes,
+     * occupations, countries, etc.). Some lists are flat arrays; others are
+     * grouped objects (e.g. `denominations` groups by Catholic/Non-Catholic).
+     *
+     * Pass `?flat=1` to flatten a grouped list into a single array.
+     * Pass `?options=1` to get `{value: value}` pairs suitable for a `<select>`.
+     *
+     * Cached server-side for 1 hour.
+     *
+     * @unauthenticated
+     * @group Configuration
+     *
+     * @urlParam list string required The list slug. See `GET /api/v1/reference` for the full list. Example: castes
+     * @queryParam flat bool Flatten a grouped list. Example: 1
+     * @queryParam options bool Return {value: value} pairs. Example: 1
+     *
+     * @response 200 scenario="flat list" {
+     *   "success": true,
+     *   "data": ["Brahmin", "Nair", "Ezhava"]
+     * }
+     * @response 404 scenario="unknown list" {
+     *   "success": false,
+     *   "error": { "code": "NOT_FOUND", "message": "Reference list 'foo' does not exist." }
+     * }
+     */
     public function show(Request $request, string $list): JsonResponse
     {
         if (! array_key_exists($list, self::VALID_LISTS)) {
@@ -109,11 +137,18 @@ class ReferenceDataController extends BaseApiController
     }
 
     /**
-     * GET /api/v1/reference
+     * List all available reference slugs
      *
-     * Meta endpoint that lists all available reference list slugs.
-     * Used by Flutter to discover what reference lists exist at runtime
-     * (also documented statically in reference docs).
+     * Meta endpoint that returns every reference list slug this API supports.
+     * Lets the Flutter client discover available dropdowns at runtime.
+     *
+     * @unauthenticated
+     * @group Configuration
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "data": { "lists": ["castes", "countries", "occupations", "languages"] }
+     * }
      */
     public function index(): JsonResponse
     {

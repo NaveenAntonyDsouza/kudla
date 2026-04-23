@@ -27,6 +27,38 @@ use Illuminate\Support\Facades\Cache;
  */
 class SiteSettingsController extends BaseApiController
 {
+    /**
+     * Get site configuration
+     *
+     * Returns site branding, theme colors, feature toggles, registration rules,
+     * Razorpay public key, support contact info, mobile-app version gates,
+     * social links, and policy URLs. The Flutter app calls this on every
+     * launch to hydrate its theme + feature-flag state.
+     *
+     * Cached server-side for 5 minutes.
+     *
+     * @unauthenticated
+     * @group Configuration
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "site": {
+     *       "name": "Kudla Matrimony",
+     *       "tagline": "Find Your Perfect Match",
+     *       "logo_url": "https://kudlamatrimony.com/storage/branding/logo.png",
+     *       "support_email": "support@kudlamatrimony.com"
+     *     },
+     *     "theme": { "primary_color": "#dc2626", "heading_font": "Playfair Display" },
+     *     "features": { "mobile_otp_login_enabled": true, "realtime_chat_enabled": false },
+     *     "registration": { "min_age": 18, "password_min_length": 6, "id_prefix": "AM" },
+     *     "membership": { "razorpay_key": "rzp_live_abc", "currency": "INR" },
+     *     "app": { "minimum_supported_version": "1.0.0" },
+     *     "social_links": { "facebook": "..." },
+     *     "policies": { "privacy_policy_url": "https://..." }
+     *   }
+     * }
+     */
     public function show(): JsonResponse
     {
         $data = Cache::remember('api:v1:site-settings', now()->addMinutes(5), function () {
