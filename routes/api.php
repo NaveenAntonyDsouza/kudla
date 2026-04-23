@@ -35,8 +35,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/reference/{list}', [\App\Http\Controllers\Api\V1\ReferenceDataController::class, 'show'])
         ->where('list', '[a-z-]+');
 
+    // Auth — registration (week 2 step 6+). Step 1 creates the account
+    // and returns a Sanctum token that authenticates steps 2-5.
+    Route::post('/auth/register/step-1', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step1']);
+
     // Public endpoints added in later steps:
-    // - /auth/register/step-1           (week 2)
     // - /auth/otp/*/send, /verify       (week 2)
     // - /auth/login/*                   (week 2)
     // - /auth/password/forgot|reset     (week 2)
