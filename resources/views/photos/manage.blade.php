@@ -291,55 +291,54 @@
                 <input type="hidden" name="tab" :value="activeTab">
                 <input type="hidden" name="photo_type" :value="previewType">
 
-                {{-- Empty state: file picker --}}
-                <template x-if="!sourceImage">
-                    <div class="p-8">
-                        <label class="block w-full cursor-pointer">
-                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-(--color-primary) hover:bg-(--color-primary-light) transition-colors">
-                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
-                                </svg>
-                                <p class="text-base font-medium text-gray-700 mb-1">Click to select a photo</p>
-                                <p class="text-xs text-gray-500">JPG, PNG, GIF, WebP. Max 5 MB. You can crop and rotate after selecting.</p>
-                            </div>
-                            <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" @change="loadIntoCropper($event)" class="hidden">
-                        </label>
-                    </div>
-                </template>
+                {{-- Empty state: file picker (shown when no image selected) --}}
+                {{-- Using x-show (not x-if) so the file input stays mounted and its ref stays stable --}}
+                <div x-show="!sourceImage" class="p-8">
+                    <label class="block w-full cursor-pointer">
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-(--color-primary) hover:bg-(--color-primary-light) transition-colors">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                            </svg>
+                            <p class="text-base font-medium text-gray-700 mb-1">Click to select a photo</p>
+                            <p class="text-xs text-gray-500">JPG, PNG, GIF, WebP. Max 5 MB. You can crop and rotate after selecting.</p>
+                        </div>
+                        <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" @change="loadIntoCropper($event)" class="hidden">
+                    </label>
+                </div>
 
                 {{-- Cropper editor (shown after file is selected) --}}
-                <template x-if="sourceImage">
-                    <div>
-                        <div class="bg-gray-900 relative" style="height: 450px;">
-                            <img x-ref="cropperImage" :src="sourceImage" alt="To be cropped" class="block max-w-full">
+                {{-- CRITICAL: using x-show (not x-if) so x-ref="cropperImage" is registered on page load --}}
+                {{-- With x-if, Alpine unmounts/remounts the content and the ref can lag behind, causing Cropper init to fail. --}}
+                <div x-show="sourceImage">
+                    <div class="bg-gray-900 relative" style="height: 450px;">
+                        <img x-ref="cropperImage" x-bind:src="sourceImage" alt="To be cropped" class="block max-w-full">
+                    </div>
+
+                    {{-- Tool bar --}}
+                    <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="rotateLeft()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate left 90°">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                            </button>
+                            <button type="button" @click="rotateRight()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate right 90°">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/></svg>
+                            </button>
+                            <button type="button" @click="flipHorizontal()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Flip horizontal">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v10M4 17h8M4 7h8M16 12h4m-4-5h4m-4 10h4"/></svg>
+                            </button>
+                            <button type="button" @click="resetCropper()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Reset</button>
+                            <button type="button" @click="clearSelection()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Choose different</button>
                         </div>
 
-                        {{-- Tool bar --}}
-                        <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex items-center gap-2">
-                                <button type="button" @click="rotateLeft()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate left 90°">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
-                                </button>
-                                <button type="button" @click="rotateRight()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate right 90°">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/></svg>
-                                </button>
-                                <button type="button" @click="flipHorizontal()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Flip horizontal">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v10M4 17h8M4 7h8M16 12h4m-4-5h4m-4 10h4"/></svg>
-                                </button>
-                                <button type="button" @click="resetCropper()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Reset</button>
-                                <button type="button" @click="clearSelection()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Choose different</button>
-                            </div>
-
-                            {{-- Brightness --}}
-                            <div class="flex items-center gap-2">
-                                <label class="text-xs font-medium text-gray-700">Brightness</label>
-                                <input type="range" min="-50" max="50" step="5" x-model="brightness" @input="applyBrightness()"
-                                    class="w-32 accent-(--color-primary)">
-                                <span class="text-xs text-gray-500 w-8 text-center" x-text="brightness"></span>
-                            </div>
+                        {{-- Brightness --}}
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs font-medium text-gray-700">Brightness</label>
+                            <input type="range" min="-50" max="50" step="5" x-model="brightness" @input="applyBrightness()"
+                                class="w-32 accent-(--color-primary)">
+                            <span class="text-xs text-gray-500 w-8 text-center" x-text="brightness"></span>
                         </div>
                     </div>
-                </template>
+                </div>
 
                 {{-- Footer --}}
                 <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
@@ -414,29 +413,21 @@
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         this.sourceImage = e.target.result;
-                        // The <template x-if="sourceImage"> renders asynchronously —
-                        // initCropper() polls via requestAnimationFrame until the
-                        // x-ref becomes available (see initCropper below).
-                        this.initCropper();
+                        // Wait one tick for x-show to become visible + src to bind, then init
+                        this.$nextTick(() => this.initCropper());
                     };
                     reader.readAsDataURL(file);
                 },
 
-                initCropper(attempts = 0) {
-                    // x-ref may lag template render — try both $refs AND DOM query.
+                initCropper() {
+                    // The img uses x-show (not x-if) so $refs.cropperImage is ALWAYS
+                    // registered on page load. No polling needed. Fallback querySelector
+                    // kept as belt-and-suspenders in case the Alpine ref binding is lagging.
                     const img = this.$refs.cropperImage
                         || (this.$el && this.$el.querySelector('img[x-ref="cropperImage"]'));
 
                     if (!img || !window.Cropper) {
-                        // Retry next frame for up to ~15 frames (~250ms at 60fps).
-                        if (attempts < 15) {
-                            requestAnimationFrame(() => this.initCropper(attempts + 1));
-                            return;
-                        }
-                        console.error('Cropper init failed: cropperImage ref unavailable after retries', {
-                            hasWindowCropper: !!window.Cropper,
-                            hasSourceImage: !!this.sourceImage,
-                        });
+                        console.error('Cropper init failed', { hasRef: !!this.$refs.cropperImage, hasCropper: !!window.Cropper });
                         alert('Failed to load the photo editor. Please refresh the page and try again.');
                         return;
                     }
