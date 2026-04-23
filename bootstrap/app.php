@@ -27,6 +27,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\CaptureAffiliateRef::class,
         ]);
+
+        // Force JSON responses on /api/* — guarantees JSON even if client
+        // forgot the Accept header. Prepend ensures it runs before exception
+        // handling so errors also come through JSON.
+        $middleware->api(prepend: [
+            \App\Http\Middleware\ForceJsonResponse::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Map all /api/* exceptions to envelope-shaped JSON with stable error codes.

@@ -84,3 +84,13 @@ it('leaves web route exceptions alone (does not hijack non-api)', function () {
     // Response should NOT contain our envelope shape
     expect($response->headers->get('Content-Type'))->not->toBe('application/json');
 });
+
+it('returns JSON even when client omits Accept header', function () {
+    // ForceJsonResponse middleware prepends Accept: application/json.
+    // Send request without Accept header and confirm we still get JSON back.
+    $response = $this->get('/api/v1/health');  // plain get(), not getJson()
+
+    $response->assertOk();
+    expect($response->headers->get('Content-Type'))->toContain('application/json');
+    $response->assertJson(['success' => true]);
+});
