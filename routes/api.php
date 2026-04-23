@@ -57,6 +57,13 @@ Route::prefix('v1')->group(function () {
             'message' => 'authenticated',
         ]));
 
-        // Protected endpoints added in weeks 2–4
+        // Registration steps 2–5 (the Sanctum token returned from step-1
+        // authenticates the caller through the rest of registration).
+        Route::post('/auth/register/step-2', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step2']);
+        Route::post('/auth/register/step-3', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step3']);
+        Route::post('/auth/register/step-4', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step4']);
+        Route::post('/auth/register/step-5', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step5']);
+
+        // Protected endpoints added in rest of weeks 2–4
     });
 });
