@@ -29,8 +29,13 @@ Route::prefix('v1')->group(function () {
     // Razorpay key, app version gates. Flutter calls on every launch.
     Route::get('/site/settings', [\App\Http\Controllers\Api\V1\SiteSettingsController::class, 'show']);
 
+    // Reference dropdown data (step 7) — castes, occupations, countries, etc.
+    // Supports ?flat=1 (flatten grouped) and ?options=1 (key-value pairs).
+    Route::get('/reference', [\App\Http\Controllers\Api\V1\ReferenceDataController::class, 'index']);
+    Route::get('/reference/{list}', [\App\Http\Controllers\Api\V1\ReferenceDataController::class, 'show'])
+        ->where('list', '[a-z-]+');
+
     // Public endpoints added in later steps:
-    // - /reference/{list}               (step 7)
     // - /auth/register/step-1           (week 2)
     // - /auth/otp/*/send, /verify       (week 2)
     // - /auth/login/*                   (week 2)
