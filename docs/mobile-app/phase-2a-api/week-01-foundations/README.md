@@ -12,18 +12,31 @@
 
 Work through these in order. Each is 30 min–2 hours.
 
-| # | Step | Status |
-|---|------|--------|
-| 1 | [Install Laravel Sanctum](step-01-install-sanctum.md) | ☐ |
-| 2 | [Create `routes/api.php` skeleton](step-02-api-routes-skeleton.md) | ☐ |
-| 3 | [Build response envelope helper (`ApiResponse`)](step-03-response-envelope.md) | ☐ |
-| 4 | [Exception handler for API errors](step-04-api-exception-handler.md) | ☐ |
-| 5 | [`ForceJsonResponse` middleware](step-05-force-json-middleware.md) | ☐ |
-| 6 | [First public endpoint — `GET /api/v1/site/settings`](step-06-site-settings-endpoint.md) | ☐ |
-| 7 | [Reference data endpoints — `/api/v1/reference/*`](step-07-reference-data-endpoints.md) | ☐ |
-| 8 | [Install Scribe for API docs](step-08-scribe-installation.md) | ☐ |
+| # | Step | Status | Commit |
+|---|------|--------|--------|
+| 1 | [Install Laravel Sanctum](step-01-install-sanctum.md) | ✅ | `ea2791c` |
+| 2 | [Create `routes/api.php` skeleton](step-02-api-routes-skeleton.md) | ✅ | `729cbad` |
+| 3 | [Build response envelope helper (`ApiResponse`)](step-03-response-envelope.md) | ✅ | `455b7f2` |
+| 4 | [Exception handler for API errors](step-04-api-exception-handler.md) | ✅ | `f23c213` |
+| 5 | [`ForceJsonResponse` middleware](step-05-force-json-middleware.md) | ✅ | `f2fadc2` |
+| 6 | [First public endpoint — `GET /api/v1/site/settings`](step-06-site-settings-endpoint.md) | ✅ | `3dd2a4b` |
+| 7 | [Reference data endpoints — `/api/v1/reference/*`](step-07-reference-data-endpoints.md) | ✅ | `4e3503f` |
+| 8 | [Install Scribe for API docs](step-08-scribe-installation.md) | ✅ | `9024b22` |
+
+**Week 1 shipped April 23, 2026.** 10 commits total on `phase-2-mobile` (8 steps + plan + TECH_STACK update). Tests: 18/18 Pest green, 119 assertions.
 
 **End-of-week acceptance:** [week-01-acceptance.md](week-01-acceptance.md)
+
+## Deltas from the plan (what we learned during execution)
+
+- **install:api is non-interactive-friendly only via `--no-interaction`.** The shell here auto-backgrounds commands; needed explicit flag.
+- **`ReferenceDataService` API is simpler than the step file assumed** — no built-in religion→caste cascading. The service just has `get()` / `getFlat()` / `getOptions()`. I kept the cascading concept for future (via the `VALID_LISTS` allow-list + query params), but didn't implement religion→caste filtering since the config doesn't carry that relationship. Genuine cascading will be added in Week 3 when we build search filters.
+- **`SiteSetting::setValue()` not `set()`** — step file said `set()`; actual method is `setValue()`.
+- **Local DB migration drift** — 8 migrations marked "Pending" locally but columns exist. Used `--path=<specific-migration>` to run only our Sanctum migration. Continuing with this pattern for Phase 2a.
+- **SQLite `:memory:` test DB can't run MySQL-specific migrations** (FULLTEXT). Kept `RefreshDatabase` disabled in `tests/Pest.php`. Tests pre-seed their cache/data to bypass DB. Full MySQL test DB setup lands Week 2 when auth tests genuinely need it.
+- **Scribe needs `composer dump-autoload` right after install** — otherwise `Knuckles\Scribe\TestSuite` isn't autoloaded yet.
+
+These deltas are documented in each step's commit message.
 
 ---
 
