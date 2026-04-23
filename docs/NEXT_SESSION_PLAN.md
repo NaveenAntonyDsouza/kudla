@@ -127,7 +127,8 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 - Hotfix commit: `054c9a6` on main
 - **DEPLOY_CHECKLIST.md updated** with 4 new lessons from today (grep-all-consumers for refactors, npm run build as mandatory step 1, hotfix-ZIP pattern, Network-tab CSS hash verification)
 - **Git hygiene cleanup**: untracked legacy `public/build/manifest.json` + `public/build/assets/app-BU6mFzGd.js` so they stop showing up as modified after every `npm run build`. Files remain on disk; `.gitignore` now fully consistent with tracking.
-- Final state: zero post-deploy errors, site working cleanly, 8 commits on `main`, working tree clean, tag `deploy-2026-04-23` preserved
+- **Photo upload cropper bug + fix** (late-April-23 discovery): user reported `/manage-photos` Upload Profile Photo → file selected → no crop box, no rotate/flip/brightness tools. Diagnosed live via Claude-in-Chrome browser MCP. Root cause: the cropper editor was wrapped in `<template x-if="sourceImage">`. Alpine's x-if template mounts on a separate schedule from `$nextTick` and RAF — so `this.$refs.cropperImage` was `undefined` when `initCropper()` ran, and Cropper.js silently failed to initialize. Fix v1 (RAF polling, 15 attempts) worked 50% of the time. Fix v2 (real fix): switched `<template x-if>` to `<div x-show>` so the img stays in DOM and x-ref is registered from page load. Lesson added as item #15 in DEPLOY_CHECKLIST.md.
+- Final state: zero post-deploy errors, site working cleanly, 10 commits on `main`, working tree clean, tag `deploy-2026-04-23` preserved
 
 ---
 
@@ -176,12 +177,19 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 **Context:**
 - Existing webview app on Play Store: `com.books.KudlaMatrimony` (kudlamatrimony.com wrapper)
 - Goal: upgrade from webview → Flutter native app for own business first, then bundle in CodeCanyon listing as v2.0 upsell
-- Full spec already written: see [MOBILE_APP_PLAN.md](MOBILE_APP_PLAN.md)
+- **Detailed plan:** [`docs/mobile-app/`](mobile-app/README.md) — 17 docs (API layer + Flutter app + launch). April 23, 2026.
+- Short overview: [MOBILE_APP_PLAN.md](MOBILE_APP_PLAN.md)
 
 **Why app before CodeCanyon packaging:**
 - Webview app is live but limited (no push, no biometric, no native UX)
-- Flutter gives Android + iOS from one codebase
+- Flutter gives Android + iOS from one codebase (Android v1, iOS v2 per plan)
 - Once native app is shipped, CodeCanyon listing can include "Web + Flutter App" as a premium tier (commands higher price)
+
+**Timeline (from `docs/mobile-app/16-implementation.md`):**
+- Phase 2a API Layer — 4 weeks (Sanctum + `/api/v1/*` JSON endpoints mirroring all user-facing web controllers, thin controllers calling existing services)
+- Phase 2b Flutter MVP — 12 weeks (Riverpod + GoRouter + Dio + FCM + Razorpay SDK)
+- Phase 2c Launch — 4 weeks (internal → closed → staged production rollout)
+- **Total: ~20 weeks / 5 months** solo with design screenshots in hand
 
 **Build Order (from MOBILE_APP_PLAN.md):**
 

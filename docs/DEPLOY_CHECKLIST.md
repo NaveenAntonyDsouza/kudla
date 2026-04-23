@@ -52,6 +52,11 @@ These bit us once — don't let them bite again:
 14. **Smoke test must include DevTools Network tab check for expected CSS hash.** If you rebuild CSS but forget to upload `manifest.json`, browsers fetch the manifest → follow the old hash → serve an old CSS file → page looks partially-broken with no obvious error. Or: if manifest points to a new CSS file you forgot to upload, page loads with no CSS (styles missing). Both are silent failures.
     - **Rule**: as part of smoke test, open DevTools → Network → filter `.css` → hard refresh → confirm the CSS file name being served matches the one your local `public/build/manifest.json` references.
 
+15. **Use `<div x-show>` — NOT `<template x-if>` — for any panel whose content holds an `x-ref` that JavaScript later initializes.** The Manage Photos cropper modal used `<template x-if="sourceImage">` around `<img x-ref="cropperImage">`. Alpine renders `<template x-if>` content on a separate schedule from `$nextTick` and even from `requestAnimationFrame`. The image mounts, but the `x-ref` registration can lag 15+ frames behind. Cropper.js initialization then silently fails because `this.$refs.cropperImage` is `undefined`. User sees the image but no crop box, no toolbar — and no error in console unless you manually wire one.
+    - **Symptom**: JavaScript library (Cropper.js, Quill, CodeMirror, Chart.js, video player, etc.) loaded into an Alpine-managed panel works locally and sometimes on live but breaks unpredictably after the panel is first shown.
+    - **Rule**: if `<template x-if>` content contains `x-ref="foo"` that's looked up in JS via `this.$refs.foo`, rewrite as `<div x-show>`. The element stays mounted, the ref stays registered, and there's no race. Use `x-bind:src` (or similar) to keep the element visually empty when the panel should be hidden.
+    - **When x-if is still correct**: content with no refs + expensive render cost (so you want to avoid keeping it in the DOM). Small modals almost always should use `x-show` for stability.
+
 ---
 
 ## PRE-DEPLOY (on your local machine) — 10-15 min

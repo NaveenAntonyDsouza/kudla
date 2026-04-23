@@ -15,7 +15,7 @@
 | Photo upload & management (profile, album, family) + photo privacy (3 modes) | Done |
 | Photo watermark (GD library, diagonal repeating text) | Done |
 | Photo multi-driver storage (Local / Cloudinary / R2 / S3) with hybrid mode | Done |
-| Photo cropping (Cropper.js) + Intervention Image v4 processing | Done |
+| Photo cropping (Cropper.js: crop box, rotate L/R, flip horizontal, brightness, 3:4 aspect lock for profile) + Intervention Image v4 processing | Done (verified live April 23) |
 | WebP output format (25-35% smaller than JPEG) | Done |
 | View & Edit My Profile (9 accordion sections with inline editing) | Done |
 | Profile Preview (4 tabbed sections) + Print Profile | Done |
