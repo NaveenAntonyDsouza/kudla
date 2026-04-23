@@ -526,7 +526,17 @@
                     foreach ($categoriesToCheck as $catKey) {
                         $catConfig = config("discover.{$catKey}");
                         if ($catConfig) {
-                            $subs = is_callable($catConfig['subcategories']) ? ($catConfig['subcategories'])() : $catConfig['subcategories'];
+                            // Resolve subcategories — handles three forms:
+                            //   'subcategories_source' => 'methodName' (new, config:cache-safe)
+                            //   'subcategories' => [...] (literal array)
+                            //   'subcategories' => fn() => [...] (legacy closure, backward compat)
+                            if (isset($catConfig['subcategories_source'])) {
+                                $subs = app(\App\Services\DiscoverConfigService::class)->{$catConfig['subcategories_source']}();
+                            } elseif (isset($catConfig['subcategories'])) {
+                                $subs = is_callable($catConfig['subcategories']) ? ($catConfig['subcategories'])() : $catConfig['subcategories'];
+                            } else {
+                                $subs = [];
+                            }
                             foreach ($subs as $sub) {
                                 $discoverLookup[$sub['slug']] = $catKey;
                             }
