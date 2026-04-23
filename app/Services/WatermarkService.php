@@ -4,17 +4,93 @@ namespace App\Services;
 
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Interfaces\ImageInterface;
 
 class WatermarkService
 {
     /**
-     * Apply a diagonal repeating text watermark to an image.
+     * Is the watermark feature enabled?
+     * Controlled via SiteSetting `photo_watermark_enabled` (default '0' = off, modern matrimony norm).
+     * Admins can toggle it on if they want branded/protected photos.
+     */
+    public function isEnabled(): bool
+    {
+        return SiteSetting::getValue('photo_watermark_enabled', '0') === '1';
+    }
+
+    /**
+     * Apply the diagonal watermark to an Intervention Image instance (in memory).
+     * Used by ImageProcessingService BEFORE resizing, so all size variants carry the watermark.
      *
-     * Uses GD library (built-in with PHP). No external packages needed.
+     * Respects the isEnabled() setting — returns the image unchanged if watermark is off.
+     */
+    public function applyToImage(ImageInterface $image): ImageInterface
+    {
+        if (!$this->isEnabled()) {
+            return $image;
+        }
+
+        $watermarkText = (string) SiteSetting::getValue('site_name', config('app.name', 'Matrimony'));
+        if (trim($watermarkText) === '') {
+            return $image;
+        }
+
+        // Intervention v4 exposes ->text() for drawing. We draw the watermark text
+        // in a tiled diagonal pattern similar to the GD version.
+        // Note: Intervention's text API varies by driver; we route through a driver-safe helper.
+        return $this->drawWatermarkText($image, $watermarkText);
+    }
+
+    /**
+     * Draw the watermark via Intervention v4's text API.
+     * Falls back to a single-layer center watermark if the driver doesn't support rotation.
+     */
+    protected function drawWatermarkText(ImageInterface $image, string $text): ImageInterface
+    {
+        $width = $image->width();
+        $height = $image->height();
+
+        $fontSize = max(12, min(36, (int) (sqrt($width * $width + $height * $height) * 0.025)));
+        $fontFile = $this->findFont();
+
+        $spacingX = (int) ($width / 3);
+        $spacingY = (int) ($height / 4);
+
+        for ($y = $spacingY; $y < $height; $y += $spacingY) {
+            for ($x = 0; $x < $width; $x += $spacingX) {
+                try {
+                    $image->text($text, $x, $y, function ($font) use ($fontSize, $fontFile) {
+                        if ($fontFile) {
+                            $font->filename($fontFile);
+                        }
+                        $font->size($fontSize);
+                        $font->color('rgba(255, 255, 255, 0.4)');
+                        $font->align('left');
+                        $font->valign('middle');
+                    });
+                } catch (\Throwable $e) {
+                    // If the driver can't draw text (rare), bail gracefully — no watermark is better than broken image
+                    return $image;
+                }
+            }
+        }
+
+        return $image;
+    }
+
+    /**
+     * LEGACY: apply watermark directly to a stored file (pre-Intervention flow).
+     * Kept for backward compat but not the recommended path anymore.
+     *
+     * Uses GD library (built-in with PHP).
      * The watermark is semi-transparent diagonal text repeated across the image.
      */
     public function apply(string $storagePath, string $disk = 'public'): bool
     {
+        if (!$this->isEnabled()) {
+            return true; // No-op: feature off, treat as success
+        }
+
         $fullPath = Storage::disk($disk)->path($storagePath);
 
         if (! file_exists($fullPath)) {

@@ -60,6 +60,43 @@ return [
             'report' => false,
         ],
 
+        /*
+        |----------------------------------------------------------------------
+        | Cloudinary (via S3-compatible API)
+        |----------------------------------------------------------------------
+        | Cloudinary exposes an S3-compatible interface at delivery.cloudinary.com.
+        | For direct uploads we use our own Cloudinary service (see PhotoStorageService).
+        | This config mirrors what we need for signed URL generation.
+        */
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'api_key' => env('CLOUDINARY_API_KEY'),
+            'api_secret' => env('CLOUDINARY_API_SECRET'),
+            'url' => env('CLOUDINARY_URL'),
+            'upload_folder' => env('CLOUDINARY_UPLOAD_FOLDER', 'matrimony/photos'),
+        ],
+
+        /*
+        |----------------------------------------------------------------------
+        | Cloudflare R2 (S3-compatible, zero egress fees)
+        |----------------------------------------------------------------------
+        | R2 uses S3 API with a custom endpoint. Perfect for matrimony scale.
+        | Public URL needs to be set (via Cloudflare public bucket or custom domain).
+        */
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'), // https://<account>.r2.cloudflarestorage.com
+            'url' => env('R2_PUBLIC_URL'),     // https://pub-<id>.r2.dev  or your custom domain
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

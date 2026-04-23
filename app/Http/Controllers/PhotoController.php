@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\PhotoPrivacySetting;
 use App\Models\ProfilePhoto;
 use App\Models\SiteSetting;
+use App\Services\ImageProcessingService;
+use App\Services\PhotoStorageService;
 use App\Services\WatermarkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +15,8 @@ class PhotoController extends Controller
 {
     public function __construct(
         private WatermarkService $watermarkService,
+        private ImageProcessingService $imageProcessor,
+        private PhotoStorageService $photoStorage,
     ) {}
 
     public function index()
@@ -66,12 +70,16 @@ class PhotoController extends Controller
             }
         }
 
-        // Store file
+        // Process upload — generates 3 size variants + preserves original.
+        // Watermark (if enabled) is applied before resize so all variants carry it.
+        // Storage driver picked per-upload from SiteSetting `active_storage_driver`.
         $folder = "photos/{$profile->id}";
-        $path = $request->file('photo')->store($folder, 'public');
-
-        // Apply watermark to prevent photo theft
-        $this->watermarkService->apply($path);
+        $activeDriver = $this->photoStorage->getActiveDriver();
+        // Fallback to public if the selected driver isn't configured (safer than failing)
+        if (!$this->photoStorage->isDriverConfigured($activeDriver)) {
+            $activeDriver = PhotoStorageService::DRIVER_LOCAL;
+        }
+        $paths = $this->imageProcessor->processUpload($request->file('photo'), $folder, $activeDriver);
 
         // For profile type, clear any primary flag and set this as primary
         $isPrimary = false;
@@ -86,8 +94,11 @@ class PhotoController extends Controller
         ProfilePhoto::create([
             'profile_id' => $profile->id,
             'photo_type' => $type,
-            'photo_url' => $path,
-            'thumbnail_url' => $path,
+            'photo_url' => $paths['full'],
+            'thumbnail_url' => $paths['thumb'],
+            'medium_url' => $paths['medium'],
+            'original_url' => $paths['original'],
+            'storage_driver' => $paths['driver'], // remember which disk this photo lives on
             'is_primary' => $isPrimary,
             'is_visible' => true,
             'display_order' => $nextOrder,
@@ -157,14 +168,30 @@ class PhotoController extends Controller
     public function updatePrivacy(Request $request)
     {
         $profile = auth()->user()->profile;
+        $levels = 'in:visible_to_all,interest_accepted,hidden';
 
+        // Support BOTH legacy single-level + new per-type fields.
         $validated = $request->validate([
-            'privacy_level' => 'required|in:visible_to_all,interest_accepted,hidden',
+            'privacy_level' => "nullable|$levels",
+            'profile_photo_privacy' => "nullable|$levels",
+            'album_photos_privacy' => "nullable|$levels",
+            'family_photos_privacy' => "nullable|$levels",
         ]);
+
+        $payload = array_filter([
+            'privacy_level' => $validated['privacy_level'] ?? null,
+            'profile_photo_privacy' => $validated['profile_photo_privacy'] ?? null,
+            'album_photos_privacy' => $validated['album_photos_privacy'] ?? null,
+            'family_photos_privacy' => $validated['family_photos_privacy'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        if (empty($payload)) {
+            return back()->withErrors(['privacy' => 'No privacy changes submitted.']);
+        }
 
         PhotoPrivacySetting::updateOrCreate(
             ['profile_id' => $profile->id],
-            ['privacy_level' => $validated['privacy_level']]
+            $payload
         );
 
         return back()->with('success', 'Privacy settings updated.');
@@ -174,13 +201,10 @@ class PhotoController extends Controller
     {
         $this->authorizePhoto($photo);
 
-        // Delete files from storage
-        if ($photo->photo_url && Storage::disk('public')->exists($photo->photo_url)) {
-            Storage::disk('public')->delete($photo->photo_url);
-        }
-        if ($photo->thumbnail_url && $photo->thumbnail_url !== $photo->photo_url && Storage::disk('public')->exists($photo->thumbnail_url)) {
-            Storage::disk('public')->delete($photo->thumbnail_url);
-        }
+        // Delete all 4 variants from the driver where THIS photo lives
+        // (different photos may be on different drivers in hybrid mode)
+        $driver = $photo->storage_driver ?: 'public';
+        $this->imageProcessor->deleteVariants($photo->getAllStoragePaths(), $driver);
 
         $photo->delete();
 

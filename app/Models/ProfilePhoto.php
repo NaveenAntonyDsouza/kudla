@@ -15,6 +15,9 @@ class ProfilePhoto extends Model
         'photo_url',
         'cloudinary_public_id',
         'thumbnail_url',
+        'medium_url',
+        'original_url',
+        'storage_driver',
         'is_primary',
         'is_visible',
         'display_order',
@@ -53,14 +56,53 @@ class ProfilePhoto extends Model
 
     // URL accessors
 
+    /**
+     * Resolve the storage driver for this photo.
+     * Falls back to 'public' for legacy photos without the column set.
+     */
+    protected function driverDisk(): string
+    {
+        $driver = $this->attributes['storage_driver'] ?? 'public';
+        return $driver ?: 'public';
+    }
+
     public function getFullUrlAttribute(): string
     {
-        return $this->photo_url ? Storage::disk('public')->url($this->photo_url) : '';
+        return $this->photo_url ? Storage::disk($this->driverDisk())->url($this->photo_url) : '';
     }
 
     public function getThumbUrlAttribute(): string
     {
-        return $this->thumbnail_url ? Storage::disk('public')->url($this->thumbnail_url) : $this->full_url;
+        return $this->thumbnail_url
+            ? Storage::disk($this->driverDisk())->url($this->thumbnail_url)
+            : $this->full_url;
+    }
+
+    public function getMediumUrlAttribute(): string
+    {
+        return $this->attributes['medium_url']
+            ? Storage::disk($this->driverDisk())->url($this->attributes['medium_url'])
+            : $this->full_url;
+    }
+
+    public function getOriginalFullUrlAttribute(): string
+    {
+        return $this->attributes['original_url']
+            ? Storage::disk($this->driverDisk())->url($this->attributes['original_url'])
+            : '';
+    }
+
+    /**
+     * All storage paths associated with this photo (for cleanup on delete).
+     */
+    public function getAllStoragePaths(): array
+    {
+        return array_filter([
+            $this->photo_url,
+            $this->thumbnail_url,
+            $this->attributes['medium_url'] ?? null,
+            $this->attributes['original_url'] ?? null,
+        ]);
     }
 
     // Scopes

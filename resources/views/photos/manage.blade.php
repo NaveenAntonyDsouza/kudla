@@ -1,29 +1,9 @@
 <x-layouts.app title="Manage Photos">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
-        activeTab: '{{ request('tab', 'album') }}',
-        showArchived: {{ $archivedPhotos->count() > 0 ? 'true' : 'false' }},
-        previewUrl: null,
-        previewType: null,
-        showUploadModal: false,
+    {{-- Cropper.js CDN (no npm build required) --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
-        openUpload(type) {
-            if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-            this.previewUrl = null;
-            this.previewType = type;
-            this.showUploadModal = true;
-            this.$nextTick(() => {
-                const input = document.querySelector('input[name=photo]');
-                if (input) input.value = '';
-            });
-        },
-        previewFile(event) {
-            const file = event.target.files[0];
-            if (file) {
-                if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-                this.previewUrl = URL.createObjectURL(file);
-            }
-        }
-    }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, '{{ request('tab', 'album') }}')">
 
         {{-- Page Header --}}
         <div class="flex items-center justify-between mb-6">
@@ -104,22 +84,44 @@
                             </button>
                         @endif
 
-                        {{-- Privacy Settings --}}
+                        {{-- Privacy Settings — per-type (profile/album/family) --}}
                         <div class="border-t border-gray-100 pt-4">
                             <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Photo Privacy</h3>
-                            <form method="POST" action="{{ route('photos.privacy') }}" x-data="{ saving: false }">
+                            <form method="POST" action="{{ route('photos.privacy') }}" x-data="{ saving: false }" @submit="saving = true">
                                 @csrf
-                                <div class="space-y-2">
-                                    @foreach(['visible_to_all' => 'Visible To All', 'interest_accepted' => 'Visible To Interest Sent or Accepted', 'hidden' => 'Hide Photos'] as $val => $label)
-                                        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer" :class="saving && 'opacity-50 pointer-events-none'">
-                                            <input type="radio" name="privacy_level" value="{{ $val }}"
-                                                {{ ($privacy?->privacy_level ?? 'visible_to_all') === $val ? 'checked' : '' }}
-                                                class="text-(--color-primary) focus:ring-(--color-primary)"
+                                @php
+                                    $levels = \App\Models\PhotoPrivacySetting::LEVELS;
+                                    $typeLevels = [
+                                        'profile' => $privacy?->profile_photo_privacy ?? 'visible_to_all',
+                                        'album' => $privacy?->album_photos_privacy ?? 'visible_to_all',
+                                        'family' => $privacy?->family_photos_privacy ?? 'interest_accepted',
+                                    ];
+                                @endphp
+
+                                <div class="space-y-3" :class="saving && 'opacity-50 pointer-events-none'">
+                                    @foreach([
+                                        'profile' => ['label' => 'Profile Photo', 'icon' => '👤'],
+                                        'album' => ['label' => 'Album Photos', 'icon' => '🖼️'],
+                                        'family' => ['label' => 'Family Photos', 'icon' => '👨‍👩‍👧'],
+                                    ] as $type => $meta)
+                                        <div>
+                                            <label class="flex items-center justify-between text-xs font-medium text-gray-700 mb-1">
+                                                <span><span class="mr-1">{{ $meta['icon'] }}</span>{{ $meta['label'] }}</span>
+                                            </label>
+                                            <select name="{{ $type }}_photo_privacy"
+                                                class="w-full text-sm border-gray-300 rounded-md focus:ring-(--color-primary) focus:border-(--color-primary)"
                                                 @change="saving = true; $el.form.submit()">
-                                            {{ $label }}
-                                        </label>
+                                                @foreach($levels as $val => $label)
+                                                    <option value="{{ $val }}" {{ $typeLevels[$type] === $val ? 'selected' : '' }}>
+                                                        {{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     @endforeach
                                 </div>
+
+                                <p class="text-xs text-gray-400 mt-3">Changes save automatically when you pick a different option.</p>
                             </form>
                         </div>
 
@@ -268,63 +270,250 @@
             </div>
         </div>
 
-        {{-- ══ UPLOAD MODAL ══ --}}
+        {{-- ══ UPLOAD MODAL (with Cropper.js editor) ══ --}}
         <div x-show="showUploadModal" x-cloak
             @keydown.escape.window="showUploadModal = false"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div @click.away="showUploadModal = false"
-                class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100">
+            <div @click.away="!submitting && (showUploadModal = false)"
+                class="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden">
+
+                {{-- Header --}}
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-900">
                         Upload <span x-text="previewType === 'profile' ? 'Profile' : previewType === 'album' ? 'Album' : 'Family'" class="capitalize"></span> Photo
                     </h3>
+                    <button type="button" @click="!submitting && (showUploadModal = false)" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
 
-                <form method="POST" action="{{ route('photos.upload') }}" enctype="multipart/form-data" x-data="{ submitting: false }" @submit="submitting = true">
-                    @csrf
-                    <input type="hidden" name="tab" :value="activeTab">
-                    <input type="hidden" name="photo_type" :value="previewType">
+                @csrf
+                <input type="hidden" name="tab" :value="activeTab">
+                <input type="hidden" name="photo_type" :value="previewType">
 
-                    <div class="p-6">
-                        {{-- Preview area --}}
-                        <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 flex items-center justify-center">
-                            <template x-if="previewUrl">
-                                <img :src="previewUrl" class="w-full h-full object-cover">
-                            </template>
-                            <template x-if="!previewUrl">
-                                <div class="text-center text-gray-400">
-                                    <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/>
-                                    </svg>
-                                    <p class="text-sm">Select a photo to preview</p>
-                                </div>
-                            </template>
+                {{-- Empty state: file picker --}}
+                <template x-if="!sourceImage">
+                    <div class="p-8">
+                        <label class="block w-full cursor-pointer">
+                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-(--color-primary) hover:bg-(--color-primary-light) transition-colors">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                                </svg>
+                                <p class="text-base font-medium text-gray-700 mb-1">Click to select a photo</p>
+                                <p class="text-xs text-gray-500">JPG, PNG, GIF, WebP. Max 5 MB. You can crop and rotate after selecting.</p>
+                            </div>
+                            <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" @change="loadIntoCropper($event)" class="hidden">
+                        </label>
+                    </div>
+                </template>
+
+                {{-- Cropper editor (shown after file is selected) --}}
+                <template x-if="sourceImage">
+                    <div>
+                        <div class="bg-gray-900 relative" style="height: 450px;">
+                            <img x-ref="cropperImage" :src="sourceImage" alt="To be cropped" class="block max-w-full">
                         </div>
 
-                        {{-- File input --}}
-                        <label class="block w-full cursor-pointer">
-                            <span class="sr-only">Choose photo</span>
-                            <input type="file" name="photo" accept="image/jpeg,image/png,image/gif,image/webp"
-                                @change="previewFile($event)" required
-                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-(--color-primary-light) file:text-(--color-primary) hover:file:bg-(--color-primary) hover:file:text-white file:cursor-pointer file:transition-colors">
-                        </label>
-                        <p class="mt-2 text-xs text-gray-400">JPG, PNG, GIF, WebP. Max 5 MB.</p>
-                    </div>
+                        {{-- Tool bar --}}
+                        <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <button type="button" @click="rotateLeft()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate left 90°">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                                </button>
+                                <button type="button" @click="rotateRight()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate right 90°">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/></svg>
+                                </button>
+                                <button type="button" @click="flipHorizontal()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Flip horizontal">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v10M4 17h8M4 7h8M16 12h4m-4-5h4m-4 10h4"/></svg>
+                                </button>
+                                <button type="button" @click="resetCropper()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Reset</button>
+                                <button type="button" @click="clearSelection()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Choose different</button>
+                            </div>
 
-                    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
-                        <button type="button" @click="showUploadModal = false"
+                            {{-- Brightness --}}
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-medium text-gray-700">Brightness</label>
+                                <input type="range" min="-50" max="50" step="5" x-model="brightness" @input="applyBrightness()"
+                                    class="w-32 accent-(--color-primary)">
+                                <span class="text-xs text-gray-500 w-8 text-center" x-text="brightness"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Footer --}}
+                <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                    <p class="text-xs text-gray-500">
+                        <template x-if="previewType === 'profile'">
+                            <span>Profile photos are cropped to 3:4 portrait (ideal for matrimony).</span>
+                        </template>
+                        <template x-if="previewType !== 'profile'">
+                            <span>You can crop freely to any aspect ratio.</span>
+                        </template>
+                    </p>
+                    <div class="flex gap-3">
+                        <button type="button" @click="!submitting && (showUploadModal = false)"
                             class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
                             Cancel
                         </button>
-                        <button type="submit" :disabled="submitting"
-                            :class="submitting && 'opacity-50 cursor-not-allowed'"
+                        <button type="button" @click="submitCropped()" :disabled="!sourceImage || submitting"
+                            :class="(!sourceImage || submitting) && 'opacity-50 cursor-not-allowed'"
                             class="px-6 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
                             <span x-show="!submitting">Upload</span>
                             <span x-show="submitting" x-cloak>Uploading...</span>
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
+
+    {{-- Alpine photo manager component (handles Cropper.js lifecycle + upload) --}}
+    <script>
+        function photoManagerEditor(initialShowArchived, initialActiveTab) {
+            return {
+                activeTab: initialActiveTab,
+                showArchived: initialShowArchived,
+                showUploadModal: false,
+                previewType: null,
+                sourceImage: null,
+                brightness: 0,
+                submitting: false,
+                _cropper: null,
+
+                openUpload(type) {
+                    this.previewType = type;
+                    this.sourceImage = null;
+                    this.brightness = 0;
+                    this.showUploadModal = true;
+                    this.destroyCropper();
+                },
+
+                clearSelection() {
+                    this.destroyCropper();
+                    this.sourceImage = null;
+                    this.brightness = 0;
+                },
+
+                destroyCropper() {
+                    if (this._cropper) {
+                        try { this._cropper.destroy(); } catch (e) {}
+                        this._cropper = null;
+                    }
+                },
+
+                loadIntoCropper(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File is too large. Maximum 5 MB.');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.sourceImage = e.target.result;
+                        this.$nextTick(() => this.initCropper());
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                initCropper() {
+                    const img = this.$refs.cropperImage;
+                    if (!img || !window.Cropper) return;
+
+                    this.destroyCropper();
+
+                    const aspectRatio = this.previewType === 'profile' ? 3/4 : NaN;
+
+                    this._cropper = new Cropper(img, {
+                        aspectRatio: aspectRatio,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.9,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: true,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
+                },
+
+                rotateLeft() { this._cropper?.rotate(-90); },
+                rotateRight() { this._cropper?.rotate(90); },
+                flipHorizontal() {
+                    if (!this._cropper) return;
+                    const current = this._cropper.getData().scaleX || 1;
+                    this._cropper.scaleX(current === 1 ? -1 : 1);
+                },
+                resetCropper() {
+                    this.brightness = 0;
+                    this._cropper?.reset();
+                    this.applyBrightness();
+                },
+                applyBrightness() {
+                    const canvas = this._cropper?.getCropperCanvas?.() || document.querySelector('.cropper-container img');
+                    if (canvas) {
+                        const amount = 1 + (this.brightness / 100);
+                        canvas.style.filter = `brightness(${amount})`;
+                    }
+                },
+
+                submitCropped() {
+                    if (!this._cropper || this.submitting) return;
+                    this.submitting = true;
+
+                    // Get cropped canvas with a max size cap (so full-size processing is efficient)
+                    const canvas = this._cropper.getCroppedCanvas({
+                        maxWidth: 2400,
+                        maxHeight: 2400,
+                        imageSmoothingQuality: 'high',
+                    });
+
+                    // Apply brightness via canvas filter before export
+                    if (this.brightness !== 0) {
+                        const amount = 1 + (this.brightness / 100);
+                        const ctx = canvas.getContext('2d');
+                        ctx.filter = `brightness(${amount})`;
+                        ctx.drawImage(canvas, 0, 0);
+                    }
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            this.submitting = false;
+                            alert('Failed to process the photo. Please try a different image.');
+                            return;
+                        }
+
+                        const form = new FormData();
+                        form.append('photo', blob, 'photo.jpg');
+                        form.append('photo_type', this.previewType);
+                        form.append('tab', this.activeTab);
+                        form.append('_token', document.querySelector('meta[name=csrf-token]')?.content || '{{ csrf_token() }}');
+
+                        fetch('{{ route('photos.upload') }}', {
+                            method: 'POST',
+                            body: form,
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        })
+                        .then((res) => {
+                            this.submitting = false;
+                            if (res.ok || res.redirected) {
+                                window.location.href = '{{ route('photos.manage') }}?tab=' + (this.previewType === 'profile' ? 'album' : this.previewType);
+                            } else {
+                                alert('Upload failed. Please try again.');
+                            }
+                        })
+                        .catch(() => {
+                            this.submitting = false;
+                            alert('Upload failed. Please check your connection and try again.');
+                        });
+                    }, 'image/jpeg', 0.92);
+                },
+            };
+        }
+    </script>
 </x-layouts.app>
