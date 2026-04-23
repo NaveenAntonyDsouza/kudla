@@ -3,6 +3,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
+    {{-- Cropper.js visual polish: replace transparent checkerboard with clean gray,
+         use brand colors for crop box handles + guides --}}
+    <style>
+        .cropper-bg { background-image: none !important; background-color: #f3f4f6 !important; }
+        .cropper-modal { background-color: rgba(17, 24, 39, 0.5) !important; }
+        .cropper-view-box { outline: 2px solid rgba(255, 255, 255, 0.9); outline-color: rgba(255, 255, 255, 0.9); }
+        .cropper-line, .cropper-point { background-color: var(--color-primary, #8B1D91) !important; }
+        .cropper-dashed { border-color: rgba(255, 255, 255, 0.6); }
+    </style>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, '{{ request('tab', 'album') }}')">
 
         {{-- Page Header --}}
@@ -273,16 +283,22 @@
         {{-- ══ UPLOAD MODAL (with Cropper.js editor) ══ --}}
         <div x-show="showUploadModal" x-cloak
             @keydown.escape.window="showUploadModal = false"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div @click.away="!submitting && (showUploadModal = false)"
-                class="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden">
+                class="bg-white rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden">
 
                 {{-- Header --}}
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        Upload <span x-text="previewType === 'profile' ? 'Profile' : previewType === 'album' ? 'Album' : 'Family'" class="capitalize"></span> Photo
-                    </h3>
-                    <button type="button" @click="!submitting && (showUploadModal = false)" class="text-gray-400 hover:text-gray-600">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            Upload <span x-text="previewType === 'profile' ? 'Profile' : previewType === 'album' ? 'Album' : 'Family'" class="capitalize"></span> Photo
+                        </h3>
+                        <p class="text-xs text-gray-500 mt-0.5" x-show="sourceImage">
+                            <template x-if="previewType === 'profile'"><span>Cropped to 3:4 portrait — ideal for matrimony profiles</span></template>
+                            <template x-if="previewType !== 'profile'"><span>Free crop — any aspect ratio</span></template>
+                        </p>
+                    </div>
+                    <button type="button" @click="!submitting && (showUploadModal = false)" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -292,7 +308,6 @@
                 <input type="hidden" name="photo_type" :value="previewType">
 
                 {{-- Empty state: file picker (shown when no image selected) --}}
-                {{-- Using x-show (not x-if) so the file input stays mounted and its ref stays stable --}}
                 <div x-show="!sourceImage" class="p-8">
                     <label class="block w-full cursor-pointer">
                         <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-(--color-primary) hover:bg-(--color-primary-light) transition-colors">
@@ -308,58 +323,95 @@
 
                 {{-- Cropper editor (shown after file is selected) --}}
                 {{-- CRITICAL: using x-show (not x-if) so x-ref="cropperImage" is registered on page load --}}
-                {{-- With x-if, Alpine unmounts/remounts the content and the ref can lag behind, causing Cropper init to fail. --}}
                 <div x-show="sourceImage">
-                    <div class="bg-gray-900 relative" style="height: 450px;">
+                    {{-- Image canvas — clean light gray background, no checkerboard --}}
+                    <div class="bg-gray-100 relative" style="height: 500px;">
                         <img x-ref="cropperImage" x-bind:src="sourceImage" alt="To be cropped" class="block max-w-full">
                     </div>
 
-                    {{-- Tool bar --}}
-                    <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <button type="button" @click="rotateLeft()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate left 90°">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                    {{-- Toolbar: transformations on the left, brightness on the right --}}
+                    <div class="px-4 py-3 border-t border-gray-100 bg-white flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-1">
+                            {{-- Rotate counter-clockwise (proper rotation icon — NOT undo) --}}
+                            <button type="button" @click="rotateLeft()"
+                                class="px-3 py-2 flex items-center gap-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Rotate 90° counter-clockwise">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                    <path d="M3 3v5h5"/>
+                                </svg>
+                                <span class="text-xs font-medium hidden sm:inline">Rotate L</span>
                             </button>
-                            <button type="button" @click="rotateRight()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Rotate right 90°">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/></svg>
+
+                            {{-- Rotate clockwise --}}
+                            <button type="button" @click="rotateRight()"
+                                class="px-3 py-2 flex items-center gap-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Rotate 90° clockwise">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                                    <path d="M21 3v5h-5"/>
+                                </svg>
+                                <span class="text-xs font-medium hidden sm:inline">Rotate R</span>
                             </button>
-                            <button type="button" @click="flipHorizontal()" class="p-2 text-gray-700 hover:bg-gray-200 rounded-lg" title="Flip horizontal">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v10M4 17h8M4 7h8M16 12h4m-4-5h4m-4 10h4"/></svg>
+
+                            {{-- Flip horizontal (mirror) --}}
+                            <button type="button" @click="flipHorizontal()"
+                                class="px-3 py-2 flex items-center gap-1.5 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Flip horizontally (mirror)">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M12 3v18"/>
+                                    <path d="M16 7l4 5-4 5"/>
+                                    <path d="M8 7l-4 5 4 5"/>
+                                </svg>
+                                <span class="text-xs font-medium hidden sm:inline">Flip</span>
                             </button>
-                            <button type="button" @click="resetCropper()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Reset</button>
-                            <button type="button" @click="clearSelection()" class="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 rounded-lg">Choose different</button>
+
+                            <div class="w-px h-6 bg-gray-200 mx-1"></div>
+
+                            {{-- Reset --}}
+                            <button type="button" @click="resetCropper()"
+                                class="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Reset all transformations">
+                                Reset
+                            </button>
                         </div>
 
-                        {{-- Brightness --}}
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs font-medium text-gray-700">Brightness</label>
+                        {{-- Brightness (compact slider with sun icon) --}}
+                        <div class="flex items-center gap-2 px-2">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="4"/>
+                                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                            </svg>
                             <input type="range" min="-50" max="50" step="5" x-model="brightness" @input="applyBrightness()"
-                                class="w-32 accent-(--color-primary)">
-                            <span class="text-xs text-gray-500 w-8 text-center" x-text="brightness"></span>
+                                class="w-24 md:w-32 accent-(--color-primary)">
+                            <span class="text-xs text-gray-500 w-8 text-center font-mono tabular-nums" x-text="brightness"></span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Footer --}}
-                <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                    <p class="text-xs text-gray-500">
-                        <template x-if="previewType === 'profile'">
-                            <span>Profile photos are cropped to 3:4 portrait (ideal for matrimony).</span>
-                        </template>
-                        <template x-if="previewType !== 'profile'">
-                            <span>You can crop freely to any aspect ratio.</span>
-                        </template>
-                    </p>
-                    <div class="flex gap-3">
+                <div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+                    <button type="button" @click="clearSelection()" x-show="sourceImage"
+                        class="text-xs font-medium text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                        Choose different photo
+                    </button>
+                    <div x-show="!sourceImage" class="text-xs text-gray-500">
+                        Select a photo to continue
+                    </div>
+                    <div class="flex items-center gap-2">
                         <button type="button" @click="!submitting && (showUploadModal = false)"
-                            class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 rounded-lg">
                             Cancel
                         </button>
                         <button type="button" @click="submitCropped()" :disabled="!sourceImage || submitting"
-                            :class="(!sourceImage || submitting) && 'opacity-50 cursor-not-allowed'"
-                            class="px-6 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
-                            <span x-show="!submitting">Upload</span>
-                            <span x-show="submitting" x-cloak>Uploading...</span>
+                            :class="(!sourceImage || submitting) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-(--color-primary-hover) shadow-sm'"
+                            class="px-6 py-2.5 text-sm font-semibold text-white bg-(--color-primary) rounded-lg transition-colors flex items-center gap-2">
+                            <svg x-show="submitting" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/>
+                                <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" class="opacity-75"/>
+                            </svg>
+                            <span x-show="!submitting">Upload Photo</span>
+                            <span x-show="submitting" x-cloak>Uploading…</span>
                         </button>
                     </div>
                 </div>
