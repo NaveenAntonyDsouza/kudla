@@ -117,7 +117,16 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
   - Step 5 `creator_contact_number` field missed `:required="true"` (no red asterisk)
 - `config/discover.php` refactored: 14 closures → `App\Services\DiscoverConfigService`. `config:cache` now works on production.
 - Engagement emails (re-engagement, weekly_matches, profile_nudges) staying disabled until gradual re-enable over Apr 24-28
-- Zero post-deploy errors in `storage/logs/laravel.log`
+
+**April 23 — POST-DEPLOY: git setup + CSS rebuild + hotfix:**
+- GitHub repo created at https://github.com/NaveenAntonyDsouza/kudla
+- 273 uncommitted files committed in 5 logical chunks (admin panel, staff, franchise, photo+reengagement, theme/deploy)
+- Branch renamed master → main; tag `deploy-2026-04-23` points to chunk 5 (= live state)
+- `npm run build` regenerated CSS (new hash `app-Bmgt2YRP.css`, 97.5 KB, +5 KB vs previous) — uploaded to live
+- **Hotfix required**: 20 min after deploy, homepage crashed with `Undefined array key "subcategories"` at `home/classic.blade.php:512`. Root cause: the discover refactor changed the config shape, and I updated the controller's `resolveSubcategories()` helper but missed an inline `@php` block in the Blade that did its own subcategory resolution. Fixed both `home/classic.blade.php` and orphan `home.blade.php` to handle the new `subcategories_source` key. Recovery via tiny hotfix ZIP + `php artisan view:clear` on live. ~5 minute downtime.
+- Hotfix commit: `054c9a6` on main
+- **DEPLOY_CHECKLIST.md updated** with 4 new lessons from today (grep-all-consumers for refactors, npm run build as mandatory step 1, hotfix-ZIP pattern, Network-tab CSS hash verification)
+- Final state: zero post-deploy errors, site working cleanly, all 6 commits on `main`, working tree clean
 
 ---
 

@@ -34,6 +34,24 @@ These bit us once — don't let them bite again:
 
 10. **Carbon v3 changed `diffInDays()` to return float.** Display code that does `$lastLogin->diffInDays(now()) . 'd ago'` now shows `2.5020910621759d ago`. Cast `(int)` for clean output. Same applies to other `diffInX()` methods in views.
 
+11. **Refactoring a data shape? Grep ALL consumers, not just controllers.** The discover service refactor (April 23) moved closures from `config/discover.php` into `DiscoverConfigService` and changed the shape from `'subcategories' => fn()` to `'subcategories_source' => 'methodName'`. I updated `DiscoverController::resolveSubcategories()` but missed `resources/views/pages/home/classic.blade.php` line 512 which ALSO resolved subcategories inline in a Blade `@php` block. Result: 500 error on every homepage visit 20 minutes after deploy. Recovery required a hotfix ZIP.
+    - **Rule**: before committing ANY refactor that changes a key/property/shape accessed via `config()`, array access, or method chain, run a comprehensive grep: `grep -rn "property_name" app/ resources/ routes/ config/ database/` and update EVERY site that reads it. Blade `@php` blocks count.
+
+12. **Fresh clones need `npm run build` before using `deploy-build.ps1`.** The `/public/build` path is gitignored (with two legacy files grandfathered in). On a fresh clone, the compiled CSS doesn't exist — `deploy-build.ps1` will bundle an empty `public/build/` or stale legacy files. Your deploy ZIP then ships a site with no CSS.
+    - **Rule**: step 1 of EVERY pre-deploy is `npm run build`. Confirm new hashes in `public/build/assets/` before running `deploy-build.ps1`.
+
+13. **Use tiny hotfix ZIPs for post-deploy bugs — don't full-redeploy.** When the homepage crashed 20 min after deploy on April 23, recovery was:
+    - Identify broken files (2 Blade files).
+    - Build `hotfix-YYYYMMDD-HHMM.zip` via PHP ZipArchive containing ONLY: the fixed files + any build artifacts that hadn't uploaded yet (manifest + CSS).
+    - Upload to project root in File Manager.
+    - Right-click → Extract → **Check Overwrite existing files** → current directory (no subfolder).
+    - SSH: `php artisan view:clear` to flush stale compiled Blade.
+    - Total recovery: ~5 minutes vs ~30 minutes for a full redeploy.
+    - Use this same pattern for any future post-deploy bugs.
+
+14. **Smoke test must include DevTools Network tab check for expected CSS hash.** If you rebuild CSS but forget to upload `manifest.json`, browsers fetch the manifest → follow the old hash → serve an old CSS file → page looks partially-broken with no obvious error. Or: if manifest points to a new CSS file you forgot to upload, page loads with no CSS (styles missing). Both are silent failures.
+    - **Rule**: as part of smoke test, open DevTools → Network → filter `.css` → hard refresh → confirm the CSS file name being served matches the one your local `public/build/manifest.json` references.
+
 ---
 
 ## PRE-DEPLOY (on your local machine) — 10-15 min
