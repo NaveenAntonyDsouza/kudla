@@ -1,6 +1,10 @@
 # Mobile App Plan (Flutter) — NEXT PRIORITY
 
-**Status:** Starting soon. Admin panel + core platform + brand neutralization + CodeCanyon prep (AWS S3, demo seeder) are complete.
+> **→ For the detailed, phased implementation plan see [`docs/mobile-app/`](mobile-app/README.md)** — 17 documents covering the REST API layer (Sanctum, endpoints, response envelope) and the Flutter app (screens, state management, Firebase, Razorpay, Play Store rollout).
+>
+> This document remains the high-level overview; `docs/mobile-app/` is the source of truth for implementation.
+
+**Status:** Plan finalized April 23, 2026 — see [`docs/mobile-app/16-implementation.md`](mobile-app/16-implementation.md) for kickoff steps. Admin panel + core platform + brand neutralization + CodeCanyon prep (AWS S3, demo seeder) are complete.
 
 **Current state:**
 - Existing Android webview app on Play Store: `com.books.KudlaMatrimony` (wraps kudlamatrimony.com)
