@@ -1,4 +1,4 @@
-# Anugraha Matrimony — Tech Stack
+# MatrimonyTheme — Tech Stack
 
 ## Core Framework
 - **Laravel 13.2.0** — PHP full-stack framework
@@ -82,7 +82,7 @@
 - **LiteSpeed** — Web server
 - **SSH** — Remote access for deployments
 - **Manual FTP upload** — File-by-file deployment (no CI/CD)
-- **Domains:** anugrahamatrimony.com, kudlamatrimony.com (white-label)
+- **Domains:** Configurable via SiteSettings — single codebase serves any matrimony domain (white-label)
 - **Cron:** Hostinger hPanel → Cron Jobs (crontab not available via SSH)
 
 ## PHP Packages (composer.json)

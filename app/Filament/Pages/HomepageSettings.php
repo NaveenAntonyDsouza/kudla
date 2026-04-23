@@ -23,11 +23,28 @@ class HomepageSettings extends Page implements HasForms
 
     public ?array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('manage_homepage_content');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('manage_homepage_content');
+    }
+
     public function mount(): void
     {
         $settings = SiteSetting::pluck('value', 'key')->toArray();
 
         $this->form->fill([
+            // Homepage Design
+            'homepage_template' => $settings['homepage_template'] ?? 'classic',
+
             // Hero Section
             'hero_heading' => $settings['hero_heading'] ?? '',
             'hero_subheading' => $settings['hero_subheading'] ?? '',
@@ -38,6 +55,7 @@ class HomepageSettings extends Page implements HasForms
             'total_members' => $settings['total_members'] ?? '0',
             'successful_marriages' => $settings['successful_marriages'] ?? '0',
             'years_of_service' => $settings['years_of_service'] ?? '1',
+            'stats_auto_compute' => ($settings['stats_auto_compute'] ?? '0') === '1',
 
             // CTA Section
             'cta_title' => $settings['cta_title'] ?? 'Register Free Today',
@@ -62,6 +80,22 @@ class HomepageSettings extends Page implements HasForms
     {
         return $form
             ->schema([
+                \Filament\Schemas\Components\Section::make('Homepage Design')
+                    ->description('Pick which homepage layout to show visitors. All three share the same content (hero text, stats, testimonials) — only the visual layout differs.')
+                    ->schema([
+                        Forms\Components\Radio::make('homepage_template')
+                            ->label('')
+                            ->options([
+                                'classic' => 'Classic — Traditional matrimony layout with hero + registration form side-by-side, counters, community browse, carousel testimonials. Safe default.',
+                                'modern' => 'Modern — Tech-startup aesthetic with split hero, profile card stack, compact registration, card grids, bottom CTA strip. Best for urban/premium brands.',
+                                'premium' => 'Premium — Editorial / magazine layout with cinematic hero, masonry featured profiles, long-form success stories, elegant serif headlines. Best for aspirational brands.',
+                            ])
+                            ->default('classic')
+                            ->required()
+                            ->inline(false)
+                            ->helperText('Tip: preview each design on your live site by toggling this setting. Content edits below apply to all three templates.'),
+                    ]),
+
                 \Filament\Schemas\Components\Section::make('Hero Banner')
                     ->description('The main banner section at the top of the homepage.')
                     ->schema([
@@ -92,17 +126,22 @@ class HomepageSettings extends Page implements HasForms
                     ]),
 
                 \Filament\Schemas\Components\Section::make('Stats Section')
-                    ->description('Numbers displayed on the homepage to build trust.')
+                    ->description('Numbers displayed on the homepage to build trust. When "Auto-Compute" is on, the Total Members figure is read live from the database instead of the manual value below.')
                     ->schema([
+                        Forms\Components\Toggle::make('stats_auto_compute')
+                            ->label('Auto-compute Total Members from live database')
+                            ->helperText('When ON: homepage shows the real count of active approved profiles. When OFF: shows the manual number below. Successful Marriages + Years are always manual.')
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('total_members')
-                            ->label('Total Members')
+                            ->label('Total Members (manual)')
                             ->numeric()
-                            ->helperText('Displayed as "X+ Members" on homepage'),
+                            ->helperText('Used when Auto-compute is OFF. Displayed as "X+ Members"'),
 
                         Forms\Components\TextInput::make('successful_marriages')
                             ->label('Successful Marriages')
                             ->numeric()
-                            ->helperText('Displayed as "X+ Successful Marriages"'),
+                            ->helperText('Always manual — displayed as "X+ Successful Marriages"'),
 
                         Forms\Components\TextInput::make('years_of_service')
                             ->label('Years of Service')
@@ -195,7 +234,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled'];
+        $toggleFields = ['announcement_enabled', 'stats_auto_compute'];
         $skipFields = ['hero_image_upload', 'current_hero_image'];
 
         foreach ($data as $key => $value) {

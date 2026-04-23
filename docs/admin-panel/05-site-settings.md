@@ -6,10 +6,10 @@ This is the **most important section for CodeCanyon customers**.
 
 | Setting | Type | Description |
 |---------|------|-------------|
-| Site Name | Text | e.g., "Anugraha Matrimony" |
+| Site Name | Text | e.g., "Your Matrimony Site" |
 | Tagline | Text | e.g., "Find Your Perfect Match" |
 | Site Area | Text | e.g., "Karnataka's Christian Community" |
-| Contact Email | Email | e.g., "info@anugrahamatrimony.com" |
+| Contact Email | Email | e.g., "info@your-domain.com" |
 | Contact Phone | Text | e.g., "+91 484 408 0333" |
 | WhatsApp Number | Text | For chat support |
 | Address | Textarea | Office address |
@@ -104,8 +104,8 @@ Website-level social media links displayed in footer and contact page:
 
 | Setting | Type | Description |
 |---------|------|-------------|
-| Facebook Page URL | URL | e.g., facebook.com/anugrahamatrimony |
-| Instagram URL | URL | e.g., instagram.com/anugrahamatrimony |
+| Facebook Page URL | URL | e.g., facebook.com/yourpage |
+| Instagram URL | URL | e.g., instagram.com/yourhandle |
 | Twitter / X URL | URL | Optional |
 | YouTube Channel URL | URL | Optional |
 | LinkedIn URL | URL | Optional |
@@ -120,7 +120,7 @@ Displayed in: footer icons, contact page, about page.
 | Setting | Type | Description |
 |---------|------|-------------|
 | Default Meta Title | Text | Fallback title tag |
-| Meta Title Suffix | Text | e.g., " | Anugraha Matrimony" (appended to all pages) |
+| Meta Title Suffix | Text | e.g., " | Your Matrimony Site" (appended to all pages) |
 | Default Meta Description | Textarea | Fallback meta description |
 | Google Analytics ID | Text | e.g., GA-XXXXXXX |
 | Google Tag Manager ID | Text | e.g., GTM-XXXXXX |

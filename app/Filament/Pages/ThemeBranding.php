@@ -24,9 +24,34 @@ class ThemeBranding extends Page implements HasForms
 
     public ?array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('manage_site_settings');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('manage_site_settings');
+    }
+
     public function mount(): void
     {
         $theme = ThemeSetting::first();
+
+        // Detect if the current heading/body font is one of the curated options,
+        // or if it's a custom font typed by the admin.
+        $curatedHeadings = array_column(config('fonts.headings', []), 'family');
+        $curatedBody = array_column(config('fonts.body', []), 'family');
+
+        $currentHeading = $theme?->heading_font ?? 'Playfair Display';
+        $currentBody = $theme?->body_font ?? 'Inter';
+
+        $headingIsCustom = !in_array($currentHeading, $curatedHeadings, true);
+        $bodyIsCustom = !in_array($currentBody, $curatedBody, true);
 
         $this->form->fill([
             'primary_color' => $theme?->primary_color ?? '#8B1D91',
@@ -35,6 +60,10 @@ class ThemeBranding extends Page implements HasForms
             'secondary_color' => $theme?->secondary_color ?? '#00BCD4',
             'secondary_hover' => $theme?->secondary_hover ?? '#00ACC1',
             'secondary_light' => $theme?->secondary_light ?? '#E0F7FA',
+            'heading_font' => $headingIsCustom ? 'Playfair Display' : $currentHeading,
+            'body_font' => $bodyIsCustom ? 'Inter' : $currentBody,
+            'custom_heading_font' => $headingIsCustom ? $currentHeading : '',
+            'custom_body_font' => $bodyIsCustom ? $currentBody : '',
             'current_logo_url' => $theme?->logo_url,
             'current_favicon_url' => $theme?->favicon_url,
         ]);
@@ -106,8 +135,56 @@ class ThemeBranding extends Page implements HasForms
                             ->helperText('Light tint for backgrounds. Default: #E0F7FA'),
                     ])
                     ->columns(3),
+
+                \Filament\Schemas\Components\Section::make('Typography')
+                    ->description('Choose fonts for headings and body text. Pick from curated fonts or enter any Google Font name.')
+                    ->schema([
+                        Forms\Components\Select::make('heading_font')
+                            ->label('Heading Font')
+                            ->required()
+                            ->options(collect(config('fonts.headings', []))
+                                ->mapWithKeys(fn ($f, $key) => [$f['family'] => $f['label']])
+                                ->toArray())
+                            ->allowHtml()
+                            ->searchable()
+                            ->helperText('Used for page titles, hero headings, section headers.')
+                            ->placeholder('Select a heading font'),
+
+                        Forms\Components\Select::make('body_font')
+                            ->label('Body Font')
+                            ->required()
+                            ->options(collect(config('fonts.body', []))
+                                ->mapWithKeys(fn ($f, $key) => [$f['family'] => $f['label']])
+                                ->toArray())
+                            ->allowHtml()
+                            ->searchable()
+                            ->helperText('Used for body text, buttons, forms, navigation.')
+                            ->placeholder('Select a body font'),
+
+                        \Filament\Schemas\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('custom_heading_font')
+                                    ->label('Custom Heading Font (advanced)')
+                                    ->placeholder('e.g., Montserrat or Crimson Text')
+                                    ->helperText('Optional. Type any Google Fonts name to override the curated pick above. Leave blank to use the dropdown selection.'),
+
+                                Forms\Components\TextInput::make('custom_body_font')
+                                    ->label('Custom Body Font (advanced)')
+                                    ->placeholder('e.g., Roboto or Quicksand')
+                                    ->helperText('Optional. Type any Google Fonts name to override the curated pick above.'),
+                            ]),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
+    }
+
+    public function getViewData(): array
+    {
+        return [
+            'presets' => config('theme_presets.presets', []),
+            'activePresetKey' => \App\Models\SiteSetting::getValue('active_theme_preset', ''),
+        ];
     }
 
     public function save(): void
@@ -120,6 +197,15 @@ class ThemeBranding extends Page implements HasForms
             return;
         }
 
+        // Font resolution: custom input overrides curated dropdown if filled.
+        $headingFont = trim($data['custom_heading_font'] ?? '') !== ''
+            ? trim($data['custom_heading_font'])
+            : ($data['heading_font'] ?? 'Playfair Display');
+
+        $bodyFont = trim($data['custom_body_font'] ?? '') !== ''
+            ? trim($data['custom_body_font'])
+            : ($data['body_font'] ?? 'Inter');
+
         $updateData = [
             'primary_color' => $data['primary_color'],
             'primary_hover' => $data['primary_hover'],
@@ -127,6 +213,8 @@ class ThemeBranding extends Page implements HasForms
             'secondary_color' => $data['secondary_color'],
             'secondary_hover' => $data['secondary_hover'],
             'secondary_light' => $data['secondary_light'],
+            'heading_font' => $headingFont,
+            'body_font' => $bodyFont,
         ];
 
         // Handle logo upload
@@ -148,6 +236,58 @@ class ThemeBranding extends Page implements HasForms
 
         Notification::make()
             ->title('Theme & branding saved successfully')
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Apply a preset theme (sets all 6 colors from config/theme_presets.php).
+     * Called from the Preset Themes picker in the view.
+     */
+    public function applyPreset(string $presetKey): void
+    {
+        $preset = config("theme_presets.presets.{$presetKey}");
+        if (!$preset) {
+            Notification::make()->title('Unknown preset: ' . $presetKey)->danger()->send();
+            return;
+        }
+
+        $theme = ThemeSetting::first();
+        if (!$theme) {
+            Notification::make()->title('No theme record found. Run the seeder first.')->danger()->send();
+            return;
+        }
+
+        $theme->update([
+            'primary_color' => $preset['primary_color'],
+            'primary_hover' => $preset['primary_hover'],
+            'primary_light' => $preset['primary_light'],
+            'secondary_color' => $preset['secondary_color'],
+            'secondary_hover' => $preset['secondary_hover'],
+            'secondary_light' => $preset['secondary_light'],
+        ]);
+
+        // Remember which preset was last applied (for UI active-state)
+        \App\Models\SiteSetting::setValue('active_theme_preset', $presetKey);
+
+        Cache::forget('theme_settings');
+        \Cache::forget('site_setting.active_theme_preset');
+
+        // Re-fill form state so the color inputs reflect the applied preset
+        $this->form->fill([
+            'primary_color' => $preset['primary_color'],
+            'primary_hover' => $preset['primary_hover'],
+            'primary_light' => $preset['primary_light'],
+            'secondary_color' => $preset['secondary_color'],
+            'secondary_hover' => $preset['secondary_hover'],
+            'secondary_light' => $preset['secondary_light'],
+            'current_logo_url' => $theme->logo_url,
+            'current_favicon_url' => $theme->favicon_url,
+        ]);
+
+        Notification::make()
+            ->title('Preset applied: ' . $preset['name'])
+            ->body('Color palette updated. Save any other changes (logo/favicon) as needed.')
             ->success()
             ->send();
     }

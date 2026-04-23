@@ -75,7 +75,7 @@ class ProfileController extends Controller
         ]);
 
         $user = $profile->user;
-        $siteName = \App\Models\SiteSetting::getValue('site_name', 'Anugraha Matrimony');
+        $siteName = \App\Models\SiteSetting::getValue('site_name', 'MatrimonyTheme');
 
         return view('profile.print', compact('profile', 'user', 'isOwn', 'siteName'));
     }
@@ -346,8 +346,8 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'age_from' => 'nullable|integer|min:18|max:70',
             'age_to' => 'nullable|integer|min:18|max:70|gte:age_from',
-            'height_from' => 'nullable|string|max:20',
-            'height_to' => 'nullable|string|max:20',
+            'height_from' => 'nullable|string|max:50',
+            'height_to' => 'nullable|string|max:50',
             'complexion' => 'nullable|array',
             'body_type' => 'nullable|array',
             'marital_status' => 'nullable|array',

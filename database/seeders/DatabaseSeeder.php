@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            StaffRolesSeeder::class,
+            BranchesSeeder::class,
             CommunitySeeder::class,
             MembershipPlanSeeder::class,
             FaqSeeder::class,
@@ -28,9 +30,9 @@ class DatabaseSeeder extends Seeder
         // Create default admin user
         $admin = User::create([
             'name' => 'Admin',
-            'email' => 'admin@anugrahamatrimony.com',
+            'email' => 'admin@example.com',
             'password' => bcrypt('password'),
-            'phone' => '9481618143',
+            'phone' => '0000000000',
             'role' => 'admin',
             'is_active' => true,
             'email_verified_at' => now(),

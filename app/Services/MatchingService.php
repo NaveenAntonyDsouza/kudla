@@ -28,6 +28,7 @@ class MatchingService
         'marital_status'   => 5,
         'diet'             => 2,
         'family_status'    => 2,
+        'horoscope'        => 0,
     ];
 
     /**
@@ -53,6 +54,7 @@ class MatchingService
         'marital_status'   => 'Marital Status',
         'diet'             => 'Diet',
         'family_status'    => 'Family Status',
+        'horoscope'        => 'Horoscope (Nakshatra)',
     ];
 
     /**
@@ -250,6 +252,7 @@ class MatchingService
             'marital_status'   => $this->hasArrayValues($prefs->marital_status),
             'diet'             => $this->hasArrayValues($prefs->diet),
             'family_status'    => $this->hasArrayValues($prefs->family_status),
+            'horoscope'        => $this->isHoroscopeApplicable($prefs),
             default            => false,
         };
     }
@@ -320,6 +323,8 @@ class MatchingService
                 true
             ),
 
+            'horoscope' => $this->evaluateHoroscope($candidate, $prefs),
+
             default => false,
         };
     }
@@ -346,5 +351,50 @@ class MatchingService
         if ($score >= 60) return 'good';
         if ($score >= 40) return 'partial';
         return null;
+    }
+
+    /**
+     * Check if horoscope matching is applicable.
+     * Requires: horoscope enabled in config AND the searching user has a nakshatra set.
+     */
+    private function isHoroscopeApplicable(PartnerPreference $prefs): bool
+    {
+        $config = json_decode(\App\Models\SiteSetting::getValue('horoscope_compatibility', '{}'), true);
+
+        if (($config['horoscope_enabled'] ?? '0') !== '1') {
+            return false;
+        }
+
+        // Check if the profile owner has a nakshatra set
+        $myNakshatra = $prefs->profile?->religiousInfo?->nakshatra;
+
+        return !empty($myNakshatra);
+    }
+
+    /**
+     * Evaluate horoscope compatibility between candidate and preference owner.
+     */
+    private function evaluateHoroscope(Profile $candidate, PartnerPreference $prefs): bool
+    {
+        $myNakshatra = $prefs->profile?->religiousInfo?->nakshatra;
+        $theirNakshatra = $candidate->religiousInfo?->nakshatra;
+
+        // If either doesn't have nakshatra, treat as neutral (compatible)
+        if (!$myNakshatra || !$theirNakshatra) {
+            return true;
+        }
+
+        $config = json_decode(\App\Models\SiteSetting::getValue('horoscope_compatibility', '{}'), true);
+        $matrix = $config['nakshatra_matrix'] ?? [];
+
+        $compatibleList = $matrix[$myNakshatra] ?? [];
+
+        // If this nakshatra has compatible entries defined, check if candidate is in the list
+        if (!empty($compatibleList)) {
+            return in_array($theirNakshatra, $compatibleList, true);
+        }
+
+        // No data for this nakshatra — treat as neutral (compatible)
+        return true;
     }
 }

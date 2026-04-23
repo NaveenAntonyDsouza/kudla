@@ -8,7 +8,12 @@
 
     @if ($errors->any())
         <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p class="text-sm text-red-600 font-medium">Please fix the errors below.</p>
+            <p class="text-sm text-red-600 font-medium">Please fix the errors below:</p>
+            <ul class="mt-1 text-xs text-red-500 list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -18,7 +23,7 @@
         maritalStatus: {{ Js::from(old('marital_status', $pref?->marital_status ?? [])) }},
         physicalStatus: {{ Js::from(old('physical_status', $pref?->physical_status ?? [])) }},
 
-        hasReligion(r) { return this.religions.includes(r) || this.religions.includes('Any'); },
+        hasReligion(r) { return this.religions.includes(r) && !this.religions.includes('Any'); },
         hasNonUnmarried() {
             if (this.maritalStatus.length === 0) return false;
             if (this.maritalStatus.includes('Any')) return true;

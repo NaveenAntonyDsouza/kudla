@@ -22,17 +22,36 @@ use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::view('/privacy-policy', 'pages.privacy')->name('privacy');
-Route::view('/terms-condition', 'pages.terms')->name('terms');
+
+// Affiliate short URL — /r/MNG redirects to homepage with ?ref=MNG
+// (Used in QR codes / printed marketing materials for cleaner URLs.)
+Route::get('/r/{code}', function (string $code) {
+    return redirect('/?ref=' . strtoupper($code));
+})->name('affiliate.short')->where('code', '[A-Za-z0-9_-]{1,20}');
+
+// Static pages served from database (editable from admin panel)
+Route::get('/privacy-policy', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'privacy-policy')->name('privacy');
+Route::get('/terms-condition', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'terms-condition')->name('terms');
+Route::get('/about-us', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'about-us')->name('about-us');
+Route::get('/refund-policy', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'refund-policy')->name('refund-policy');
+Route::get('/child-safety', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'child-safety')->name('child-safety');
+Route::get('/report-misuse', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'report-misuse')->name('report-misuse');
+Route::get('/add-with-us', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'add-with-us')->name('add-with-us');
+
+// Pages that remain Blade-based (dynamic content / complex logic)
 Route::view('/faq', 'pages.faq')->name('faq');
-Route::view('/about-us', 'pages.about-us')->name('about-us');
-Route::view('/add-with-us', 'pages.add-with-us')->name('add-with-us');
 Route::view('/blog', 'pages.blog')->name('blog');
-Route::view('/child-safety', 'pages.child-safety')->name('child-safety');
 Route::view('/demograph', 'pages.demograph')->name('demograph');
 Route::view('/event', 'pages.event')->name('event');
-Route::view('/refund-policy', 'pages.refund-policy')->name('refund-policy');
-Route::view('/report-misuse', 'pages.report-misuse')->name('report-misuse');
+
+// Ad click tracking
+Route::get('/ad/click/{advertisement}', function (\App\Models\Advertisement $advertisement) {
+    $advertisement->recordClick();
+    return redirect($advertisement->click_url ?: '/');
+})->name('ad.click');
+
+// Catch-all for custom admin-created static pages (must be AFTER all named routes)
+Route::get('/page/{slug}', [\App\Http\Controllers\StaticPageController::class, 'show'])->name('static-page')->where('slug', '[a-z0-9-]+');
 
 // Success Stories (public listing)
 Route::get('/success-stories', [\App\Http\Controllers\SuccessStoryController::class, 'index'])->name('success-stories.index');
@@ -70,6 +89,7 @@ Route::get('/search/quick-search', fn() => app(SearchController::class)->publicS
 Route::get('/search/advance-search', fn() => app(SearchController::class)->publicSearch('advance'))->name('search.advance');
 Route::get('/search/keyword-search', fn() => app(SearchController::class)->publicSearch('keyword'))->name('search.keyword');
 Route::get('/search/id-search', fn() => app(SearchController::class)->publicSearch('byid'))->name('search.byid');
+Route::get('/search/results', [SearchController::class, 'publicResults'])->name('search.results.public');
 
 // Discover Profiles (public — accessible without login for SEO)
 Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
@@ -163,6 +183,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Membership Plans
     Route::post('/membership-plans/checkout', [MembershipController::class, 'checkout'])->name('membership.checkout');
     Route::post('/membership-plans/verify', [MembershipController::class, 'verify'])->name('membership.verify');
+    Route::post('/membership-plans/apply-coupon', [MembershipController::class, 'applyCoupon'])->name('membership.applyCoupon');
 
     // ID Proof
     Route::get('/submit-id-proof', [IdProofController::class, 'index'])->name('idproof.index');
@@ -237,3 +258,14 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/profile/{section}', [ProfileController::class, 'update'])->name('profile.update')
         ->where('section', 'primary|religious|education|family|location|contact|hobbies|social|partner');
 });
+
+// ──────────────────────────────────────────────────────────────
+// Unsubscribe — 1-click via signed URL (no auth required)
+// Sent from re-engagement emails and other automated mails.
+// ──────────────────────────────────────────────────────────────
+Route::get('/unsubscribe/{user}/{preference}', \App\Http\Controllers\UnsubscribeController::class)
+    ->middleware('signed')
+    ->name('unsubscribe');
+
+Route::get('/resubscribe/{user}/{preference}', [\App\Http\Controllers\UnsubscribeController::class, 'resubscribe'])
+    ->name('unsubscribe.resubscribe');

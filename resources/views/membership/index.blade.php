@@ -75,9 +75,51 @@
                         @if($activePlanId === $plan->id)
                             <div class="mt-6 px-6 py-2.5 text-sm font-semibold text-green-700 bg-green-100 rounded-lg">Current Plan</div>
                         @elseif($plan->price_inr > 0)
-                            <form method="POST" action="{{ route('membership.checkout') }}" class="mt-6">
+                            <form method="POST" action="{{ route('membership.checkout') }}" class="mt-6" x-data="couponForm({{ $plan->id }}, {{ $plan->price_inr }})">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                <input type="hidden" name="coupon_code" :value="appliedCode">
+
+                                {{-- Coupon Toggle --}}
+                                <div class="mb-3 text-left">
+                                    <button type="button" @click="showCoupon = !showCoupon" class="text-xs text-gray-500 hover:text-gray-700 underline">
+                                        Have a coupon code?
+                                    </button>
+
+                                    <div x-show="showCoupon" x-transition class="mt-2">
+                                        <div class="flex gap-1">
+                                            <input type="text" x-model="couponInput" placeholder="Enter code"
+                                                class="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-purple-500 focus:border-purple-500 uppercase"
+                                                :disabled="appliedCode !== ''" @keydown.enter.prevent="applyCoupon()">
+                                            <button type="button"
+                                                x-show="appliedCode === ''"
+                                                @click="applyCoupon()"
+                                                :disabled="loading"
+                                                class="px-3 py-1.5 text-xs font-medium text-white rounded-md" style="background: {{ $color }};">
+                                                <span x-show="!loading">Apply</span>
+                                                <span x-show="loading">...</span>
+                                            </button>
+                                            <button type="button"
+                                                x-show="appliedCode !== ''"
+                                                @click="removeCoupon()"
+                                                class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md">
+                                                Remove
+                                            </button>
+                                        </div>
+                                        <p x-show="errorMsg" class="text-xs text-red-500 mt-1" x-text="errorMsg"></p>
+                                        <div x-show="appliedCode" class="mt-1.5 p-2 bg-green-50 border border-green-200 rounded-md">
+                                            <p class="text-xs text-green-700 font-medium">
+                                                Coupon <span x-text="appliedCode" class="font-bold"></span> applied!
+                                                Discount: ₹<span x-text="discountAmount"></span>
+                                            </p>
+                                            <p class="text-xs text-green-600 mt-0.5">
+                                                You pay: ₹<span x-text="finalPrice" class="font-bold"></span>
+                                                <span class="line-through text-gray-400 ml-1">₹{{ number_format($plan->price_inr) }}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <button type="submit" class="w-full px-6 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors hover:opacity-90" style="background: {{ $color }};">
                                     UPGRADE
                                 </button>
@@ -176,4 +218,62 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function couponForm(planId, originalPrice) {
+            return {
+                showCoupon: false,
+                couponInput: '',
+                appliedCode: '',
+                discountAmount: 0,
+                finalPrice: originalPrice,
+                errorMsg: '',
+                loading: false,
+
+                async applyCoupon() {
+                    if (!this.couponInput.trim()) return;
+                    this.loading = true;
+                    this.errorMsg = '';
+
+                    try {
+                        const response = await fetch('{{ route("membership.applyCoupon") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                coupon_code: this.couponInput.trim(),
+                                plan_id: planId,
+                            }),
+                        });
+                        const data = await response.json();
+
+                        if (data.valid) {
+                            this.appliedCode = data.coupon_code;
+                            this.discountAmount = data.discount;
+                            this.finalPrice = data.final_price;
+                            this.errorMsg = '';
+                        } else {
+                            this.errorMsg = data.message;
+                            this.appliedCode = '';
+                        }
+                    } catch (e) {
+                        this.errorMsg = 'Something went wrong. Please try again.';
+                    }
+
+                    this.loading = false;
+                },
+
+                removeCoupon() {
+                    this.appliedCode = '';
+                    this.couponInput = '';
+                    this.discountAmount = 0;
+                    this.finalPrice = originalPrice;
+                    this.errorMsg = '';
+                },
+            };
+        }
+    </script>
 </x-layouts.app>

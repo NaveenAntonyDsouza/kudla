@@ -39,7 +39,7 @@
             <p>{{ config('app.name') }} acts as a platform to connect individuals seeking matrimonial matches. We do not guarantee the accuracy of member profiles, the outcome of any interaction, or the success of any match. Members are advised to exercise due diligence before proceeding with any match.</p>
 
             <h2 class="text-lg font-semibold text-gray-900">8. Contact</h2>
-            <p>For questions about these terms, contact us at <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com') }}</strong>.</p>
+            <p>For questions about these terms, contact us at <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@example.com') }}</strong>.</p>
         </div>
     </div>
 </x-layouts.app>

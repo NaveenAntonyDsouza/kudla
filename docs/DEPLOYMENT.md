@@ -1,9 +1,11 @@
-# Deployment Guide — Anugraha Matrimony on Hostinger
+# Deployment Guide — MatrimonyTheme on Hostinger
+
+> This guide uses Hostinger as the example host. The same steps apply to any shared or VPS PHP hosting — adjust paths and panel names as needed.
 
 ## Prerequisites
-- Hostinger Business plan with SSH access
-- Domain: anugrahamatrimony.com pointed to Hostinger
-- MySQL database created in hPanel
+- Hostinger Business plan (or equivalent) with SSH access
+- Domain pointed to your hosting provider
+- MySQL database created in hPanel (or your hosting control panel)
 
 ---
 
@@ -12,8 +14,8 @@
 1. Login to **Hostinger hPanel**
 2. Go to **Databases > MySQL Databases**
 3. Create a new database:
-   - Database name: `anugraha_matrimony`
-   - Username: `anugraha_user`
+   - Database name: `your_matrimony_db` (pick any name)
+   - Username: `your_db_user`
    - Password: (generate a strong password, save it)
 4. Note down: database name, username, password
 
@@ -148,7 +150,7 @@ php artisan db:seed
 
 ## Step 12: Test
 
-1. Visit https://anugrahamatrimony.com
+1. Visit your configured domain
 2. Register a new account
 3. Test login, search, interests
 4. Test payment (use Razorpay test mode first, then switch to live)

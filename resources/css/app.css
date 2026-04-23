@@ -12,7 +12,7 @@
 /*
  * White-Label Theme System
  * Colors are injected from the database via <style> tag in the layout.
- * These @theme values are build-time fallbacks (Anugraha Matrimony defaults).
+ * These @theme values are build-time fallbacks (MatrimonyTheme defaults).
  * At runtime, CSS custom properties from the DB override these.
  */
 /* Floating label field style (outlined inputs) */

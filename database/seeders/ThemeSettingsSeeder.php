@@ -10,7 +10,7 @@ class ThemeSettingsSeeder extends Seeder
     public function run(): void
     {
         ThemeSetting::create([
-            'site_name' => 'Anugraha Matrimony',
+            'site_name' => 'MatrimonyTheme',
             'tagline' => 'Find Your Perfect Match',
             'primary_color' => '#8B1D91',
             'primary_hover' => '#6B1571',

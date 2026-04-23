@@ -21,7 +21,7 @@
 
             <h2 class="text-lg font-semibold text-gray-900">4. How to Report Concerns</h2>
             <p><strong>In-App:</strong> Report any user directly from their profile using the "Report" or "Block" feature.</p>
-            <p><strong>Email:</strong> Send a detailed report to <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com') }}</strong> with screenshots and user profile details.</p>
+            <p><strong>Email:</strong> Send a detailed report to <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@example.com') }}</strong> with screenshots and user profile details.</p>
             <p>All reports are treated with strict confidentiality.</p>
 
             <h2 class="text-lg font-semibold text-gray-900">5. Our Moderation and Enforcement Process</h2>
@@ -31,7 +31,7 @@
             <p>We report all instances of apparent CSAM to NCMEC and/or regional/national authorities (Indian Cyber Crime Reporting Portal). We fully cooperate with law enforcement investigations.</p>
 
             <h2 class="text-lg font-semibold text-gray-900">7. Contact Us</h2>
-            <p>For questions about our child safety practices: <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com') }}</strong></p>
+            <p>For questions about our child safety practices: <strong>{{ \App\Models\SiteSetting::getValue('email', 'info@example.com') }}</strong></p>
         </div>
     </div>
 </x-layouts.app>

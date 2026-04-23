@@ -25,6 +25,20 @@ class SeoSettings extends Page implements HasForms
     public ?array $globalData = [];
     public ?array $pageData = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('manage_seo_settings');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('manage_seo_settings');
+    }
+
     public function mount(): void
     {
         $settings = SiteSetting::pluck('value', 'key')->toArray();
@@ -39,6 +53,7 @@ class SeoSettings extends Page implements HasForms
             'posthog_api_key' => $settings['posthog_api_key'] ?? '',
             'posthog_host' => $settings['posthog_host'] ?? 'https://us.i.posthog.com',
             'robots_txt' => $settings['robots_txt'] ?? "User-agent: *\nAllow: /\n\nSitemap: " . url('/sitemap.xml'),
+            'sitemap_enabled' => $settings['sitemap_enabled'] ?? '1',
         ]);
 
         // Load per-page SEO data
@@ -86,20 +101,20 @@ class SeoSettings extends Page implements HasForms
                             ->label('Default Meta Title')
                             ->maxLength(70)
                             ->helperText('Fallback <title> tag. Max 60-70 characters recommended.')
-                            ->placeholder('e.g., Anugraha Matrimony - Find Your Perfect Match'),
+                            ->placeholder('e.g., Your Matrimony Site - Find Your Perfect Match'),
 
                         Forms\Components\TextInput::make('meta_title_suffix')
                             ->label('Meta Title Suffix')
                             ->maxLength(50)
-                            ->helperText('Appended to all page titles. e.g., " | Anugraha Matrimony"')
-                            ->placeholder('e.g., | Anugraha Matrimony'),
+                            ->helperText('Appended to all page titles. e.g., " | Your Matrimony Site"')
+                            ->placeholder('e.g., | Your Matrimony Site'),
 
                         Forms\Components\Textarea::make('meta_description_default')
                             ->label('Default Meta Description')
                             ->rows(3)
                             ->maxLength(160)
                             ->helperText('Fallback meta description. Max 155-160 characters.')
-                            ->placeholder('e.g., Find your perfect life partner with Anugraha Matrimony...'),
+                            ->placeholder('e.g., Find your perfect life partner with our matrimony service...'),
                     ]),
 
                 \Filament\Schemas\Components\Section::make('Tracking & Analytics')
@@ -132,13 +147,18 @@ class SeoSettings extends Page implements HasForms
                     ])
                     ->columns(3),
 
-                \Filament\Schemas\Components\Section::make('Robots.txt')
-                    ->description('Control how search engines crawl your site.')
+                \Filament\Schemas\Components\Section::make('Sitemap & Robots')
+                    ->description('Control sitemap visibility and search engine crawling.')
                     ->schema([
+                        Forms\Components\Toggle::make('sitemap_enabled')
+                            ->label('Enable XML Sitemap')
+                            ->helperText('When disabled, /sitemap.xml returns a 404. Useful during development.'),
+
                         Forms\Components\Textarea::make('robots_txt')
                             ->label('Robots.txt Content')
                             ->rows(8)
-                            ->helperText('This will be served at /robots.txt. Be careful with Disallow rules.'),
+                            ->helperText('This will be served at /robots.txt. Be careful with Disallow rules.')
+                            ->columnSpanFull(),
                     ]),
             ])
             ->statePath('globalData');
@@ -193,8 +213,14 @@ class SeoSettings extends Page implements HasForms
     {
         $data = $this->globalForm->getState();
 
+        $toggleFields = ['sitemap_enabled'];
+
         foreach ($data as $key => $value) {
-            SiteSetting::setValue($key, $value ?? '');
+            if (in_array($key, $toggleFields)) {
+                SiteSetting::setValue($key, $value ? '1' : '0');
+            } else {
+                SiteSetting::setValue($key, $value ?? '');
+            }
         }
 
         Notification::make()

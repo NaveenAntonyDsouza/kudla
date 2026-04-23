@@ -38,31 +38,41 @@
                         </div>
 
                         <div class="p-5 space-y-4">
-                            {{-- Verification --}}
+                            {{-- Verification (only show if verification is enabled OR already verified) --}}
+                            @php
+                                $phoneVerificationEnabled = \App\Models\SiteSetting::getValue('phone_verification_enabled', '0') === '1';
+                                $emailVerificationEnabled = \App\Models\SiteSetting::getValue('email_verification_enabled', '0') === '1';
+                            @endphp
+                            @if($phoneVerificationEnabled || $emailVerificationEnabled || $user->phone_verified_at || $user->email_verified_at)
                             <div class="space-y-2">
-                                <div class="flex items-center gap-2 text-sm">
-                                    @if($user->phone_verified_at)
+                                @if($user->phone_verified_at)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
                                         <span class="text-green-700">Mobile Verified</span>
-                                    @else
+                                    </div>
+                                @elseif($phoneVerificationEnabled)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <a href="{{ route('register.verify') }}" class="flex items-center gap-2 text-amber-600 hover:underline">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
                                             Mobile Not Verified — Verify Now
                                         </a>
-                                    @endif
-                                </div>
-                                <div class="flex items-center gap-2 text-sm">
-                                    @if($user->email_verified_at)
+                                    </div>
+                                @endif
+                                @if($user->email_verified_at)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
                                         <span class="text-green-700">Email Verified</span>
-                                    @else
+                                    </div>
+                                @elseif($emailVerificationEnabled)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <a href="{{ route('register.verifyemail') }}" class="flex items-center gap-2 text-amber-600 hover:underline">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
                                             Email Not Verified — Verify Now
                                         </a>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                             </div>
+                            @endif
 
                             {{-- Completion --}}
                             <div>

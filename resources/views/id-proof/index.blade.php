@@ -36,7 +36,7 @@
                         <p>You can also send your ID proof via:</p>
                         <p class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-(--color-primary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
-                            info@anugrahamatrimony.com
+                            {{ \App\Models\SiteSetting::getValue('email', 'info@example.com') }}
                         </p>
                     </div>
                 </div>

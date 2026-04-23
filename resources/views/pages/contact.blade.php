@@ -75,7 +75,7 @@
             {{-- Contact Info Sidebar --}}
             <div class="space-y-6">
                 @php
-                    $contactEmail = \App\Models\SiteSetting::getValue('email', 'info@kudlamatrimony.com');
+                    $contactEmail = \App\Models\SiteSetting::getValue('email', 'info@example.com');
                     $contactPhone = \App\Models\SiteSetting::getValue('phone', '');
                     $whatsapp = \App\Models\SiteSetting::getValue('whatsapp', '');
                     $address = \App\Models\SiteSetting::getValue('address', '');

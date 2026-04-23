@@ -179,7 +179,7 @@ class FaqSeeder extends Seeder
             // Contact (3)
             [
                 'question' => 'How do I contact support?',
-                'answer' => 'Phone: +91 94816 18143 | WhatsApp: +91 94816 18143 | Email: info@anugrahamatrimony.com. We\'re available Monday to Saturday, 9 AM to 6 PM.',
+                'answer' => 'Please refer to the contact details on the Contact Us page. We\'re typically available Monday to Saturday, 9 AM to 6 PM.',
                 'category' => 'Contact',
                 'is_visible' => true,
                 'display_order' => 23,

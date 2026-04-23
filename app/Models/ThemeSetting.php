@@ -16,6 +16,8 @@ class ThemeSetting extends Model
         'secondary_color',
         'secondary_hover',
         'secondary_light',
+        'heading_font',
+        'body_font',
         'logo_url',
         'favicon_url',
     ];

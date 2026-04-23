@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BranchScopable;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Profile extends Model
 {
-    use SoftDeletes;
+    use BranchScopable, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -23,6 +24,8 @@ class Profile extends Model
         'date_of_birth',
         'created_by',
         'creator_name',
+        'created_by_staff_id',
+        'branch_id',
         'creator_contact_number',
         'marital_status',
         'children_with_me',
@@ -42,6 +45,8 @@ class Profile extends Model
         'is_approved',
         'is_verified',
         'id_proof_verified',
+        'is_vip',
+        'is_featured',
         'how_did_you_hear_about_us',
         'show_profile_to',
         'is_hidden',
@@ -69,6 +74,8 @@ class Profile extends Model
             'is_approved' => 'boolean',
             'is_verified' => 'boolean',
             'id_proof_verified' => 'boolean',
+            'is_vip' => 'boolean',
+            'is_featured' => 'boolean',
             'children_with_me' => 'integer',
             'children_not_with_me' => 'integer',
             'suspended_at' => 'datetime',
@@ -136,11 +143,31 @@ class Profile extends Model
         return $query->where('is_approved', true);
     }
 
+    public function scopeVip(Builder $query): Builder
+    {
+        return $query->where('is_vip', true);
+    }
+
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('is_featured', true);
+    }
+
     // Relationships
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function createdByStaff(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_staff_id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function religiousInfo(): HasOne

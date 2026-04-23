@@ -134,8 +134,14 @@
 
         {{-- Details --}}
         <div class="p-3">
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5 flex-wrap">
                 <p class="text-sm font-semibold text-(--color-primary) group-hover:underline">{{ $p->matri_id }}</p>
+                @if($p->is_vip)
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold text-white leading-none" style="background: linear-gradient(135deg, #f59e0b, #d97706);">⭐ VIP</span>
+                @endif
+                @if($p->is_featured)
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-pink-500 text-white leading-none">Featured</span>
+                @endif
                 @if(!$isGuest && $p->user?->isPremium())
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-(--color-primary) text-white leading-none">Premium</span>
                 @endif
@@ -155,15 +161,15 @@
                             $activityColor = 'bg-green-400';
                             $activityTextColor = 'text-green-600';
                         } elseif ($diffHours < 72) {
-                            $activityLabel = $lastLogin->diffInDays(now()) . 'd ago';
+                            $activityLabel = (int) $lastLogin->diffInDays(now()) . 'd ago';
                             $activityColor = 'bg-yellow-400';
                             $activityTextColor = 'text-yellow-700';
                         } elseif ($diffHours < 168) {
-                            $activityLabel = $lastLogin->diffInDays(now()) . 'd ago';
+                            $activityLabel = (int) $lastLogin->diffInDays(now()) . 'd ago';
                             $activityColor = 'bg-orange-400';
                             $activityTextColor = 'text-orange-700';
                         } else {
-                            $activityLabel = $lastLogin->diffInDays(now()) . 'd ago';
+                            $activityLabel = (int) $lastLogin->diffInDays(now()) . 'd ago';
                             $activityColor = 'bg-gray-300';
                             $activityTextColor = 'text-gray-500';
                         }

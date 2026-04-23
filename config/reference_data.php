@@ -250,7 +250,7 @@ return [
     'how_did_you_hear_list' => [
         'Branding' => ['Auto', 'Bill Board', 'Boat', 'Bus', 'Metro'],
         'Event/Activity' => ['Carnival', 'Consumer Fair', 'Conventions'],
-        'Magazine Ads' => ['Anugraha Magazine', 'College Magazines', 'Jeevadeepthi', 'Other Magazines', 'Parish Bulletins', 'Vanitha'],
+        'Magazine Ads' => ['College Magazines', 'Community Magazines', 'Other Magazines', 'Parish Bulletins'],
         'Newspaper Ads' => ['Deepika', 'Deshabhimani', 'Janapraksham', 'Keralasabha'],
         'Others' => ['Hoarding', 'Notice/Pamphlet', 'Others', 'Tele-In', 'Telemarketing'],
         'Radio' => ['Aakashavani', 'Club FM', 'Local Radios', 'Radio Mango', 'Radio Mirchi', 'Red FM'],

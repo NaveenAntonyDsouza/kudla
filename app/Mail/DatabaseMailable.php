@@ -3,6 +3,8 @@
 namespace App\Mail;
 
 use App\Models\EmailTemplate;
+use App\Models\SiteSetting;
+use App\Models\ThemeSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -65,13 +67,14 @@ abstract class DatabaseMailable extends Mailable
     public function content(): Content
     {
         $template = EmailTemplate::findBySlug($this->templateSlug);
+        $themeVars = $this->themeVariables(); // brand colors + logo for the wrapper
 
         if ($template) {
             $rendered = $template->render($this->buildVariables());
 
             return new Content(
                 view: 'emails.database-template',
-                with: ['body' => $rendered['body']],
+                with: array_merge(['body' => $rendered['body']], $themeVars),
             );
         }
 
@@ -80,26 +83,81 @@ abstract class DatabaseMailable extends Mailable
         if ($fallbackView) {
             return new Content(
                 markdown: $fallbackView,
-                with: $this->fallbackData(),
+                with: array_merge($this->fallbackData(), $themeVars),
             );
         }
 
         // Last resort: render variables as simple message
         return new Content(
             view: 'emails.database-template',
-            with: ['body' => '<p>You have a new notification from ' . config('app.name') . '.</p>'],
+            with: array_merge(
+                ['body' => '<p>You have a new notification from ' . config('app.name') . '.</p>'],
+                $themeVars
+            ),
         );
     }
 
     /**
-     * Build the full variable map with common defaults.
+     * Build the full variable map with common defaults + theme variables.
+     * Templates can use {{PRIMARY_COLOR}}, {{LOGO_URL}}, etc. in their HTML.
      */
-    private function buildVariables(): array
+    protected function buildVariables(): array
     {
         return array_merge([
-            'SITE_NAME' => config('app.name'),
+            'SITE_NAME' => SiteSetting::getValue('site_name', config('app.name')),
             'SITE_URL' => config('app.url'),
             'LOGIN_URL' => url('/login'),
+            // Theme variables (Phase 2.6D) — use these in email template HTML
+            'PRIMARY_COLOR' => $this->getPrimaryColor(),
+            'PRIMARY_HOVER' => $this->getPrimaryHover(),
+            'PRIMARY_LIGHT' => $this->getPrimaryLight(),
+            'SECONDARY_COLOR' => $this->getSecondaryColor(),
+            'LOGO_URL' => $this->getLogoUrl(),
+            'TAGLINE' => SiteSetting::getValue('tagline', ''),
         ], $this->templateVariables());
+    }
+
+    /**
+     * Theme variables for the email wrapper template.
+     */
+    protected function themeVariables(): array
+    {
+        return [
+            'primaryColor' => $this->getPrimaryColor(),
+            'primaryHover' => $this->getPrimaryHover(),
+            'primaryLight' => $this->getPrimaryLight(),
+            'secondaryColor' => $this->getSecondaryColor(),
+            'logoUrl' => $this->getLogoUrl(),
+            'siteName' => SiteSetting::getValue('site_name', config('app.name')),
+            'tagline' => SiteSetting::getValue('tagline', ''),
+        ];
+    }
+
+    protected function getPrimaryColor(): string
+    {
+        return ThemeSetting::first()?->primary_color ?? '#8B1D91';
+    }
+
+    protected function getPrimaryHover(): string
+    {
+        return ThemeSetting::first()?->primary_hover ?? '#6B1571';
+    }
+
+    protected function getPrimaryLight(): string
+    {
+        return ThemeSetting::first()?->primary_light ?? '#F3E8F7';
+    }
+
+    protected function getSecondaryColor(): string
+    {
+        return ThemeSetting::first()?->secondary_color ?? '#00BCD4';
+    }
+
+    protected function getLogoUrl(): string
+    {
+        $logo = ThemeSetting::first()?->logo_url ?? '';
+        if (!$logo) return '';
+        // If it's a relative path, make it absolute for emails
+        return str_starts_with($logo, 'http') ? $logo : rtrim(config('app.url'), '/') . $logo;
     }
 }

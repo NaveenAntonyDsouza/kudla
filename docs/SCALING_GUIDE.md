@@ -1,4 +1,4 @@
-# Scaling Guide — Anugraha Matrimony
+# Scaling Guide — MatrimonyTheme
 
 When to optimize, what to change, and how. Each section is independent — do them when needed, not all at once.
 

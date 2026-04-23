@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
 use App\Models\ThemeSetting;
+use App\Traits\LogsAdminActivity;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -12,7 +13,7 @@ use Filament\Pages\Page;
 
 class SiteSettings extends Page implements HasForms
 {
-    use InteractsWithForms;
+    use InteractsWithForms, LogsAdminActivity;
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'General Settings';
@@ -22,6 +23,20 @@ class SiteSettings extends Page implements HasForms
     protected string $view = 'filament.pages.site-settings';
 
     public ?array $data = [];
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return \App\Support\Permissions::can('manage_site_settings');
+    }
+
+    /**
+     * Block direct URL access for users without permission.
+     * Without this, hidden navigation can be bypassed by typing the URL.
+     */
+    public static function canAccess(): bool
+    {
+        return \App\Support\Permissions::can('manage_site_settings');
+    }
 
     public function mount(): void
     {
@@ -60,10 +75,14 @@ class SiteSettings extends Page implements HasForms
             'social_instagram' => $settings['social_instagram'] ?? '',
             'social_youtube' => $settings['social_youtube'] ?? '',
             'social_twitter' => $settings['social_twitter'] ?? '',
+            'social_linkedin' => $settings['social_linkedin'] ?? '',
 
             // Mobile App
             'app_play_store_url' => $settings['app_play_store_url'] ?? '',
             'app_apple_store_url' => $settings['app_apple_store_url'] ?? '',
+
+            // Canned Responses
+            'canned_responses' => json_decode($settings['canned_responses'] ?? '[]', true) ?: [],
         ]);
     }
 
@@ -78,7 +97,7 @@ class SiteSettings extends Page implements HasForms
                             ->label('Site Name')
                             ->required()
                             ->maxLength(100)
-                            ->helperText('Displayed in header, footer, emails. e.g., "Anugraha Matrimony"'),
+                            ->helperText('Displayed in header, footer, emails. e.g., "Your Matrimony Site"'),
 
                         Forms\Components\TextInput::make('tagline')
                             ->label('Tagline')
@@ -207,6 +226,11 @@ class SiteSettings extends Page implements HasForms
                             ->label('Twitter / X URL')
                             ->url()
                             ->placeholder('https://x.com/...'),
+
+                        Forms\Components\TextInput::make('social_linkedin')
+                            ->label('LinkedIn Company URL')
+                            ->url()
+                            ->placeholder('https://linkedin.com/company/...'),
                     ])
                     ->columns(2),
 
@@ -224,6 +248,34 @@ class SiteSettings extends Page implements HasForms
                             ->placeholder('https://apps.apple.com/app/...'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Canned Responses')
+                    ->description('Pre-written reply templates for the Contact Inbox. Select these when replying to inquiries.')
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\Repeater::make('canned_responses')
+                            ->label('')
+                            ->schema([
+                                Forms\Components\TextInput::make('label')
+                                    ->label('Template Name')
+                                    ->required()
+                                    ->maxLength(100)
+                                    ->placeholder('e.g., Thank You Response'),
+
+                                Forms\Components\Textarea::make('body')
+                                    ->label('Response Text')
+                                    ->required()
+                                    ->rows(3)
+                                    ->maxLength(2000)
+                                    ->placeholder('Type the response message here...'),
+                            ])
+                            ->columns(1)
+                            ->addActionLabel('Add Response Template')
+                            ->defaultItems(0)
+                            ->reorderable()
+                            ->collapsible()
+                            ->itemLabel(fn (array $state): ?string => $state['label'] ?? null),
+                    ]),
             ])
             ->statePath('data');
     }
@@ -240,9 +292,13 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_documents',
         ];
 
+        $jsonFields = ['canned_responses'];
+
         foreach ($data as $key => $value) {
             if (in_array($key, $toggleFields)) {
                 SiteSetting::setValue($key, $value ? '1' : '0');
+            } elseif (in_array($key, $jsonFields)) {
+                SiteSetting::setValue($key, json_encode($value ?? []));
             } else {
                 SiteSetting::setValue($key, $value ?? '');
             }
@@ -257,6 +313,8 @@ class SiteSettings extends Page implements HasForms
             ]);
             \Illuminate\Support\Facades\Cache::forget('theme_settings');
         }
+
+        self::logActivity('site_settings_updated');
 
         Notification::make()
             ->title('Settings saved successfully')

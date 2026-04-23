@@ -71,10 +71,39 @@
 
                 {{-- ── QUICK SEARCH TAB ── --}}
                 <div x-show="activeTab === 'partner'" x-cloak>
-                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6"
+                         x-data="{
+                            selectedReligion: '{{ request('religion', '') }}',
+                            communities: [],
+                            selectedCaste: '{{ request('caste', '') }}',
+                            loading: false,
+                            async fetchCommunities() {
+                                if (!this.selectedReligion) {
+                                    this.communities = [];
+                                    this.selectedCaste = '';
+                                    return;
+                                }
+                                this.loading = true;
+                                try {
+                                    const res = await fetch('/api/cascade/communities?religion=' + encodeURIComponent(this.selectedReligion));
+                                    const data = await res.json();
+                                    this.communities = data.map(c => c.community_name);
+                                    if (!this.communities.includes(this.selectedCaste)) {
+                                        this.selectedCaste = '';
+                                    }
+                                } catch(e) {
+                                    this.communities = [];
+                                }
+                                this.loading = false;
+                            },
+                            init() {
+                                if (this.selectedReligion) this.fetchCommunities();
+                            }
+                         }">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Quick Search</h2>
 
-                        <form method="GET" action="{{ route('search.quick') }}">
+                        <form method="GET" action="{{ route('search.results.public') }}">
+                            <input type="hidden" name="search_type" value="quick">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 {{-- Gender --}}
                                 <div class="float-field">
@@ -106,24 +135,24 @@
 
                                 {{-- Religion --}}
                                 <div class="float-field">
-                                    <select name="religion">
+                                    <select name="religion" x-model="selectedReligion" @change="fetchCommunities()">
                                         <option value="">Any Religion</option>
                                         @foreach(['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other'] as $r)
-                                            <option value="{{ $r }}" {{ request('religion') === $r ? 'selected' : '' }}>{{ $r }}</option>
+                                            <option value="{{ $r }}">{{ $r }}</option>
                                         @endforeach
                                     </select>
                                     <label>Religion</label>
                                 </div>
                             </div>
 
-                            {{-- Caste/Community --}}
-                            <div class="mt-5">
+                            {{-- Caste/Community (cascaded from Religion) --}}
+                            <div class="mt-5" x-show="selectedReligion" x-transition>
                                 <div class="float-field">
-                                    <select name="caste">
+                                    <select name="caste" x-model="selectedCaste" :disabled="loading">
                                         <option value="">Any Caste / Community</option>
-                                        @foreach(\App\Models\Community::getCasteList() as $c)
-                                            <option value="{{ $c }}" {{ request('caste') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                                        @endforeach
+                                        <template x-for="c in communities" :key="c">
+                                            <option :value="c" x-text="c"></option>
+                                        </template>
                                     </select>
                                     <label>Caste / Community</label>
                                 </div>
@@ -157,7 +186,8 @@
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Advance Search</h2>
 
-                        <form method="GET" action="{{ route('search.advance') }}">
+                        <form method="GET" action="{{ route('search.results.public') }}">
+                            <input type="hidden" name="search_type" value="advance">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 {{-- Gender --}}
                                 <div class="float-field">
@@ -306,7 +336,8 @@
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Keyword Search</h2>
                         <p class="text-sm text-gray-500 mb-6">Search profiles by name, profession, religion, or any keyword.</p>
-                        <form method="GET" action="{{ route('search.keyword') }}" class="space-y-4">
+                        <form method="GET" action="{{ route('search.results.public') }}" class="space-y-4">
+                            <input type="hidden" name="search_type" value="keyword">
                             <div class="float-field">
                                 <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">
                                 <label>Enter Keyword (e.g. Doctor, Bangalore, Catholic)</label>
@@ -322,7 +353,8 @@
                 <div x-show="activeTab === 'byid'" x-cloak>
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Search by Matrimony ID</h2>
-                        <form method="GET" action="{{ route('search.byid') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+                        <form method="GET" action="{{ route('search.results.public') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+                            <input type="hidden" name="search_type" value="byid">
                             <div class="float-field flex-1">
                                 <input type="text" name="matri_id" value="{{ request('matri_id') }}" placeholder=" " required
                                     class="uppercase" maxlength="20">
@@ -334,35 +366,6 @@
                         </form>
                     </div>
                 </div>
-
-                {{-- ── RESULTS ── --}}
-                @if(request()->hasAny(['search', 'keyword', 'matri_id', 'caste', 'denomination', 'religion', 'gender', 'age_from']))
-                <div class="mt-8">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">
-                        @if(!empty($filterLabel))
-                            <span class="text-(--color-primary)">{{ $filterLabel }}</span> —
-                        @endif
-                        <span class="text-(--color-primary)">{{ $results->total() }}</span> {{ Str::plural('Profile', $results->total()) }} found
-                    </h2>
-
-                    @if($results->count() > 0)
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                            @foreach($results as $p)
-                                <x-profile-card :profile="$p" />
-                            @endforeach
-                        </div>
-
-                        <div class="mt-8">
-                            {{ $results->links() }}
-                        </div>
-                    @else
-                        <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                            <p class="text-gray-600 font-medium">No profiles found</p>
-                            <p class="text-sm text-gray-400 mt-2">Try adjusting your search criteria.</p>
-                        </div>
-                    @endif
-                </div>
-                @endif
 
             </div>
         </div>

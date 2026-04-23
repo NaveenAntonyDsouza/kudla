@@ -1,5 +1,5 @@
 # Admin Panel — Complete Visual Map
-**Platform:** Anugraha / Kudla Matrimony (White-Label)
+**Platform:** MatrimonyTheme (White-Label)
 **Framework:** Filament 5.4.3 (Laravel 13)
 **Total Sections:** 11 | **Total Pages:** 35+
 
@@ -513,12 +513,12 @@
  |       [Social] [SEO]                                              |
  |                                                                    |
  | General:                                                          |
- |   Site Name:        [Kudla Matrimony     ]                        |
+ |   Site Name:        [Your Matrimony Site ]                        |
  |   Tagline:          [Find Your Perfect...]                        |
- |   Contact Email:    [info@kudlamatr...   ]                        |
+ |   Contact Email:    [info@your-domain... ]                        |
  |   Contact Phone:    [+91 98765 43210     ]                        |
  |   WhatsApp:         [+91 98765 43210     ]                        |
- |   Address:          [Mangalore, Karnataka]                        |
+ |   Address:          [Your City, Country  ]                        |
  |                                                                    |
  | Branding:                                                         |
  |   Logo:             [Upload]  [Preview]                           |
@@ -533,7 +533,7 @@
  |   Twitter/X:        [https://x.com/...]                           |
  |                                                                    |
  | SEO:                                                              |
- |   Default Meta Title:  [Kudla Matrimony - ...]                    |
+ |   Default Meta Title:  [Your Matrimony Site]                      |
  |   Meta Description:    [Trusted matrimony...]                     |
  |   Google Analytics ID: [G-XXXXXXXXX]                              |
  |   Facebook Pixel ID:   [XXXXXXXXX]                                |
@@ -600,7 +600,7 @@
  | 2 | Udupi       | UDP  | Udupi     | Ramesh  | 230   | ON         |
  |                                                                    |
  | [Add Branch] → Name, Code, Location, Phone, Email, Manager       |
- | Affiliate Link: kudlamatrimony.com/register?ref=MNG  [Copy] [QR] |
+ | Affiliate Link: your-domain.com/register?ref=MNG    [Copy] [QR] |
  +------------------------------------------------------------------+
 
  Branch Revenue
@@ -724,7 +724,7 @@
 ## Build Order (Current Plan)
 
 ```
-Phase 1 — Active Development (for kudlamatrimony.com)
+Phase 1 — Active Development
   1. [DONE] Dashboard
   2. [DONE] User Management
   3. [NEXT] Verification (ID Proofs) — enhance

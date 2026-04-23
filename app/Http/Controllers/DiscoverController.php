@@ -143,16 +143,27 @@ class DiscoverController extends Controller
             'age_high' => $query
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
 
-            // Default: newest first
-            default => $query->orderBy('profiles.created_at', 'desc'),
+            // Default: VIP → Featured → newest first
+            default => $query
+                ->orderBy('profiles.is_vip', 'desc')
+                ->orderBy('profiles.is_featured', 'desc')
+                ->orderBy('profiles.created_at', 'desc'),
         };
     }
 
     /**
-     * Resolve subcategories — handles both arrays and callables.
+     * Resolve subcategories — handles three forms:
+     *   1. literal array in 'subcategories' key
+     *   2. method name string in 'subcategories_source' key (resolved via DiscoverConfigService)
+     *   3. legacy callable in 'subcategories' key (kept for backwards compatibility)
      */
     private function resolveSubcategories(array $config): array
     {
+        if (isset($config['subcategories_source'])) {
+            $method = $config['subcategories_source'];
+            return app(\App\Services\DiscoverConfigService::class)->{$method}();
+        }
+
         $subs = $config['subcategories'] ?? [];
         return is_callable($subs) ? $subs() : $subs;
     }

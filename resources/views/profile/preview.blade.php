@@ -141,25 +141,44 @@
                             <h2 class="text-lg font-semibold text-gray-900">{{ $profile->full_name }}</h2>
                             <p class="text-sm text-(--color-primary) font-medium">{{ $profile->matri_id }}</p>
 
+                            @if($profile->is_vip || $profile->is_featured)
+                                <div class="mt-2 flex items-center justify-center gap-2 flex-wrap">
+                                    @if($profile->is_vip)
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706);">⭐ VIP Member</span>
+                                    @endif
+                                    @if($profile->is_featured)
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold text-white bg-pink-500">Featured Profile</span>
+                                    @endif
+                                </div>
+                            @endif
+
                             <div class="mt-4 space-y-2 text-left">
-                                <div class="flex items-center gap-2 text-sm">
-                                    @if($user->phone_verified_at)
+                                @php
+                                    $phoneVerificationEnabled = \App\Models\SiteSetting::getValue('phone_verification_enabled', '0') === '1';
+                                    $emailVerificationEnabled = \App\Models\SiteSetting::getValue('email_verification_enabled', '0') === '1';
+                                @endphp
+                                @if($user->phone_verified_at)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
                                         <span class="text-green-700">Mobile Number Verified</span>
-                                    @else
+                                    </div>
+                                @elseif($phoneVerificationEnabled)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
-                                        <span class="text-red-500">ID Proof Not Verified</span>
-                                    @endif
-                                </div>
-                                <div class="flex items-center gap-2 text-sm">
-                                    @if($user->email_verified_at)
+                                        <span class="text-red-500">Mobile Not Verified</span>
+                                    </div>
+                                @endif
+                                @if($user->email_verified_at)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>
                                         <span class="text-green-700">Email Verified</span>
-                                    @else
+                                    </div>
+                                @elseif($emailVerificationEnabled)
+                                    <div class="flex items-center gap-2 text-sm">
                                         <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
                                         <span class="text-gray-500">Email Not Verified</span>
-                                    @endif
-                                </div>
+                                    </div>
+                                @endif
                                 <div class="flex items-center gap-2 text-sm text-gray-500">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
                                     Last Login : {{ ($user->last_login_at ?? $user->updated_at)?->format('d M Y') }}

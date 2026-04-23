@@ -1,7 +1,20 @@
-# Mobile App Plan (Flutter) — Future Phase
+# Mobile App Plan (Flutter) — NEXT PRIORITY
 
-**Status:** Not started. Build after admin panel is complete.
-**Sell as:** Separate CodeCanyon product (add-on to web platform)
+**Status:** Starting soon. Admin panel + core platform + brand neutralization + CodeCanyon prep (AWS S3, demo seeder) are complete.
+
+**Current state:**
+- Existing Android webview app on Play Store: `com.books.KudlaMatrimony` (wraps kudlamatrimony.com)
+- This document plans the upgrade: webview → full native Flutter app
+
+**Sell as:** Premium tier bundle in CodeCanyon listing (Web + Flutter App) — commands higher price than web-only.
+
+**Estimated effort:** 3-6 months end-to-end (API layer 1-2 weeks, Flutter build 2-4 months, store review + polish 2-4 weeks).
+
+**Why Flutter over React Native / native:**
+- Single codebase → Android + iOS
+- Mature ecosystem (Riverpod, Dio, FCM, Razorpay SDK all first-class)
+- Hot reload speeds development
+- Strong performance, near-native feel
 
 ---
 

@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Add all missing columns needed for the full Anugraha registration flow.
+     * Add all missing columns needed for the full registration flow
+     * (children, religious, education, location, contact, family, lifestyle,
+     * social media, and differently-abled info).
      */
     public function up(): void
     {

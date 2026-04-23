@@ -21,18 +21,30 @@ class HomeController extends Controller
             ->get()
             ->groupBy('religion');
 
+        // Stats: Total Members respects the admin's auto-compute toggle.
+        // When ON, show live DB count of active + approved members. When OFF, show manual value.
+        $autoComputeMembers = SiteSetting::getValue('stats_auto_compute', '0') === '1';
+        $members = $autoComputeMembers
+            ? Profile::where('is_active', true)
+                ->approved()
+                ->whereHas('user', fn($q) => $q->whereNull('staff_role_id'))
+                ->count()
+            : (int) SiteSetting::getValue('total_members', '0');
+
         $stats = [
-            'members' => SiteSetting::getValue('total_members', '0'),
+            'members' => $members,
             'marriages' => SiteSetting::getValue('successful_marriages', '0'),
             'years' => SiteSetting::getValue('years_of_service', '1'),
         ];
 
-        // Get recent active profiles for the featured section
+        // Get VIP/Featured profiles first, then recent active profiles to fill up to 8
         $featuredProfiles = Profile::where('is_active', true)
             ->approved()
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->whereNotNull('full_name')
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
+            ->orderBy('is_vip', 'desc')
+            ->orderBy('is_featured', 'desc')
             ->orderBy('created_at', 'desc')
             ->limit(8)
             ->get();
@@ -47,6 +59,11 @@ class HomeController extends Controller
         $siteTitle = "{$siteName} - {$siteTagline} | Free Registration";
         $siteMetaDesc = "{$siteName} - Trusted matrimony service. Register free, browse verified profiles, and find your perfect life partner. {$stats['members']}+ members, {$stats['marriages']}+ successful marriages.";
 
-        return view('pages.home', compact('communities', 'stats', 'featuredProfiles', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
+        // Pick the homepage template: classic (default) | modern | premium.
+        // Admin sets this from Settings -> Homepage Content -> Homepage Design.
+        $template = SiteSetting::getValue('homepage_template', 'classic');
+        $template = in_array($template, ['classic', 'modern', 'premium'], true) ? $template : 'classic';
+
+        return view("pages.home.{$template}", compact('communities', 'stats', 'featuredProfiles', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
     }
 }

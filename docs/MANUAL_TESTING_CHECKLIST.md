@@ -1,5 +1,5 @@
-# Manual Testing Checklist — Anugraha / Kudla Matrimony
-**Test on:** https://kudlamatrimony.com (or localhost)
+# Manual Testing Checklist — MatrimonyTheme
+**Test on:** your-configured-domain or localhost
 **Tester:** _____________ | **Date:** _______________
 
 > Mark each item: ✅ Pass | ❌ Fail | ⏭ Skipped

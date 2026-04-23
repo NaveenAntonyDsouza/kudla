@@ -1,6 +1,6 @@
 # Admin Panel — Comprehensive Plan
 
-**Platform:** Anugraha Matrimony (White-Label Matrimony Platform)
+**Platform:** MatrimonyTheme (White-Label Matrimony Platform)
 **Framework:** Filament 5.4.3 (already installed)
 **Target:** CodeCanyon / white-label customers who manage everything from Admin Panel
 
