@@ -414,14 +414,32 @@
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         this.sourceImage = e.target.result;
-                        this.$nextTick(() => this.initCropper());
+                        // The <template x-if="sourceImage"> renders asynchronously —
+                        // initCropper() polls via requestAnimationFrame until the
+                        // x-ref becomes available (see initCropper below).
+                        this.initCropper();
                     };
                     reader.readAsDataURL(file);
                 },
 
-                initCropper() {
-                    const img = this.$refs.cropperImage;
-                    if (!img || !window.Cropper) return;
+                initCropper(attempts = 0) {
+                    // x-ref may lag template render — try both $refs AND DOM query.
+                    const img = this.$refs.cropperImage
+                        || (this.$el && this.$el.querySelector('img[x-ref="cropperImage"]'));
+
+                    if (!img || !window.Cropper) {
+                        // Retry next frame for up to ~15 frames (~250ms at 60fps).
+                        if (attempts < 15) {
+                            requestAnimationFrame(() => this.initCropper(attempts + 1));
+                            return;
+                        }
+                        console.error('Cropper init failed: cropperImage ref unavailable after retries', {
+                            hasWindowCropper: !!window.Cropper,
+                            hasSourceImage: !!this.sourceImage,
+                        });
+                        alert('Failed to load the photo editor. Please refresh the page and try again.');
+                        return;
+                    }
 
                     this.destroyCropper();
 
