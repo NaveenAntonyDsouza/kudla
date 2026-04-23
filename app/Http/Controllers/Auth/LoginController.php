@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\LoginHistory;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\OtpService;
@@ -33,7 +34,12 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
-        $user->update(['last_login_at' => now()]);
+        // Update last login + reset re-engagement level (user is active again)
+        $user->update([
+            'last_login_at' => now(),
+            'reengagement_level' => 0,
+        ]);
+        LoginHistory::record($user, 'password');
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
@@ -85,7 +91,12 @@ class LoginController extends Controller
         $user = User::where('phone', $request->phone)->first();
         Auth::login($user, true);
         $request->session()->regenerate();
-        $user->update(['last_login_at' => now()]);
+        // Update last login + reset re-engagement level (user is active again)
+        $user->update([
+            'last_login_at' => now(),
+            'reengagement_level' => 0,
+        ]);
+        LoginHistory::record($user, 'mobile_otp');
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
@@ -185,7 +196,12 @@ class LoginController extends Controller
 
         Auth::login($user, true);
         $request->session()->regenerate();
-        $user->update(['last_login_at' => now()]);
+        // Update last login + reset re-engagement level (user is active again)
+        $user->update([
+            'last_login_at' => now(),
+            'reengagement_level' => 0,
+        ]);
+        LoginHistory::record($user, 'email_otp');
 
         // Mark email as verified if not already
         if (! $user->email_verified_at) {

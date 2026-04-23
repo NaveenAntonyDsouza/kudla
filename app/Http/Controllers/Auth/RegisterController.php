@@ -18,6 +18,7 @@ use App\Models\LocationInfo;
 use App\Models\Profile;
 use App\Models\ReligiousInfo;
 use App\Models\User;
+use App\Services\AffiliateTracker;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,9 +70,17 @@ class RegisterController extends Controller
             'is_active' => true,
         ]);
 
+        // Affiliate attribution — if the user arrived via ?ref=CODE,
+        // stamp branch_id on the user and link the click to the registration.
+        // Safe to call even when no cookie is set (no-op).
+        app(AffiliateTracker::class)->attributeRegistration($request, $user);
+
         // Create profile (basic info only)
         // Auto-approve if admin setting is enabled
         $autoApprove = SiteSetting::getValue('auto_approve_profiles', '1') === '1';
+
+        // Re-read user so we pick up branch_id assigned by attributeRegistration above
+        $user->refresh();
 
         Profile::create([
             'user_id' => $user->id,
@@ -81,6 +90,7 @@ class RegisterController extends Controller
             'onboarding_step_completed' => 1,
             'is_active' => true,
             'is_approved' => $autoApprove,
+            'branch_id' => $user->branch_id, // mirror user's branch attribution
         ]);
 
         Auth::login($user);
