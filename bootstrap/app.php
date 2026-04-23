@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);
+
+        // Affiliate tracking — captures ?ref=CODE on every public web request
+        $middleware->web(append: [
+            \App\Http\Middleware\CaptureAffiliateRef::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
