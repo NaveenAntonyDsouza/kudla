@@ -25,8 +25,11 @@ Route::prefix('v1')->group(function () {
         'version' => 'v1',
     ]));
 
+    // Site configuration (step 6) — theme, branding, feature toggles,
+    // Razorpay key, app version gates. Flutter calls on every launch.
+    Route::get('/site/settings', [\App\Http\Controllers\Api\V1\SiteSettingsController::class, 'show']);
+
     // Public endpoints added in later steps:
-    // - /site/settings                  (step 6)
     // - /reference/{list}               (step 7)
     // - /auth/register/step-1           (week 2)
     // - /auth/otp/*/send, /verify       (week 2)
