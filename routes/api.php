@@ -52,8 +52,11 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/otp/email/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyEmailOtp'])
         ->middleware('throttle:10,1');
 
-    // Public endpoints added in later steps:
-    // - /auth/login/*                   (week 2)
+    // Login — email + password (week 2 step 10). Primary login flow.
+    // Steps 11/12 add /auth/login/phone-otp + /auth/login/email-otp aliases
+    // that forward to verifyPhoneOtp/verifyEmailOtp with purpose=login.
+    Route::post('/auth/login/password', [\App\Http\Controllers\Api\V1\AuthController::class, 'loginPassword'])
+        ->middleware('throttle:10,1');
     // - /auth/password/forgot|reset     (week 2)
     // - /membership/plans               (week 4)
     // - /success-stories                (week 4)

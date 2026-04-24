@@ -203,7 +203,39 @@ class AuthController extends BaseApiController
     }
 
     /* ------------------------------------------------------------------
-     |  Shared handlers (used by both phone + email OTP verify)
+     |  Password login
+     | ------------------------------------------------------------------ */
+
+    /**
+     * Log in with email + password. Primary login flow for existing users.
+     *
+     * @unauthenticated
+     * @group Authentication
+     */
+    public function loginPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'device_name' => 'nullable|string|max:60',
+        ]);
+
+        $user = $this->auth->authenticatePassword($data['email'], $data['password']);
+
+        if (! $user) {
+            // Generic UNAUTHENTICATED — don't leak whether the email exists.
+            return ApiResponse::error(
+                code: 'UNAUTHENTICATED',
+                message: 'Invalid email or password.',
+                status: 401,
+            );
+        }
+
+        return $this->handleLoginVerify($user, $data['device_name'] ?? 'Mobile', 'password');
+    }
+
+    /* ------------------------------------------------------------------
+     |  Shared handlers (used by both phone + email OTP verify + password login)
      | ------------------------------------------------------------------ */
 
     /**
