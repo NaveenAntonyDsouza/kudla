@@ -122,6 +122,17 @@ Route::prefix('v1')->group(function () {
             ])
             ->middleware('throttle:30,1');
 
+        // Photo-request lifecycle (week 3 step 11). send is throttled
+        // (20/min) to prevent spam; list/approve/ignore are unthrottled.
+        // Send uses matri_id in the URL so Flutter can open a profile
+        // view and kick off a request without needing the numeric profile id.
+        Route::get('/photo-requests', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'index']);
+        Route::post('/profiles/{matriId}/photo-request', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'send'])
+            ->where('matriId', '[A-Z0-9]+')
+            ->middleware('throttle:20,1');
+        Route::post('/photo-requests/{photoRequest}/approve', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'approve']);
+        Route::post('/photo-requests/{photoRequest}/ignore', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'ignore']);
+
         // Photo CRUD (week 3 step 9). Upload is throttled to 20/hour per
         // user to prevent storage abuse; other routes unthrottled. DELETE
         // soft-archives with a 30-day undo window; /permanent hard-deletes
