@@ -29,3 +29,6 @@ Thumbs.db
 # Scribe internal extraction state — regenerated on every scribe:generate.
 # (The rendered view at resources/views/scribe/ IS committed.)
 /.scribe
+
+# Local pre-migration backups created by dev workflow
+/storage/backups
