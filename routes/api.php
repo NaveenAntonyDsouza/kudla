@@ -96,6 +96,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/devices', [\App\Http\Controllers\Api\V1\DeviceController::class, 'register']);
         Route::delete('/devices/{device}', [\App\Http\Controllers\Api\V1\DeviceController::class, 'revoke']);
 
+        // Dashboard (week 3 step 3). Single-call home screen — CTA, stats,
+        // 4 carousels, discover teasers. Flutter calls on every app launch.
+        Route::get('/dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'show']);
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });
