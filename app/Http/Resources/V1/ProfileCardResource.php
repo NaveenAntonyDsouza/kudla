@@ -260,10 +260,10 @@ class ProfileCardResource extends JsonResource
 
         return BlockedProfile::where(function ($q) use ($profile) {
             $q->where([
-                'blocker_profile_id' => $this->viewer->id,
+                'profile_id' => $this->viewer->id,
                 'blocked_profile_id' => $profile->id,
             ])->orWhere([
-                'blocker_profile_id' => $profile->id,
+                'profile_id' => $profile->id,
                 'blocked_profile_id' => $this->viewer->id,
             ]);
         })->exists();
