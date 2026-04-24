@@ -39,8 +39,15 @@ Route::prefix('v1')->group(function () {
     // and returns a Sanctum token that authenticates steps 2-5.
     Route::post('/auth/register/step-1', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step1']);
 
+    // Phone OTP (week 2 step 8) — 3 purposes: register|login|reset.
+    // Rate limits prevent SMS spam + OTP brute force.
+    Route::post('/auth/otp/phone/send', [\App\Http\Controllers\Api\V1\AuthController::class, 'sendPhoneOtp'])
+        ->middleware('throttle:5,1');   // 5 sends per minute per IP
+    Route::post('/auth/otp/phone/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyPhoneOtp'])
+        ->middleware('throttle:10,1');  // 10 verifies per minute per IP
+
     // Public endpoints added in later steps:
-    // - /auth/otp/*/send, /verify       (week 2)
+    // - /auth/otp/email/*               (step 9)
     // - /auth/login/*                   (week 2)
     // - /auth/password/forgot|reset     (week 2)
     // - /membership/plans               (week 4)
