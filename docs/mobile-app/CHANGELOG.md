@@ -4,6 +4,51 @@ All plan revisions logged here. Most recent at top.
 
 ---
 
+## 2.1.0 — 2026-04-24 (afternoon, mid-Phase-2a)
+
+**UI-Safe API bar raised.** After Week 2 shipped, user asked: "can you
+build the API so well that there's no problem during UI?" This revision
+operationalizes the answer.
+
+### Added
+- `reference/ui-safe-api-checklist.md` — the 8-point non-negotiable
+  standard every endpoint must meet (timestamps as ISO 8601, real
+  booleans, empty arrays not null, present-but-null optionals, absolute
+  photo URLs, documented error responses, uniform pagination meta, Pest
+  test coverage)
+- Week 4 `step-16-bruno-collection.md` — committed Bruno collection with
+  `tests {}` blocks asserting envelope + key fields per endpoint.
+  Runnable as `bru run docs/bruno/kudla-api-v1 --env local`
+- Week 4 `step-17-contract-snapshot-tests.md` — Pest + spatie/pest-plugin-snapshots
+  test file capturing every endpoint's response shape. Fails loudly on
+  any future drift. Single most valuable regression net for Phase 2b
+- Week 4 `step-18-scribe-audit.md` — automated test that verifies every
+  `/api/v1/*` endpoint has `@response` blocks (happy + error),
+  `@urlParam` / `@queryParam` documented, 100% Scribe coverage
+- New entry in reference/README index pointing to the checklist
+- "Quality Bar — UI-Safe API" section in root README
+
+### Changed
+- Week 3 README now references the UI-safe checklist, time budget bumped
+  from ~32h to ~40h (Pest test writing per endpoint)
+- Week 4 README's step-15 renamed to "Feature-Complete Smoke + Scribe
+  Regen" (was "Bruno + load test" — Bruno moved to step-16, load test
+  dropped as premature optimization at 50-profile local scale)
+- `design/16-implementation.md` Gate A expanded with 4 new UI-safe
+  exit criteria (contract snapshots, Bruno run, Scribe audit,
+  8-point checklist per endpoint)
+- Phase 2a total: 4 weeks → 4.5 weeks. Phase 2 total: 20 → 20.5 weeks
+
+### Philosophy
+The cost of this bar (~3 extra days across Weeks 3+4) pays back
+heavily in Phase 2b. Every class of "Flutter broke because API drifted"
+regression is caught by a tripwire test long before Flutter sees it.
+
+Retrofit plan: Week 1+2 endpoints audited + raised to the same bar
+during the buffer week after Week 4.
+
+---
+
 ## 2.0.0 — 2026-04-23 (evening)
 
 **Major restructure.** Moved from 17 flat design docs to phase-based step-by-step folders.

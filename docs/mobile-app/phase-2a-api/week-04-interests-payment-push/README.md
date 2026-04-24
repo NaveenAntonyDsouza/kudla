@@ -26,17 +26,40 @@
 | 12 | [Settings endpoints (visibility/alerts/password/hide/delete)](step-12-settings.md) | ☐ |
 | 13 | [Contact form + static pages + success stories](step-13-engagement-public.md) | ☐ |
 | 14 | [Onboarding endpoints (4 optional steps)](step-14-onboarding-endpoints.md) | ☐ |
-| 15 | [Bruno test collection + load test](step-15-bruno-load-test.md) | ☐ |
+| 15 | [Feature-complete smoke test + Scribe regeneration](step-15-feature-complete-smoke.md) | ☐ |
+
+### New quality-bar steps (per UI-safe API bar, April 24 2026)
+
+| # | Step | Status |
+|---|------|--------|
+| 16 | [Bruno test collection — every endpoint](step-16-bruno-collection.md) | ☐ |
+| 17 | [Contract snapshot test suite](step-17-contract-snapshot-tests.md) | ☐ |
+| 18 | [Scribe completeness audit + OpenAPI publish](step-18-scribe-audit.md) | ☐ |
 
 **End-of-week acceptance:** [week-04-acceptance.md](week-04-acceptance.md) (also Phase 2a exit gate)
 
 ---
 
+## ⚠ New quality bar from Week 3 onwards
+
+Every endpoint must meet the **[UI-Safe API Checklist](../../reference/ui-safe-api-checklist.md)**:
+
+1. ISO 8601 timestamps · 2. real `bool` · 3. `[]` not null · 4. null not missing ·
+5. absolute photo URLs · 6. every error Scribe-documented · 7. identical pagination meta · 8. Pest happy + 2+ error paths
+
+Steps 16–18 operationalize the bar across the whole API.
+
+---
+
 ## End-of-phase state
 
-By end of Week 4, the API layer is **feature-complete**. Every Flutter screen in Phase 2b has its backend waiting.
+By end of Week 4, the API layer is **feature-complete + UI-safe**:
 
-**Around 80 endpoints total live at `/api/v1/*`.**
+- **~82 endpoints** live at `/api/v1/*`
+- **Bruno collection** runnable via `bru run docs/bruno/kudla-api-v1 --env local` — every endpoint green
+- **Contract snapshots** pinning every response shape — regression net for Phase 2b
+- **Scribe docs** with 100% endpoint coverage + error `@response` blocks
+- **OpenAPI 3.1 spec** published at `/docs.openapi` — Flutter can auto-generate Dart DTOs from it
 
 ---
 

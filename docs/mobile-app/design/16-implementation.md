@@ -112,12 +112,19 @@ Backend-only. No Flutter work yet.
 
 | Phase | Weeks | Running total |
 |-------|-------|---------------|
-| 2a — API Layer | 4 | 4 |
-| 2b — Flutter MVP | 12 | 16 |
-| 2c — Launch | 4 | 20 |
-| **Total** | | **20 weeks (~5 months)** |
+| 2a — API Layer | 4.5 | 4.5 |
+| 2b — Flutter MVP | 12 | 16.5 |
+| 2c — Launch | 4 | 20.5 |
+| **Total** | | **~20–21 weeks (~5 months)** |
 
 Assumes solo builder (you + me) with design screenshots in hand. Extend by 2–4 weeks for: unforeseen Razorpay issues, Play Store review delays, new feature creep.
+
+**Note on Phase 2a's 4 → 4.5 weeks:** on April 24, 2026 the UI-Safe API
+bar was raised (see [reference/ui-safe-api-checklist.md](../reference/ui-safe-api-checklist.md)).
+Weeks 3 + 4 now ship with Pest tests for every endpoint, Bruno collection,
+contract snapshot tests, and a Scribe completeness audit. Added ~3 days
+of quality-bar work across the two weeks. The investment pays back
+heavily in Phase 2b — zero API-shape surprises when Flutter starts.
 
 ---
 
@@ -125,15 +132,18 @@ Assumes solo builder (you + me) with design screenshots in hand. Extend by 2–4
 
 Between phases, check these before proceeding:
 
-### Gate A: API Layer → Flutter (end of week 4)
+### Gate A: API Layer → Flutter (end of week 4.5)
 - [ ] All `/api/v1/*` endpoints return correct envelope
-- [ ] Pest suite green (target: 100+ tests)
+- [ ] Pest suite green (target: 150+ tests — 1 happy + 2+ error paths per endpoint)
+- [ ] Contract snapshot tests all green (step-17 — the shape tripwire)
+- [ ] Bruno collection runs green via `bru run` (step-16)
+- [ ] Scribe completeness test passes (step-18 — every endpoint has `@response` + error cases)
 - [ ] Production deploy of API has no web regression
-- [ ] Load test passed (100 req/s on heavy endpoints)
 - [ ] Error codes consistent and documented
 - [ ] Rate limits enforced and tested
 - [ ] Razorpay test-mode flow: order → SDK mock → verify → membership active
 - [ ] Push notifications deliver to test FCM token
+- [ ] **UI-safe checklist green for every endpoint** (see [reference/ui-safe-api-checklist.md](../reference/ui-safe-api-checklist.md))
 
 **If any unchecked:** delay Flutter start until resolved.
 

@@ -120,6 +120,27 @@ Before starting **any** implementation:
 
 ---
 
+## Quality Bar — UI-Safe API
+
+Every endpoint from Phase 2a Week 3 onwards must meet the
+**[UI-Safe API Checklist](reference/ui-safe-api-checklist.md)** —
+8 non-negotiable points that guarantee Flutter development in Phase 2b
+hits zero friction on the API boundary:
+
+1. ISO 8601 timestamps (never Carbon, never unix int)
+2. Real PHP `bool` (never `"1"` / `"0"` strings)
+3. `[]` when empty (never `null`, never missing)
+4. Optional fields always present (with explicit `null`)
+5. Absolute photo URLs (via `PhotoStorageService`)
+6. Every error code has a Scribe `@response`
+7. Identical pagination meta across all lists
+8. Pest: 1 happy + 2+ error paths per endpoint
+
+Operationalized by **Week 4 steps 16–18** — Bruno collection, contract
+snapshot tests, Scribe completeness audit.
+
+---
+
 ## Decisions Locked
 
 See [`00-decisions-and-context.md`](00-decisions-and-context.md) for full reasoning. Summary:
