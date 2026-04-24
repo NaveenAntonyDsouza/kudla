@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\Api\V1\Photo\UpdatePhotoPrivacyRequest;
 use App\Http\Requests\Api\V1\Photo\UploadPhotoRequest;
 use App\Http\Resources\V1\PhotoResource;
 use App\Http\Responses\ApiResponse;
+use App\Models\PhotoPrivacySetting;
 use App\Models\ProfilePhoto;
 use App\Models\SiteSetting;
 use App\Services\ImageProcessingService;
@@ -425,6 +427,82 @@ class PhotoController extends BaseApiController
     }
 
     /* ==================================================================
+     |  POST /photos/privacy — update per-type privacy levels
+     | ================================================================== */
+
+    /**
+     * Update the authenticated user's photo-privacy settings. PATCH-like
+     * semantics — only the fields present in the payload are changed.
+     *
+     * The photo_privacy_settings row is created on-demand via
+     * updateOrCreate if the user has never saved a setting before.
+     *
+     * @authenticated
+     *
+     * @group Photos
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "privacy": {
+     *       "privacy_level": "visible_to_all",
+     *       "profile_photo_privacy": "visible_to_all",
+     *       "album_photos_privacy": "interest_accepted",
+     *       "family_photos_privacy": "interest_accepted"
+     *     }
+     *   }
+     * }
+     *
+     * @response 422 scenario="empty-payload" {
+     *   "success": false,
+     *   "error": {
+     *     "code": "VALIDATION_FAILED",
+     *     "message": "Please check the fields below.",
+     *     "fields": {"privacy_level": ["Provide at least one privacy field to update."]}
+     *   }
+     * }
+     *
+     * @response 422 scenario="invalid-level" {
+     *   "success": false,
+     *   "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"privacy_level": ["..."]}}
+     * }
+     *
+     * @response 422 scenario="no-profile" {
+     *   "success": false,
+     *   "error": {"code": "PROFILE_REQUIRED", "message": "..."}
+     * }
+     */
+    public function updatePrivacy(UpdatePhotoPrivacyRequest $request): JsonResponse
+    {
+        $profile = $request->user()->profile;
+        if (! $profile) {
+            return ApiResponse::error(
+                'PROFILE_REQUIRED',
+                'Complete registration before managing photos.',
+                null,
+                422,
+            );
+        }
+
+        // Keep only non-null values — we never overwrite a saved privacy
+        // level with null. If Flutter wants to "reset to default" for a
+        // field, a separate endpoint (or an explicit 'visible_to_all'
+        // value) is the contract.
+        $changes = collect($request->validated())
+            ->filter(fn ($value) => $value !== null)
+            ->all();
+
+        $setting = PhotoPrivacySetting::updateOrCreate(
+            ['profile_id' => $profile->id],
+            $changes,
+        );
+
+        return ApiResponse::ok([
+            'privacy' => $this->privacyBlockFromRow($setting),
+        ]);
+    }
+
+    /* ==================================================================
      |  Private helpers
      | ================================================================== */
 
@@ -474,8 +552,7 @@ class PhotoController extends BaseApiController
     /**
      * Shape the privacy block in the GET /photos response. Uses the
      * existing photo_privacy_settings schema (privacy_level enum +
-     * per-type strings). The step-10 photo-privacy endpoint will be the
-     * write-side counterpart for this block.
+     * per-type strings).
      *
      * Returns null when the row doesn't exist yet — Flutter treats that
      * as "privacy not yet configured, show defaults."
@@ -483,10 +560,17 @@ class PhotoController extends BaseApiController
     private function privacyBlock($profile): ?array
     {
         $pp = $profile->photoPrivacySetting;
-        if (! $pp) {
-            return null;
-        }
 
+        return $pp ? $this->privacyBlockFromRow($pp) : null;
+    }
+
+    /**
+     * Render a PhotoPrivacySetting row into the stable privacy block.
+     * Returned by POST /photos/privacy so Flutter can re-render its
+     * toggles immediately after a save without a follow-up GET.
+     */
+    private function privacyBlockFromRow(PhotoPrivacySetting $pp): array
+    {
         return [
             'privacy_level' => $pp->privacy_level,
             'profile_photo_privacy' => $pp->profile_photo_privacy ?? null,

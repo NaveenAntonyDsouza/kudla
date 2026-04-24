@@ -129,6 +129,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/photos', [\App\Http\Controllers\Api\V1\PhotoController::class, 'index']);
         Route::post('/photos', [\App\Http\Controllers\Api\V1\PhotoController::class, 'upload'])
             ->middleware('throttle:20,60');
+        // Photo privacy toggle (week 3 step 10). Registered BEFORE the
+        // /{photo}/... routes so "/privacy" isn't captured as a photo id.
+        Route::post('/photos/privacy', [\App\Http\Controllers\Api\V1\PhotoController::class, 'updatePrivacy']);
         Route::post('/photos/{photo}/primary', [\App\Http\Controllers\Api\V1\PhotoController::class, 'setPrimary']);
         Route::post('/photos/{photo}/restore', [\App\Http\Controllers\Api\V1\PhotoController::class, 'restore']);
         Route::delete('/photos/{photo}/permanent', [\App\Http\Controllers\Api\V1\PhotoController::class, 'deletePermanent']);
