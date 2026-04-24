@@ -111,6 +111,17 @@ Route::prefix('v1')->group(function () {
         Route::get('/profiles/{matriId}', [\App\Http\Controllers\Api\V1\ProfileController::class, 'show'])
             ->where('matriId', '[A-Z0-9]+');
 
+        // Update a single profile section (week 3 step 6). Nine allowed
+        // section names — the whereIn locks the router so bad section
+        // names 404 before the controller even runs. Throttled to
+        // 30 edits/min per authenticated user.
+        Route::put('/profile/me/{section}', [\App\Http\Controllers\Api\V1\ProfileController::class, 'updateSection'])
+            ->whereIn('section', [
+                'primary', 'religious', 'education', 'family', 'location',
+                'contact', 'hobbies', 'social', 'partner',
+            ])
+            ->middleware('throttle:30,1');
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });

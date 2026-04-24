@@ -2,14 +2,26 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Requests\Api\V1\Profile\UpdateContactSectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdateEducationSectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdateFamilySectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdateHobbiesSectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdateLocationSectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdatePartnerSectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdatePrimarySectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdateReligiousSectionRequest;
+use App\Http\Requests\Api\V1\Profile\UpdateSocialSectionRequest;
 use App\Http\Resources\V1\ProfileResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Interest;
+use App\Models\LifestyleInfo;
+use App\Models\PartnerPreference;
 use App\Models\PhotoRequest;
 use App\Models\Profile;
 use App\Models\Shortlist;
 use App\Services\MatchingService;
 use App\Services\ProfileAccessService;
+use App\Services\ProfileCompletionService;
 use App\Services\ProfileViewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,10 +68,17 @@ class ProfileController extends BaseApiController
         'profilePhotos',
     ];
 
+    /** Section names accepted by updateSection(). */
+    public const UPDATABLE_SECTIONS = [
+        'primary', 'religious', 'education', 'family', 'location',
+        'contact', 'hobbies', 'social', 'partner',
+    ];
+
     public function __construct(
         private ProfileAccessService $access,
         private MatchingService $matching,
         private ProfileViewService $profileViewer,
+        private ProfileCompletionService $completion,
     ) {}
 
     /* ==================================================================
@@ -221,6 +240,257 @@ class ProfileController extends BaseApiController
             'photo_request_status' => $isSelf ? null : $this->photoRequestStatus($viewer, $target),
             'can_view_contact'     => $canViewContact,
         ]);
+    }
+
+    /* ==================================================================
+     |  updateSection() — edit one of 9 sections of own profile
+     | ================================================================== */
+
+    /**
+     * Persist the authenticated user's edits to a single profile section.
+     *
+     * Each section has its own FormRequest for validation (9 classes in
+     * App\Http\Requests\Api\V1\Profile\*). After the save, the completion
+     * percentage is recomputed and returned so Flutter's progress ring
+     * refreshes without a follow-up GET.
+     *
+     * @authenticated
+     *
+     * @group Profile
+     *
+     * @urlParam section string required One of: primary, religious,
+     *   education, family, location, contact, hobbies, social, partner.
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "section": "primary",
+     *     "updated_fields": ["about_me", "languages_known"],
+     *     "profile_completion_pct": 68
+     *   }
+     * }
+     *
+     * @response 404 scenario="unknown-section" {
+     *   "success": false,
+     *   "error": {"code": "NOT_FOUND", "message": "Profile not available."}
+     * }
+     *
+     * @response 422 scenario="validation-failed" {
+     *   "success": false,
+     *   "error": {
+     *     "code": "VALIDATION_FAILED",
+     *     "message": "Please check the fields below.",
+     *     "fields": {"mother_tongue": ["The mother tongue field is required."]}
+     *   }
+     * }
+     *
+     * @response 422 scenario="no-profile" {
+     *   "success": false,
+     *   "error": {"code": "PROFILE_REQUIRED", "message": "Complete registration before updating your profile."}
+     * }
+     *
+     * @response 429 scenario="throttled" {
+     *   "success": false,
+     *   "error": {"code": "THROTTLED", "message": "Too many requests. Try again in 60 seconds."}
+     * }
+     */
+    public function updateSection(Request $request, string $section): JsonResponse
+    {
+        if (! in_array($section, self::UPDATABLE_SECTIONS, true)) {
+            // Same 404 as anti-enumeration path — never reveal allowed sections
+            // beyond what the route's whereIn() already enforces.
+            return $this->notFound();
+        }
+
+        $profile = $request->user()->profile;
+        if (! $profile) {
+            return ApiResponse::error(
+                'PROFILE_REQUIRED',
+                'Complete registration before updating your profile.',
+                null,
+                422,
+            );
+        }
+
+        // Validate against the section's FormRequest rules. Laravel's
+        // ValidationException flows through ApiExceptionHandler and comes
+        // out as 422 VALIDATION_FAILED with per-field errors.
+        $validated = $request->validate($this->rulesForSection($section));
+
+        $updatedFields = $this->applySection($profile, $section, $validated);
+        $pct = $this->completion->recalculate($profile);
+
+        return ApiResponse::ok([
+            'section' => $section,
+            'updated_fields' => $updatedFields,
+            'profile_completion_pct' => $pct,
+        ]);
+    }
+
+    /**
+     * Section → FormRequest rules lookup. Kept as a method so tests can
+     * verify the mapping is complete.
+     */
+    private function rulesForSection(string $section): array
+    {
+        $cls = match ($section) {
+            'primary' => UpdatePrimarySectionRequest::class,
+            'religious' => UpdateReligiousSectionRequest::class,
+            'education' => UpdateEducationSectionRequest::class,
+            'family' => UpdateFamilySectionRequest::class,
+            'location' => UpdateLocationSectionRequest::class,
+            'contact' => UpdateContactSectionRequest::class,
+            'hobbies' => UpdateHobbiesSectionRequest::class,
+            'social' => UpdateSocialSectionRequest::class,
+            'partner' => UpdatePartnerSectionRequest::class,
+        };
+
+        return (new $cls())->rules();
+    }
+
+    /**
+     * Dispatch validated data to the right persistence path. Returns the
+     * list of field names that were actually touched (in API-side naming,
+     * not DB column naming — e.g. 'manglik' not 'dosh').
+     */
+    private function applySection(Profile $profile, string $section, array $validated): array
+    {
+        return match ($section) {
+            'primary' => $this->applyPrimary($profile, $validated),
+            'religious' => $this->applyReligious($profile, $validated),
+            'hobbies' => $this->applyHobbies($profile, $validated),
+            'partner' => $this->applyPartner($profile, $validated),
+
+            // Plain HasOne relations — no transformations needed.
+            'education' => $this->applyHasOne($profile, 'educationDetail', $validated),
+            'family' => $this->applyHasOne($profile, 'familyDetail', $validated),
+            'location' => $this->applyHasOne($profile, 'locationInfo', $validated),
+            'contact' => $this->applyHasOne($profile, 'contactInfo', $validated),
+            'social' => $this->applyHasOne($profile, 'socialMediaLink', $validated),
+        };
+    }
+
+    /**
+     * Generic updateOrCreate for HasOne relations where API field names
+     * match DB columns. Used by education / family / location / contact /
+     * social sections.
+     */
+    private function applyHasOne(Profile $profile, string $relation, array $data): array
+    {
+        $profile->{$relation}()->updateOrCreate(
+            ['profile_id' => $profile->id],
+            $data,
+        );
+
+        return array_keys($data);
+    }
+
+    /**
+     * "Primary" is a split section:
+     *   - Most fields (weight_kg, blood_group, …) live on profiles itself
+     *   - `languages_known` lives on lifestyle_info (web controller convention)
+     */
+    private function applyPrimary(Profile $profile, array $validated): array
+    {
+        $profileFields = array_intersect_key($validated, array_flip([
+            'weight_kg', 'blood_group', 'mother_tongue',
+            'complexion', 'body_type', 'about_me',
+        ]));
+
+        if (! empty($profileFields)) {
+            $profile->update($profileFields);
+        }
+
+        $updated = array_keys($profileFields);
+
+        if (array_key_exists('languages_known', $validated)) {
+            LifestyleInfo::updateOrCreate(
+                ['profile_id' => $profile->id],
+                ['languages_known' => $validated['languages_known'] ?: []],
+            );
+            $updated[] = 'languages_known';
+        }
+
+        return $updated;
+    }
+
+    /**
+     * Religious section has one API-to-DB name translation: the API
+     * uses the user-facing `manglik` field, but the column is `dosh`
+     * (legacy naming). Swap before persisting.
+     */
+    private function applyReligious(Profile $profile, array $validated): array
+    {
+        $data = $validated;
+        if (array_key_exists('manglik', $data)) {
+            $data['dosh'] = $data['manglik'];
+            unset($data['manglik']);
+        }
+
+        $profile->religiousInfo()->updateOrCreate(
+            ['profile_id' => $profile->id],
+            $data,
+        );
+
+        return array_keys($validated);  // API field names, not DB columns
+    }
+
+    /**
+     * Hobbies section has two twists:
+     *   1. Deselected array fields (omitted from payload) must be nulled
+     *      so the next GET returns [], not the stale previous selection.
+     *   2. `languages_known` is owned by the "primary" section — preserve
+     *      it from the existing lifestyle_info row so saving hobbies
+     *      doesn't wipe the user's language list.
+     */
+    private function applyHobbies(Profile $profile, array $validated): array
+    {
+        $arrayFields = [
+            'hobbies', 'favorite_music', 'preferred_books',
+            'preferred_movies', 'sports_fitness_games', 'favorite_cuisine',
+        ];
+        foreach ($arrayFields as $field) {
+            if (! array_key_exists($field, $validated)) {
+                $validated[$field] = null;
+            }
+        }
+
+        $existing = $profile->lifestyleInfo;
+
+        LifestyleInfo::updateOrCreate(
+            ['profile_id' => $profile->id],
+            array_merge($validated, [
+                'languages_known' => $existing?->languages_known,
+            ]),
+        );
+
+        return array_keys($validated);
+    }
+
+    /**
+     * Partner-preference arrays may contain the literal string 'Any'
+     * which the web form uses for "no preference". Strip it, and null
+     * any array that ends up empty so downstream matching treats the
+     * field as unset rather than "must match []".
+     */
+    private function applyPartner(Profile $profile, array $validated): array
+    {
+        foreach ($validated as $key => $value) {
+            if (is_array($value)) {
+                $filtered = array_values(array_filter(
+                    $value,
+                    fn ($v) => $v !== 'Any',
+                ));
+                $validated[$key] = empty($filtered) ? null : $filtered;
+            }
+        }
+
+        PartnerPreference::updateOrCreate(
+            ['profile_id' => $profile->id],
+            $validated,
+        );
+
+        return array_keys($validated);
     }
 
     /* ==================================================================

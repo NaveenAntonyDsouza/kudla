@@ -5,6 +5,7 @@ use App\Models\Profile;
 use App\Models\User;
 use App\Services\MatchingService;
 use App\Services\ProfileAccessService;
+use App\Services\ProfileCompletionService;
 use App\Services\ProfileViewService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -98,15 +99,17 @@ function buildShowController(?Profile $target = null): ProfileController
         app(ProfileAccessService::class),
         app(MatchingService::class),
         app(ProfileViewService::class),
+        app(ProfileCompletionService::class),
         $target,
     ) extends ProfileController {
         public function __construct(
             ProfileAccessService $access,
             MatchingService $matching,
             ProfileViewService $viewer,
+            ProfileCompletionService $completion,
             private ?Profile $stubbedTarget,
         ) {
-            parent::__construct($access, $matching, $viewer);
+            parent::__construct($access, $matching, $viewer, $completion);
         }
 
         protected function findTargetByMatriId(string $matriId): ?Profile
