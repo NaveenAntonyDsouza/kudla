@@ -87,6 +87,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/register/step-4', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step4']);
         Route::post('/auth/register/step-5', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step5']);
 
+        // /me + /logout (week 2 step 14). /me validates stored token on app launch.
+        Route::get('/auth/me', [\App\Http\Controllers\Api\V1\AuthController::class, 'me']);
+        Route::post('/auth/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });

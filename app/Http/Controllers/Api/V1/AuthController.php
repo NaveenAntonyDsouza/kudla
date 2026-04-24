@@ -310,6 +310,45 @@ class AuthController extends BaseApiController
     }
 
     /* ------------------------------------------------------------------
+     |  Session lifecycle (/me + /logout)
+     | ------------------------------------------------------------------ */
+
+    /**
+     * Return the currently-authenticated user with profile, membership, and
+     * next-step hint. Flutter calls this on every app launch to validate
+     * the stored token — a 401 here tells the client to drop the token and
+     * route to the login screen.
+     *
+     * @authenticated
+     * @group Authentication
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return ApiResponse::ok([
+            'user' => (new UserResource($user))->resolve(),
+            'profile' => $this->profileSummary($user),
+            'membership' => $this->membershipSummary($user),
+            'next_step' => $this->nextStepForUser($user),
+        ]);
+    }
+
+    /**
+     * Revoke the token the current request authenticated with. Only this
+     * device's token is revoked — other devices stay signed in.
+     *
+     * @authenticated
+     * @group Authentication
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $this->auth->revokeCurrentToken($request->user());
+
+        return ApiResponse::ok(['logged_out' => true]);
+    }
+
+    /* ------------------------------------------------------------------
      |  Shared handlers (used by both phone + email OTP verify + password login)
      | ------------------------------------------------------------------ */
 
