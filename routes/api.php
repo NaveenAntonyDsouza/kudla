@@ -104,6 +104,13 @@ Route::prefix('v1')->group(function () {
         // contact populated (self-view). Used by the profile screen.
         Route::get('/profile/me', [\App\Http\Controllers\Api\V1\ProfileController::class, 'me']);
 
+        // View another profile by matri_id (week 3 step 5). Applies all
+        // 7 ProfileAccessService gates, tracks a 24h-deduped ProfileView,
+        // returns viewer-context (match score, interest status, etc.).
+        // matri_id is alphanumeric uppercase (AM###### convention).
+        Route::get('/profiles/{matriId}', [\App\Http\Controllers\Api\V1\ProfileController::class, 'show'])
+            ->where('matriId', '[A-Z0-9]+');
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });
