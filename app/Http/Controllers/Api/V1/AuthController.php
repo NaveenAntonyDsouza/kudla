@@ -235,6 +235,81 @@ class AuthController extends BaseApiController
     }
 
     /* ------------------------------------------------------------------
+     |  Forgot + reset password (Laravel Password broker)
+     | ------------------------------------------------------------------ */
+
+    /**
+     * Send a password reset email via Laravel's Password broker.
+     *
+     * Always returns envelope success, regardless of whether the email
+     * exists — anti-enumeration. If an account exists, a reset link is
+     * dispatched to the user's email. The link points to APP_URL/reset-password/{token}
+     * which the Flutter App Links intent filter (step-17 of Flutter plan)
+     * intercepts to open the reset screen in-app.
+     *
+     * @unauthenticated
+     * @group Authentication
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Password::sendResetLink is silent on unknown emails — exactly
+        // what we want. It returns a status enum; we don't leak it.
+        \Illuminate\Support\Facades\Password::sendResetLink(['email' => $data['email']]);
+
+        return ApiResponse::ok([
+            'sent' => true,
+            'message' => 'If that email is registered, a password reset link has been sent.',
+        ]);
+    }
+
+    /**
+     * Complete the password reset using the token from the reset email.
+     *
+     * Side effect: on success, all Sanctum tokens for the user are revoked
+     * (force re-login on every device for security).
+     *
+     * @unauthenticated
+     * @group Authentication
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $minPwd = config('matrimony.password_min_length', 6);
+        $maxPwd = config('matrimony.password_max_length', 14);
+
+        $data = $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+            'password' => "required|string|min:{$minPwd}|max:{$maxPwd}|confirmed",
+        ]);
+
+        $status = \Illuminate\Support\Facades\Password::reset(
+            $data,
+            function ($user, $password) {
+                $user->update([
+                    'password' => \Illuminate\Support\Facades\Hash::make($password),
+                ]);
+                // Revoke every Sanctum token — all devices must re-login.
+                $this->auth->revokeAllTokens($user);
+            },
+        );
+
+        if ($status !== \Illuminate\Support\Facades\Password::PASSWORD_RESET) {
+            return ApiResponse::error(
+                code: 'VALIDATION_FAILED',
+                message: 'The reset link is invalid or has expired.',
+                fields: ['token' => [__($status)]],
+                status: 422,
+            );
+        }
+
+        return ApiResponse::ok(['reset' => true]);
+    }
+
+    /* ------------------------------------------------------------------
      |  Shared handlers (used by both phone + email OTP verify + password login)
      | ------------------------------------------------------------------ */
 

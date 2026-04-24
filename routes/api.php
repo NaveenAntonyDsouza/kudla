@@ -53,10 +53,18 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:10,1');
 
     // Login — email + password (week 2 step 10). Primary login flow.
-    // Steps 11/12 add /auth/login/phone-otp + /auth/login/email-otp aliases
-    // that forward to verifyPhoneOtp/verifyEmailOtp with purpose=login.
+    // Login via phone / email OTP is handled by the purpose=login branch of
+    // /auth/otp/phone/verify and /auth/otp/email/verify (steps 8/9) — no
+    // separate endpoints needed.
     Route::post('/auth/login/password', [\App\Http\Controllers\Api\V1\AuthController::class, 'loginPassword'])
         ->middleware('throttle:10,1');
+
+    // Forgot + reset password (week 2 step 13). Uses Laravel's Password
+    // broker — same reset-link tokens the web app uses.
+    Route::post('/auth/password/forgot', [\App\Http\Controllers\Api\V1\AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,1');
+    Route::post('/auth/password/reset', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword'])
+        ->middleware('throttle:5,1');
     // - /auth/password/forgot|reset     (week 2)
     // - /membership/plans               (week 4)
     // - /success-stories                (week 4)
