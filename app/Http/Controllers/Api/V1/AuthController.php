@@ -124,7 +124,86 @@ class AuthController extends BaseApiController
     }
 
     /* ------------------------------------------------------------------
-     |  Shared handlers (also used by email OTP in step-09)
+     |  Email OTP
+     | ------------------------------------------------------------------ */
+
+    /**
+     * Dispatch an email OTP. Mirror of sendPhoneOtp — same 3 purposes,
+     * but feature-flag for login purpose defaults to DISABLED (admin must
+     * explicitly enable email OTP login via site_settings).
+     *
+     * @unauthenticated
+     * @group Authentication
+     */
+    public function sendEmailOtp(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'purpose' => 'required|in:register,login,reset',
+        ]);
+
+        if ($data['purpose'] === 'login'
+            && SiteSetting::getValue('email_otp_login_enabled', '0') !== '1') {
+            return ApiResponse::error(
+                code: 'UNAUTHORIZED',
+                message: 'Email OTP login is currently disabled.',
+                status: 403,
+            );
+        }
+
+        // Silent short-circuit for login/reset on unknown emails (anti-enumeration).
+        if (in_array($data['purpose'], ['login', 'reset'], true)
+            && ! User::where('email', $data['email'])->exists()) {
+            return $this->sendOk();
+        }
+
+        $this->otp->send($data['email'], OtpService::CHANNEL_EMAIL);
+
+        return $this->sendOk();
+    }
+
+    /**
+     * Verify an email OTP. Dispatches to the same handleX handlers used
+     * by phone OTP (single source of truth for the 3 purpose branches).
+     *
+     * @unauthenticated
+     * @group Authentication
+     */
+    public function verifyEmailOtp(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
+            'purpose' => 'required|in:register,login,reset',
+            'device_name' => 'nullable|string|max:60',
+        ]);
+
+        if (! $this->otp->verify($data['email'], OtpService::CHANNEL_EMAIL, $data['otp'])) {
+            return ApiResponse::error(
+                code: 'OTP_INVALID',
+                message: 'Invalid or expired OTP.',
+                status: 422,
+            );
+        }
+
+        $user = User::where('email', $data['email'])->first();
+        if (! $user) {
+            return ApiResponse::error(
+                code: 'NOT_FOUND',
+                message: 'No account found with this email.',
+                status: 404,
+            );
+        }
+
+        return match ($data['purpose']) {
+            'register' => $this->handleRegisterVerify($user, 'email'),
+            'login' => $this->handleLoginVerify($user, $data['device_name'] ?? 'Mobile', 'email_otp'),
+            'reset' => $this->handleResetVerify(),
+        };
+    }
+
+    /* ------------------------------------------------------------------
+     |  Shared handlers (used by both phone + email OTP verify)
      | ------------------------------------------------------------------ */
 
     /**

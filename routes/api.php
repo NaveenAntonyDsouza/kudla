@@ -46,8 +46,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/otp/phone/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyPhoneOtp'])
         ->middleware('throttle:10,1');  // 10 verifies per minute per IP
 
+    // Email OTP (week 2 step 9) — mirror of phone OTP.
+    Route::post('/auth/otp/email/send', [\App\Http\Controllers\Api\V1\AuthController::class, 'sendEmailOtp'])
+        ->middleware('throttle:5,1');
+    Route::post('/auth/otp/email/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyEmailOtp'])
+        ->middleware('throttle:10,1');
+
     // Public endpoints added in later steps:
-    // - /auth/otp/email/*               (step 9)
     // - /auth/login/*                   (week 2)
     // - /auth/password/forgot|reset     (week 2)
     // - /membership/plans               (week 4)
