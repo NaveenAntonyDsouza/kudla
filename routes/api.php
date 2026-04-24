@@ -122,6 +122,18 @@ Route::prefix('v1')->group(function () {
             ])
             ->middleware('throttle:30,1');
 
+        // Photo CRUD (week 3 step 9). Upload is throttled to 20/hour per
+        // user to prevent storage abuse; other routes unthrottled. DELETE
+        // soft-archives with a 30-day undo window; /permanent hard-deletes
+        // + wipes all 4 storage variants.
+        Route::get('/photos', [\App\Http\Controllers\Api\V1\PhotoController::class, 'index']);
+        Route::post('/photos', [\App\Http\Controllers\Api\V1\PhotoController::class, 'upload'])
+            ->middleware('throttle:20,60');
+        Route::post('/photos/{photo}/primary', [\App\Http\Controllers\Api\V1\PhotoController::class, 'setPrimary']);
+        Route::post('/photos/{photo}/restore', [\App\Http\Controllers\Api\V1\PhotoController::class, 'restore']);
+        Route::delete('/photos/{photo}/permanent', [\App\Http\Controllers\Api\V1\PhotoController::class, 'deletePermanent']);
+        Route::delete('/photos/{photo}', [\App\Http\Controllers\Api\V1\PhotoController::class, 'destroy']);
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });

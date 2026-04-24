@@ -80,15 +80,17 @@ class ProfilePhoto extends Model
 
     public function getMediumUrlAttribute(): string
     {
-        return $this->attributes['medium_url']
-            ? Storage::disk($this->driverDisk())->url($this->attributes['medium_url'])
+        $path = $this->attributes['medium_url'] ?? null;
+        return $path
+            ? Storage::disk($this->driverDisk())->url($path)
             : $this->full_url;
     }
 
     public function getOriginalFullUrlAttribute(): string
     {
-        return $this->attributes['original_url']
-            ? Storage::disk($this->driverDisk())->url($this->attributes['original_url'])
+        $path = $this->attributes['original_url'] ?? null;
+        return $path
+            ? Storage::disk($this->driverDisk())->url($path)
             : '';
     }
 
