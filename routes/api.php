@@ -100,6 +100,10 @@ Route::prefix('v1')->group(function () {
         // 4 carousels, discover teasers. Flutter calls on every app launch.
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'show']);
 
+        // Own profile (week 3 step 4). Full profile with all 9 sections,
+        // contact populated (self-view). Used by the profile screen.
+        Route::get('/profile/me', [\App\Http\Controllers\Api\V1\ProfileController::class, 'me']);
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });
