@@ -102,6 +102,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Branch::class, 'branch_id');
     }
 
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
+
     /* ------------------------------------------------------------------
      |  Re-engagement helpers (Phase 2.2)
      | ------------------------------------------------------------------ */

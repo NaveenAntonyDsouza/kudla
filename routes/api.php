@@ -91,6 +91,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/me', [\App\Http\Controllers\Api\V1\AuthController::class, 'me']);
         Route::post('/auth/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
 
+        // FCM device registration (week 2 step 15). Called after each login
+        // + on Firebase's onTokenRefresh. Idempotent on fcm_token.
+        Route::post('/devices', [\App\Http\Controllers\Api\V1\DeviceController::class, 'register']);
+        Route::delete('/devices/{device}', [\App\Http\Controllers\Api\V1\DeviceController::class, 'revoke']);
+
         // Protected endpoints added in rest of weeks 2–4
     });
 });
