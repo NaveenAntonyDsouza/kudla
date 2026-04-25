@@ -66,6 +66,12 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/password/reset', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword'])
         ->middleware('throttle:5,1');
 
+    // Public membership plans (week 4 step 3) — pricing page surface.
+    // Mirrors web's public /membership-plans index. Throttled to
+    // 60/min/IP since it's a public, abuse-vulnerable endpoint.
+    Route::get('/membership/plans', [\App\Http\Controllers\Api\V1\MembershipController::class, 'plans'])
+        ->middleware('throttle:60,1');
+
     // Discover — category-based public browsing (week 3 step 14).
     // No auth required: mirrors web's public /discover routes. Throttled
     // 60/min per IP since public endpoints are exposed to abuse.
@@ -162,6 +168,15 @@ Route::prefix('v1')->group(function () {
         // cheap and idle-screen polling shouldn't hit limits.
         Route::get('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'messages'])
             ->middleware('throttle:120,1');
+
+        // Membership read-side (week 4 step 3). /me returns viewer's
+        // active membership + today's usage. /coupon/validate runs the
+        // canonical Coupon::validateFor logic — auth-required because
+        // we need user_id for the per-user usage check. Throttled
+        // tighter on validate to prevent code-bombing.
+        Route::get('/membership/me', [\App\Http\Controllers\Api\V1\MembershipController::class, 'mine']);
+        Route::post('/membership/coupon/validate', [\App\Http\Controllers\Api\V1\MembershipController::class, 'validateCoupon'])
+            ->middleware('throttle:30,1');
 
         // Match endpoints (week 3 step 15) — viewer's matches, mutual
         // matches, on-demand score for a specific target. Score endpoint
