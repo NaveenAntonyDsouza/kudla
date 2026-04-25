@@ -55,6 +55,25 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'paypal' => [
+        // PayPal REST app credentials (Developer dashboard → My Apps & Credentials).
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+
+        // 'sandbox' or 'live' — determines the API base URL.
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+
+        // The webhook ID PayPal assigns when you register a webhook URL in
+        // their dashboard. Used (with the transmission headers) to call
+        // POST /v1/notifications/verify-webhook-signature for inbound auth.
+        'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+
+        // 3-letter ISO currency for the PayPal order. PayPal-India merchant
+        // accounts cannot receive INR — default to USD. Buyers targeting
+        // other markets override via SiteSetting / .env.
+        'currency' => env('PAYPAL_CURRENCY', 'USD'),
+    ],
+
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),

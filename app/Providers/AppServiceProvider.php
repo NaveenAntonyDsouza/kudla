@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Payment\PayPalService;
 use App\Services\Payment\PaymentGatewayManager;
 use App\Services\Payment\RazorpayService;
 use App\Services\Payment\StripeService;
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
             $manager = new PaymentGatewayManager();
             $manager->register($app->make(RazorpayService::class));
             $manager->register($app->make(StripeService::class));
+            $manager->register($app->make(PayPalService::class));
 
             return $manager;
         });

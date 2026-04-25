@@ -70,6 +70,13 @@ class GatewaySettings extends Page implements HasForms
             'stripe_secret' => $settings['stripe_secret'] ?? '',
             'stripe_webhook_secret' => $settings['stripe_webhook_secret'] ?? '',
             'stripe_mode' => $settings['stripe_mode'] ?? 'test',
+
+            // PayPal
+            'paypal_client_id' => $settings['paypal_client_id'] ?? config('services.paypal.client_id', ''),
+            'paypal_secret' => $settings['paypal_secret'] ?? '',
+            'paypal_webhook_id' => $settings['paypal_webhook_id'] ?? config('services.paypal.webhook_id', ''),
+            'paypal_mode' => $settings['paypal_mode'] ?? config('services.paypal.mode', 'sandbox'),
+            'paypal_currency' => $settings['paypal_currency'] ?? config('services.paypal.currency', 'USD'),
         ]);
     }
 
@@ -233,6 +240,40 @@ class GatewaySettings extends Page implements HasForms
                             ->helperText('whsec_... — used to verify Stripe-Signature header. Leave empty to keep existing.'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (PayPal)')
+                    ->description('Configure PayPal payment integration. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('paypal_mode')
+                            ->label('Mode')
+                            ->options([
+                                'sandbox' => 'Sandbox',
+                                'live' => 'Live',
+                            ])
+                            ->default('sandbox')
+                            ->helperText('Use Sandbox until you have verified PayPal live credentials.'),
+
+                        Forms\Components\TextInput::make('paypal_currency')
+                            ->label('Currency (ISO-4217)')
+                            ->placeholder('USD')
+                            ->maxLength(3)
+                            ->helperText('3-letter currency code. PayPal-India accounts cannot receive INR — default USD.'),
+
+                        Forms\Components\TextInput::make('paypal_client_id')
+                            ->label('Client ID')
+                            ->helperText('From PayPal Developer dashboard → My Apps & Credentials.'),
+
+                        Forms\Components\TextInput::make('paypal_secret')
+                            ->label('Secret')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Leave empty to keep existing secret.'),
+
+                        Forms\Components\TextInput::make('paypal_webhook_id')
+                            ->label('Webhook ID')
+                            ->helperText('The webhook id PayPal assigns when you register your webhook URL. Required to verify inbound webhook signatures.'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -247,6 +288,7 @@ class GatewaySettings extends Page implements HasForms
             'sms_api_key',
             'razorpay_key_secret', 'razorpay_webhook_secret',
             'stripe_secret', 'stripe_webhook_secret',
+            'paypal_secret',
         ];
 
         foreach ($data as $key => $value) {

@@ -25,6 +25,7 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overrideSmsConfig($settings);
         $this->overrideRazorpayConfig($settings);
         $this->overrideStripeConfig($settings);
+        $this->overridePayPalConfig($settings);
     }
 
     protected function overrideMailConfig(array $settings): void
@@ -93,6 +94,29 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['stripe_webhook_secret'])) {
             config(['services.stripe.webhook_secret' => $settings['stripe_webhook_secret']]);
+        }
+    }
+
+    protected function overridePayPalConfig(array $settings): void
+    {
+        if (!empty($settings['paypal_client_id'])) {
+            config(['services.paypal.client_id' => $settings['paypal_client_id']]);
+        }
+
+        if (!empty($settings['paypal_secret'])) {
+            config(['services.paypal.secret' => $settings['paypal_secret']]);
+        }
+
+        if (!empty($settings['paypal_mode'])) {
+            config(['services.paypal.mode' => $settings['paypal_mode']]);
+        }
+
+        if (!empty($settings['paypal_webhook_id'])) {
+            config(['services.paypal.webhook_id' => $settings['paypal_webhook_id']]);
+        }
+
+        if (!empty($settings['paypal_currency'])) {
+            config(['services.paypal.currency' => $settings['paypal_currency']]);
         }
     }
 }
