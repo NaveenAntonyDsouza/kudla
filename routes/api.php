@@ -178,6 +178,18 @@ Route::prefix('v1')->group(function () {
         Route::post('/membership/coupon/validate', [\App\Http\Controllers\Api\V1\MembershipController::class, 'validateCoupon'])
             ->middleware('throttle:30,1');
 
+        // Payment gateway endpoints (week 4 step 4) — multi-gateway
+        // architecture, Razorpay first. {gateway} resolved at runtime
+        // via PaymentGatewayManager. Adding a new gateway = single
+        // ServiceProvider line, no route changes here. Throttled
+        // tighter since each call hits an external gateway API.
+        Route::post('/payment/{gateway}/order', [\App\Http\Controllers\Api\V1\PaymentController::class, 'createOrder'])
+            ->where('gateway', '[a-z0-9-]+')
+            ->middleware('throttle:20,1');
+        Route::post('/payment/{gateway}/verify', [\App\Http\Controllers\Api\V1\PaymentController::class, 'verifyPayment'])
+            ->where('gateway', '[a-z0-9-]+')
+            ->middleware('throttle:20,1');
+
         // Match endpoints (week 3 step 15) — viewer's matches, mutual
         // matches, on-demand score for a specific target. Score endpoint
         // is throttled tighter (30/hour) since calculateScore is the
