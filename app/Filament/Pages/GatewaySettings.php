@@ -64,6 +64,12 @@ class GatewaySettings extends Page implements HasForms
             'razorpay_key_secret' => $settings['razorpay_key_secret'] ?? '',
             'razorpay_webhook_secret' => $settings['razorpay_webhook_secret'] ?? '',
             'razorpay_mode' => $settings['razorpay_mode'] ?? 'test',
+
+            // Stripe
+            'stripe_key' => $settings['stripe_key'] ?? config('services.stripe.key', ''),
+            'stripe_secret' => $settings['stripe_secret'] ?? '',
+            'stripe_webhook_secret' => $settings['stripe_webhook_secret'] ?? '',
+            'stripe_mode' => $settings['stripe_mode'] ?? 'test',
         ]);
     }
 
@@ -196,6 +202,37 @@ class GatewaySettings extends Page implements HasForms
                             ->helperText('Optional. Used to verify webhook signatures.'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (Stripe)')
+                    ->description('Configure Stripe payment integration. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('stripe_mode')
+                            ->label('Mode')
+                            ->options([
+                                'test' => 'Test Mode',
+                                'live' => 'Live Mode',
+                            ])
+                            ->default('test')
+                            ->helperText('Use Test mode until you have verified Stripe live credentials.'),
+
+                        Forms\Components\TextInput::make('stripe_key')
+                            ->label('Publishable Key')
+                            ->placeholder('pk_test_...')
+                            ->helperText('Stripe publishable key (pk_test_ / pk_live_). Safe to expose to client apps.'),
+
+                        Forms\Components\TextInput::make('stripe_secret')
+                            ->label('Secret Key')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Stripe secret key (sk_test_ / sk_live_). Leave empty to keep existing.'),
+
+                        Forms\Components\TextInput::make('stripe_webhook_secret')
+                            ->label('Webhook Signing Secret')
+                            ->password()
+                            ->revealable()
+                            ->helperText('whsec_... — used to verify Stripe-Signature header. Leave empty to keep existing.'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -205,7 +242,12 @@ class GatewaySettings extends Page implements HasForms
         $data = $this->form->getState();
 
         // Fields where empty means "keep existing value"
-        $passwordFields = ['mail_password', 'sms_api_key', 'razorpay_key_secret', 'razorpay_webhook_secret'];
+        $passwordFields = [
+            'mail_password',
+            'sms_api_key',
+            'razorpay_key_secret', 'razorpay_webhook_secret',
+            'stripe_secret', 'stripe_webhook_secret',
+        ];
 
         foreach ($data as $key => $value) {
             // Don't overwrite secrets with empty values

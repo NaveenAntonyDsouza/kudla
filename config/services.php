@@ -46,6 +46,15 @@ return [
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
+    'stripe' => [
+        // Publishable key — pk_test_... / pk_live_... — safe to ship to Flutter.
+        'key' => env('STRIPE_KEY'),
+        // Secret API key — sk_test_... / sk_live_... — server-only, used for HTTP Basic auth.
+        'secret' => env('STRIPE_SECRET'),
+        // Webhook signing secret — whsec_... — used to verify Stripe-Signature header.
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),

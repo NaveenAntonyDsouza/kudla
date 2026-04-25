@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\Payment\PaymentGatewayManager;
 use App\Services\Payment\RazorpayService;
+use App\Services\Payment\StripeService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentGatewayManager::class, function ($app) {
             $manager = new PaymentGatewayManager();
             $manager->register($app->make(RazorpayService::class));
+            $manager->register($app->make(StripeService::class));
 
             return $manager;
         });

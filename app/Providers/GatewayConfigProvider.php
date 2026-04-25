@@ -24,6 +24,7 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overrideMailConfig($settings);
         $this->overrideSmsConfig($settings);
         $this->overrideRazorpayConfig($settings);
+        $this->overrideStripeConfig($settings);
     }
 
     protected function overrideMailConfig(array $settings): void
@@ -77,6 +78,21 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['razorpay_webhook_secret'])) {
             config(['services.razorpay.webhook_secret' => $settings['razorpay_webhook_secret']]);
+        }
+    }
+
+    protected function overrideStripeConfig(array $settings): void
+    {
+        if (!empty($settings['stripe_key'])) {
+            config(['services.stripe.key' => $settings['stripe_key']]);
+        }
+
+        if (!empty($settings['stripe_secret'])) {
+            config(['services.stripe.secret' => $settings['stripe_secret']]);
+        }
+
+        if (!empty($settings['stripe_webhook_secret'])) {
+            config(['services.stripe.webhook_secret' => $settings['stripe_webhook_secret']]);
         }
     }
 }
