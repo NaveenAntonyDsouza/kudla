@@ -51,8 +51,13 @@ class InterestService
             throw new \RuntimeException("Daily interest limit reached ({$usage['limit']}/day). Upgrade your plan for more interests.");
         }
 
-        // Personalized messages require a paid plan
-        if ($customMessage && !$sender->user->isPremium()) {
+        // Personalized messages require a paid plan — UNLESS the receiver
+        // is on a high-end tier with `allows_free_member_chat=true`, in which
+        // case free senders may include custom text. Models the BharatMatrimony
+        // Platinum convention; see config/matrimony.php + MembershipPlan.
+        if ($customMessage
+            && !$sender->user->isPremium()
+            && !$receiver->user?->activePlanAllowsFreeMemberChat()) {
             throw new \RuntimeException('Upgrade to a paid plan to send personalized messages.');
         }
 
@@ -208,24 +213,34 @@ class InterestService
      */
     public function sendMessage(Interest $interest, Profile $sender, string $message): InterestReply
     {
-        // Premium check — free users cannot chat
-        if (!$sender->user->isPremium()) {
-            throw new \RuntimeException('Upgrade to a paid plan to send messages.');
+        // Verify sender is part of this interest before any other check —
+        // otherwise an unrelated free user could probe for status.
+        if ($interest->sender_profile_id !== $sender->id && $interest->receiver_profile_id !== $sender->id) {
+            throw new \RuntimeException('You are not part of this conversation.');
         }
 
         if ($interest->status !== 'accepted') {
             throw new \RuntimeException('Messages can only be sent in accepted interests.');
         }
 
-        // Verify sender is part of this interest
-        if ($interest->sender_profile_id !== $sender->id && $interest->receiver_profile_id !== $sender->id) {
-            throw new \RuntimeException('You are not part of this conversation.');
-        }
-
-        // Check if either party has blocked the other
+        // Identify the other party (needed for both the chat-allow check
+        // and the block check below).
         $otherProfileId = $interest->sender_profile_id === $sender->id
             ? $interest->receiver_profile_id
             : $interest->sender_profile_id;
+
+        // Premium check — free users normally cannot chat. Exception:
+        // when the OTHER party is on a high-end tier with
+        // `allows_free_member_chat=true`, the free sender may reply.
+        // Mirrors the BharatMatrimony Platinum convention.
+        if (!$sender->user->isPremium()) {
+            $otherProfile = $interest->sender_profile_id === $sender->id
+                ? $interest->receiverProfile
+                : $interest->senderProfile;
+            if (! $otherProfile?->user?->activePlanAllowsFreeMemberChat()) {
+                throw new \RuntimeException('Upgrade to a paid plan to send messages.');
+            }
+        }
 
         $isBlocked = \App\Models\BlockedProfile::where(function ($q) use ($sender, $otherProfileId) {
             $q->where('profile_id', $sender->id)->where('blocked_profile_id', $otherProfileId);

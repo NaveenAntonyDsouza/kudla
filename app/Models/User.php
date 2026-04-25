@@ -290,6 +290,37 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Does this user hold an active membership on a plan with the
+     * `allows_free_member_chat` flag set?
+     *
+     * Used by App\Services\InterestService to decide whether free
+     * members on the OTHER side of an interest can send custom-text
+     * messages or chat replies to this user. Models the BharatMatrimony
+     * Platinum convention — high-end-tier holders accept full expressive
+     * contact from free senders.
+     *
+     * Returns false defensively on any DB failure (matches the
+     * test-environment-safe pattern used across the service layer).
+     */
+    public function activePlanAllowsFreeMemberChat(): bool
+    {
+        try {
+            return $this->userMemberships()
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>', now());
+                })
+                ->whereHas('plan', function ($query) {
+                    $query->where('allows_free_member_chat', true);
+                })
+                ->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Users with any staff_role_id OR with role='admin' (legacy) can access the Filament admin panel.
      */
     public function canAccessPanel(Panel $panel): bool

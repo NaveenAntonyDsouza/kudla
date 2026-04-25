@@ -130,6 +130,10 @@ class MembershipPlanResource extends Resource
                 ->label('Personalized Messages')
                 ->helperText('Allow sending personalized messages'),
 
+            Forms\Components\Toggle::make('allows_free_member_chat')
+                ->label('Free Member Chat')
+                ->helperText('High-end-tier flag — when ON, members on this plan can chat with free members in both directions (matches Bharat-Platinum / Shaadi-Plus convention).'),
+
             Forms\Components\Toggle::make('featured_profile')
                 ->label('Featured Profile')
                 ->helperText('Profile appears in featured/highlighted section'),
@@ -208,6 +212,11 @@ class MembershipPlanResource extends Resource
                 Tables\Columns\IconColumn::make('personalized_messages')
                     ->label('Messages')
                     ->boolean(),
+
+                Tables\Columns\IconColumn::make('allows_free_member_chat')
+                    ->label('Free Chat')
+                    ->boolean()
+                    ->tooltip('When ON, members on this plan can chat with free members in both directions (Bharat-Platinum / Shaadi-Plus convention).'),
 
                 Tables\Columns\IconColumn::make('featured_profile')
                     ->label('Featured')
