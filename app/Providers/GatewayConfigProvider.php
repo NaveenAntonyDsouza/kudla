@@ -26,6 +26,7 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overrideRazorpayConfig($settings);
         $this->overrideStripeConfig($settings);
         $this->overridePayPalConfig($settings);
+        $this->overridePaytmConfig($settings);
     }
 
     protected function overrideMailConfig(array $settings): void
@@ -117,6 +118,33 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['paypal_currency'])) {
             config(['services.paypal.currency' => $settings['paypal_currency']]);
+        }
+    }
+
+    protected function overridePaytmConfig(array $settings): void
+    {
+        if (!empty($settings['paytm_mid'])) {
+            config(['services.paytm.mid' => $settings['paytm_mid']]);
+        }
+
+        if (!empty($settings['paytm_key'])) {
+            config(['services.paytm.key' => $settings['paytm_key']]);
+        }
+
+        if (!empty($settings['paytm_mode'])) {
+            config(['services.paytm.mode' => $settings['paytm_mode']]);
+        }
+
+        if (!empty($settings['paytm_website'])) {
+            config(['services.paytm.website' => $settings['paytm_website']]);
+        }
+
+        if (!empty($settings['paytm_industry_type'])) {
+            config(['services.paytm.industry_type' => $settings['paytm_industry_type']]);
+        }
+
+        if (!empty($settings['paytm_channel_id'])) {
+            config(['services.paytm.channel_id' => $settings['paytm_channel_id']]);
         }
     }
 }

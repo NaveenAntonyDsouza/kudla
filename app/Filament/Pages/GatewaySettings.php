@@ -77,6 +77,14 @@ class GatewaySettings extends Page implements HasForms
             'paypal_webhook_id' => $settings['paypal_webhook_id'] ?? config('services.paypal.webhook_id', ''),
             'paypal_mode' => $settings['paypal_mode'] ?? config('services.paypal.mode', 'sandbox'),
             'paypal_currency' => $settings['paypal_currency'] ?? config('services.paypal.currency', 'USD'),
+
+            // Paytm
+            'paytm_mid' => $settings['paytm_mid'] ?? config('services.paytm.mid', ''),
+            'paytm_key' => $settings['paytm_key'] ?? '',
+            'paytm_mode' => $settings['paytm_mode'] ?? config('services.paytm.mode', 'sandbox'),
+            'paytm_website' => $settings['paytm_website'] ?? config('services.paytm.website', 'WEBSTAGING'),
+            'paytm_industry_type' => $settings['paytm_industry_type'] ?? config('services.paytm.industry_type', 'Retail'),
+            'paytm_channel_id' => $settings['paytm_channel_id'] ?? config('services.paytm.channel_id', 'WAP'),
         ]);
     }
 
@@ -274,6 +282,49 @@ class GatewaySettings extends Page implements HasForms
                             ->helperText('The webhook id PayPal assigns when you register your webhook URL. Required to verify inbound webhook signatures.'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (Paytm)')
+                    ->description('Configure Paytm payment integration. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('paytm_mode')
+                            ->label('Mode')
+                            ->options([
+                                'sandbox' => 'Sandbox (securegw-stage)',
+                                'production' => 'Production (securegw)',
+                            ])
+                            ->default('sandbox')
+                            ->helperText('Sandbox for testing; switch to Production once Paytm activates your live MID.'),
+
+                        Forms\Components\TextInput::make('paytm_mid')
+                            ->label('Merchant ID (MID)')
+                            ->helperText('Your Paytm Merchant ID — provided by Paytm at onboarding.'),
+
+                        Forms\Components\TextInput::make('paytm_key')
+                            ->label('Merchant Key')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Secret used for AES-128-CBC checksum signing. Leave empty to keep existing.'),
+
+                        Forms\Components\TextInput::make('paytm_website')
+                            ->label('Website Name')
+                            ->placeholder('WEBSTAGING')
+                            ->helperText('Provided by Paytm. WEBSTAGING for sandbox; merchant-specific for live.'),
+
+                        Forms\Components\TextInput::make('paytm_industry_type')
+                            ->label('Industry Type')
+                            ->placeholder('Retail')
+                            ->helperText('Provided by Paytm at onboarding (e.g. Retail).'),
+
+                        Forms\Components\Select::make('paytm_channel_id')
+                            ->label('Channel ID')
+                            ->options([
+                                'WAP' => 'WAP (mobile app SDK)',
+                                'WEB' => 'WEB (browser flow)',
+                            ])
+                            ->default('WAP')
+                            ->helperText('WAP for the Flutter SDK flow; WEB for browser-based checkout.'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -289,6 +340,7 @@ class GatewaySettings extends Page implements HasForms
             'razorpay_key_secret', 'razorpay_webhook_secret',
             'stripe_secret', 'stripe_webhook_secret',
             'paypal_secret',
+            'paytm_key',
         ];
 
         foreach ($data as $key => $value) {

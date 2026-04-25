@@ -74,6 +74,22 @@ return [
         'currency' => env('PAYPAL_CURRENCY', 'USD'),
     ],
 
+    'paytm' => [
+        // Merchant ID — assigned by Paytm when you onboard.
+        'mid' => env('PAYTM_MID'),
+        // Merchant Key — secret used for AES-128-CBC checksum generation.
+        'key' => env('PAYTM_MERCHANT_KEY'),
+        // 'sandbox' (securegw-stage) or 'production' (securegw).
+        'mode' => env('PAYTM_MODE', 'sandbox'),
+        // Website name — usually 'WEBSTAGING' for sandbox, merchant-specific
+        // for production. Provided by Paytm at onboarding.
+        'website' => env('PAYTM_WEBSITE', 'WEBSTAGING'),
+        // Industry type — e.g. 'Retail'. Provided by Paytm.
+        'industry_type' => env('PAYTM_INDUSTRY_TYPE', 'Retail'),
+        // Channel ID — 'WEB' for browser flows, 'WAP' for mobile app SDK.
+        'channel_id' => env('PAYTM_CHANNEL_ID', 'WAP'),
+    ],
+
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
