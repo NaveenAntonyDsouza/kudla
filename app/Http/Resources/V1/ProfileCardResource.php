@@ -68,7 +68,8 @@ class ProfileCardResource extends JsonResource
             'badges'            => $this->computeBadges($profile),
             'last_active_at'    => $profile->user?->last_login_at?->toIso8601String(),
             'last_active_label' => $profile->user?->last_login_at?->diffForHumans(),
-            'match_score'       => $this->cachedMatchScore($profile),
+            'match_score'       => $this->resolveMatchScore($profile),
+            'match_badge'       => $this->resolveMatchBadge($profile),
             'is_shortlisted'    => $this->isShortlistedBy($profile),
             'interest_status'   => $this->interestStatusWith($profile),
             'is_blocked'        => $this->isBlockedBy($profile),
@@ -193,8 +194,27 @@ class ProfileCardResource extends JsonResource
      *
      * Cache key pattern: `match_score:{viewer_profile_id}:{target_profile_id}`
      */
-    private function cachedMatchScore(Profile $profile): ?int
+    /**
+     * Resolve the match_score for the rendered profile.
+     *
+     * Two sources, checked in order:
+     *   1. In-memory dynamic attribute attached by MatchingService
+     *      (getMatches / getMutualMatches / getRecommendations attach
+     *      `match_score` directly on the Profile instance).
+     *   2. Redis cache populated by GET /api/v1/matches/score/{matriId}
+     *      under the key match_score:{viewer_id}:{profile_id}.
+     *
+     * Returns null when neither source has a value (typical for cards
+     * surfaced via search / discover / dashboard carousels that aren't
+     * scoring-aware).
+     */
+    private function resolveMatchScore(Profile $profile): ?int
     {
+        $inMemory = $profile->getAttribute('match_score');
+        if (is_int($inMemory)) {
+            return $inMemory;
+        }
+
         if (! $this->viewer) {
             return null;
         }
@@ -202,6 +222,22 @@ class ProfileCardResource extends JsonResource
         $cached = Cache::get("match_score:{$this->viewer->id}:{$profile->id}");
 
         return is_int($cached) ? $cached : null;
+    }
+
+    /**
+     * Resolve the match_badge for the rendered profile.
+     *
+     * Only set when MatchingService has scored the profile (in-memory
+     * attribute). Badge values: 'great' (>=80), 'good' (>=60),
+     * 'partial' (>=40), or null below 40 / unscored. Cards from
+     * search/discover/dashboard carry null until scoring is wired in
+     * those flows.
+     */
+    private function resolveMatchBadge(Profile $profile): ?string
+    {
+        $badge = $profile->getAttribute('match_badge');
+
+        return is_string($badge) ? $badge : null;
     }
 
     /**

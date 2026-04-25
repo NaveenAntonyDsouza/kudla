@@ -142,6 +142,18 @@ Route::prefix('v1')->group(function () {
         Route::get('/search/partner', [\App\Http\Controllers\Api\V1\SearchController::class, 'partner'])
             ->middleware('throttle:60,1');
 
+        // Match endpoints (week 3 step 15) — viewer's matches, mutual
+        // matches, on-demand score for a specific target. Score endpoint
+        // is throttled tighter (30/hour) since calculateScore is the
+        // most expensive operation in MatchingService.
+        Route::get('/matches/my', [\App\Http\Controllers\Api\V1\MatchController::class, 'my'])
+            ->middleware('throttle:60,1');
+        Route::get('/matches/mutual', [\App\Http\Controllers\Api\V1\MatchController::class, 'mutual'])
+            ->middleware('throttle:60,1');
+        Route::get('/matches/score/{matriId}', [\App\Http\Controllers\Api\V1\MatchController::class, 'score'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:30,60');
+
         // Keyword + matri_id lookup + saved-search CRUD (week 3 step 13).
         // Keyword search is also chatty — same 60/min throttle as partner.
         // Saved-search routes are low-volume — no throttle.

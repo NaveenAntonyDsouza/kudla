@@ -61,21 +61,49 @@ function buildCardProfile(array $overrides = []): Profile
     return $profile;
 }
 
-it('returns envelope with all 18 keys', function () {
+it('returns envelope with all 19 keys', function () {
     $profile = buildCardProfile();
     $data = (new ProfileCardResource($profile))->resolve();
 
-    // All 18 keys must be present — no conditional inclusion
+    // All 19 keys must be present — no conditional inclusion. match_badge
+    // was added in week-3 step-15; defaults null for cards rendered
+    // outside a scoring context (search/discover/dashboard).
     $expectedKeys = [
         'matri_id', 'full_name', 'age', 'height_cm', 'height_label',
         'religion', 'caste', 'native_state', 'occupation', 'education_short',
         'primary_photo', 'badges', 'last_active_at', 'last_active_label',
-        'match_score', 'is_shortlisted', 'interest_status', 'is_blocked',
+        'match_score', 'match_badge', 'is_shortlisted', 'interest_status', 'is_blocked',
     ];
 
     foreach ($expectedKeys as $key) {
         expect($data)->toHaveKey($key);
     }
+});
+
+it('match_score reads in-memory attribute when MatchingService set it', function () {
+    $profile = buildCardProfile();
+    $profile->setAttribute('match_score', 87);  // simulate MatchingService dynamic attr
+
+    $data = (new ProfileCardResource($profile))->resolve();
+
+    expect($data['match_score'])->toBe(87);
+});
+
+it('match_badge reads in-memory attribute when MatchingService set it', function () {
+    $profile = buildCardProfile();
+    $profile->setAttribute('match_badge', 'great');
+
+    $data = (new ProfileCardResource($profile))->resolve();
+
+    expect($data['match_badge'])->toBe('great');
+});
+
+it('match_badge defaults to null when MatchingService has not scored', function () {
+    $profile = buildCardProfile();
+
+    $data = (new ProfileCardResource($profile))->resolve();
+
+    expect($data['match_badge'])->toBeNull();
 });
 
 it('returns age as integer when date_of_birth is set', function () {
