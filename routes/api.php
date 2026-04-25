@@ -142,6 +142,22 @@ Route::prefix('v1')->group(function () {
         Route::get('/search/partner', [\App\Http\Controllers\Api\V1\SearchController::class, 'partner'])
             ->middleware('throttle:60,1');
 
+        // Interest endpoints (week 4 step 1) — the conversation core.
+        // /messages is throttled tighter (30/hour) since it's the chat
+        // hot-path; the rest are unthrottled (low-volume per-user).
+        Route::get('/interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
+        Route::get('/interests/{interest}', [\App\Http\Controllers\Api\V1\InterestController::class, 'show']);
+        Route::post('/profiles/{matriId}/interest', [\App\Http\Controllers\Api\V1\InterestController::class, 'send'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:60,1');
+        Route::post('/interests/{interest}/accept', [\App\Http\Controllers\Api\V1\InterestController::class, 'accept']);
+        Route::post('/interests/{interest}/decline', [\App\Http\Controllers\Api\V1\InterestController::class, 'decline']);
+        Route::post('/interests/{interest}/cancel', [\App\Http\Controllers\Api\V1\InterestController::class, 'cancel']);
+        Route::post('/interests/{interest}/star', [\App\Http\Controllers\Api\V1\InterestController::class, 'star']);
+        Route::post('/interests/{interest}/trash', [\App\Http\Controllers\Api\V1\InterestController::class, 'trash']);
+        Route::post('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'reply'])
+            ->middleware('throttle:30,60');
+
         // Match endpoints (week 3 step 15) — viewer's matches, mutual
         // matches, on-demand score for a specific target. Score endpoint
         // is throttled tighter (30/hour) since calculateScore is the
