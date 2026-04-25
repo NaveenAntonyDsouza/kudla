@@ -321,6 +321,39 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Does this user hold an active membership on a plan with the
+     * `exposes_contact_to_free` flag set?
+     *
+     * Used by App\Services\ProfileAccessService::canViewContact() to
+     * decide whether free viewers can see this user's phone + email
+     * directly on the profile page (bypassing the interest flow).
+     * Models the Shaadi.com "Plus" convention — Plus-tier holders make
+     * their contact details discoverable to free members.
+     *
+     * Independent of activePlanAllowsFreeMemberChat — a single plan can
+     * have either, both, or neither flag set.
+     *
+     * Returns false defensively on any DB failure.
+     */
+    public function activePlanExposesContactToFree(): bool
+    {
+        try {
+            return $this->userMemberships()
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>', now());
+                })
+                ->whereHas('plan', function ($query) {
+                    $query->where('exposes_contact_to_free', true);
+                })
+                ->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Users with any staff_role_id OR with role='admin' (legacy) can access the Filament admin panel.
      */
     public function canAccessPanel(Panel $panel): bool

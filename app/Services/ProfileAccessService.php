@@ -108,13 +108,19 @@ class ProfileAccessService
     /**
      * Contact section visibility — stricter than profile-view access.
      *
-     * Rules:
-     *   - Viewer must pass every profile-view gate
-     *   - Viewer must be premium
-     *   - There must be an ACCEPTED interest between viewer and target
+     * Rules (in evaluation order):
+     *   1. Viewer must pass every profile-view gate (canAccess).
+     *   2. Self-view always allowed (return own contact).
+     *   3. Target on a plan with `exposes_contact_to_free=true` →
+     *      always visible to ANY viewer (Shaadi-Plus convention).
+     *      Bypasses both the premium check and the accepted-interest
+     *      check below — Plus-tier members are explicitly opting in
+     *      to free-tier discoverability.
+     *   4. Otherwise: viewer must be premium AND there must be an
+     *      ACCEPTED interest between the two profiles.
      *
      * This is called by ProfileController::show to decide whether to
-     * populate the `sections.contact` block.
+     * populate the `sections.contact` block in the response.
      */
     public function canViewContact(Profile $viewer, Profile $target): bool
     {
@@ -126,11 +132,35 @@ class ProfileAccessService
             return true;  // own profile — always see own contact
         }
 
+        // Plus-tier flag on TARGET — opens contact to any viewer
+        // (including free members) regardless of premium / interest status.
+        if ($this->targetExposesContactToFree($target)) {
+            return true;
+        }
+
         if (! $this->isPremium($viewer)) {
             return false;
         }
 
         return $this->hasAcceptedInterest($viewer, $target);
+    }
+
+    /**
+     * Does the target hold an active membership with the
+     * `exposes_contact_to_free` flag set? Defensive — returns false
+     * silently if the user relation or the membership query fails.
+     *
+     * `protected` so tests can stub it via subclassing and exercise the
+     * canViewContact branch without setting up the full membership +
+     * plan tables.
+     */
+    protected function targetExposesContactToFree(Profile $target): bool
+    {
+        try {
+            return (bool) ($target->user?->activePlanExposesContactToFree() ?? false);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**

@@ -196,6 +196,37 @@ it('canViewContact false when viewer not premium (even with clean access)', func
     expect($this->svc->canViewContact($viewer, $target))->toBeFalse();
 });
 
+it('canViewContact true when target has exposes_contact_to_free flag (Shaadi-Plus)', function () {
+    $viewer = buildAccessProfile(['profile' => ['id' => 9991, 'gender' => 'male']]);
+    $target = buildAccessProfile(['profile' => ['id' => 9992, 'gender' => 'female', 'show_profile_to' => 'all']]);
+
+    // Stub the helper to simulate target on a Plus-tier plan with
+    // exposes_contact_to_free=true. Free viewer should see contact.
+    $svc = new class(app(\App\Services\MatchingService::class)) extends \App\Services\ProfileAccessService {
+        protected function targetExposesContactToFree(\App\Models\Profile $target): bool
+        {
+            return true;
+        }
+    };
+
+    expect($svc->canViewContact($viewer, $target))->toBeTrue();
+});
+
+it('canViewContact returns to false-by-default when target does NOT have exposes_contact_to_free', function () {
+    $viewer = buildAccessProfile(['profile' => ['id' => 9991, 'gender' => 'male']]);
+    $target = buildAccessProfile(['profile' => ['id' => 9992, 'gender' => 'female', 'show_profile_to' => 'all']]);
+
+    $svc = new class(app(\App\Services\MatchingService::class)) extends \App\Services\ProfileAccessService {
+        protected function targetExposesContactToFree(\App\Models\Profile $target): bool
+        {
+            return false;  // explicit — flag NOT set
+        }
+    };
+
+    // Free viewer + flag-off target → falls through to premium+interest gate → false.
+    expect($svc->canViewContact($viewer, $target))->toBeFalse();
+});
+
 /* ------------------------------------------------------------------
  |  Photo blur helper
  | ------------------------------------------------------------------ */
