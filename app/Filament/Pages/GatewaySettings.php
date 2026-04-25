@@ -85,6 +85,14 @@ class GatewaySettings extends Page implements HasForms
             'paytm_website' => $settings['paytm_website'] ?? config('services.paytm.website', 'WEBSTAGING'),
             'paytm_industry_type' => $settings['paytm_industry_type'] ?? config('services.paytm.industry_type', 'Retail'),
             'paytm_channel_id' => $settings['paytm_channel_id'] ?? config('services.paytm.channel_id', 'WAP'),
+
+            // PhonePe (V2 Standard Checkout)
+            'phonepe_client_id' => $settings['phonepe_client_id'] ?? config('services.phonepe.client_id', ''),
+            'phonepe_client_secret' => $settings['phonepe_client_secret'] ?? '',
+            'phonepe_client_version' => $settings['phonepe_client_version'] ?? config('services.phonepe.client_version', '1'),
+            'phonepe_mode' => $settings['phonepe_mode'] ?? config('services.phonepe.mode', 'sandbox'),
+            'phonepe_webhook_username' => $settings['phonepe_webhook_username'] ?? config('services.phonepe.webhook_username', ''),
+            'phonepe_webhook_password' => $settings['phonepe_webhook_password'] ?? '',
         ]);
     }
 
@@ -325,6 +333,45 @@ class GatewaySettings extends Page implements HasForms
                             ->helperText('WAP for the Flutter SDK flow; WEB for browser-based checkout.'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (PhonePe V2)')
+                    ->description('Configure PhonePe Standard Checkout V2. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('phonepe_mode')
+                            ->label('Mode')
+                            ->options([
+                                'sandbox' => 'Sandbox (api-preprod)',
+                                'production' => 'Production (api.phonepe.com)',
+                            ])
+                            ->default('sandbox')
+                            ->helperText('Sandbox for testing; switch to Production once your PG V2 keys are activated.'),
+
+                        Forms\Components\TextInput::make('phonepe_client_id')
+                            ->label('Client ID')
+                            ->helperText('From PhonePe Dashboard → Developer Settings → PG V2 keys.'),
+
+                        Forms\Components\TextInput::make('phonepe_client_secret')
+                            ->label('Client Secret')
+                            ->password()
+                            ->revealable()
+                            ->helperText('PG V2 client secret. Leave empty to keep existing.'),
+
+                        Forms\Components\TextInput::make('phonepe_client_version')
+                            ->label('Client Version')
+                            ->placeholder('1')
+                            ->helperText('Provided by PhonePe — usually 1.'),
+
+                        Forms\Components\TextInput::make('phonepe_webhook_username')
+                            ->label('Webhook Username')
+                            ->helperText('Configure in PhonePe Dashboard → Webhooks. PhonePe authenticates each callback with SHA256(username:password).'),
+
+                        Forms\Components\TextInput::make('phonepe_webhook_password')
+                            ->label('Webhook Password')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Paired with the webhook username above. Leave empty to keep existing.'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -341,6 +388,7 @@ class GatewaySettings extends Page implements HasForms
             'stripe_secret', 'stripe_webhook_secret',
             'paypal_secret',
             'paytm_key',
+            'phonepe_client_secret', 'phonepe_webhook_password',
         ];
 
         foreach ($data as $key => $value) {

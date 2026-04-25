@@ -90,6 +90,25 @@ return [
         'channel_id' => env('PAYTM_CHANNEL_ID', 'WAP'),
     ],
 
+    'phonepe' => [
+        // PhonePe V2 Standard Checkout credentials (from Developer Settings →
+        // PG V2 keys in the merchant dashboard).
+        'client_id' => env('PHONEPE_CLIENT_ID'),
+        'client_secret' => env('PHONEPE_CLIENT_SECRET'),
+        // Provided by PhonePe — typically '1' for the initial onboarded version.
+        'client_version' => env('PHONEPE_CLIENT_VERSION', '1'),
+
+        // 'sandbox' or 'production' — selects api-preprod vs api hosts.
+        'mode' => env('PHONEPE_MODE', 'sandbox'),
+
+        // Webhook auth — username + password are merchant-CONFIGURED in the
+        // PhonePe dashboard's webhook section (NOT the API client_id/secret).
+        // PhonePe sends Authorization: SHA256(username:password) on every
+        // webhook delivery; we recompute and compare.
+        'webhook_username' => env('PHONEPE_WEBHOOK_USERNAME'),
+        'webhook_password' => env('PHONEPE_WEBHOOK_PASSWORD'),
+    ],
+
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),

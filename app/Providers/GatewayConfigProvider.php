@@ -27,6 +27,7 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overrideStripeConfig($settings);
         $this->overridePayPalConfig($settings);
         $this->overridePaytmConfig($settings);
+        $this->overridePhonePeConfig($settings);
     }
 
     protected function overrideMailConfig(array $settings): void
@@ -145,6 +146,33 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['paytm_channel_id'])) {
             config(['services.paytm.channel_id' => $settings['paytm_channel_id']]);
+        }
+    }
+
+    protected function overridePhonePeConfig(array $settings): void
+    {
+        if (!empty($settings['phonepe_client_id'])) {
+            config(['services.phonepe.client_id' => $settings['phonepe_client_id']]);
+        }
+
+        if (!empty($settings['phonepe_client_secret'])) {
+            config(['services.phonepe.client_secret' => $settings['phonepe_client_secret']]);
+        }
+
+        if (!empty($settings['phonepe_client_version'])) {
+            config(['services.phonepe.client_version' => $settings['phonepe_client_version']]);
+        }
+
+        if (!empty($settings['phonepe_mode'])) {
+            config(['services.phonepe.mode' => $settings['phonepe_mode']]);
+        }
+
+        if (!empty($settings['phonepe_webhook_username'])) {
+            config(['services.phonepe.webhook_username' => $settings['phonepe_webhook_username']]);
+        }
+
+        if (!empty($settings['phonepe_webhook_password'])) {
+            config(['services.phonepe.webhook_password' => $settings['phonepe_webhook_password']]);
         }
     }
 }
