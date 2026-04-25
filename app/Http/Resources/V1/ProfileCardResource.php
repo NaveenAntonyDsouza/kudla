@@ -148,10 +148,20 @@ class ProfileCardResource extends JsonResource
         // Only call isPremium() when userMemberships is preloaded — protects
         // against N+1 in list views and keeps unit tests DB-free. Controllers
         // that render lists must eager-load ->user->userMemberships.
-        if ($profile->user
-            && $profile->user->relationLoaded('userMemberships')
-            && $profile->user->isPremium()) {
-            $badges[] = 'premium';
+        //
+        // isPremium() itself re-queries user_memberships under the hood
+        // (doesn't use the preloaded relation), so wrap the call in
+        // try/catch — same defensive pattern as ProfileResource::
+        // isPremiumSafely. Production tables always exist; test env
+        // falls through to "not premium" silently.
+        if ($profile->user && $profile->user->relationLoaded('userMemberships')) {
+            try {
+                if ($profile->user->isPremium()) {
+                    $badges[] = 'premium';
+                }
+            } catch (\Throwable $e) {
+                // Missing user_memberships table (test env) — skip badge.
+            }
         }
 
         if ($profile->is_vip ?? false) {

@@ -129,6 +129,20 @@ Route::prefix('v1')->group(function () {
         Route::get('/search/partner', [\App\Http\Controllers\Api\V1\SearchController::class, 'partner'])
             ->middleware('throttle:60,1');
 
+        // Keyword + matri_id lookup + saved-search CRUD (week 3 step 13).
+        // Keyword search is also chatty — same 60/min throttle as partner.
+        // Saved-search routes are low-volume — no throttle.
+        // NOTE: the /search/saved routes are registered BEFORE
+        // /search/id/{matriId} to avoid "saved" being matched as a matri_id.
+        Route::get('/search/keyword', [\App\Http\Controllers\Api\V1\SearchController::class, 'keyword'])
+            ->middleware('throttle:60,1');
+        Route::get('/search/saved', [\App\Http\Controllers\Api\V1\SearchController::class, 'savedList']);
+        Route::post('/search/saved', [\App\Http\Controllers\Api\V1\SearchController::class, 'saveSearch']);
+        Route::delete('/search/saved/{savedSearch}', [\App\Http\Controllers\Api\V1\SearchController::class, 'deleteSaved']);
+        Route::get('/search/id/{matriId}', [\App\Http\Controllers\Api\V1\SearchController::class, 'byMatriId'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:60,1');
+
         // Photo-request lifecycle (week 3 step 11). send is throttled
         // (20/min) to prevent spam; list/approve/ignore are unthrottled.
         // Send uses matri_id in the URL so Flutter can open a profile
