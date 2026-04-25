@@ -122,6 +122,13 @@ Route::prefix('v1')->group(function () {
             ])
             ->middleware('throttle:30,1');
 
+        // Partner search (week 3 step 12). 17+ query-param filters,
+        // 5 sort modes, paginated (default 20, max 50). Throttled to
+        // 60/min/user — search is chatty during typing / filter-chip
+        // toggling but shouldn't exceed 1/sec sustained.
+        Route::get('/search/partner', [\App\Http\Controllers\Api\V1\SearchController::class, 'partner'])
+            ->middleware('throttle:60,1');
+
         // Photo-request lifecycle (week 3 step 11). send is throttled
         // (20/min) to prevent spam; list/approve/ignore are unthrottled.
         // Send uses matri_id in the URL so Flutter can open a profile
