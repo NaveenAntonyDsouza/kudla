@@ -32,3 +32,7 @@ Thumbs.db
 
 # Local pre-migration backups created by dev workflow
 /storage/backups
+
+# Firebase service-account JSON (FCM push) — buyer downloads from
+# Firebase Console; never commit. See .env.example for setup.
+/storage/app/firebase-credentials.json

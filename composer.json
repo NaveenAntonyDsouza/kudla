@@ -10,6 +10,7 @@
         "endroid/qr-code": "^6.0",
         "filament/filament": "^5.4",
         "intervention/image": "^4.0",
+        "kreait/laravel-firebase": "^7.1",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
