@@ -6,11 +6,10 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Coupon;
 use App\Models\MembershipPlan;
 use App\Models\Subscription;
-use App\Models\UserMembership;
 use App\Services\Payment\PaymentGatewayManager;
+use App\Services\Payment\SubscriptionActivator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 /**
  * Payment-gateway API surface — multi-gateway by design.
@@ -293,17 +292,24 @@ class PaymentController extends BaseApiController
             );
         }
 
-        // Verified — mark subscription paid, persist gateway-specific IDs,
-        // create UserMembership, record coupon usage, deactivate priors.
-        $plan = MembershipPlan::find($subscription->plan_id);
-        if (! $plan) {
-            // Plan deleted between order + verify (edge case). Mark paid
-            // anyway since the user paid; admin can reconcile manually.
-            $subscription->update([
-                'payment_status' => 'paid',
-                'is_active' => false,
-            ]);
+        // Persist gateway-specific verified IDs (razorpay_payment_id +
+        // razorpay_signature for Razorpay; gateway_metadata JSON for
+        // future gateways). Done BEFORE activation so the subscription
+        // row carries the verifying gateway IDs even if activation
+        // partially fails (plan deleted, user_memberships outage, etc.).
+        $gateway->applyVerifiedIdsToSubscription($subscription, $data);
 
+        // Activation: mark paid, set timestamps, create UserMembership,
+        // deactivate priors, record coupon usage. Idempotent — same
+        // service is called by the webhook handler too.
+        $activator = app(SubscriptionActivator::class);
+        $activated = $activator->activate($subscription);
+
+        // If activate() returned false AND status is still paid, the
+        // plan was deleted between order and verify — surface a 422 so
+        // Flutter knows to contact support.
+        $subscription->refresh();
+        if (! $activated && $subscription->payment_status === 'paid' && ! $subscription->is_active) {
             return ApiResponse::error(
                 'PLAN_GONE',
                 'The plan associated with this payment is no longer available. Contact support.',
@@ -312,58 +318,7 @@ class PaymentController extends BaseApiController
             );
         }
 
-        $startsAt = Carbon::today();
-        $expiresAt = $startsAt->copy()->addMonths(max(1, (int) $plan->duration_months));
-
-        $subscription->update([
-            'payment_status' => 'paid',
-            'is_active' => true,
-            'starts_at' => $startsAt,
-            'expires_at' => $expiresAt,
-        ]);
-
-        // Persist gateway-specific verified IDs.
-        $gateway->applyVerifiedIdsToSubscription($subscription, $data);
-
-        // Record coupon usage if applicable.
-        if ($subscription->coupon_id) {
-            $coupon = Coupon::find($subscription->coupon_id);
-            if ($coupon) {
-                try {
-                    $coupon->recordUsage(
-                        userId: $subscription->user_id,
-                        subscriptionId: $subscription->id,
-                        discountAmount: (int) $subscription->discount_amount,
-                    );
-                } catch (\Throwable $e) {
-                    // Coupon usage tracking is best-effort — don't fail
-                    // the verification if it hiccups.
-                }
-            }
-        }
-
-        // Deactivate prior memberships, create the new one.
-        try {
-            UserMembership::where('user_id', $subscription->user_id)
-                ->where('is_active', true)
-                ->update(['is_active' => false]);
-
-            UserMembership::create([
-                'user_id' => $subscription->user_id,
-                'plan_id' => $plan->id,
-                'is_active' => true,
-                'starts_at' => $startsAt,
-                'ends_at' => $expiresAt,
-            ]);
-        } catch (\Throwable $e) {
-            // Membership row creation is best-effort within the API
-            // verify flow. The Subscription row remains paid; admin
-            // can manually create the UserMembership if this branch
-            // fires (would require an outage of the user_memberships
-            // table — extreme edge case).
-        }
-
-        $subscription->refresh();
+        $plan = MembershipPlan::find($subscription->plan_id);
 
         return ApiResponse::ok([
             'subscription_id' => (int) $subscription->id,
@@ -371,11 +326,56 @@ class PaymentController extends BaseApiController
             'is_active' => (bool) $subscription->is_active,
             'starts_at' => $subscription->starts_at?->toIso8601String(),
             'expires_at' => $subscription->expires_at?->toIso8601String(),
-            'membership' => [
+            'membership' => $plan ? [
                 'plan_id' => (int) $plan->id,
                 'plan_name' => (string) $plan->plan_name,
-                'is_premium' => true,
-            ],
+                'is_premium' => (bool) $subscription->is_active,
+            ] : null,
         ]);
+    }
+
+    /* ==================================================================
+     |  POST /webhooks/{gateway}
+     | ================================================================== */
+
+    /**
+     * Inbound webhook endpoint for any registered payment gateway.
+     * Each gateway owns its own signature scheme + event dispatch
+     * via PaymentGatewayInterface::handleWebhook. The controller
+     * just resolves the slug and delegates.
+     *
+     * NO authentication on this route — gateway servers can't carry
+     * Sanctum tokens. Authenticity is established by the per-gateway
+     * signature check inside handleWebhook.
+     *
+     * @unauthenticated
+     *
+     * @group Payment
+     *
+     * @urlParam gateway string required Gateway slug.
+     *
+     * @response 200 scenario="processed" {"status": "processed"}
+     * @response 200 scenario="duplicate" {"status": "duplicate"}
+     * @response 200 scenario="ignored-event-type" {"status": "ignored"}
+     * @response 401 scenario="invalid-signature" {"error": "Invalid signature."}
+     * @response 404 scenario="unknown-gateway" {"error": "Unknown payment gateway."}
+     * @response 422 scenario="malformed-payload" {"error": "Malformed JSON."}
+     * @response 503 scenario="webhook-not-configured" {"error": "Webhook secret not configured."}
+     */
+    public function webhook(Request $request, string $gatewaySlug): JsonResponse
+    {
+        $gateway = $this->gateways->forSlug($gatewaySlug);
+        if (! $gateway) {
+            // Don't even acknowledge an unknown slug. Returning 404
+            // (not 200) so a misconfigured webhook URL gets surfaced
+            // in the gateway dashboard.
+            return response()->json(['error' => 'Unknown payment gateway.'], 404);
+        }
+
+        // We deliberately allow webhooks against gateways that aren't
+        // fully configured for OUTBOUND order creation — the inbound
+        // signature check inside handleWebhook is what guards the
+        // gateway-specific verification step.
+        return $gateway->handleWebhook($request);
     }
 }

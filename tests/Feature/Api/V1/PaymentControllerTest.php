@@ -106,6 +106,17 @@ class FakeGateway implements PaymentGatewayInterface
             ]),
         ]);
     }
+
+    public function handleWebhook(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        // FakeGateway powers step-4 controller tests that don't exercise
+        // the webhook path. Returning a stub 200 keeps the interface
+        // satisfied; webhook behaviour is tested via the real
+        // RazorpayService in PaymentWebhookTest.
+        $this->calls[] = ['method' => 'handleWebhook', 'args' => []];
+
+        return response()->json(['status' => 'fake-handled'], 200);
+    }
 }
 
 function createPaymentTables(): void

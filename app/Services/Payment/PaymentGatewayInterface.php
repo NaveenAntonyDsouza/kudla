@@ -3,6 +3,8 @@
 namespace App\Services\Payment;
 
 use App\Models\Subscription;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Contract every payment gateway must implement.
@@ -113,4 +115,30 @@ interface PaymentGatewayInterface
      * @param  array  $verifyData  Whatever verifyPayment() received.
      */
     public function applyVerifiedIdsToSubscription(Subscription $subscription, array $verifyData): void;
+
+    /**
+     * Handle an inbound webhook from this gateway.
+     *
+     * Each implementation owns:
+     *   1. Signature verification (using the gateway's webhook secret —
+     *      typically a different secret from the API key secret).
+     *   2. Event parsing + dedupe via the WebhookEvent table
+     *      (gateway, event_id) — duplicate inserts are caught and a
+     *      200 OK is returned without re-processing.
+     *   3. Event dispatch to the right action (e.g. payment.captured →
+     *      SubscriptionActivator::activate, payment.failed →
+     *      ::markFailed, refund.processed → ::markRefunded).
+     *
+     * Return semantics:
+     *   - 200 OK on successful processing (or recognised duplicate /
+     *     known-but-uninteresting event type). Tells the gateway server
+     *     "I got it, don't retry."
+     *   - 401 on signature mismatch. Tells the gateway "your secret is
+     *     wrong" so the webhook is marked failed in their dashboard.
+     *   - 422 on malformed payload. Same effect — gateway will surface
+     *     the misconfiguration to the merchant.
+     *   - Don't return 5xx unless something is genuinely broken
+     *     server-side; gateways will retry 5xx for hours.
+     */
+    public function handleWebhook(Request $request): JsonResponse;
 }

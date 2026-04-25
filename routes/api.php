@@ -66,6 +66,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/password/reset', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword'])
         ->middleware('throttle:5,1');
 
+    // Payment-gateway webhooks (week 4 step 5+) — public endpoints
+    // (gateway servers can't carry Sanctum tokens). Authenticity is
+    // established by per-gateway signature verification inside the
+    // gateway service's handleWebhook method. NOT throttled — Razorpay
+    // / Stripe / PayPal control their own retry rates.
+    Route::post('/webhooks/{gateway}', [\App\Http\Controllers\Api\V1\PaymentController::class, 'webhook'])
+        ->where('gateway', '[a-z0-9-]+');
+
     // Public membership plans (week 4 step 3) — pricing page surface.
     // Mirrors web's public /membership-plans index. Throttled to
     // 60/min/IP since it's a public, abuse-vulnerable endpoint.
