@@ -65,6 +65,19 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:5,1');
     Route::post('/auth/password/reset', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword'])
         ->middleware('throttle:5,1');
+
+    // Discover — category-based public browsing (week 3 step 14).
+    // No auth required: mirrors web's public /discover routes. Throttled
+    // 60/min per IP since public endpoints are exposed to abuse.
+    Route::get('/discover', [\App\Http\Controllers\Api\V1\DiscoverController::class, 'hub'])
+        ->middleware('throttle:60,1');
+    Route::get('/discover/{category}', [\App\Http\Controllers\Api\V1\DiscoverController::class, 'category'])
+        ->where('category', '[a-z0-9-]+')
+        ->middleware('throttle:60,1');
+    Route::get('/discover/{category}/{slug}', [\App\Http\Controllers\Api\V1\DiscoverController::class, 'results'])
+        ->where('category', '[a-z0-9-]+')
+        ->where('slug', '[a-z0-9-]+')
+        ->middleware('throttle:60,1');
     // - /auth/password/forgot|reset     (week 2)
     // - /membership/plans               (week 4)
     // - /success-stories                (week 4)
