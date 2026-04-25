@@ -157,6 +157,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/interests/{interest}/trash', [\App\Http\Controllers\Api\V1\InterestController::class, 'trash']);
         Route::post('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'reply'])
             ->middleware('throttle:30,60');
+        // Chat polling (week 4 step 2) — Flutter polls ~every 10s while
+        // chat screen is open. Throttled higher than POST since GET is
+        // cheap and idle-screen polling shouldn't hit limits.
+        Route::get('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'messages'])
+            ->middleware('throttle:120,1');
 
         // Match endpoints (week 3 step 15) — viewer's matches, mutual
         // matches, on-demand score for a specific target. Score endpoint

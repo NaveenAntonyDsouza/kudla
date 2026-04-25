@@ -143,6 +143,36 @@ function createInterestsTable(): void
     });
 }
 
+/** Inline interest_replies table — needed for chat polling tests. */
+function createInterestRepliesTable(): void
+{
+    if (Schema::hasTable('interest_replies')) {
+        return;
+    }
+    Schema::create('interest_replies', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('interest_id');
+        $t->unsignedBigInteger('replier_profile_id');
+        $t->string('reply_type');  // accept | decline | message
+        $t->string('template_id')->nullable();
+        $t->text('custom_message')->nullable();
+        $t->boolean('is_silent_decline')->default(false);
+        $t->timestamps();
+        $t->index('interest_id');
+    });
+}
+
+/** Persist a reply row; returns the InterestReply. */
+function persistReply(int $interestId, int $replierProfileId, string $type = 'message', ?string $text = null): \App\Models\InterestReply
+{
+    return \App\Models\InterestReply::create([
+        'interest_id' => $interestId,
+        'replier_profile_id' => $replierProfileId,
+        'reply_type' => $type,
+        'custom_message' => $text,
+    ]);
+}
+
 /** Persist an Interest row + return the model with relations pre-set. */
 function persistInterest(array $overrides = []): Interest
 {
@@ -242,9 +272,11 @@ function interestRequest(User $user, string $method = 'GET', array $body = [], s
 
 beforeEach(function () {
     createInterestsTable();
+    createInterestRepliesTable();
 });
 
 afterEach(function () {
+    Schema::dropIfExists('interest_replies');
     Schema::dropIfExists('interests');
 });
 
@@ -585,4 +617,162 @@ it('exposes DEFAULT_PER_PAGE=20, MAX_PER_PAGE=50, cancelWindowHours=24', functio
     expect(InterestController::DEFAULT_PER_PAGE)->toBe(20);
     expect(InterestController::MAX_PER_PAGE)->toBe(50);
     expect($controller->cancelWindowHours())->toBe(24);
+});
+
+/* ==================================================================
+ |  GET /interests/{interest}/messages — chat polling
+ | ================================================================== */
+
+it('messages returns 422 PROFILE_REQUIRED when viewer has no profile', function () {
+    $user = buildInterestUser(100, withProfile: false);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200]);
+
+    $response = buildInterestController()->messages(
+        interestRequest($user, path: '/api/v1/interests/'.$interest->id.'/messages'),
+        $interest,
+    );
+
+    expect($response->getStatusCode())->toBe(422);
+    expect($response->getData(true)['error']['code'])->toBe('PROFILE_REQUIRED');
+});
+
+it('messages returns 403 when viewer is neither sender nor receiver', function () {
+    $stranger = buildInterestUser(999);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200]);
+
+    $response = buildInterestController()->messages(
+        interestRequest($stranger, path: '/api/v1/interests/'.$interest->id.'/messages'),
+        $interest,
+    );
+
+    expect($response->getStatusCode())->toBe(403);
+});
+
+it('messages returns empty array when no replies exist', function () {
+    $sender = buildInterestUser(100);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    $response = buildInterestController()->messages(
+        interestRequest($sender, path: '/api/v1/interests/'.$interest->id.'/messages'),
+        $interest,
+    );
+    $data = $response->getData(true)['data'];
+
+    expect($response->getStatusCode())->toBe(200);
+    expect($data['replies'])->toBe([]);
+    expect($data['latest_message_id'])->toBe(0);
+    expect($data['thread_status'])->toBe('accepted');
+    expect($data['polled_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T/');
+});
+
+it('messages returns replies in chronological (id-ascending) order', function () {
+    $sender = buildInterestUser(100);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    $r1 = persistReply($interest->id, 100, 'message', 'first');
+    $r2 = persistReply($interest->id, 200, 'message', 'second');
+    $r3 = persistReply($interest->id, 100, 'message', 'third');
+
+    $response = buildInterestController()->messages(
+        interestRequest($sender, path: '/api/v1/interests/'.$interest->id.'/messages'),
+        $interest,
+    );
+    $replies = $response->getData(true)['data']['replies'];
+
+    expect(count($replies))->toBe(3);
+    expect($replies[0]['text'])->toBe('first');
+    expect($replies[1]['text'])->toBe('second');
+    expect($replies[2]['text'])->toBe('third');
+});
+
+it('messages from-field is "me" for viewer-sent replies and "them" for the other party', function () {
+    $sender = buildInterestUser(100);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    persistReply($interest->id, 100, 'message', 'mine');     // sender (viewer)
+    persistReply($interest->id, 200, 'message', 'theirs');   // receiver (other)
+
+    $response = buildInterestController()->messages(
+        interestRequest($sender, path: '/api/v1/interests/'.$interest->id.'/messages'),
+        $interest,
+    );
+    $replies = $response->getData(true)['data']['replies'];
+
+    expect($replies[0]['from'])->toBe('me');
+    expect($replies[1]['from'])->toBe('them');
+});
+
+it('messages applies the after cursor — only returns replies with id > after', function () {
+    $sender = buildInterestUser(100);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    $r1 = persistReply($interest->id, 100, 'message', 'old');
+    $r2 = persistReply($interest->id, 200, 'message', 'new');
+
+    $response = buildInterestController()->messages(
+        interestRequest($sender, path: '/api/v1/interests/'.$interest->id.'/messages?after='.$r1->id),
+        $interest,
+    );
+    $data = $response->getData(true)['data'];
+
+    expect(count($data['replies']))->toBe(1);
+    expect($data['replies'][0]['id'])->toBe($r2->id);
+    expect($data['latest_message_id'])->toBe($r2->id);
+});
+
+it('messages echoes the input cursor as latest_message_id when no new replies', function () {
+    $sender = buildInterestUser(100);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    $r1 = persistReply($interest->id, 100, 'message', 'only');
+
+    // Caller already has the latest — poll with after = r1->id, expect empty.
+    $response = buildInterestController()->messages(
+        interestRequest($sender, path: '/api/v1/interests/'.$interest->id.'/messages?after='.$r1->id),
+        $interest,
+    );
+    $data = $response->getData(true)['data'];
+
+    expect($data['replies'])->toBe([]);
+    expect($data['latest_message_id'])->toBe($r1->id);  // echoes input
+});
+
+it('messages exposes reply_type for system replies (accept / decline)', function () {
+    $receiver = buildInterestUser(200);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    persistReply($interest->id, 200, 'accept', 'I accept');
+    persistReply($interest->id, 100, 'message', 'Hi!');
+
+    $response = buildInterestController()->messages(
+        interestRequest($receiver, path: '/api/v1/interests/'.$interest->id.'/messages'),
+        $interest,
+    );
+    $replies = $response->getData(true)['data']['replies'];
+
+    expect($replies[0]['type'])->toBe('accept');
+    expect($replies[1]['type'])->toBe('message');
+});
+
+it('messages limit query param caps replies returned per call', function () {
+    $sender = buildInterestUser(100);
+    $interest = persistInterest(['sender_profile_id' => 100, 'receiver_profile_id' => 200, 'status' => 'accepted']);
+
+    // Insert 10 replies, request limit=3.
+    for ($i = 0; $i < 10; $i++) {
+        persistReply($interest->id, 100, 'message', "msg{$i}");
+    }
+
+    $response = buildInterestController()->messages(
+        interestRequest($sender, path: '/api/v1/interests/'.$interest->id.'/messages?limit=3'),
+        $interest,
+    );
+    $replies = $response->getData(true)['data']['replies'];
+
+    expect(count($replies))->toBe(3);
+});
+
+it('exposes MESSAGES_DEFAULT_LIMIT=50 and MESSAGES_MAX_LIMIT=100', function () {
+    expect(InterestController::MESSAGES_DEFAULT_LIMIT)->toBe(50);
+    expect(InterestController::MESSAGES_MAX_LIMIT)->toBe(100);
 });

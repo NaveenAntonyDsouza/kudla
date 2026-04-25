@@ -591,6 +591,120 @@ class InterestController extends BaseApiController
     }
 
     /* ==================================================================
+     |  GET /interests/{interest}/messages — chat polling
+     | ================================================================== */
+
+    /** Hard cap on per-poll reply count — guards against abusive dumps. */
+    public const MESSAGES_MAX_LIMIT = 100;
+
+    /** Default per-poll reply count. */
+    public const MESSAGES_DEFAULT_LIMIT = 50;
+
+    /**
+     * List replies in an interest thread (chat polling). Flutter calls
+     * this on a timer (~10s) while the chat screen is open.
+     *
+     * Cursor-style pagination via `?after=N` — returns replies with
+     * `id > after`, ordered by id ascending. Initial poll uses
+     * `?after=0` (or omits) to fetch the whole history; subsequent
+     * polls send the previous response's `latest_message_id`.
+     *
+     * Returns the current thread status alongside so Flutter can react
+     * if the interest was blocked / cancelled while the user was idle.
+     *
+     * Pairs with POST /interests/{interest}/messages from step-1 —
+     * write counterpart is `reply()`, read counterpart is this method.
+     *
+     * @authenticated
+     *
+     * @group Interests
+     *
+     * @urlParam interest integer required Interest id.
+     *
+     * @queryParam after integer Return replies with id > this. Default 0 (full history).
+     * @queryParam limit integer Default 50, max 100.
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "replies": [
+     *       {"id": 7, "from": "me", "type": "message", "template_id": null, "text": "Hi!", "created_at": "2026-04-25T..."}
+     *     ],
+     *     "latest_message_id": 7,
+     *     "thread_status": "accepted",
+     *     "polled_at": "2026-04-25T..."
+     *   }
+     * }
+     *
+     * @response 403 scenario="not-party" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "..."}}
+     * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
+     * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "..."}}
+     */
+    public function messages(Request $request, Interest $interest): JsonResponse
+    {
+        $viewer = $request->user()->profile;
+        if (! $viewer) {
+            return $this->profileRequired();
+        }
+
+        if (! $this->isPartyTo($interest, $viewer)) {
+            return $this->notParty();
+        }
+
+        $after = max((int) $request->query('after', 0), 0);
+        $limit = min(
+            max((int) $request->query('limit', self::MESSAGES_DEFAULT_LIMIT), 1),
+            self::MESSAGES_MAX_LIMIT,
+        );
+
+        $replies = $interest->replies()
+            ->where('id', '>', $after)
+            ->orderBy('id')
+            ->limit($limit)
+            ->get();
+
+        $latestId = $replies->isNotEmpty()
+            ? (int) $replies->last()->id
+            : $after;  // empty page → echo input cursor so next poll re-sends same `?after`
+
+        // Re-query the interest's status so Flutter can react if the
+        // thread changed state while the user was idle. Use a column-only
+        // query instead of $interest->refresh() — refresh() reloads
+        // every relation that's been touched (sender / receiver profile,
+        // replies), which would unnecessarily query the profiles table
+        // each poll.
+        $threadStatus = (string) (Interest::whereKey($interest->id)->value('status')
+            ?? $interest->status);
+
+        return ApiResponse::ok([
+            'replies' => $replies
+                ->map(fn ($r) => $this->renderPollReply($r, $viewer))
+                ->values()
+                ->all(),
+            'latest_message_id' => $latestId,
+            'thread_status' => (string) $threadStatus,
+            'polled_at' => Carbon::now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Render a single InterestReply for the polling response. Adds the
+     * viewer-relative `from` field ("me" vs "them") + maps the
+     * custom_message column to the Flutter-friendly `text` key.
+     */
+    private function renderPollReply($reply, Profile $viewer): array
+    {
+        return [
+            'id' => (int) $reply->id,
+            'from' => $reply->replier_profile_id === $viewer->id ? 'me' : 'them',
+            'type' => (string) $reply->reply_type,
+            'template_id' => $reply->template_id,
+            'text' => $reply->custom_message,
+            'created_at' => $reply->created_at?->toIso8601String(),
+        ];
+    }
+
+    /* ==================================================================
      |  Helpers — shape, guards, lookups
      | ================================================================== */
 
