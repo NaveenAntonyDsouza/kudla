@@ -200,6 +200,20 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead'])
             ->middleware('throttle:30,1');
 
+        // Shortlist (week 4 step 9) — saved/favorited profiles.
+        // Toggle uses matri_id in URL so Flutter doesn't need to know
+        // numeric profile ids. Throttle list 60/min, toggle 30/min.
+        Route::get('/shortlist', [\App\Http\Controllers\Api\V1\ShortlistController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::post('/profiles/{matriId}/shortlist', [\App\Http\Controllers\Api\V1\ShortlistController::class, 'toggle'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:30,1');
+
+        // Profile views (week 4 step 9) — "who viewed me" + "I viewed".
+        // viewed_by tab is premium-gated (count exposed for upgrade CTA).
+        Route::get('/views', [\App\Http\Controllers\Api\V1\ProfileViewController::class, 'index'])
+            ->middleware('throttle:60,1');
+
         // Payment gateway endpoints (week 4 step 4) — multi-gateway
         // architecture, Razorpay first. {gateway} resolved at runtime
         // via PaymentGatewayManager. Adding a new gateway = single
