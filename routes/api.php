@@ -239,6 +239,14 @@ Route::prefix('v1')->group(function () {
             ->where('matriId', '[A-Za-z0-9]+')
             ->middleware('throttle:20,1');
 
+        // ID proof / KYC (week 4 step 11). Read unthrottled (cheap),
+        // upload tightly throttled to 5/hour to discourage spam-uploads
+        // of large files. Single active record per profile.
+        Route::get('/id-proof', [\App\Http\Controllers\Api\V1\IdProofController::class, 'show']);
+        Route::post('/id-proof', [\App\Http\Controllers\Api\V1\IdProofController::class, 'store'])
+            ->middleware('throttle:5,60');
+        Route::delete('/id-proof/{idProof}', [\App\Http\Controllers\Api\V1\IdProofController::class, 'destroy']);
+
         // Payment gateway endpoints (week 4 step 4) — multi-gateway
         // architecture, Razorpay first. {gateway} resolved at runtime
         // via PaymentGatewayManager. Adding a new gateway = single
