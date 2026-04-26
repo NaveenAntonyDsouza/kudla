@@ -186,6 +186,20 @@ Route::prefix('v1')->group(function () {
         Route::post('/membership/coupon/validate', [\App\Http\Controllers\Api\V1\MembershipController::class, 'validateCoupon'])
             ->middleware('throttle:30,1');
 
+        // Notification list/read endpoints (week 4 step 8). Reads are
+        // chatty (badge refresh on every screen) — throttle 60/min/user.
+        // Mutations stay tighter (30/min). Specific routes registered
+        // BEFORE the {notification} param route so unread-count and
+        // read-all aren't matched as ids.
+        Route::get('/notifications', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount'])
+            ->middleware('throttle:60,1');
+        Route::post('/notifications/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead'])
+            ->middleware('throttle:30,1');
+        Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead'])
+            ->middleware('throttle:30,1');
+
         // Payment gateway endpoints (week 4 step 4) — multi-gateway
         // architecture, Razorpay first. {gateway} resolved at runtime
         // via PaymentGatewayManager. Adding a new gateway = single
