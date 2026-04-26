@@ -43,4 +43,17 @@ class RegisterStep1Request extends ApiFormRequest
             'gender.in' => 'Gender must be either "male" or "female".',
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'full_name' => ['description' => 'Full legal name. 2-100 characters.', 'example' => 'Naveen DSouza'],
+            'gender' => ['description' => 'Either "male" or "female". Drives partner-search defaults + same-gender interest guards.', 'enum' => ['male', 'female'], 'example' => 'male'],
+            'date_of_birth' => ['description' => 'YYYY-MM-DD. Must be 18+ at the time of registration.', 'example' => '1995-04-12'],
+            'phone' => ['description' => '10-digit phone number. Must be globally unique across users.', 'example' => '9876543210'],
+            'email' => ['description' => 'Valid email address. Must be globally unique across users.', 'example' => 'naveen@example.com'],
+            'password' => ['description' => '6-14 characters. Hashed with bcrypt before storage.', 'example' => 'choose-a-password'],
+            'ref' => ['description' => 'Optional affiliate / referral code. Max 20 chars.', 'required' => false, 'example' => 'FRIEND2026'],
+        ];
+    }
 }

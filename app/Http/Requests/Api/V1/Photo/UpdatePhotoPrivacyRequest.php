@@ -81,4 +81,45 @@ class UpdatePhotoPrivacyRequest extends ApiFormRequest
             }
         });
     }
+
+    /**
+     * Scribe body-parameter metadata. All four fields are nullable + send
+     * at-least-one is enforced cross-field (see withValidator above), which
+     * Scribe cannot infer from rules() alone.
+     */
+    public function bodyParameters(): array
+    {
+        $description = 'One of: visible_to_all | interest_accepted | hidden. Send at least one privacy field per request.';
+
+        return [
+            'privacy_level' => [
+                'description' => "Legacy field — applies the same privacy level to every photo type. {$description}",
+                'type' => 'string',
+                'enum' => self::LEVELS,
+                'required' => false,
+                'example' => 'visible_to_all',
+            ],
+            'profile_photo_privacy' => [
+                'description' => "Per-type override for the profile (primary) photo. {$description}",
+                'type' => 'string',
+                'enum' => self::LEVELS,
+                'required' => false,
+                'example' => 'visible_to_all',
+            ],
+            'album_photos_privacy' => [
+                'description' => "Per-type override for album photos. {$description}",
+                'type' => 'string',
+                'enum' => self::LEVELS,
+                'required' => false,
+                'example' => 'interest_accepted',
+            ],
+            'family_photos_privacy' => [
+                'description' => "Per-type override for family photos. {$description}",
+                'type' => 'string',
+                'enum' => self::LEVELS,
+                'required' => false,
+                'example' => 'interest_accepted',
+            ],
+        ];
+    }
 }

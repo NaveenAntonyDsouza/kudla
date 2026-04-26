@@ -61,4 +61,29 @@ class UploadPhotoRequest extends ApiFormRequest
             'photo_type.in' => 'photo_type must be one of: profile, album, family.',
         ];
     }
+
+    /**
+     * Scribe body-parameter metadata. Surfaces accurate types + examples in
+     * the generated OpenAPI spec, which `rules()` alone can't (file fields
+     * read as plain "file" without size/mime detail).
+     */
+    public function bodyParameters(): array
+    {
+        $maxMb = (int) config('matrimony.max_photo_size_mb', 5);
+
+        return [
+            'photo' => [
+                'description' => "Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: {$maxMb} MB.",
+                'type' => 'file',
+                'required' => true,
+            ],
+            'photo_type' => [
+                'description' => 'Photo slot. profile=primary avatar (max 1), album=gallery (max 9), family=family photo (max 3).',
+                'type' => 'string',
+                'enum' => ['profile', 'album', 'family'],
+                'required' => true,
+                'example' => 'album',
+            ],
+        ];
+    }
 }
