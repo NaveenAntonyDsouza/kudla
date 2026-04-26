@@ -1,0 +1,35 @@
+meta {
+  name: Send Phone OTP
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/otp/phone/send
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "phone": "98765{{$randomInt(10000, 99999)}}",
+    "purpose": "login"
+  }
+}
+
+tests {
+  test("status is 200 or 422 (rate-limit gate)", () => {
+    expect([200, 422]).to.include(res.status);
+  });
+  test("envelope shape valid on 200", () => {
+    if (res.status === 200) {
+      expect(res.body.success).to.equal(true);
+      expect(res.body.data).to.have.property("expires_in_seconds");
+    }
+  });
+  test("error code present on 422", () => {
+    if (res.status === 422) {
+      expect(res.body.error).to.have.property("code");
+    }
+  });
+}

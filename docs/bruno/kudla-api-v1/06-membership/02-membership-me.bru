@@ -1,0 +1,28 @@
+meta {
+  name: GET /membership/me
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/membership/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response carries plan + usage sections", () => {
+    expect(res.body.data).to.have.property("plan");
+    expect(res.body.data).to.have.property("usage");
+  });
+}

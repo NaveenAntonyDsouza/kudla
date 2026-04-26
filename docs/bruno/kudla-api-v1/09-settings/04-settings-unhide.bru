@@ -1,0 +1,31 @@
+meta {
+  name: POST /settings/unhide
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/settings/unhide
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# Restores profile visibility. Run after 03-settings-hide to keep
+# the test profile discoverable for downstream search/discover suites.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response confirms hidden=false", () => {
+    expect(res.body.data).to.have.property("hidden");
+    expect(res.body.data.hidden).to.equal(false);
+  });
+}

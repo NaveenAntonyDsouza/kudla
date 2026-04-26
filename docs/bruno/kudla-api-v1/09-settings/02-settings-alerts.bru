@@ -1,0 +1,37 @@
+meta {
+  name: PUT /settings/alerts
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/settings/alerts
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "email_alerts": true,
+    "push_alerts": true,
+    "sms_alerts": false
+  }
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response echoes updated alert flags", () => {
+    expect(res.body.data).to.have.property("email_alerts");
+    expect(res.body.data).to.have.property("push_alerts");
+    expect(res.body.data).to.have.property("sms_alerts");
+  });
+}

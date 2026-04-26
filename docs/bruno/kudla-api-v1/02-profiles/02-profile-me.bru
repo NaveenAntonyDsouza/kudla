@@ -1,0 +1,30 @@
+meta {
+  name: GET /profile/me
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profile/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("matri_id present + uppercase alphanumeric", () => {
+    expect(res.body.data.matri_id).to.match(/^[A-Z]+\d+$/);
+  });
+  test("contact section is populated for self-view", () => {
+    expect(res.body.data).to.have.property("contact");
+  });
+}

@@ -1,0 +1,45 @@
+meta {
+  name: POST /devices (FCM register)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/devices
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# Registers a fake FCM device token. The bound device row is captured
+# into {{deviceId}} for later teardown via DELETE /devices/{id}.
+
+body:json {
+  {
+    "token": "FAKE-FCM-TOKEN-FROM-BRUNO-{{$randomInt}}",
+    "platform": "android",
+    "device_name": "Bruno Smoke Test Device",
+    "app_version": "1.0.0"
+  }
+}
+
+vars:post-response {
+  deviceId: res.body.data.id
+}
+
+tests {
+  test("status is 201 or 200", () => {
+    expect([200, 201]).to.include(res.status);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response carries device id + platform", () => {
+    expect(res.body.data).to.have.property("id");
+    expect(res.body.data).to.have.property("platform");
+    expect(res.body.data.platform).to.equal("android");
+  });
+}

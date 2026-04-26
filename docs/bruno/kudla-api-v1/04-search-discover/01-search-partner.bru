@@ -1,0 +1,33 @@
+meta {
+  name: GET /search/partner
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/search/partner?per_page=10&sort=newest
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("data is an array", () => {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta has pagination keys", () => {
+    expect(res.body.meta).to.have.property("page");
+    expect(res.body.meta).to.have.property("per_page");
+    expect(res.body.meta).to.have.property("total");
+    expect(res.body.meta).to.have.property("last_page");
+  });
+}

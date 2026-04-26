@@ -1,0 +1,31 @@
+meta {
+  name: GET /profiles/{matriId}
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/{{matriId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# {{matriId}} is captured by 01-auth/01-register-step-1.bru. Self-viewing
+# is allowed (the 7-gate ProfileAccessService treats self-view as
+# REASON_SELF and lets it through).
+
+tests {
+  test("status is 200 (or 404 if matriId not seeded)", () => {
+    expect([200, 404]).to.include(res.status);
+  });
+  test("envelope success=true on 200", () => {
+    if (res.status === 200) {
+      expect(res.body.success).to.equal(true);
+      expect(res.body.data.matri_id).to.equal(bru.getEnvVar("matriId"));
+    }
+  });
+}

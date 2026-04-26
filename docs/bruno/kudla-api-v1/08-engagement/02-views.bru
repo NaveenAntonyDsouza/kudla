@@ -1,0 +1,33 @@
+meta {
+  name: GET /views?tab=viewed_by
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/views?tab=viewed_by&per_page=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# Free user: total_count exposed, viewers empty.
+# Premium user: paginated viewer profile cards.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response carries tab + is_premium + total_count + viewers", () => {
+    expect(res.body.data.tab).to.equal("viewed_by");
+    expect(res.body.data).to.have.property("is_premium");
+    expect(res.body.data).to.have.property("total_count");
+    expect(res.body.data).to.have.property("viewers");
+  });
+}

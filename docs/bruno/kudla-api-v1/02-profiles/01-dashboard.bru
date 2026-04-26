@@ -1,0 +1,28 @@
+meta {
+  name: GET /dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/dashboard
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("dashboard sections present", () => {
+    expect(res.body.data).to.have.property("cta");
+    expect(res.body.data).to.have.property("stats");
+  });
+}

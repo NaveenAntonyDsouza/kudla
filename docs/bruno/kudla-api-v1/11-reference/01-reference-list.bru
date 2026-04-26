@@ -1,0 +1,28 @@
+meta {
+  name: GET /reference (catalog)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/reference
+  body: none
+  auth: none
+}
+
+# Public catalog of available reference lists (religions, castes,
+# languages, education, occupations, …). Used by mobile clients to
+# decide which lookup endpoints they can consume.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("data is a non-empty array of catalog entries", () => {
+    expect(res.body.data).to.be.an("array");
+    expect(res.body.data.length).to.be.greaterThan(0);
+  });
+}

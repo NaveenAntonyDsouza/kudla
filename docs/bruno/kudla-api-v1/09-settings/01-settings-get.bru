@@ -1,0 +1,29 @@
+meta {
+  name: GET /settings
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/settings
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("payload exposes alerts + privacy + visibility groups", () => {
+    expect(res.body.data).to.have.property("alerts");
+    expect(res.body.data).to.have.property("privacy");
+    expect(res.body.data).to.have.property("visibility");
+  });
+}

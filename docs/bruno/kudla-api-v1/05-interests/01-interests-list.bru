@@ -1,0 +1,32 @@
+meta {
+  name: GET /interests (inbox)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/interests?tab=all&per_page=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("data is an array", () => {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta carries tab + pagination", () => {
+    expect(res.body.meta).to.have.property("tab");
+    expect(res.body.meta).to.have.property("page");
+    expect(res.body.meta).to.have.property("total");
+  });
+}

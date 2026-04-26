@@ -1,0 +1,25 @@
+meta {
+  name: GET /health
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/health
+  body: none
+  auth: none
+}
+
+# Liveness probe. Should respond 200 with status=ok. Useful as the very
+# first request when wiring up a new environment to confirm baseUrl,
+# DNS, and basic routing are sane before fanning out into auth flows.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("payload reports status=ok", () => {
+    expect(res.body).to.have.property("status");
+    expect(res.body.status).to.equal("ok");
+  });
+}

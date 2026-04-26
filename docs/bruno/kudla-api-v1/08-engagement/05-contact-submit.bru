@@ -1,0 +1,36 @@
+meta {
+  name: POST /contact (public)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/contact
+  body: json
+  auth: none
+}
+
+# Public contact form. Throttled, but a single test submission should pass.
+
+body:json {
+  {
+    "name": "Bruno Tester",
+    "email": "bruno.tester@example.com",
+    "subject": "Smoke test from Bruno",
+    "message": "This is a smoke-test submission from the Bruno collection. Safe to ignore."
+  }
+}
+
+tests {
+  test("status is 201 or 200", () => {
+    expect([200, 201]).to.include(res.status);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response carries a submission identifier", () => {
+    expect(res.body.data).to.satisfy((d) => {
+      return d && (d.submission_id || d.id || d.reference);
+    });
+  });
+}
