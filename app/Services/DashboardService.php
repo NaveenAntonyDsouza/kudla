@@ -158,12 +158,32 @@ class DashboardService
         }
     }
 
+    /**
+     * Eager-load every relation ProfileCardResource accesses so the
+     * dashboard doesn't fan out into 5 N+1 queries per profile per
+     * carousel. Mirrors ProfileQueryFilters::baseQuery() — keep in sync.
+     */
+    private const CARD_RELATIONS = [
+        'primaryPhoto',
+        'religiousInfo',
+        'educationDetail',
+        'locationInfo',
+        'photoPrivacySetting',
+        'user.userMemberships',
+    ];
+
     /** Recent views carousel — last N people who viewed this profile. */
     public function buildRecentViews(Profile $profile): array
     {
         try {
+            // Eager-load every viewerProfile.{relation} so the cardsFrom()
+            // pass below doesn't fan out into N+1 queries per viewer.
+            $viewerProfileRels = collect(self::CARD_RELATIONS)
+                ->map(fn ($rel) => 'viewerProfile.'.$rel)
+                ->all();
+
             $viewers = ProfileView::where('viewed_profile_id', $profile->id)
-                ->with('viewerProfile.user')
+                ->with($viewerProfileRels)
                 ->orderByDesc('viewed_at')
                 ->take(self::CAROUSEL_LIMIT)
                 ->get()
@@ -188,7 +208,7 @@ class DashboardService
                 ->where('is_approved', true)
                 ->where('is_hidden', false)
                 ->where('suspension_status', 'active')
-                ->with('user')
+                ->with(self::CARD_RELATIONS)
                 ->orderByDesc('created_at')
                 ->take(self::CAROUSEL_LIMIT)
                 ->get();
