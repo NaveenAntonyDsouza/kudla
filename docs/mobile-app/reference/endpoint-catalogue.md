@@ -1,6 +1,6 @@
 # API Endpoint Catalogue
 
-All ~80 endpoints under `/api/v1/*`. Sorted by group.
+All ~95 endpoints under `/api/v1/*`. Sorted by group. Authoritative — kept in sync with `routes/api.php` via `php tests/Tools/route-audit.php`.
 
 Legend:
 - 🔓 Public (no auth)
@@ -13,7 +13,7 @@ Legend:
 
 | Method | Path | Auth | Rate | Covered in |
 |--------|------|------|------|-----------|
-| POST | `/auth/register/step-1` | 🔓 | 10/min | [wk-02/step-06](../phase-2a-api/week-02-auth-registration/step-06-register-step-1-endpoint.md) |
+| POST | `/auth/register/step-1` | 🔓 | 5/min | [wk-02/step-06](../phase-2a-api/week-02-auth-registration/step-06-register-step-1-endpoint.md) |
 | POST | `/auth/register/step-2` | 🔐 | | [wk-02/step-07](../phase-2a-api/week-02-auth-registration/step-07-register-steps-2-5.md) |
 | POST | `/auth/register/step-3` | 🔐 | | [wk-02/step-07](../phase-2a-api/week-02-auth-registration/step-07-register-steps-2-5.md) |
 | POST | `/auth/register/step-4` | 🔐 | | [wk-02/step-07](../phase-2a-api/week-02-auth-registration/step-07-register-steps-2-5.md) |
@@ -26,6 +26,7 @@ Legend:
 | POST | `/auth/password/forgot` | 🔓 | 5/min | [wk-02/step-13](../phase-2a-api/week-02-auth-registration/step-13-forgot-reset-password.md) |
 | POST | `/auth/password/reset` | 🔓 | 5/min | [wk-02/step-13](../phase-2a-api/week-02-auth-registration/step-13-forgot-reset-password.md) |
 | GET | `/auth/me` | 🔐 | | [wk-02/step-14](../phase-2a-api/week-02-auth-registration/step-14-me-logout.md) |
+| GET | `/auth/ping` | 🔐 | | [wk-01/step-02](../phase-2a-api/week-01-foundations/step-02-api-routes-skeleton.md) |
 | POST | `/auth/logout` | 🔐 | | [wk-02/step-14](../phase-2a-api/week-02-auth-registration/step-14-me-logout.md) |
 
 ## Devices
@@ -44,6 +45,7 @@ Legend:
 ## Configuration (🔓)
 
 | GET | `/site/settings` | 🔓 | | [wk-01/step-06](../phase-2a-api/week-01-foundations/step-06-site-settings-endpoint.md) |
+| GET | `/reference` | 🔓 | | [wk-01/step-07](../phase-2a-api/week-01-foundations/step-07-reference-data-endpoints.md) |
 | GET | `/reference/{list}` | 🔓 | | [wk-01/step-07](../phase-2a-api/week-01-foundations/step-07-reference-data-endpoints.md) |
 | GET | `/static-pages/{slug}` | 🔓 | | [wk-04/step-13](../phase-2a-api/week-04-interests-payment-push/step-13-engagement-public.md) |
 
@@ -53,7 +55,6 @@ Legend:
 | GET | `/profile/me` | 🔐 | | [wk-03/step-04](../phase-2a-api/week-03-profiles-photos-search/step-04-profile-me-endpoint.md) |
 | GET | `/profiles/{matriId}` | 🔐 | | [wk-03/step-05](../phase-2a-api/week-03-profiles-photos-search/step-05-view-other-profile.md) |
 | PUT | `/profile/me/{section}` | 🔐 | | [wk-03/step-06](../phase-2a-api/week-03-profiles-photos-search/step-06-update-profile-section.md) |
-| POST | `/profile/me/jathakam` | 🔐 | | (part of registration or separate later) |
 
 ## Photos
 
@@ -61,6 +62,7 @@ Legend:
 | POST | `/photos` | 🔐 | 20/hr | wk-03/step-09 |
 | POST | `/photos/{photo}/primary` | 🔐 | | wk-03/step-09 |
 | DELETE | `/photos/{photo}` | 🔐 | | wk-03/step-09 |
+| DELETE | `/photos/{photo}/permanent` | 🔐 | | wk-03/step-09 |
 | POST | `/photos/{photo}/restore` | 🔐 | | wk-03/step-09 |
 | POST | `/photos/privacy` | 🔐 | | [wk-03/step-10](../phase-2a-api/week-03-profiles-photos-search/step-10-photo-privacy-endpoint.md) |
 | GET | `/photo-requests` | 🔐 | | [wk-03/step-11](../phase-2a-api/week-03-profiles-photos-search/step-11-photo-request-endpoints.md) |
@@ -70,7 +72,7 @@ Legend:
 
 ## Search, Discover, Matches
 
-| GET | `/search` | 🔐 | | [wk-03/step-12](../phase-2a-api/week-03-profiles-photos-search/step-12-search-partner-endpoint.md) |
+| GET | `/search/partner` | 🔐 | | [wk-03/step-12](../phase-2a-api/week-03-profiles-photos-search/step-12-search-partner-endpoint.md) |
 | GET | `/search/keyword` | 🔐 | | [wk-03/step-13](../phase-2a-api/week-03-profiles-photos-search/step-13-keyword-id-saved.md) |
 | GET | `/search/id/{matriId}` | 🔐 | | wk-03/step-13 |
 | GET | `/search/saved` | 🔐 | | wk-03/step-13 |
@@ -94,17 +96,18 @@ Legend:
 | POST | `/interests/{interest}/star` | 🔐 | | wk-04/step-01 |
 | POST | `/interests/{interest}/trash` | 🔐 | | wk-04/step-01 |
 | POST | `/interests/{interest}/messages` | 🔐 | 30/hr | wk-04/step-01 |
-| GET | `/interests/{interest}/messages/since/{messageId?}` | 🔐 | | [wk-04/step-02](../phase-2a-api/week-04-interests-payment-push/step-02-chat-polling.md) |
+| GET | `/interests/{interest}/messages` | 🔐 | | [wk-04/step-02](../phase-2a-api/week-04-interests-payment-push/step-02-chat-polling.md) |
 
 ## Membership + Payment
 
 | GET | `/membership/plans` | 🔓 | | [wk-04/step-03](../phase-2a-api/week-04-interests-payment-push/step-03-membership-plans-coupon.md) |
 | GET | `/membership/me` | 🔐 | | wk-04/step-03 |
 | POST | `/membership/coupon/validate` | 🔐 | | wk-04/step-03 |
-| POST | `/membership/order` | 🔐 | | [wk-04/step-04](../phase-2a-api/week-04-interests-payment-push/step-04-razorpay-order-verify.md) |
-| POST | `/membership/verify` | 🔐 | | wk-04/step-04 |
-| GET | `/membership/history` | 🔐 | | wk-04/step-04 |
-| POST | `/webhooks/razorpay` | 🔓 | | [wk-04/step-05](../phase-2a-api/week-04-interests-payment-push/step-05-razorpay-webhook.md) |
+| POST | `/payment/{gateway}/order` | 🔐 | | [wk-04/step-04](../phase-2a-api/week-04-interests-payment-push/step-04-razorpay-order-verify.md) |
+| POST | `/payment/{gateway}/verify` | 🔐 | | wk-04/step-04 |
+| POST | `/webhooks/{gateway}` | 🔓 | | [wk-04/step-05](../phase-2a-api/week-04-interests-payment-push/step-05-razorpay-webhook.md) |
+
+`{gateway}` ∈ `razorpay | stripe | paypal | paytm | phonepe`. Multi-gateway architecture — each slug resolves through `PaymentGatewayManager`. The matching `/webhooks/{gateway}` endpoint stays public and is signature-verified per-gateway in the gateway service. Membership purchase history is exposed via `GET /membership/me` (current snapshot); full purchase history is admin-only and not exposed on the API surface.
 
 ## Notifications
 
@@ -147,6 +150,14 @@ Legend:
 
 ---
 
-**Total: 82 endpoints** (give or take ±5 as new edge cases emerge during build)
+**Total: 96 routes** across 89 path templates (counted by `php artisan route:list --path=api/v1`).
 
-All covered by Pest tests. All in Bruno collection at `docs/bruno/kudla-api-v1/`. All documented via Scribe at `/docs`.
+All covered by Pest tests under `tests/Feature/Api/V1/` (652 tests, 2039 assertions). All in Bruno collection at `docs/bruno/kudla-api-v1/`. All documented via Scribe at `/docs` (94 OpenAPI operations).
+
+To verify the catalogue stays in sync with the codebase:
+
+```
+php tests/Tools/route-audit.php
+```
+
+Reports any registered-but-undocumented or documented-but-unregistered routes.

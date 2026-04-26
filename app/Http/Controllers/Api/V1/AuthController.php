@@ -57,7 +57,7 @@ class AuthController extends BaseApiController
      *
      * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in": 300}}
      * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"phone": ["The phone field is required."]}}}
-     * @response 429 scenario="cooldown" {"success": false, "error": {"code": "OTP_COOLDOWN", "message": "Please wait before requesting another code."}}
+     * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many requests. Try again in {n} seconds."}}
      */
     public function sendPhoneOtp(Request $request): JsonResponse
     {
@@ -104,8 +104,7 @@ class AuthController extends BaseApiController
      *
      * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "next_step": "complete"}}
      * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
-     * @response 422 scenario="otp-invalid" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
-     * @response 422 scenario="otp-expired" {"success": false, "error": {"code": "OTP_EXPIRED", "message": "Code has expired. Send a new one."}}
+     * @response 422 scenario="otp-invalid-or-expired" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
      */
     public function verifyPhoneOtp(Request $request): JsonResponse
     {
@@ -158,7 +157,7 @@ class AuthController extends BaseApiController
      * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in": 300}}
      * @response 422 scenario="login-disabled" {"success": false, "error": {"code": "OTP_INVALID", "message": "Email OTP login is not enabled."}}
      * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"email": ["..."]}}}
-     * @response 429 scenario="cooldown" {"success": false, "error": {"code": "OTP_COOLDOWN", "message": "Please wait before requesting another code."}}
+     * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many requests. Try again in {n} seconds."}}
      */
     public function sendEmailOtp(Request $request): JsonResponse
     {
