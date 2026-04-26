@@ -80,6 +80,17 @@ Route::prefix('v1')->group(function () {
     Route::get('/membership/plans', [\App\Http\Controllers\Api\V1\MembershipController::class, 'plans'])
         ->middleware('throttle:60,1');
 
+    // Engagement public surface (week 4 step 13) — contact form, DB-
+    // backed static pages, success-story feed. Contact submit tightly
+    // throttled (anti-spam); pages cacheable so unthrottled; story
+    // feed 60/min/IP for browse.
+    Route::post('/contact', [\App\Http\Controllers\Api\V1\ContactController::class, 'submit'])
+        ->middleware('throttle:5,60');
+    Route::get('/static-pages/{slug}', [\App\Http\Controllers\Api\V1\StaticPageController::class, 'show'])
+        ->where('slug', '[a-z0-9-]+');
+    Route::get('/success-stories', [\App\Http\Controllers\Api\V1\SuccessStoryController::class, 'index'])
+        ->middleware('throttle:60,1');
+
     // Discover — category-based public browsing (week 3 step 14).
     // No auth required: mirrors web's public /discover routes. Throttled
     // 60/min per IP since public endpoints are exposed to abuse.
@@ -246,6 +257,11 @@ Route::prefix('v1')->group(function () {
         Route::post('/id-proof', [\App\Http\Controllers\Api\V1\IdProofController::class, 'store'])
             ->middleware('throttle:5,60');
         Route::delete('/id-proof/{idProof}', [\App\Http\Controllers\Api\V1\IdProofController::class, 'destroy']);
+
+        // Success-story submission (week 4 step 13) — auth required since
+        // we attach submitted_by_user_id. 3/hour anti-spam (file upload).
+        Route::post('/success-stories', [\App\Http\Controllers\Api\V1\SuccessStoryController::class, 'store'])
+            ->middleware('throttle:3,60');
 
         // Settings (week 4 step 12). Read unthrottled, mutations 30/min,
         // password 10/min (anti-brute), delete 5/hour (anti-mistake).
