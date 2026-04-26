@@ -40,9 +40,19 @@ class OnboardingController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Onboarding step 1 — personal + professional + family extras.
+     *
      * @authenticated
      *
      * @group Onboarding
+     *
+     * @bodyParam personal object Personal extras (weight_kg, blood_group, mother_tongue, languages_known[], about_me).
+     * @bodyParam professional object Professional extras (education_detail, occupation_detail, employer_name).
+     * @bodyParam family object Family extras (father_name, mother_name, brothers/sisters counts, candidate_asset_details, about_candidate_family).
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 65, "next_step": "onboarding.step-2"}}
+     * @response 401 scenario="invalid-token" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "..."}}
+     * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function step1(Request $request): JsonResponse
     {
@@ -100,9 +110,17 @@ class OnboardingController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Onboarding step 2 — location + extended contact info.
+     *
      * @authenticated
      *
      * @group Onboarding
+     *
+     * @bodyParam location object Location extras (residing_country, residency_status, outstation_leave_date_from/to).
+     * @bodyParam contact object Extended contact (residential_phone_number, secondary_phone, alternate_email, reference_*, present_address, permanent_address, …).
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 78, "next_step": "onboarding.partner-preferences"}}
+     * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function step2(Request $request): JsonResponse
     {
@@ -151,9 +169,29 @@ class OnboardingController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Onboarding partner-preferences — multi-select arrays drive the partner-search filters.
+     *
      * @authenticated
      *
      * @group Onboarding
+     *
+     * @bodyParam age_from integer Min preferred age (18-70).
+     * @bodyParam age_to integer Max preferred age (18-70). Must be >= age_from.
+     * @bodyParam height_from_cm integer Min preferred height in cm (100-250).
+     * @bodyParam height_to_cm integer Max preferred height in cm (100-250).
+     * @bodyParam complexion string[] Preferred complexion values.
+     * @bodyParam body_type string[] Preferred body types.
+     * @bodyParam marital_status string[] Acceptable marital statuses.
+     * @bodyParam religions string[] Acceptable religions; downstream filters (denomination, caste, etc.) apply per-religion.
+     * @bodyParam education_levels string[] Preferred education levels.
+     * @bodyParam occupations string[] Preferred occupations.
+     * @bodyParam income_range string[] Acceptable income buckets.
+     * @bodyParam working_countries string[] Preferred working countries.
+     * @bodyParam native_countries string[] Preferred native countries.
+     * @bodyParam about_partner string Free-text "about the partner" (max 5000 chars).
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 90, "next_step": "onboarding.lifestyle"}}
+     * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function partnerPrefs(Request $request): JsonResponse
     {
@@ -213,6 +251,13 @@ class OnboardingController extends BaseApiController
      * @authenticated
      *
      * @group Onboarding
+     *
+     * @bodyParam lifestyle object Lifestyle (diet, drinking, smoking, cultural_background, hobbies[], favorite_music[], …).
+     * @bodyParam social object Social-media URLs (facebook_url, instagram_url, linkedin_url, youtube_url, website_url).
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 100, "next_step": "dashboard", "onboarding_finished": true}}
+     * @response 422 scenario="invalid-url" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"social.facebook_url": ["The social.facebook url field must be a valid URL."]}}}
+     * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function lifestyle(Request $request): JsonResponse
     {
@@ -268,6 +313,9 @@ class OnboardingController extends BaseApiController
      * @authenticated
      *
      * @group Onboarding
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 65, "next_step": "dashboard", "onboarding_finished": true}}
+     * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function finish(Request $request): JsonResponse
     {

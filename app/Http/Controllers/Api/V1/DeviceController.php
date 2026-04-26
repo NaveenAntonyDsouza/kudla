@@ -34,6 +34,17 @@ class DeviceController extends BaseApiController
      *
      * @authenticated
      * @group Devices
+     *
+     * @bodyParam fcm_token string required FCM device token from firebase_messaging.getToken().
+     * @bodyParam platform string required Either "android" or "ios".
+     * @bodyParam device_model string Optional device model (e.g. "Pixel 7", max 100 chars).
+     * @bodyParam app_version string Optional app version (e.g. "1.0.3", max 20 chars).
+     * @bodyParam os_version string Optional OS version (e.g. "Android 14", max 20 chars).
+     * @bodyParam locale string Optional BCP-47 locale (e.g. "en", "en-IN", max 10 chars). Defaults to "en".
+     *
+     * @response 201 scenario="success" {"success": true, "data": {"device_id": 87}}
+     * @response 401 scenario="invalid-token" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "..."}}
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"fcm_token": ["The fcm token field is required."]}}}
      */
     public function register(Request $request): JsonResponse
     {
@@ -75,6 +86,12 @@ class DeviceController extends BaseApiController
      *
      * @authenticated
      * @group Devices
+     *
+     * @urlParam device integer required Device id from POST /devices.
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"revoked": true}}
+     * @response 403 scenario="not-owner" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "This device is not yours."}}
+     * @response 404 scenario="not-found" {"success": false, "error": {"code": "NOT_FOUND", "message": "..."}}
      */
     public function revoke(Request $request, Device $device): JsonResponse
     {

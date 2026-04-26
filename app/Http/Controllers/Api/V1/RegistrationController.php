@@ -86,6 +86,15 @@ class RegistrationController extends BaseApiController
      *
      * @authenticated
      * @group Authentication
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 2},
+     *     "next_step": "register.step-3"
+     *   }
+     * }
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"religion": ["The religion field is required."]}}}
      */
     public function step2(RegisterStep2Request $request): JsonResponse
     {
@@ -107,6 +116,15 @@ class RegistrationController extends BaseApiController
      *
      * @authenticated
      * @group Authentication
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 3},
+     *     "next_step": "register.step-4"
+     *   }
+     * }
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"highest_education": ["The highest education field is required."]}}}
      */
     public function step3(RegisterStep3Request $request): JsonResponse
     {
@@ -128,6 +146,15 @@ class RegistrationController extends BaseApiController
      *
      * @authenticated
      * @group Authentication
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 4},
+     *     "next_step": "register.step-5"
+     *   }
+     * }
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"native_country": ["The native country field is required."]}}}
      */
     public function step4(RegisterStep4Request $request): JsonResponse
     {
@@ -150,6 +177,18 @@ class RegistrationController extends BaseApiController
      *
      * @authenticated
      * @group Authentication
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true},
+     *     "user": {"email_verified_at": null, "phone_verified_at": null},
+     *     "next_step": "verify.email",
+     *     "email_verification_enabled": true,
+     *     "phone_verification_enabled": false
+     *   }
+     * }
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"created_by": ["The created by field is required."]}}}
      */
     public function step5(RegisterStep5Request $request): JsonResponse
     {

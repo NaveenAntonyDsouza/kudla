@@ -38,6 +38,8 @@ class IgnoredProfileController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List the profiles the authenticated user has ignored.
+     *
      * @authenticated
      *
      * @group Ignored

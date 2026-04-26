@@ -56,6 +56,8 @@ class IdProofController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Get the viewer's current ID-proof submission + the catalogue of accepted document types.
+     *
      * @authenticated
      *
      * @group ID Proof

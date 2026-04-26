@@ -36,6 +36,8 @@ class ProfileViewController extends BaseApiController
     private const MAX_PER_PAGE = 50;
 
     /**
+     * Profile-views feed — "viewed_by" (who viewed me) or "i_viewed" (who I viewed). Premium-gated for full list.
+     *
      * @authenticated
      *
      * @group Views

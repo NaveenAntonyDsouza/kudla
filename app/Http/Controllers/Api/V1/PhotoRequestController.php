@@ -52,6 +52,8 @@ class PhotoRequestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Send a photo-request to a target whose photos are privacy-gated. Subject to gender-mismatch + block guards.
+     *
      * @authenticated
      *
      * @group Photo Requests
@@ -170,6 +172,8 @@ class PhotoRequestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List photo-requests visible to the viewer — both received (incoming) and sent (outgoing).
+     *
      * @authenticated
      *
      * @group Photo Requests
@@ -221,6 +225,8 @@ class PhotoRequestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Approve an incoming photo-request — grants the requester access to your photos.
+     *
      * @authenticated
      *
      * @group Photo Requests
@@ -284,6 +290,8 @@ class PhotoRequestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Ignore an incoming photo-request silently. The requester is not notified; the request is just dismissed.
+     *
      * @authenticated
      *
      * @group Photo Requests

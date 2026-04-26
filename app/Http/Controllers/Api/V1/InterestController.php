@@ -82,6 +82,8 @@ class InterestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List the viewer's interests, filtered by tab (received/sent/accepted/declined/starred/trash/all).
+     *
      * @authenticated
      *
      * @group Interests
@@ -216,6 +218,8 @@ class InterestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Get a single interest the viewer is party to (sender or receiver), with replies.
+     *
      * @authenticated
      *
      * @group Interests
@@ -247,6 +251,8 @@ class InterestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Send an interest to a target profile. Subject to daily caps + block + gender-mismatch + premium-gate.
+     *
      * @authenticated
      *
      * @group Interests
@@ -300,6 +306,8 @@ class InterestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Accept a pending interest. Only the receiver can accept; flips status + creates an accept-reply.
+     *
      * @authenticated
      *
      * @group Interests
@@ -357,6 +365,8 @@ class InterestController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Decline a pending interest. Only the receiver can decline; supports silent decline (no notification).
+     *
      * @authenticated
      *
      * @group Interests

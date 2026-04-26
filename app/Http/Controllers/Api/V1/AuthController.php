@@ -51,6 +51,13 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam phone string required 10-digit phone number. Example: 9876543210
+     * @bodyParam purpose string required One of: register | login | reset.
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in": 300}}
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"phone": ["The phone field is required."]}}}
+     * @response 429 scenario="cooldown" {"success": false, "error": {"code": "OTP_COOLDOWN", "message": "Please wait before requesting another code."}}
      */
     public function sendPhoneOtp(Request $request): JsonResponse
     {
@@ -89,6 +96,16 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam phone string required 10-digit phone number.
+     * @bodyParam otp string required 6-digit OTP code.
+     * @bodyParam purpose string required One of: register | login | reset.
+     * @bodyParam device_name string Optional device label (max 60 chars). Used on login token.
+     *
+     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "next_step": "complete"}}
+     * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
+     * @response 422 scenario="otp-invalid" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
+     * @response 422 scenario="otp-expired" {"success": false, "error": {"code": "OTP_EXPIRED", "message": "Code has expired. Send a new one."}}
      */
     public function verifyPhoneOtp(Request $request): JsonResponse
     {
@@ -134,6 +151,14 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam email string required Valid email address.
+     * @bodyParam purpose string required One of: register | login | reset.
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in": 300}}
+     * @response 422 scenario="login-disabled" {"success": false, "error": {"code": "OTP_INVALID", "message": "Email OTP login is not enabled."}}
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"email": ["..."]}}}
+     * @response 429 scenario="cooldown" {"success": false, "error": {"code": "OTP_COOLDOWN", "message": "Please wait before requesting another code."}}
      */
     public function sendEmailOtp(Request $request): JsonResponse
     {
@@ -168,6 +193,15 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam email string required Email address that received the OTP.
+     * @bodyParam otp string required 6-digit OTP code.
+     * @bodyParam purpose string required One of: register | login | reset.
+     * @bodyParam device_name string Optional device label (max 60 chars). Used on login token.
+     *
+     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "next_step": "complete"}}
+     * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
+     * @response 422 scenario="otp-invalid" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
      */
     public function verifyEmailOtp(Request $request): JsonResponse
     {
@@ -211,6 +245,24 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam email string required Registered email address.
+     * @bodyParam password string required Account password.
+     * @bodyParam device_name string Optional device label (max 60 chars). Defaults to "mobile".
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "token": "5|abc123...",
+     *     "user": {"id": 42, "name": "Naveen", "email": "naveen@example.com"},
+     *     "profile": {"matri_id": "AM100042", "onboarding_completed": true},
+     *     "membership": {"is_premium": false},
+     *     "next_step": "home"
+     *   }
+     * }
+     * @response 401 scenario="bad-credentials" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "Invalid email or password."}}
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"email": ["..."]}}}
+     * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many attempts. Try again later."}}
      */
     public function loginPassword(Request $request): JsonResponse
     {
@@ -249,6 +301,11 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam email string required Email address to send the reset link to. Always returns success even when the email is unknown (anti-enumeration).
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "message": "If that email is registered, a password reset link has been sent."}}
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"email": ["The email field is required."]}}}
      */
     public function forgotPassword(Request $request): JsonResponse
     {
@@ -274,6 +331,15 @@ class AuthController extends BaseApiController
      *
      * @unauthenticated
      * @group Authentication
+     *
+     * @bodyParam email string required Email the reset link was sent to.
+     * @bodyParam token string required Reset token from the URL Laravel emailed.
+     * @bodyParam password string required New password (6-14 chars).
+     * @bodyParam password_confirmation string required Must match password.
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"reset": true, "message": "Password updated. Please sign in again."}}
+     * @response 422 scenario="invalid-token" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"token": ["This reset token is invalid or has expired."]}}}
+     * @response 422 scenario="weak-password" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"password": ["The password must be at least 6 characters."]}}}
      */
     public function resetPassword(Request $request): JsonResponse
     {
@@ -321,6 +387,17 @@ class AuthController extends BaseApiController
      *
      * @authenticated
      * @group Authentication
+     *
+     * @response 200 scenario="success" {
+     *   "success": true,
+     *   "data": {
+     *     "user": {"id": 42, "name": "Naveen", "email": "naveen@example.com", "phone": "9876543210"},
+     *     "profile": {"matri_id": "AM100042", "onboarding_completed": true, "is_approved": true, "is_active": true},
+     *     "membership": {"is_premium": false, "plan_id": null, "expires_at": null},
+     *     "next_step": "home"
+     *   }
+     * }
+     * @response 401 scenario="invalid-token" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "You must log in to access this resource."}}
      */
     public function me(Request $request): JsonResponse
     {
@@ -340,6 +417,9 @@ class AuthController extends BaseApiController
      *
      * @authenticated
      * @group Authentication
+     *
+     * @response 200 scenario="success" {"success": true, "data": {"logged_out": true}}
+     * @response 401 scenario="invalid-token" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "You must log in to access this resource."}}
      */
     public function logout(Request $request): JsonResponse
     {

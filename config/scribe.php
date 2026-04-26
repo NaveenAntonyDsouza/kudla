@@ -99,30 +99,23 @@ return [
     ],
 
     // How is your API authenticated? This information will be used in the displayed docs, generated examples and response calls.
+    //
+    // NOTE: enabled=true + default=false means: the API DOES use auth, but
+    // each endpoint opts in via the @authenticated docblock tag. Public
+    // endpoints (health, register, login, reference) need no marker. This
+    // mirrors the actual route layout — most /auth/*, /reference/*,
+    // /site/*, /static-pages/*, /success-stories endpoints are public; the
+    // rest sit behind auth:sanctum.
     'auth' => [
-        // Set this to true if ANY endpoints in your API use authentication.
-        'enabled' => false,
-
-        // Set this to true if your API should be authenticated by default. If so, you must also set `enabled` (above) to true.
-        // You can then use @unauthenticated or @authenticated on individual endpoints to change their status from the default.
+        'enabled' => true,
         'default' => false,
-
-        // Where is the auth value meant to be sent in a request?
         'in' => AuthIn::BEARER->value,
-
-        // The name of the auth parameter (e.g. token, key, apiKey) or header (e.g. Authorization, Api-Key).
-        'name' => 'key',
-
-        // The value of the parameter to be used by Scribe to authenticate response calls.
-        // This will NOT be included in the generated documentation. If empty, Scribe will use a random value.
+        // Header name. The Sanctum middleware reads `Authorization: Bearer <token>`.
+        'name' => 'Authorization',
+        // Optional override for response-call auth. Empty = Scribe uses a random value.
         'use_value' => env('SCRIBE_AUTH_KEY'),
-
-        // Placeholder your users will see for the auth parameter in the example requests.
-        // Set this to null if you want Scribe to use a random value as placeholder instead.
-        'placeholder' => '{YOUR_AUTH_KEY}',
-
-        // Any extra authentication-related info for your users. Markdown and HTML are supported.
-        'extra_info' => 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.',
+        'placeholder' => 'Bearer {YOUR_SANCTUM_TOKEN}',
+        'extra_info' => 'Bearer token issued by `POST /api/v1/auth/register/step-1` or `POST /api/v1/auth/login/password`. Send as `Authorization: Bearer <token>`.',
     ],
 
     // Example requests for each endpoint will be shown in each of these languages.

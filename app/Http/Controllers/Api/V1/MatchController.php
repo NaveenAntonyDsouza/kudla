@@ -64,6 +64,8 @@ class MatchController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Browse profiles matching the viewer's saved partner preferences, ranked by match-score.
+     *
      * @authenticated
      *
      * @group Matches
@@ -112,6 +114,8 @@ class MatchController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List mutual matches — profiles where both sides' preferences align (high-confidence matches).
+     *
      * @authenticated
      *
      * @group Matches
@@ -151,6 +155,8 @@ class MatchController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Compute the viewer↔target match score with per-criterion breakdown (religion, caste, education, …).
+     *
      * @authenticated
      *
      * @group Matches

@@ -41,6 +41,8 @@ class MembershipController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List all active membership plans (public — no auth needed for the pricing screen).
+     *
      * @unauthenticated
      *
      * @group Membership
@@ -84,6 +86,8 @@ class MembershipController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Get the viewer's current membership + today's usage counters (interests_sent / contacts_viewed).
+     *
      * @authenticated
      *
      * @group Membership
@@ -163,6 +167,8 @@ class MembershipController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Validate a coupon code against a plan + return the computed discount. Used pre-checkout.
+     *
      * @authenticated
      *
      * @group Membership

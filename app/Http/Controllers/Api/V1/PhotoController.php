@@ -51,6 +51,8 @@ class PhotoController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List the viewer's photos grouped by slot (profile/album/family) with limits, counts, and privacy.
+     *
      * @authenticated
      *
      * @group Photos
@@ -132,6 +134,8 @@ class PhotoController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Upload a new photo. Multipart body — photo file + slot type (profile/album/family).
+     *
      * @authenticated
      *
      * @group Photos
@@ -250,6 +254,8 @@ class PhotoController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Mark a profile-slot photo as primary (sets it as the main avatar; only profile-type photos qualify).
+     *
      * @authenticated
      *
      * @group Photos
@@ -309,6 +315,8 @@ class PhotoController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Soft-delete (archive) a photo. Reversible via /restore within 30 days; storage stays untouched.
+     *
      * @authenticated
      *
      * @group Photos
@@ -341,6 +349,8 @@ class PhotoController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Hard-delete a photo + wipe storage (variants too). Irreversible; bypasses the 30-day restore window.
+     *
      * @authenticated
      *
      * @group Photos
@@ -376,6 +386,8 @@ class PhotoController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Un-archive a soft-deleted photo (within the 30-day undo window). Fails 422 if the slot is full.
+     *
      * @authenticated
      *
      * @group Photos

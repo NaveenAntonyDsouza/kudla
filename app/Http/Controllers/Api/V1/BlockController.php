@@ -43,6 +43,8 @@ class BlockController extends BaseApiController
      | ================================================================== */
 
     /**
+     * List the profiles the authenticated user has blocked.
+     *
      * @authenticated
      *
      * @group Block

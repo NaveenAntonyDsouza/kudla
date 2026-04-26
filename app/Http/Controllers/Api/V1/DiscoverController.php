@@ -53,6 +53,8 @@ class DiscoverController extends BaseApiController
      | ================================================================== */
 
     /**
+     * Discover hub — list all browsable categories (NRI, denomination, caste, language, …).
+     *
      * @unauthenticated
      *
      * @group Discover

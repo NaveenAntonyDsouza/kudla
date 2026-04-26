@@ -133,7 +133,7 @@ device's token is revoked — other devices stay signed in.</a>
                 </li>
                                     <ul id="tocify-subheader-block" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="block-GETapi-v1-blocked">
-                                <a href="#block-GETapi-v1-blocked">GET api/v1/blocked</a>
+                                <a href="#block-GETapi-v1-blocked">List the profiles the authenticated user has blocked.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="block-POSTapi-v1-profiles--matriId--block">
                                 <a href="#block-POSTapi-v1-profiles--matriId--block">Block a target profile. Idempotent — POSTing twice is a no-op
@@ -191,7 +191,7 @@ a partial state isn't visible to other requests.</a>
                 </li>
                                     <ul id="tocify-subheader-discover" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="discover-GETapi-v1-discover">
-                                <a href="#discover-GETapi-v1-discover">GET api/v1/discover</a>
+                                <a href="#discover-GETapi-v1-discover">Discover hub — list all browsable categories (NRI, denomination, caste, language, …).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="discover-GETapi-v1-discover--category-">
                                 <a href="#discover-GETapi-v1-discover--category-">Polymorphic response:
@@ -209,7 +209,7 @@ a partial state isn't visible to other requests.</a>
                 </li>
                                     <ul id="tocify-subheader-id-proof" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="id-proof-GETapi-v1-id-proof">
-                                <a href="#id-proof-GETapi-v1-id-proof">GET api/v1/id-proof</a>
+                                <a href="#id-proof-GETapi-v1-id-proof">Get the viewer's current ID-proof submission + the catalogue of accepted document types.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="id-proof-POSTapi-v1-id-proof">
                                 <a href="#id-proof-POSTapi-v1-id-proof">Upload (or replace) the viewer's ID proof. Multipart body.</a>
@@ -227,7 +227,7 @@ badge isn't gameable.</a>
                 </li>
                                     <ul id="tocify-subheader-ignored" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="ignored-GETapi-v1-ignored">
-                                <a href="#ignored-GETapi-v1-ignored">GET api/v1/ignored</a>
+                                <a href="#ignored-GETapi-v1-ignored">List the profiles the authenticated user has ignored.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="ignored-POSTapi-v1-profiles--matriId--ignore-toggle">
                                 <a href="#ignored-POSTapi-v1-profiles--matriId--ignore-toggle">Toggle ignore for a target profile. Each call flips the state;
@@ -241,19 +241,19 @@ response carries the authoritative new state.</a>
                 </li>
                                     <ul id="tocify-subheader-interests" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="interests-GETapi-v1-interests">
-                                <a href="#interests-GETapi-v1-interests">GET api/v1/interests</a>
+                                <a href="#interests-GETapi-v1-interests">List the viewer's interests, filtered by tab (received/sent/accepted/declined/starred/trash/all).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="interests-GETapi-v1-interests--interest_id-">
-                                <a href="#interests-GETapi-v1-interests--interest_id-">GET api/v1/interests/{interest_id}</a>
+                                <a href="#interests-GETapi-v1-interests--interest_id-">Get a single interest the viewer is party to (sender or receiver), with replies.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="interests-POSTapi-v1-profiles--matriId--interest">
-                                <a href="#interests-POSTapi-v1-profiles--matriId--interest">POST api/v1/profiles/{matriId}/interest</a>
+                                <a href="#interests-POSTapi-v1-profiles--matriId--interest">Send an interest to a target profile. Subject to daily caps + block + gender-mismatch + premium-gate.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="interests-POSTapi-v1-interests--interest_id--accept">
-                                <a href="#interests-POSTapi-v1-interests--interest_id--accept">POST api/v1/interests/{interest_id}/accept</a>
+                                <a href="#interests-POSTapi-v1-interests--interest_id--accept">Accept a pending interest. Only the receiver can accept; flips status + creates an accept-reply.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="interests-POSTapi-v1-interests--interest_id--decline">
-                                <a href="#interests-POSTapi-v1-interests--interest_id--decline">POST api/v1/interests/{interest_id}/decline</a>
+                                <a href="#interests-POSTapi-v1-interests--interest_id--decline">Decline a pending interest. Only the receiver can decline; supports silent decline (no notification).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="interests-POSTapi-v1-interests--interest_id--cancel">
                                 <a href="#interests-POSTapi-v1-interests--interest_id--cancel">Sender cancels a pending interest within the cancel window.</a>
@@ -285,13 +285,13 @@ this on a timer (~10s) while the chat screen is open.</a>
                 </li>
                                     <ul id="tocify-subheader-matches" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="matches-GETapi-v1-matches-my">
-                                <a href="#matches-GETapi-v1-matches-my">GET api/v1/matches/my</a>
+                                <a href="#matches-GETapi-v1-matches-my">Browse profiles matching the viewer's saved partner preferences, ranked by match-score.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="matches-GETapi-v1-matches-mutual">
-                                <a href="#matches-GETapi-v1-matches-mutual">GET api/v1/matches/mutual</a>
+                                <a href="#matches-GETapi-v1-matches-mutual">List mutual matches — profiles where both sides' preferences align (high-confidence matches).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="matches-GETapi-v1-matches-score--matriId-">
-                                <a href="#matches-GETapi-v1-matches-score--matriId-">GET api/v1/matches/score/{matriId}</a>
+                                <a href="#matches-GETapi-v1-matches-score--matriId-">Compute the viewer↔target match score with per-criterion breakdown (religion, caste, education, …).</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -301,13 +301,13 @@ this on a timer (~10s) while the chat screen is open.</a>
                 </li>
                                     <ul id="tocify-subheader-membership" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="membership-GETapi-v1-membership-plans">
-                                <a href="#membership-GETapi-v1-membership-plans">GET api/v1/membership/plans</a>
+                                <a href="#membership-GETapi-v1-membership-plans">List all active membership plans (public — no auth needed for the pricing screen).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="membership-GETapi-v1-membership-me">
-                                <a href="#membership-GETapi-v1-membership-me">GET api/v1/membership/me</a>
+                                <a href="#membership-GETapi-v1-membership-me">Get the viewer's current membership + today's usage counters (interests_sent / contacts_viewed).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="membership-POSTapi-v1-membership-coupon-validate">
-                                <a href="#membership-POSTapi-v1-membership-coupon-validate">POST api/v1/membership/coupon/validate</a>
+                                <a href="#membership-POSTapi-v1-membership-coupon-validate">Validate a coupon code against a plan + return the computed discount. Used pre-checkout.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -342,13 +342,13 @@ which ids exist.</a>
                 </li>
                                     <ul id="tocify-subheader-onboarding" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="onboarding-POSTapi-v1-onboarding-step-1">
-                                <a href="#onboarding-POSTapi-v1-onboarding-step-1">POST api/v1/onboarding/step-1</a>
+                                <a href="#onboarding-POSTapi-v1-onboarding-step-1">Onboarding step 1 — personal + professional + family extras.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="onboarding-POSTapi-v1-onboarding-step-2">
-                                <a href="#onboarding-POSTapi-v1-onboarding-step-2">POST api/v1/onboarding/step-2</a>
+                                <a href="#onboarding-POSTapi-v1-onboarding-step-2">Onboarding step 2 — location + extended contact info.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="onboarding-POSTapi-v1-onboarding-partner-preferences">
-                                <a href="#onboarding-POSTapi-v1-onboarding-partner-preferences">POST api/v1/onboarding/partner-preferences</a>
+                                <a href="#onboarding-POSTapi-v1-onboarding-partner-preferences">Onboarding partner-preferences — multi-select arrays drive the partner-search filters.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="onboarding-POSTapi-v1-onboarding-lifestyle">
                                 <a href="#onboarding-POSTapi-v1-onboarding-lifestyle">Final onboarding step — also flips onboarding_completed=true.</a>
@@ -387,16 +387,16 @@ deactivates prior memberships.</a>
                 </li>
                                     <ul id="tocify-subheader-photo-requests" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="photo-requests-GETapi-v1-photo-requests">
-                                <a href="#photo-requests-GETapi-v1-photo-requests">GET api/v1/photo-requests</a>
+                                <a href="#photo-requests-GETapi-v1-photo-requests">List photo-requests visible to the viewer — both received (incoming) and sent (outgoing).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photo-requests-POSTapi-v1-profiles--matriId--photo-request">
-                                <a href="#photo-requests-POSTapi-v1-profiles--matriId--photo-request">POST api/v1/profiles/{matriId}/photo-request</a>
+                                <a href="#photo-requests-POSTapi-v1-profiles--matriId--photo-request">Send a photo-request to a target whose photos are privacy-gated. Subject to gender-mismatch + block guards.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photo-requests-POSTapi-v1-photo-requests--photoRequest_id--approve">
-                                <a href="#photo-requests-POSTapi-v1-photo-requests--photoRequest_id--approve">POST api/v1/photo-requests/{photoRequest_id}/approve</a>
+                                <a href="#photo-requests-POSTapi-v1-photo-requests--photoRequest_id--approve">Approve an incoming photo-request — grants the requester access to your photos.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photo-requests-POSTapi-v1-photo-requests--photoRequest_id--ignore">
-                                <a href="#photo-requests-POSTapi-v1-photo-requests--photoRequest_id--ignore">POST api/v1/photo-requests/{photoRequest_id}/ignore</a>
+                                <a href="#photo-requests-POSTapi-v1-photo-requests--photoRequest_id--ignore">Ignore an incoming photo-request silently. The requester is not notified; the request is just dismissed.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -406,26 +406,26 @@ deactivates prior memberships.</a>
                 </li>
                                     <ul id="tocify-subheader-photos" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="photos-GETapi-v1-photos">
-                                <a href="#photos-GETapi-v1-photos">GET api/v1/photos</a>
+                                <a href="#photos-GETapi-v1-photos">List the viewer's photos grouped by slot (profile/album/family) with limits, counts, and privacy.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photos-POSTapi-v1-photos">
-                                <a href="#photos-POSTapi-v1-photos">POST api/v1/photos</a>
+                                <a href="#photos-POSTapi-v1-photos">Upload a new photo. Multipart body — photo file + slot type (profile/album/family).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photos-POSTapi-v1-photos-privacy">
                                 <a href="#photos-POSTapi-v1-photos-privacy">Update the authenticated user's photo-privacy settings. PATCH-like
 semantics — only the fields present in the payload are changed.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photos-POSTapi-v1-photos--photo_id--primary">
-                                <a href="#photos-POSTapi-v1-photos--photo_id--primary">POST api/v1/photos/{photo_id}/primary</a>
+                                <a href="#photos-POSTapi-v1-photos--photo_id--primary">Mark a profile-slot photo as primary (sets it as the main avatar; only profile-type photos qualify).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photos-POSTapi-v1-photos--photo_id--restore">
-                                <a href="#photos-POSTapi-v1-photos--photo_id--restore">POST api/v1/photos/{photo_id}/restore</a>
+                                <a href="#photos-POSTapi-v1-photos--photo_id--restore">Un-archive a soft-deleted photo (within the 30-day undo window). Fails 422 if the slot is full.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photos-DELETEapi-v1-photos--photo_id--permanent">
-                                <a href="#photos-DELETEapi-v1-photos--photo_id--permanent">DELETE api/v1/photos/{photo_id}/permanent</a>
+                                <a href="#photos-DELETEapi-v1-photos--photo_id--permanent">Hard-delete a photo + wipe storage (variants too). Irreversible; bypasses the 30-day restore window.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="photos-DELETEapi-v1-photos--photo_id-">
-                                <a href="#photos-DELETEapi-v1-photos--photo_id-">DELETE api/v1/photos/{photo_id}</a>
+                                <a href="#photos-DELETEapi-v1-photos--photo_id-">Soft-delete (archive) a photo. Reversible via /restore within 30 days; storage stays untouched.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -555,7 +555,7 @@ each call flips, response carries the authoritative new state.</a>
                 </li>
                                     <ul id="tocify-subheader-static-pages" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="static-pages-GETapi-v1-static-pages--slug-">
-                                <a href="#static-pages-GETapi-v1-static-pages--slug-">GET api/v1/static-pages/{slug}</a>
+                                <a href="#static-pages-GETapi-v1-static-pages--slug-">Fetch a CMS-managed static page (about / privacy / terms / refund-policy / …) by slug.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -579,7 +579,7 @@ approval gates publication.</a>
                 </li>
                                     <ul id="tocify-subheader-views" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="views-GETapi-v1-views">
-                                <a href="#views-GETapi-v1-views">GET api/v1/views</a>
+                                <a href="#views-GETapi-v1-views">Profile-views feed — "viewed_by" (who viewed me) or "i_viewed" (who I viewed). Premium-gated for full list.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -610,7 +610,9 @@ approval gates publication.</a>
 You can switch the language used with the tabs at the top right (or from the nav menu at the top left on mobile).&lt;/aside&gt;</code></pre>
 
         <h1 id="authenticating-requests">Authenticating requests</h1>
-<p>This API is not authenticated.</p>
+<p>To authenticate requests, include an <strong><code>Authorization</code></strong> header with the value <strong><code>"Bearer Bearer {YOUR_SANCTUM_TOKEN}"</code></strong>.</p>
+<p>All authenticated endpoints are marked with a <code>requires authentication</code> badge in the documentation below.</p>
+<p>Bearer token issued by <code>POST /api/v1/auth/register/step-1</code> or <code>POST /api/v1/auth/login/password</code>. Send as <code>Authorization: Bearer &lt;token&gt;</code>.</p>
 
         <h1 id="authentication">Authentication</h1>
 
@@ -897,8 +899,8 @@ enumerate registered numbers.</p>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"phone\": \"8225697751\",
-    \"purpose\": \"reset\"
+    \"phone\": \"9876543210\",
+    \"purpose\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -914,8 +916,8 @@ const headers = {
 };
 
 let body = {
-    "phone": "8225697751",
-    "purpose": "reset"
+    "phone": "9876543210",
+    "purpose": "architecto"
 };
 
 fetch(url, {
@@ -927,7 +929,51 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-otp-phone-send">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;sent&quot;: true,
+        &quot;expires_in&quot;: 300
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;Please check the fields below.&quot;,
+        &quot;fields&quot;: {
+            &quot;phone&quot;: [
+                &quot;The phone field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (429, cooldown):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;OTP_COOLDOWN&quot;,
+        &quot;message&quot;: &quot;Please wait before requesting another code.&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-otp-phone-send" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-otp-phone-send"></span>:
@@ -1007,10 +1053,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="phone"                data-endpoint="POSTapi-v1-auth-otp-phone-send"
-               value="8225697751"
+               value="9876543210"
                data-component="body">
     <br>
-<p>Must be 10 digits. Example: <code>8225697751</code></p>
+<p>10-digit phone number. Example: <code>9876543210</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>purpose</code></b>&nbsp;&nbsp;
@@ -1019,12 +1065,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-phone-send"
-               value="reset"
+               value="architecto"
                data-component="body">
     <br>
-<p>Example: <code>reset</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
+<p>One of: register | login | reset. Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -1049,10 +1093,10 @@ Must be one of:
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"phone\": \"8225697751\",
-    \"otp\": \"569775\",
-    \"purpose\": \"register\",
-    \"device_name\": \"n\"
+    \"phone\": \"architecto\",
+    \"otp\": \"architecto\",
+    \"purpose\": \"architecto\",
+    \"device_name\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -1068,10 +1112,10 @@ const headers = {
 };
 
 let body = {
-    "phone": "8225697751",
-    "otp": "569775",
-    "purpose": "register",
-    "device_name": "n"
+    "phone": "architecto",
+    "otp": "architecto",
+    "purpose": "architecto",
+    "device_name": "architecto"
 };
 
 fetch(url, {
@@ -1083,7 +1127,62 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-otp-phone-verify">
-</span>
+            <blockquote>
+            <p>Example response (200, login-success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;token&quot;: &quot;5|abc...&quot;,
+        &quot;user&quot;: {
+            &quot;id&quot;: 42
+        },
+        &quot;next_step&quot;: &quot;complete&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (200, register-verify-success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;verified&quot;: true,
+        &quot;next_step&quot;: &quot;register.step-2&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, otp-invalid):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;OTP_INVALID&quot;,
+        &quot;message&quot;: &quot;Invalid or expired code.&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, otp-expired):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;OTP_EXPIRED&quot;,
+        &quot;message&quot;: &quot;Code has expired. Send a new one.&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-otp-phone-verify" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-otp-phone-verify"></span>:
@@ -1163,10 +1262,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="phone"                data-endpoint="POSTapi-v1-auth-otp-phone-verify"
-               value="8225697751"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must be 10 digits. Example: <code>8225697751</code></p>
+<p>10-digit phone number. Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>otp</code></b>&nbsp;&nbsp;
@@ -1175,10 +1274,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="otp"                data-endpoint="POSTapi-v1-auth-otp-phone-verify"
-               value="569775"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must be 6 digits. Example: <code>569775</code></p>
+<p>6-digit OTP code. Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>purpose</code></b>&nbsp;&nbsp;
@@ -1187,12 +1286,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-phone-verify"
-               value="register"
+               value="architecto"
                data-component="body">
     <br>
-<p>Example: <code>register</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
+<p>One of: register | login | reset. Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>device_name</code></b>&nbsp;&nbsp;
@@ -1201,10 +1298,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="device_name"                data-endpoint="POSTapi-v1-auth-otp-phone-verify"
-               value="n"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 60 characters. Example: <code>n</code></p>
+<p>Optional device label (max 60 chars). Used on login token. Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -1228,7 +1325,7 @@ explicitly enable email OTP login via site_settings).</h2>
     --header "Accept: application/json" \
     --data "{
     \"email\": \"gbailey@example.net\",
-    \"purpose\": \"login\"
+    \"purpose\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -1245,7 +1342,7 @@ const headers = {
 
 let body = {
     "email": "gbailey@example.net",
-    "purpose": "login"
+    "purpose": "architecto"
 };
 
 fetch(url, {
@@ -1257,7 +1354,64 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-otp-email-send">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;sent&quot;: true,
+        &quot;expires_in&quot;: 300
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, login-disabled):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;OTP_INVALID&quot;,
+        &quot;message&quot;: &quot;Email OTP login is not enabled.&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;email&quot;: [
+                &quot;...&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (429, cooldown):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;OTP_COOLDOWN&quot;,
+        &quot;message&quot;: &quot;Please wait before requesting another code.&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-otp-email-send" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-otp-email-send"></span>:
@@ -1340,7 +1494,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="gbailey@example.net"
                data-component="body">
     <br>
-<p>Must be a valid email address. Example: <code>gbailey@example.net</code></p>
+<p>Valid email address. Example: <code>gbailey@example.net</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>purpose</code></b>&nbsp;&nbsp;
@@ -1349,12 +1503,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-email-send"
-               value="login"
+               value="architecto"
                data-component="body">
     <br>
-<p>Example: <code>login</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
+<p>One of: register | login | reset. Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -1377,9 +1529,9 @@ by phone OTP (single source of truth for the 3 purpose branches).</h2>
     --header "Accept: application/json" \
     --data "{
     \"email\": \"gbailey@example.net\",
-    \"otp\": \"569775\",
-    \"purpose\": \"reset\",
-    \"device_name\": \"n\"
+    \"otp\": \"architecto\",
+    \"purpose\": \"architecto\",
+    \"device_name\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -1396,9 +1548,9 @@ const headers = {
 
 let body = {
     "email": "gbailey@example.net",
-    "otp": "569775",
-    "purpose": "reset",
-    "device_name": "n"
+    "otp": "architecto",
+    "purpose": "architecto",
+    "device_name": "architecto"
 };
 
 fetch(url, {
@@ -1410,7 +1562,49 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-otp-email-verify">
-</span>
+            <blockquote>
+            <p>Example response (200, login-success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;token&quot;: &quot;5|abc...&quot;,
+        &quot;user&quot;: {
+            &quot;id&quot;: 42
+        },
+        &quot;next_step&quot;: &quot;complete&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (200, register-verify-success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;verified&quot;: true,
+        &quot;next_step&quot;: &quot;register.step-2&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, otp-invalid):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;OTP_INVALID&quot;,
+        &quot;message&quot;: &quot;Invalid or expired code.&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-otp-email-verify" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-otp-email-verify"></span>:
@@ -1493,7 +1687,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="gbailey@example.net"
                data-component="body">
     <br>
-<p>Must be a valid email address. Example: <code>gbailey@example.net</code></p>
+<p>Email address that received the OTP. Example: <code>gbailey@example.net</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>otp</code></b>&nbsp;&nbsp;
@@ -1502,10 +1696,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="otp"                data-endpoint="POSTapi-v1-auth-otp-email-verify"
-               value="569775"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must be 6 digits. Example: <code>569775</code></p>
+<p>6-digit OTP code. Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>purpose</code></b>&nbsp;&nbsp;
@@ -1514,12 +1708,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-email-verify"
-               value="reset"
+               value="architecto"
                data-component="body">
     <br>
-<p>Example: <code>reset</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
+<p>One of: register | login | reset. Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>device_name</code></b>&nbsp;&nbsp;
@@ -1528,10 +1720,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="device_name"                data-endpoint="POSTapi-v1-auth-otp-email-verify"
-               value="n"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 60 characters. Example: <code>n</code></p>
+<p>Optional device label (max 60 chars). Used on login token. Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -1554,7 +1746,7 @@ Must be one of:
     --data "{
     \"email\": \"gbailey@example.net\",
     \"password\": \"|]|{+-\",
-    \"device_name\": \"v\"
+    \"device_name\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -1572,7 +1764,7 @@ const headers = {
 let body = {
     "email": "gbailey@example.net",
     "password": "|]|{+-",
-    "device_name": "v"
+    "device_name": "architecto"
 };
 
 fetch(url, {
@@ -1584,7 +1776,76 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-login-password">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;token&quot;: &quot;5|abc123...&quot;,
+        &quot;user&quot;: {
+            &quot;id&quot;: 42,
+            &quot;name&quot;: &quot;Naveen&quot;,
+            &quot;email&quot;: &quot;naveen@example.com&quot;
+        },
+        &quot;profile&quot;: {
+            &quot;matri_id&quot;: &quot;AM100042&quot;,
+            &quot;onboarding_completed&quot;: true
+        },
+        &quot;membership&quot;: {
+            &quot;is_premium&quot;: false
+        },
+        &quot;next_step&quot;: &quot;home&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (401, bad-credentials):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;UNAUTHENTICATED&quot;,
+        &quot;message&quot;: &quot;Invalid email or password.&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;email&quot;: [
+                &quot;...&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (429, throttled):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;THROTTLED&quot;,
+        &quot;message&quot;: &quot;Too many attempts. Try again later.&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-login-password" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-login-password"></span>:
@@ -1667,7 +1928,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="gbailey@example.net"
                data-component="body">
     <br>
-<p>Must be a valid email address. Example: <code>gbailey@example.net</code></p>
+<p>Registered email address. Example: <code>gbailey@example.net</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password</code></b>&nbsp;&nbsp;
@@ -1679,7 +1940,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="|]|{+-"
                data-component="body">
     <br>
-<p>Example: <code>|]|{+-</code></p>
+<p>Account password. Example: <code>|]|{+-</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>device_name</code></b>&nbsp;&nbsp;
@@ -1688,10 +1949,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="device_name"                data-endpoint="POSTapi-v1-auth-login-password"
-               value="v"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 60 characters. Example: <code>v</code></p>
+<p>Optional device label (max 60 chars). Defaults to "mobile". Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -1744,7 +2005,38 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-password-forgot">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;sent&quot;: true,
+        &quot;message&quot;: &quot;If that email is registered, a password reset link has been sent.&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;email&quot;: [
+                &quot;The email field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-password-forgot" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-password-forgot"></span>:
@@ -1827,7 +2119,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="gbailey@example.net"
                data-component="body">
     <br>
-<p>Must be a valid email address. Example: <code>gbailey@example.net</code></p>
+<p>Email address to send the reset link to. Always returns success even when the email is unknown (anti-enumeration). Example: <code>gbailey@example.net</code></p>
         </div>
         </form>
 
@@ -1850,7 +2142,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --data "{
     \"token\": \"architecto\",
-    \"email\": \"zbailey@example.net\"
+    \"email\": \"gbailey@example.net\",
+    \"password\": \"|]|{+-\",
+    \"password_confirmation\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -1867,7 +2161,9 @@ const headers = {
 
 let body = {
     "token": "architecto",
-    "email": "zbailey@example.net"
+    "email": "gbailey@example.net",
+    "password": "|]|{+-",
+    "password_confirmation": "architecto"
 };
 
 fetch(url, {
@@ -1879,7 +2175,56 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-password-reset">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;reset&quot;: true,
+        &quot;message&quot;: &quot;Password updated. Please sign in again.&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, invalid-token):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;token&quot;: [
+                &quot;This reset token is invalid or has expired.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, weak-password):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;password&quot;: [
+                &quot;The password must be at least 6 characters.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-password-reset" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-password-reset"></span>:
@@ -1962,7 +2307,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="architecto"
                data-component="body">
     <br>
-<p>Example: <code>architecto</code></p>
+<p>Reset token from the URL Laravel emailed. Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>email</code></b>&nbsp;&nbsp;
@@ -1971,22 +2316,34 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="email"                data-endpoint="POSTapi-v1-auth-password-reset"
-               value="zbailey@example.net"
+               value="gbailey@example.net"
                data-component="body">
     <br>
-<p>Must be a valid email address. Example: <code>zbailey@example.net</code></p>
+<p>Email the reset link was sent to. Example: <code>gbailey@example.net</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
-<i>optional</i> &nbsp;
+ &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="password"                data-endpoint="POSTapi-v1-auth-password-reset"
-               value=""
+               value="|]|{+-"
                data-component="body">
     <br>
-
+<p>New password (6-14 chars). Example: <code>|]|{+-</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>password_confirmation</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="password_confirmation"                data-endpoint="POSTapi-v1-auth-password-reset"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Must match password. Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -2005,6 +2362,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/auth/register/step-2" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "height=170 cm - 5 ft 07 inch"\
@@ -2036,7 +2394,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "religious_observance=architecto"\
     --form "jain_sect=architecto"\
     --form "other_religion_name=architecto"\
-    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\phpE119.tmp" </code></pre></div>
+    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\php1E4F.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2045,6 +2403,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "multipart/form-data",
     "Accept": "application/json",
 };
@@ -2090,7 +2449,41 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-register-step-2">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile&quot;: {
+            &quot;matri_id&quot;: &quot;AM100042&quot;,
+            &quot;onboarding_step_completed&quot;: 2
+        },
+        &quot;next_step&quot;: &quot;register.step-3&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;Please check the fields below.&quot;,
+        &quot;fields&quot;: {
+            &quot;religion&quot;: [
+                &quot;The religion field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-register-step-2" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-register-step-2"></span>:
@@ -2138,6 +2531,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/auth/register/step-2</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-auth-register-step-2"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -2461,7 +2866,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpE119.tmp</code></p>
+<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php1E4F.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>muslim_sect</code></b>&nbsp;&nbsp;
@@ -2540,6 +2945,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/auth/register/step-3" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2565,6 +2971,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -2593,7 +3000,41 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-register-step-3">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile&quot;: {
+            &quot;matri_id&quot;: &quot;AM100042&quot;,
+            &quot;onboarding_step_completed&quot;: 3
+        },
+        &quot;next_step&quot;: &quot;register.step-4&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;Please check the fields below.&quot;,
+        &quot;fields&quot;: {
+            &quot;highest_education&quot;: [
+                &quot;The highest education field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-register-step-3" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-register-step-3"></span>:
@@ -2641,6 +3082,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/auth/register/step-3</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-auth-register-step-3"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -2827,6 +3280,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/auth/register/step-4" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -2849,6 +3303,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -2874,7 +3329,41 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-register-step-4">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile&quot;: {
+            &quot;matri_id&quot;: &quot;AM100042&quot;,
+            &quot;onboarding_step_completed&quot;: 4
+        },
+        &quot;next_step&quot;: &quot;register.step-5&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;Please check the fields below.&quot;,
+        &quot;fields&quot;: {
+            &quot;native_country&quot;: [
+                &quot;The native country field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-register-step-4" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-register-step-4"></span>:
@@ -2922,6 +3411,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/auth/register/step-4</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -3073,6 +3574,7 @@ screen: &#039;verify.email&#039;, &#039;verify.phone&#039;, or &#039;complete&#0
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/auth/register/step-5" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -3090,6 +3592,7 @@ screen: &#039;verify.email&#039;, &#039;verify.phone&#039;, or &#039;complete&#0
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -3110,7 +3613,48 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-register-step-5">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile&quot;: {
+            &quot;matri_id&quot;: &quot;AM100042&quot;,
+            &quot;onboarding_step_completed&quot;: 5,
+            &quot;onboarding_completed&quot;: true
+        },
+        &quot;user&quot;: {
+            &quot;email_verified_at&quot;: null,
+            &quot;phone_verified_at&quot;: null
+        },
+        &quot;next_step&quot;: &quot;verify.email&quot;,
+        &quot;email_verification_enabled&quot;: true,
+        &quot;phone_verification_enabled&quot;: false
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;Please check the fields below.&quot;,
+        &quot;fields&quot;: {
+            &quot;created_by&quot;: [
+                &quot;The created by field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-register-step-5" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-register-step-5"></span>:
@@ -3158,6 +3702,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/auth/register/step-5</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-auth-register-step-5"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -3251,6 +3807,7 @@ route to the login screen.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/auth/me" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -3261,6 +3818,7 @@ route to the login screen.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -3275,16 +3833,38 @@ fetch(url, {
 
 <span id="example-responses-GETapi-v1-auth-me">
             <blockquote>
-            <p>Example response (401):</p>
+            <p>Example response (200, success):</p>
         </blockquote>
-                <details class="annotation">
-            <summary style="cursor: pointer;">
-                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
-            </summary>
-            <pre><code class="language-http">cache-control: no-cache, private
-content-type: application/json
-access-control-allow-origin: *
- </code></pre></details>         <pre>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;user&quot;: {
+            &quot;id&quot;: 42,
+            &quot;name&quot;: &quot;Naveen&quot;,
+            &quot;email&quot;: &quot;naveen@example.com&quot;,
+            &quot;phone&quot;: &quot;9876543210&quot;
+        },
+        &quot;profile&quot;: {
+            &quot;matri_id&quot;: &quot;AM100042&quot;,
+            &quot;onboarding_completed&quot;: true,
+            &quot;is_approved&quot;: true,
+            &quot;is_active&quot;: true
+        },
+        &quot;membership&quot;: {
+            &quot;is_premium&quot;: false,
+            &quot;plan_id&quot;: null,
+            &quot;expires_at&quot;: null
+        },
+        &quot;next_step&quot;: &quot;home&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (401, invalid-token):</p>
+        </blockquote>
+                <pre>
 
 <code class="language-json" style="max-height: 300px;">{
     &quot;success&quot;: false,
@@ -3343,6 +3923,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-auth-me"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -3384,6 +3976,7 @@ device&#039;s token is revoked — other devices stay signed in.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/auth/logout" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -3394,6 +3987,7 @@ device&#039;s token is revoked — other devices stay signed in.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -3407,7 +4001,32 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-auth-logout">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;logged_out&quot;: true
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (401, invalid-token):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;UNAUTHENTICATED&quot;,
+        &quot;message&quot;: &quot;You must log in to access this resource.&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-auth-logout" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-auth-logout"></span>:
@@ -3456,6 +4075,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-auth-logout"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -3485,7 +4116,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="block-GETapi-v1-blocked">GET api/v1/blocked</h2>
+                                <h2 id="block-GETapi-v1-blocked">List the profiles the authenticated user has blocked.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -3500,6 +4131,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/blocked?page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -3517,6 +4149,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -3603,6 +4236,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-blocked"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -3671,6 +4316,7 @@ a partial state isn&#039;t visible to other requests.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/block" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -3681,6 +4327,7 @@ a partial state isn&#039;t visible to other requests.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -3794,6 +4441,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--block"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -3847,6 +4506,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/unblock" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -3857,6 +4517,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -3956,6 +4617,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/profiles/{matriId}/unblock</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--unblock"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -4726,15 +5399,16 @@ last_seen_at + metadata, returns the same device_id.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/devices" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"fcm_token\": \"b\",
-    \"platform\": \"ios\",
-    \"device_model\": \"n\",
-    \"app_version\": \"gzmiyvdljnikhway\",
-    \"os_version\": \"kcmyuwpwlvqwrsit\",
-    \"locale\": \"de_DE\"
+    \"fcm_token\": \"architecto\",
+    \"platform\": \"architecto\",
+    \"device_model\": \"architecto\",
+    \"app_version\": \"architecto\",
+    \"os_version\": \"architecto\",
+    \"locale\": \"sr_BA\"
 }"
 </code></pre></div>
 
@@ -4745,17 +5419,18 @@ last_seen_at + metadata, returns the same device_id.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
 
 let body = {
-    "fcm_token": "b",
-    "platform": "ios",
-    "device_model": "n",
-    "app_version": "gzmiyvdljnikhway",
-    "os_version": "kcmyuwpwlvqwrsit",
-    "locale": "de_DE"
+    "fcm_token": "architecto",
+    "platform": "architecto",
+    "device_model": "architecto",
+    "app_version": "architecto",
+    "os_version": "architecto",
+    "locale": "sr_BA"
 };
 
 fetch(url, {
@@ -4767,7 +5442,50 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-devices">
-</span>
+            <blockquote>
+            <p>Example response (201, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;device_id&quot;: 87
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (401, invalid-token):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;UNAUTHENTICATED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, validation-failed):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;fcm_token&quot;: [
+                &quot;The fcm token field is required.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-devices" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-devices"></span>:
@@ -4816,6 +5534,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-devices"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -4847,10 +5577,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="fcm_token"                data-endpoint="POSTapi-v1-devices"
-               value="b"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 255 characters. Example: <code>b</code></p>
+<p>FCM device token from firebase_messaging.getToken(). Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>platform</code></b>&nbsp;&nbsp;
@@ -4859,12 +5589,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="platform"                data-endpoint="POSTapi-v1-devices"
-               value="ios"
+               value="architecto"
                data-component="body">
     <br>
-<p>Example: <code>ios</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>android</code></li> <li><code>ios</code></li></ul>
+<p>Either "android" or "ios". Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>device_model</code></b>&nbsp;&nbsp;
@@ -4873,10 +5601,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="device_model"                data-endpoint="POSTapi-v1-devices"
-               value="n"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 100 characters. Example: <code>n</code></p>
+<p>Optional device model (e.g. "Pixel 7", max 100 chars). Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>app_version</code></b>&nbsp;&nbsp;
@@ -4885,10 +5613,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="app_version"                data-endpoint="POSTapi-v1-devices"
-               value="gzmiyvdljnikhway"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 20 characters. Example: <code>gzmiyvdljnikhway</code></p>
+<p>Optional app version (e.g. "1.0.3", max 20 chars). Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>os_version</code></b>&nbsp;&nbsp;
@@ -4897,10 +5625,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="os_version"                data-endpoint="POSTapi-v1-devices"
-               value="kcmyuwpwlvqwrsit"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 20 characters. Example: <code>kcmyuwpwlvqwrsit</code></p>
+<p>Optional OS version (e.g. "Android 14", max 20 chars). Example: <code>architecto</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>locale</code></b>&nbsp;&nbsp;
@@ -4909,10 +5637,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="locale"                data-endpoint="POSTapi-v1-devices"
-               value="de_DE"
+               value="sr_BA"
                data-component="body">
     <br>
-<p>Must not be greater than 10 characters. Example: <code>de_DE</code></p>
+<p>Optional BCP-47 locale (e.g. "en", "en-IN", max 10 chars). Defaults to "en". Example: <code>sr_BA</code></p>
         </div>
         </form>
 
@@ -4932,6 +5660,7 @@ so the corresponding /auth/logout isn't needed separately.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
     "http://localhost:8000/api/v1/devices/16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -4942,6 +5671,7 @@ so the corresponding /auth/logout isn't needed separately.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -4955,7 +5685,45 @@ fetch(url, {
 </span>
 
 <span id="example-responses-DELETEapi-v1-devices--device_id-">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;revoked&quot;: true
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (403, not-owner):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;UNAUTHORIZED&quot;,
+        &quot;message&quot;: &quot;This device is not yours.&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404, not-found):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;NOT_FOUND&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-DELETEapi-v1-devices--device_id-" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-DELETEapi-v1-devices--device_id-"></span>:
@@ -5004,6 +5772,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-devices--device_id-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -5040,13 +5820,25 @@ You can check the Dev Tools console for debugging information.</code></pre>
     <br>
 <p>The ID of the device. Example: <code>16</code></p>
             </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>device</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="device"                data-endpoint="DELETEapi-v1-devices--device_id-"
+               value="16"
+               data-component="url">
+    <br>
+<p>Device id from POST /devices. Example: <code>16</code></p>
+            </div>
                     </form>
 
                 <h1 id="discover">Discover</h1>
 
     
 
-                                <h2 id="discover-GETapi-v1-discover">GET api/v1/discover</h2>
+                                <h2 id="discover-GETapi-v1-discover">Discover hub — list all browsable categories (NRI, denomination, caste, language, …).</h2>
 
 <p>
 </p>
@@ -5560,7 +6352,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="id-proof-GETapi-v1-id-proof">GET api/v1/id-proof</h2>
+                                <h2 id="id-proof-GETapi-v1-id-proof">Get the viewer&#039;s current ID-proof submission + the catalogue of accepted document types.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -5575,6 +6367,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/id-proof" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -5585,6 +6378,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -5683,6 +6477,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-id-proof"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -5725,10 +6531,11 @@ admin reviews from scratch.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/id-proof" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "document_type=architecto"\
-    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\php4196.tmp" </code></pre></div>
+    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\php2110.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -5737,6 +6544,7 @@ admin reviews from scratch.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "multipart/form-data",
     "Accept": "application/json",
 };
@@ -5841,6 +6649,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-id-proof"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -5887,7 +6707,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php4196.tmp</code></p>
+<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php2110.tmp</code></p>
         </div>
         </form>
 
@@ -5908,6 +6728,7 @@ badge isn&#039;t gameable.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
     "http://localhost:8000/api/v1/id-proof/16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -5918,6 +6739,7 @@ badge isn&#039;t gameable.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -6018,6 +6840,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-id-proof--idProof_id-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -6072,7 +6906,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="ignored-GETapi-v1-ignored">GET api/v1/ignored</h2>
+                                <h2 id="ignored-GETapi-v1-ignored">List the profiles the authenticated user has ignored.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -6087,6 +6921,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/ignored?page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -6104,6 +6939,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -6190,6 +7026,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-ignored"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -6256,6 +7104,7 @@ response carries the authoritative new state.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/ignore-toggle" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -6266,6 +7115,7 @@ response carries the authoritative new state.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -6379,6 +7229,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--ignore-toggle"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -6421,7 +7283,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="interests-GETapi-v1-interests">GET api/v1/interests</h2>
+                                <h2 id="interests-GETapi-v1-interests">List the viewer&#039;s interests, filtered by tab (received/sent/accepted/declined/starred/trash/all).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -6436,6 +7298,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/interests?tab=architecto&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -6453,6 +7316,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -6551,6 +7415,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-interests"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -6601,7 +7477,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
-                    <h2 id="interests-GETapi-v1-interests--interest_id-">GET api/v1/interests/{interest_id}</h2>
+                    <h2 id="interests-GETapi-v1-interests--interest_id-">Get a single interest the viewer is party to (sender or receiver), with replies.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -6616,6 +7492,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/interests/16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -6626,6 +7503,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -6728,6 +7606,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-interests--interest_id-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -6778,7 +7668,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="interests-POSTapi-v1-profiles--matriId--interest">POST api/v1/profiles/{matriId}/interest</h2>
+                    <h2 id="interests-POSTapi-v1-profiles--matriId--interest">Send an interest to a target profile. Subject to daily caps + block + gender-mismatch + premium-gate.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -6793,6 +7683,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/interest" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -6808,6 +7699,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -6940,6 +7832,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--interest"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -7003,7 +7907,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="interests-POSTapi-v1-interests--interest_id--accept">POST api/v1/interests/{interest_id}/accept</h2>
+                    <h2 id="interests-POSTapi-v1-interests--interest_id--accept">Accept a pending interest. Only the receiver can accept; flips status + creates an accept-reply.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -7018,6 +7922,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/interests/16/accept" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -7033,6 +7938,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -7139,6 +8045,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-interests--interest_id--accept"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -7202,7 +8120,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="interests-POSTapi-v1-interests--interest_id--decline">POST api/v1/interests/{interest_id}/decline</h2>
+                    <h2 id="interests-POSTapi-v1-interests--interest_id--decline">Decline a pending interest. Only the receiver can decline; supports silent decline (no notification).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -7217,6 +8135,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/interests/16/decline" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -7233,6 +8152,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -7340,6 +8260,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-interests--interest_id--decline"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -7440,6 +8372,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/interests/16/cancel" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -7450,6 +8383,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -7564,6 +8498,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-interests--interest_id--cancel"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -7619,6 +8565,7 @@ favourite-marking interests in the inbox.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/interests/16/star" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -7629,6 +8576,7 @@ favourite-marking interests in the inbox.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -7717,6 +8665,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-interests--interest_id--star"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -7771,6 +8731,7 @@ from the default &quot;all&quot; inbox tab but still visible in &quot;trash&quot
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/interests/16/trash" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -7781,6 +8742,7 @@ from the default &quot;all&quot; inbox tab but still visible in &quot;trash&quot
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -7869,6 +8831,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-interests--interest_id--trash"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -7925,6 +8899,7 @@ reply (Bharat-Platinum convention; see Commit A).</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/interests/16/messages" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -7939,6 +8914,7 @@ reply (Bharat-Platinum convention; see Commit A).</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -8070,6 +9046,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-interests--interest_id--messages"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -8144,6 +9132,7 @@ write counterpart is <code>reply()</code>, read counterpart is this method.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/interests/16/messages?after=16&amp;limit=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -8161,6 +9150,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -8286,6 +9276,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-interests--interest_id--messages"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -8365,7 +9367,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="matches-GETapi-v1-matches-my">GET api/v1/matches/my</h2>
+                                <h2 id="matches-GETapi-v1-matches-my">Browse profiles matching the viewer&#039;s saved partner preferences, ranked by match-score.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -8380,6 +9382,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/matches/my?page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -8397,6 +9400,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -8523,6 +9527,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-matches-my"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -8573,7 +9589,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
-                    <h2 id="matches-GETapi-v1-matches-mutual">GET api/v1/matches/mutual</h2>
+                    <h2 id="matches-GETapi-v1-matches-mutual">List mutual matches — profiles where both sides&#039; preferences align (high-confidence matches).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -8588,6 +9604,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/matches/mutual?page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -8605,6 +9622,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -8702,6 +9720,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-matches-mutual"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -8752,7 +9782,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
-                    <h2 id="matches-GETapi-v1-matches-score--matriId-">GET api/v1/matches/score/{matriId}</h2>
+                    <h2 id="matches-GETapi-v1-matches-score--matriId-">Compute the viewer↔target match score with per-criterion breakdown (religion, caste, education, …).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -8767,6 +9797,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/matches/score/architecto" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -8777,6 +9808,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -8926,6 +9958,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-matches-score--matriId-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -8968,7 +10012,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="membership-GETapi-v1-membership-plans">GET api/v1/membership/plans</h2>
+                                <h2 id="membership-GETapi-v1-membership-plans">List all active membership plans (public — no auth needed for the pricing screen).</h2>
 
 <p>
 </p>
@@ -9113,7 +10157,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="membership-GETapi-v1-membership-me">GET api/v1/membership/me</h2>
+                    <h2 id="membership-GETapi-v1-membership-me">Get the viewer&#039;s current membership + today&#039;s usage counters (interests_sent / contacts_viewed).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -9128,6 +10172,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/membership/me" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -9138,6 +10183,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -9265,6 +10311,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-membership-me"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -9290,7 +10348,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="membership-POSTapi-v1-membership-coupon-validate">POST api/v1/membership/coupon/validate</h2>
+                    <h2 id="membership-POSTapi-v1-membership-coupon-validate">Validate a coupon code against a plan + return the computed discount. Used pre-checkout.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -9305,6 +10363,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/membership/coupon/validate" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -9320,6 +10379,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -9451,6 +10511,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-membership-coupon-validate"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -9520,6 +10592,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/notifications?filter=architecto&amp;page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -9538,6 +10611,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -9631,6 +10705,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-notifications"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -9709,6 +10795,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/notifications/unread-count" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -9719,6 +10806,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -9793,6 +10881,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-notifications-unread-count"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -9835,6 +10935,7 @@ useful for clients to skip a needless badge refresh.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/notifications/read-all" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -9845,6 +10946,7 @@ useful for clients to skip a needless badge refresh.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -9919,6 +11021,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-notifications-read-all"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -9962,6 +11076,7 @@ which ids exist.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/notifications/16/read" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -9972,6 +11087,7 @@ which ids exist.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -10075,6 +11191,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-notifications--notification_id--read"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -10129,7 +11257,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="onboarding-POSTapi-v1-onboarding-step-1">POST api/v1/onboarding/step-1</h2>
+                                <h2 id="onboarding-POSTapi-v1-onboarding-step-1">Onboarding step 1 — personal + professional + family extras.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -10144,6 +11272,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/onboarding/step-1" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -10189,6 +11318,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -10237,7 +11367,46 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-onboarding-step-1">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile_completion_pct&quot;: 65,
+        &quot;next_step&quot;: &quot;onboarding.step-2&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (401, invalid-token):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;UNAUTHENTICATED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, no-profile):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-onboarding-step-1" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-onboarding-step-1"></span>:
@@ -10286,6 +11455,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-onboarding-step-1"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -10318,7 +11499,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Personal extras (weight_kg, blood_group, mother_tongue, languages_known[], about_me).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>weight_kg</code></b>&nbsp;&nbsp;
@@ -10392,7 +11573,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Professional extras (education_detail, occupation_detail, employer_name).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>education_detail</code></b>&nbsp;&nbsp;
@@ -10440,7 +11621,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Family extras (father_name, mother_name, brothers/sisters counts, candidate_asset_details, about_candidate_family).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>father_name</code></b>&nbsp;&nbsp;
@@ -10638,7 +11819,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="onboarding-POSTapi-v1-onboarding-step-2">POST api/v1/onboarding/step-2</h2>
+                    <h2 id="onboarding-POSTapi-v1-onboarding-step-2">Onboarding step 2 — location + extended contact info.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -10653,13 +11834,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/onboarding/step-2" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"location\": {
         \"residing_country\": \"b\",
         \"residency_status\": \"n\",
-        \"outstation_leave_date_from\": \"2026-04-26T19:22:30\",
+        \"outstation_leave_date_from\": \"2026-04-26T19:53:54\",
         \"outstation_leave_date_to\": \"2052-05-19\"
     },
     \"contact\": {
@@ -10673,8 +11855,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
         \"present_address_same_as_comm\": false,
         \"present_address\": \"v\",
         \"present_pin_zip_code\": \"qwrsit\",
-        \"permanent_address_same_as_comm\": false,
-        \"permanent_address_same_as_present\": false,
+        \"permanent_address_same_as_comm\": true,
+        \"permanent_address_same_as_present\": true,
         \"permanent_address\": \"c\",
         \"permanent_pin_zip_code\": \"pscqld\"
     }
@@ -10688,6 +11870,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -10696,7 +11879,7 @@ let body = {
     "location": {
         "residing_country": "b",
         "residency_status": "n",
-        "outstation_leave_date_from": "2026-04-26T19:22:30",
+        "outstation_leave_date_from": "2026-04-26T19:53:54",
         "outstation_leave_date_to": "2052-05-19"
     },
     "contact": {
@@ -10710,8 +11893,8 @@ let body = {
         "present_address_same_as_comm": false,
         "present_address": "v",
         "present_pin_zip_code": "qwrsit",
-        "permanent_address_same_as_comm": false,
-        "permanent_address_same_as_present": false,
+        "permanent_address_same_as_comm": true,
+        "permanent_address_same_as_present": true,
         "permanent_address": "c",
         "permanent_pin_zip_code": "pscqld"
     }
@@ -10726,7 +11909,33 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-onboarding-step-2">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile_completion_pct&quot;: 78,
+        &quot;next_step&quot;: &quot;onboarding.partner-preferences&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, no-profile):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-onboarding-step-2" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-onboarding-step-2"></span>:
@@ -10775,6 +11984,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-onboarding-step-2"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -10807,7 +12028,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Location extras (residing_country, residency_status, outstation_leave_date_from/to).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>residing_country</code></b>&nbsp;&nbsp;
@@ -10840,10 +12061,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="location.outstation_leave_date_from"                data-endpoint="POSTapi-v1-onboarding-step-2"
-               value="2026-04-26T19:22:30"
+               value="2026-04-26T19:53:54"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-04-26T19:22:30</code></p>
+<p>Must be a valid date. Example: <code>2026-04-26T19:53:54</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>outstation_leave_date_to</code></b>&nbsp;&nbsp;
@@ -10867,7 +12088,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Extended contact (residential_phone_number, secondary_phone, alternate<em>email, reference</em>*, present_address, permanent_address, …).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>residential_phone_number</code></b>&nbsp;&nbsp;
@@ -11019,7 +12240,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>permanent_address_same_as_present</code></b>&nbsp;&nbsp;
@@ -11041,7 +12262,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>permanent_address</code></b>&nbsp;&nbsp;
@@ -11071,7 +12292,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="onboarding-POSTapi-v1-onboarding-partner-preferences">POST api/v1/onboarding/partner-preferences</h2>
+                    <h2 id="onboarding-POSTapi-v1-onboarding-partner-preferences">Onboarding partner-preferences — multi-select arrays drive the partner-search filters.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -11086,14 +12307,42 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/onboarding/partner-preferences" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"age_from\": 1,
-    \"age_to\": 22,
-    \"height_from_cm\": 7,
+    \"age_from\": 16,
+    \"age_to\": 16,
+    \"height_from_cm\": 16,
     \"height_to_cm\": 16,
-    \"about_partner\": \"m\"
+    \"complexion\": [
+        \"architecto\"
+    ],
+    \"body_type\": [
+        \"architecto\"
+    ],
+    \"marital_status\": [
+        \"architecto\"
+    ],
+    \"religions\": [
+        \"architecto\"
+    ],
+    \"education_levels\": [
+        \"architecto\"
+    ],
+    \"occupations\": [
+        \"architecto\"
+    ],
+    \"income_range\": [
+        \"architecto\"
+    ],
+    \"working_countries\": [
+        \"architecto\"
+    ],
+    \"native_countries\": [
+        \"architecto\"
+    ],
+    \"about_partner\": \"architecto\"
 }"
 </code></pre></div>
 
@@ -11104,16 +12353,44 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
 
 let body = {
-    "age_from": 1,
-    "age_to": 22,
-    "height_from_cm": 7,
+    "age_from": 16,
+    "age_to": 16,
+    "height_from_cm": 16,
     "height_to_cm": 16,
-    "about_partner": "m"
+    "complexion": [
+        "architecto"
+    ],
+    "body_type": [
+        "architecto"
+    ],
+    "marital_status": [
+        "architecto"
+    ],
+    "religions": [
+        "architecto"
+    ],
+    "education_levels": [
+        "architecto"
+    ],
+    "occupations": [
+        "architecto"
+    ],
+    "income_range": [
+        "architecto"
+    ],
+    "working_countries": [
+        "architecto"
+    ],
+    "native_countries": [
+        "architecto"
+    ],
+    "about_partner": "architecto"
 };
 
 fetch(url, {
@@ -11125,7 +12402,33 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-onboarding-partner-preferences">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile_completion_pct&quot;: 90,
+        &quot;next_step&quot;: &quot;onboarding.lifestyle&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, no-profile):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-onboarding-partner-preferences" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-onboarding-partner-preferences"></span>:
@@ -11174,6 +12477,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -11205,10 +12520,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="age_from"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value="1"
+               value="16"
                data-component="body">
     <br>
-<p>Must be at least 18. Must not be greater than 70. Example: <code>1</code></p>
+<p>Min preferred age (18-70). Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>age_to</code></b>&nbsp;&nbsp;
@@ -11217,10 +12532,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="age_to"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value="22"
+               value="16"
                data-component="body">
     <br>
-<p>Must be at least 18. Must not be greater than 70. Example: <code>22</code></p>
+<p>Max preferred age (18-70). Must be &gt;= age_from. Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>height_from_cm</code></b>&nbsp;&nbsp;
@@ -11229,10 +12544,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="height_from_cm"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value="7"
+               value="16"
                data-component="body">
     <br>
-<p>Must be at least 100. Must not be greater than 250. Example: <code>7</code></p>
+<p>Min preferred height in cm (100-250). Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>height_to_cm</code></b>&nbsp;&nbsp;
@@ -11244,43 +12559,49 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="16"
                data-component="body">
     <br>
-<p>Must be at least 100. Must not be greater than 250. Example: <code>16</code></p>
+<p>Max preferred height in cm (100-250). Example: <code>16</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>complexion</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="complexion"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="complexion[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="complexion[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Preferred complexion values.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>body_type</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="body_type"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="body_type[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="body_type[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Preferred body types.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>marital_status</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="marital_status"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="marital_status[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="marital_status[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Acceptable marital statuses.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>children_status</code></b>&nbsp;&nbsp;
@@ -11332,15 +12653,17 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>religions</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="religions"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="religions[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="religions[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Acceptable religions; downstream filters (denomination, caste, etc.) apply per-religion.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>denomination</code></b>&nbsp;&nbsp;
@@ -11464,15 +12787,17 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>education_levels</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="education_levels"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="education_levels[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="education_levels[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Preferred education levels.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>educational_qualifications</code></b>&nbsp;&nbsp;
@@ -11488,15 +12813,17 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>occupations</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="occupations"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="occupations[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="occupations[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Preferred occupations.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>employment_status</code></b>&nbsp;&nbsp;
@@ -11512,39 +12839,45 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>income_range</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="income_range"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="income_range[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="income_range[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Acceptable income buckets.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>working_countries</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="working_countries"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="working_countries[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="working_countries[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Preferred working countries.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>native_countries</code></b>&nbsp;&nbsp;
-<small>object</small>&nbsp;
+<small>string[]</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="native_countries"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value=""
+                              name="native_countries[0]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="native_countries[1]"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
                data-component="body">
     <br>
-
+<p>Preferred native countries.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>about_partner</code></b>&nbsp;&nbsp;
@@ -11553,10 +12886,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="about_partner"                data-endpoint="POSTapi-v1-onboarding-partner-preferences"
-               value="m"
+               value="architecto"
                data-component="body">
     <br>
-<p>Must not be greater than 5000 characters. Example: <code>m</code></p>
+<p>Free-text "about the partner" (max 5000 chars). Example: <code>architecto</code></p>
         </div>
         </form>
 
@@ -11575,6 +12908,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/onboarding/lifestyle" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -11601,6 +12935,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -11630,7 +12965,52 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-onboarding-lifestyle">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile_completion_pct&quot;: 100,
+        &quot;next_step&quot;: &quot;dashboard&quot;,
+        &quot;onboarding_finished&quot;: true
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, invalid-url):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
+        &quot;message&quot;: &quot;...&quot;,
+        &quot;fields&quot;: {
+            &quot;social.facebook_url&quot;: [
+                &quot;The social.facebook url field must be a valid URL.&quot;
+            ]
+        }
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, no-profile):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-onboarding-lifestyle" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-onboarding-lifestyle"></span>:
@@ -11679,6 +13059,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-onboarding-lifestyle"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -11711,7 +13103,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Lifestyle (diet, drinking, smoking, cultural_background, hobbies[], favorite_music[], …).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>diet</code></b>&nbsp;&nbsp;
@@ -11843,7 +13235,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <i>optional</i> &nbsp;
  &nbsp;
 <br>
-
+<p>Social-media URLs (facebook_url, instagram_url, linkedin_url, youtube_url, website_url).</p>
             </summary>
                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>facebook_url</code></b>&nbsp;&nbsp;
@@ -11926,6 +13318,7 @@ banner stops showing; doesn&#039;t touch any field data.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/onboarding/finish" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -11936,6 +13329,7 @@ banner stops showing; doesn&#039;t touch any field data.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -11949,7 +13343,34 @@ fetch(url, {
 </span>
 
 <span id="example-responses-POSTapi-v1-onboarding-finish">
-</span>
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;profile_completion_pct&quot;: 65,
+        &quot;next_step&quot;: &quot;dashboard&quot;,
+        &quot;onboarding_finished&quot;: true
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, no-profile):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
 <span id="execution-results-POSTapi-v1-onboarding-finish" hidden>
     <blockquote>Received response<span
                 id="execution-response-status-POSTapi-v1-onboarding-finish"></span>:
@@ -11997,6 +13418,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/onboarding/finish</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-onboarding-finish"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -12236,6 +13669,7 @@ client SDK.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/payment/architecto/order" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -12251,6 +13685,7 @@ client SDK.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -12439,6 +13874,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-payment--gateway--order"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -12520,6 +13967,7 @@ deactivates prior memberships.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/payment/architecto/verify" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -12537,6 +13985,7 @@ deactivates prior memberships.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -12705,6 +14154,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-payment--gateway--verify"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -12796,7 +14257,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="photo-requests-GETapi-v1-photo-requests">GET api/v1/photo-requests</h2>
+                                <h2 id="photo-requests-GETapi-v1-photo-requests">List photo-requests visible to the viewer — both received (incoming) and sent (outgoing).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -12811,6 +14272,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/photo-requests" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -12821,6 +14283,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -12909,6 +14372,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-photo-requests"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -12934,7 +14409,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="photo-requests-POSTapi-v1-profiles--matriId--photo-request">POST api/v1/profiles/{matriId}/photo-request</h2>
+                    <h2 id="photo-requests-POSTapi-v1-profiles--matriId--photo-request">Send a photo-request to a target whose photos are privacy-gated. Subject to gender-mismatch + block guards.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -12949,6 +14424,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/photo-request" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -12959,6 +14435,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -13112,6 +14589,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--photo-request"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -13150,7 +14639,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="photo-requests-POSTapi-v1-photo-requests--photoRequest_id--approve">POST api/v1/photo-requests/{photoRequest_id}/approve</h2>
+                    <h2 id="photo-requests-POSTapi-v1-photo-requests--photoRequest_id--approve">Approve an incoming photo-request — grants the requester access to your photos.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -13165,6 +14654,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/photo-requests/16/approve" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -13175,6 +14665,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -13294,6 +14785,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-photo-requests--photoRequest_id--approve"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -13344,7 +14847,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="photo-requests-POSTapi-v1-photo-requests--photoRequest_id--ignore">POST api/v1/photo-requests/{photoRequest_id}/ignore</h2>
+                    <h2 id="photo-requests-POSTapi-v1-photo-requests--photoRequest_id--ignore">Ignore an incoming photo-request silently. The requester is not notified; the request is just dismissed.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -13359,6 +14862,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/photo-requests/16/ignore" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -13369,6 +14873,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -13470,6 +14975,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-photo-requests--photoRequest_id--ignore"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -13524,7 +15041,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="photos-GETapi-v1-photos">GET api/v1/photos</h2>
+                                <h2 id="photos-GETapi-v1-photos">List the viewer&#039;s photos grouped by slot (profile/album/family) with limits, counts, and privacy.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -13539,6 +15056,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/photos" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -13549,6 +15067,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -13673,6 +15192,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-photos"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -13698,7 +15229,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="photos-POSTapi-v1-photos">POST api/v1/photos</h2>
+                    <h2 id="photos-POSTapi-v1-photos">Upload a new photo. Multipart body — photo file + slot type (profile/album/family).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -13713,10 +15244,11 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/photos" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "photo_type=album"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\phpCA23.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php2395.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -13725,6 +15257,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "multipart/form-data",
     "Accept": "application/json",
 };
@@ -13857,6 +15390,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-photos"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -13891,7 +15436,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpCA23.tmp</code></p>
+<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php2395.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>photo_type</code></b>&nbsp;&nbsp;
@@ -13926,6 +15471,7 @@ updateOrCreate if the user has never saved a setting before.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/photos/privacy" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -13943,6 +15489,7 @@ updateOrCreate if the user has never saved a setting before.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -14078,6 +15625,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-photos-privacy"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -14160,7 +15719,7 @@ Must be one of:
         </div>
         </form>
 
-                    <h2 id="photos-POSTapi-v1-photos--photo_id--primary">POST api/v1/photos/{photo_id}/primary</h2>
+                    <h2 id="photos-POSTapi-v1-photos--photo_id--primary">Mark a profile-slot photo as primary (sets it as the main avatar; only profile-type photos qualify).</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -14175,6 +15734,7 @@ Must be one of:
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/photos/16/primary" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -14185,6 +15745,7 @@ Must be one of:
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -14317,6 +15878,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-photos--photo_id--primary"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -14367,7 +15940,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="photos-POSTapi-v1-photos--photo_id--restore">POST api/v1/photos/{photo_id}/restore</h2>
+                    <h2 id="photos-POSTapi-v1-photos--photo_id--restore">Un-archive a soft-deleted photo (within the 30-day undo window). Fails 422 if the slot is full.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -14382,6 +15955,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/photos/16/restore" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -14392,6 +15966,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -14505,6 +16080,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-photos--photo_id--restore"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -14555,7 +16142,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="photos-DELETEapi-v1-photos--photo_id--permanent">DELETE api/v1/photos/{photo_id}/permanent</h2>
+                    <h2 id="photos-DELETEapi-v1-photos--photo_id--permanent">Hard-delete a photo + wipe storage (variants too). Irreversible; bypasses the 30-day restore window.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -14570,6 +16157,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
     "http://localhost:8000/api/v1/photos/16/permanent" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -14580,6 +16168,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -14681,6 +16270,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-photos--photo_id--permanent"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -14731,7 +16332,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
-                    <h2 id="photos-DELETEapi-v1-photos--photo_id-">DELETE api/v1/photos/{photo_id}</h2>
+                    <h2 id="photos-DELETEapi-v1-photos--photo_id-">Soft-delete (archive) a photo. Reversible via /restore within 30 days; storage stays untouched.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -14746,6 +16347,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
     "http://localhost:8000/api/v1/photos/16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -14756,6 +16358,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -14858,6 +16461,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-photos--photo_id-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -14927,6 +16542,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/dashboard" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -14937,6 +16553,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -15062,6 +16679,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-dashboard"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -15103,6 +16732,7 @@ contact populated, photos grouped by type.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/profile/me" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -15113,6 +16743,7 @@ contact populated, photos grouped by type.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -15236,6 +16867,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-profile-me"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -15278,6 +16921,7 @@ gates, tracks a deduped ProfileView, returns viewer-context fields
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/profiles/architecto" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -15288,6 +16932,7 @@ gates, tracks a deduped ProfileView, returns viewer-context fields
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -15430,6 +17075,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-profiles--matriId-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -15486,6 +17143,7 @@ refreshes without a follow-up GET.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
     "http://localhost:8000/api/v1/profile/me/architecto" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -15496,6 +17154,7 @@ refreshes without a follow-up GET.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -15632,6 +17291,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-v1-profile-me--section-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -15690,6 +17361,7 @@ education, family, location, contact, hobbies, social, partner. Example: <code>a
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/report" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -15705,6 +17377,7 @@ education, family, location, contact, hobbies, social, partner. Example: <code>a
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -15851,6 +17524,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--report"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -15934,6 +17619,7 @@ mapped from the DB's <code>search_name</code> / <code>criteria</code> columns.</
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/search/saved" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -15944,6 +17630,7 @@ mapped from the DB's <code>search_name</code> / <code>criteria</code> columns.</
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -16041,6 +17728,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-search-saved"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -16087,6 +17786,7 @@ sees the internal column names.</li>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/search/saved" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -16102,6 +17802,7 @@ sees the internal column names.</li>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -16237,6 +17938,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-search-saved"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -16305,6 +18018,7 @@ mapping (already in place).</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
     "http://localhost:8000/api/v1/search/saved/16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -16315,6 +18029,7 @@ mapping (already in place).</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -16429,6 +18144,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-search-saved--savedSearch_id-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -16498,6 +18225,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/search/partner?page=16&amp;per_page=16&amp;sort=architecto&amp;age_from=16&amp;age_to=16&amp;height_from=16&amp;height_to=16&amp;religion[]=architecto&amp;caste[]=architecto&amp;denomination[]=architecto&amp;mother_tongue[]=architecto&amp;marital_status[]=architecto&amp;body_type[]=architecto&amp;physical_status[]=architecto&amp;education[]=architecto&amp;occupation[]=architecto&amp;annual_income[]=architecto&amp;working_country=architecto&amp;native_country=architecto&amp;family_status[]=architecto&amp;diet[]=architecto&amp;smoking[]=architecto&amp;drinking[]=architecto&amp;with_photo=" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -16537,6 +18265,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -16665,6 +18394,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/search/partner</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-search-partner"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -17039,6 +18780,7 @@ what the caller types.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/search/keyword?q=architecto&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -17060,6 +18802,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -17192,6 +18935,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-search-keyword"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -17275,6 +19030,7 @@ anti-enumeration, matches step-5's GET /profiles/{matriId}.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/search/id/architecto" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -17285,6 +19041,7 @@ anti-enumeration, matches step-5's GET /profiles/{matriId}.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -17386,6 +19143,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-search-id--matriId-"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -17445,6 +19214,7 @@ single payload.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/settings" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -17455,6 +19225,7 @@ single payload.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -17545,6 +19316,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-settings"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -17586,6 +19369,7 @@ keys you want to change.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
     "http://localhost:8000/api/v1/settings/visibility" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -17603,6 +19387,7 @@ keys you want to change.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -17683,6 +19468,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/settings/visibility</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-v1-settings-visibility"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -17807,6 +19604,7 @@ during the user's chosen quiet hours.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
     "http://localhost:8000/api/v1/settings/alerts" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -17832,6 +19630,7 @@ during the user's chosen quiet hours.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -17920,6 +19719,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/settings/alerts</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-v1-settings-alerts"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
@@ -18207,6 +20018,7 @@ mid-update.</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
     "http://localhost:8000/api/v1/settings/password" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -18223,6 +20035,7 @@ mid-update.</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -18321,6 +20134,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-v1-settings-password"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -18398,6 +20223,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/settings/hide" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -18408,6 +20234,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -18482,6 +20309,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-settings-hide"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -18522,6 +20361,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/settings/unhide" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -18532,6 +20372,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -18606,6 +20447,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-settings-unhide"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -18653,6 +20506,7 @@ already does ("Other: <text>").</p>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/settings/delete" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -18669,6 +20523,7 @@ already does ("Other: <text>").</p>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -18767,6 +20622,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-settings-delete"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -18848,6 +20715,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/shortlist?page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -18865,6 +20733,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -18951,6 +20820,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-shortlist"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -19017,6 +20898,7 @@ each call flips, response carries the authoritative new state.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/profiles/architecto/shortlist" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -19027,6 +20909,7 @@ each call flips, response carries the authoritative new state.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -19141,6 +21024,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-profiles--matriId--shortlist"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -19183,7 +21078,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="static-pages-GETapi-v1-static-pages--slug-">GET api/v1/static-pages/{slug}</h2>
+                                <h2 id="static-pages-GETapi-v1-static-pages--slug-">Fetch a CMS-managed static page (about / privacy / terms / refund-policy / …) by slug.</h2>
 
 <p>
 </p>
@@ -19525,13 +21420,14 @@ approval gates publication.</h2>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/success-stories" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "couple_names=architecto"\
     --form "story=architecto"\
     --form "wedding_date=architecto"\
     --form "location=architecto"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php61D3.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php2142.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -19540,6 +21436,7 @@ approval gates publication.</h2>
 );
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "multipart/form-data",
     "Accept": "application/json",
 };
@@ -19630,6 +21527,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
                                 <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-success-stories"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;
  &nbsp;
@@ -19712,7 +21621,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php61D3.tmp</code></p>
+<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php2142.tmp</code></p>
         </div>
         </form>
 
@@ -19720,7 +21629,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="views-GETapi-v1-views">GET api/v1/views</h2>
+                                <h2 id="views-GETapi-v1-views">Profile-views feed — &quot;viewed_by&quot; (who viewed me) or &quot;i_viewed&quot; (who I viewed). Premium-gated for full list.</h2>
 
 <p>
 <small class="badge badge-darkred">requires authentication</small>
@@ -19735,6 +21644,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
     --get "http://localhost:8000/api/v1/views?tab=architecto&amp;page=16&amp;per_page=16" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -19753,6 +21663,7 @@ Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
 
 const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
@@ -19870,6 +21781,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <b><code>api/v1/views</code></b>
         </p>
                 <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-views"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
 &nbsp;

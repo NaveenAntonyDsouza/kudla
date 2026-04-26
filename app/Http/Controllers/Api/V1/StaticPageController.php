@@ -27,6 +27,8 @@ use Illuminate\Http\JsonResponse;
 class StaticPageController extends BaseApiController
 {
     /**
+     * Fetch a CMS-managed static page (about / privacy / terms / refund-policy / …) by slug.
+     *
      * @group Static Pages
      *
      * @urlParam slug string required Page slug (lowercase, hyphens only).
