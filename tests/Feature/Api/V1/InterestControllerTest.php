@@ -373,11 +373,14 @@ it('send happy path delegates to InterestService::send + returns interest card',
     expect($fake->calls[0]['args']['customMessage'])->toBe('Hi');
 });
 
-it('send maps service exception to 422 INVALID_INTEREST with message', function () {
+it('send maps generic service RuntimeException to 422 INVALID_INTEREST with message', function () {
+    // Generic-failure path — used for blocks, premium-gate, etc. Anything
+    // the service signals via a plain \RuntimeException that doesn't have
+    // a more specific typed exception lands here.
     $sender = buildInterestUser(100);
     $target = buildInterestUser(200)->profile;
     $fake = new FakeInterestService();
-    $fake->nextThrowable = new \RuntimeException('Daily interest limit reached.');
+    $fake->nextThrowable = new \RuntimeException('Cannot send interest to this profile.');
     $controller = buildInterestController($fake, $target);
 
     $response = $controller->send(
@@ -387,7 +390,29 @@ it('send maps service exception to 422 INVALID_INTEREST with message', function 
 
     expect($response->getStatusCode())->toBe(422);
     expect($response->getData(true)['error']['code'])->toBe('INVALID_INTEREST');
-    expect($response->getData(true)['error']['message'])->toBe('Daily interest limit reached.');
+    expect($response->getData(true)['error']['message'])->toBe('Cannot send interest to this profile.');
+});
+
+it('send maps DailyLimitReachedException to 429 DAILY_LIMIT_REACHED envelope', function () {
+    // Acceptance gate: error-codes.md requires daily-cap to surface as
+    // DAILY_LIMIT_REACHED 429 so Flutter can switch on the code to
+    // trigger the upgrade dialog.
+    $sender = buildInterestUser(100);
+    $target = buildInterestUser(200)->profile;
+    $fake = new FakeInterestService();
+    $fake->nextThrowable = new \App\Exceptions\Interest\DailyLimitReachedException(limit: 5, used: 5);
+    $controller = buildInterestController($fake, $target);
+
+    $response = $controller->send(
+        interestRequest($sender, 'POST', path: '/api/v1/profiles/AM000200/interest'),
+        'AM000200',
+    );
+
+    expect($response->getStatusCode())->toBe(429);
+    $body = $response->getData(true);
+    expect($body['success'])->toBeFalse();
+    expect($body['error']['code'])->toBe('DAILY_LIMIT_REACHED');
+    expect($body['error']['message'])->toContain('5/day');
 });
 
 /* ==================================================================

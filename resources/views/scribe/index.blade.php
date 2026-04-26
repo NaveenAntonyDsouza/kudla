@@ -898,7 +898,7 @@ enumerate registered numbers.</p>
     --header "Accept: application/json" \
     --data "{
     \"phone\": \"8225697751\",
-    \"purpose\": \"login\"
+    \"purpose\": \"reset\"
 }"
 </code></pre></div>
 
@@ -915,7 +915,7 @@ const headers = {
 
 let body = {
     "phone": "8225697751",
-    "purpose": "login"
+    "purpose": "reset"
 };
 
 fetch(url, {
@@ -1019,10 +1019,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-phone-send"
-               value="login"
+               value="reset"
                data-component="body">
     <br>
-<p>Example: <code>login</code></p>
+<p>Example: <code>reset</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
         </div>
@@ -1228,7 +1228,7 @@ explicitly enable email OTP login via site_settings).</h2>
     --header "Accept: application/json" \
     --data "{
     \"email\": \"gbailey@example.net\",
-    \"purpose\": \"login\"
+    \"purpose\": \"reset\"
 }"
 </code></pre></div>
 
@@ -1245,7 +1245,7 @@ const headers = {
 
 let body = {
     "email": "gbailey@example.net",
-    "purpose": "login"
+    "purpose": "reset"
 };
 
 fetch(url, {
@@ -1349,10 +1349,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-email-send"
-               value="login"
+               value="reset"
                data-component="body">
     <br>
-<p>Example: <code>login</code></p>
+<p>Example: <code>reset</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
         </div>
@@ -2036,7 +2036,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "religious_observance=architecto"\
     --form "jain_sect=architecto"\
     --form "other_religion_name=architecto"\
-    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\phpB998.tmp" </code></pre></div>
+    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\php7353.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2461,7 +2461,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpB998.tmp</code></p>
+<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php7353.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>muslim_sect</code></b>&nbsp;&nbsp;
@@ -4730,7 +4730,7 @@ last_seen_at + metadata, returns the same device_id.</p>
     --header "Accept: application/json" \
     --data "{
     \"fcm_token\": \"b\",
-    \"platform\": \"android\",
+    \"platform\": \"ios\",
     \"device_model\": \"n\",
     \"app_version\": \"gzmiyvdljnikhway\",
     \"os_version\": \"kcmyuwpwlvqwrsit\",
@@ -4751,7 +4751,7 @@ const headers = {
 
 let body = {
     "fcm_token": "b",
-    "platform": "android",
+    "platform": "ios",
     "device_model": "n",
     "app_version": "gzmiyvdljnikhway",
     "os_version": "kcmyuwpwlvqwrsit",
@@ -4859,10 +4859,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="platform"                data-endpoint="POSTapi-v1-devices"
-               value="android"
+               value="ios"
                data-component="body">
     <br>
-<p>Example: <code>android</code></p>
+<p>Example: <code>ios</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>android</code></li> <li><code>ios</code></li></ul>
         </div>
@@ -5728,7 +5728,7 @@ admin reviews from scratch.</p>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "document_type=architecto"\
-    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\php15DE.tmp" </code></pre></div>
+    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\phpD9BB.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -5887,7 +5887,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php15DE.tmp</code></p>
+<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpD9BB.tmp</code></p>
         </div>
         </form>
 
@@ -6861,7 +6861,7 @@ fetch(url, {
     &quot;success&quot;: false,
     &quot;error&quot;: {
         &quot;code&quot;: &quot;INVALID_INTEREST&quot;,
-        &quot;message&quot;: &quot;Daily interest limit reached...&quot;
+        &quot;message&quot;: &quot;Cannot send interest to this profile.&quot;
     }
 }</code>
  </pre>
@@ -6875,6 +6875,19 @@ fetch(url, {
     &quot;error&quot;: {
         &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
         &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (429, daily-limit-reached):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;DAILY_LIMIT_REACHED&quot;,
+        &quot;message&quot;: &quot;Daily interest limit reached (5/day). Upgrade your plan for more interests.&quot;
     }
 }</code>
  </pre>
@@ -10646,7 +10659,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"location\": {
         \"residing_country\": \"b\",
         \"residency_status\": \"n\",
-        \"outstation_leave_date_from\": \"2026-04-26T18:47:22\",
+        \"outstation_leave_date_from\": \"2026-04-26T19:13:19\",
         \"outstation_leave_date_to\": \"2052-05-19\"
     },
     \"contact\": {
@@ -10657,7 +10670,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         \"reference_name\": \"p\",
         \"reference_relationship\": \"w\",
         \"reference_mobile\": \"l\",
-        \"present_address_same_as_comm\": true,
+        \"present_address_same_as_comm\": false,
         \"present_address\": \"v\",
         \"present_pin_zip_code\": \"qwrsit\",
         \"permanent_address_same_as_comm\": false,
@@ -10683,7 +10696,7 @@ let body = {
     "location": {
         "residing_country": "b",
         "residency_status": "n",
-        "outstation_leave_date_from": "2026-04-26T18:47:22",
+        "outstation_leave_date_from": "2026-04-26T19:13:19",
         "outstation_leave_date_to": "2052-05-19"
     },
     "contact": {
@@ -10694,7 +10707,7 @@ let body = {
         "reference_name": "p",
         "reference_relationship": "w",
         "reference_mobile": "l",
-        "present_address_same_as_comm": true,
+        "present_address_same_as_comm": false,
         "present_address": "v",
         "present_pin_zip_code": "qwrsit",
         "permanent_address_same_as_comm": false,
@@ -10827,10 +10840,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="location.outstation_leave_date_from"                data-endpoint="POSTapi-v1-onboarding-step-2"
-               value="2026-04-26T18:47:22"
+               value="2026-04-26T19:13:19"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-04-26T18:47:22</code></p>
+<p>Must be a valid date. Example: <code>2026-04-26T19:13:19</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>outstation_leave_date_to</code></b>&nbsp;&nbsp;
@@ -10960,7 +10973,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>present_address</code></b>&nbsp;&nbsp;
@@ -13682,7 +13695,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "photo_type=album"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php9F84.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php68A1.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -13857,7 +13870,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php9F84.tmp</code></p>
+<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php68A1.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>photo_type</code></b>&nbsp;&nbsp;
@@ -19497,7 +19510,7 @@ approval gates publication.</h2>
     --form "story=architecto"\
     --form "wedding_date=architecto"\
     --form "location=architecto"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php37E0.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\phpFB5F.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -19678,7 +19691,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php37E0.tmp</code></p>
+<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpFB5F.tmp</code></p>
         </div>
         </form>
 

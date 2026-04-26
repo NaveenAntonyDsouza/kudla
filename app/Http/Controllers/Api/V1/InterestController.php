@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\Interest\DailyLimitReachedException;
 use App\Http\Resources\V1\ProfileCardResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Interest;
@@ -33,11 +34,17 @@ use Illuminate\Support\Carbon;
  * controller's job is request shaping + ownership/window guards +
  * error mapping.
  *
- * Service exceptions (\InvalidArgumentException, \RuntimeException) are
- * caught and rendered as 422 INVALID_INTEREST envelopes carrying the
- * exception's message — Flutter can show it verbatim. A future buffer
- * task can introduce a typed InterestException with stable error
- * codes; for MVP, the message-based contract is workable.
+ * Service exceptions are mapped via serviceError():
+ *   - DailyLimitReachedException     → 429 DAILY_LIMIT_REACHED
+ *   - all other \Throwable           → 422 INVALID_INTEREST (carries the
+ *                                       service message verbatim — Flutter
+ *                                       shows it as-is)
+ *
+ * The dedicated DAILY_LIMIT_REACHED path lets the Flutter client switch on
+ * the code to trigger the upgrade dialog instead of the generic snackbar.
+ * Other failure modes (block, premium-gated message, duplicate interest)
+ * still flow through the message-based INVALID_INTEREST envelope; they
+ * can be promoted to typed exceptions later if their UX patterns diverge.
  *
  * Anti-enumeration: same pattern as step-5/13 — when the viewer isn't
  * a party to the interest, we return 403 (ownership) rather than 404
@@ -251,8 +258,9 @@ class InterestController extends BaseApiController
      *
      * @response 201 scenario="success" {"success": true, "data": {"id": 42, "status": "pending"}}
      * @response 404 scenario="target-not-found" {"success": false, "error": {"code": "NOT_FOUND", "message": "Profile not available."}}
-     * @response 422 scenario="invalid-interest" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "Daily interest limit reached..."}}
+     * @response 422 scenario="invalid-interest" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "Cannot send interest to this profile."}}
      * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
+     * @response 429 scenario="daily-limit-reached" {"success": false, "error": {"code": "DAILY_LIMIT_REACHED", "message": "Daily interest limit reached (5/day). Upgrade your plan for more interests."}}
      */
     public function send(Request $request, string $matriId): JsonResponse
     {
@@ -843,6 +851,18 @@ class InterestController extends BaseApiController
      */
     private function serviceError(\Throwable $e): JsonResponse
     {
+        // Daily-cap hits surface as the canonical DAILY_LIMIT_REACHED (429)
+        // so Flutter can switch on the code to show the upgrade dialog.
+        // Reference: docs/mobile-app/reference/error-codes.md
+        if ($e instanceof DailyLimitReachedException) {
+            return ApiResponse::error(
+                code: 'DAILY_LIMIT_REACHED',
+                message: $e->getMessage(),
+                fields: null,
+                status: 429,
+            );
+        }
+
         return ApiResponse::error(
             'INVALID_INTEREST',
             $e->getMessage(),

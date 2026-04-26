@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\Interest\DailyLimitReachedException;
 use App\Mail\InterestAcceptedMail;
 use App\Mail\InterestDeclinedMail;
 use App\Mail\InterestReceivedMail;
@@ -45,10 +46,16 @@ class InterestService
             throw new \RuntimeException('Cannot send interest to this profile.');
         }
 
-        // Check daily limit (plan-based)
+        // Check daily limit (plan-based). Typed exception so the API
+        // controller can render the canonical DAILY_LIMIT_REACHED (429)
+        // envelope instead of the generic INVALID_INTEREST (422) used
+        // for other service-level failures.
         $usage = $this->canSendToday($sender);
         if (! $usage['can_send']) {
-            throw new \RuntimeException("Daily interest limit reached ({$usage['limit']}/day). Upgrade your plan for more interests.");
+            throw new DailyLimitReachedException(
+                limit: (int) ($usage['limit'] ?? self::FREE_DAILY_LIMIT),
+                used: (int) ($usage['used'] ?? ($usage['limit'] ?? self::FREE_DAILY_LIMIT)),
+            );
         }
 
         // Personalized messages require a paid plan — UNLESS the receiver
