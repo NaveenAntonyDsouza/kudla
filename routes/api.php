@@ -263,6 +263,19 @@ Route::prefix('v1')->group(function () {
         Route::post('/success-stories', [\App\Http\Controllers\Api\V1\SuccessStoryController::class, 'store'])
             ->middleware('throttle:3,60');
 
+        // Onboarding (week 4 step 14) — 5 OPTIONAL post-registration steps
+        // that raise profile_completion_pct. Flutter walks through after
+        // /auth/register/step-5 if onboarding_completed is still false.
+        // Throttled 30/min — frequent saves while editing forms; the
+        // service's updateOrCreate makes each step idempotent.
+        Route::prefix('onboarding')->middleware('throttle:30,1')->group(function () {
+            Route::post('/step-1', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'step1']);
+            Route::post('/step-2', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'step2']);
+            Route::post('/partner-preferences', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'partnerPrefs']);
+            Route::post('/lifestyle', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'lifestyle']);
+            Route::post('/finish', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'finish']);
+        });
+
         // Settings (week 4 step 12). Read unthrottled, mutations 30/min,
         // password 10/min (anti-brute), delete 5/hour (anti-mistake).
         Route::get('/settings', [\App\Http\Controllers\Api\V1\SettingsController::class, 'index'])
