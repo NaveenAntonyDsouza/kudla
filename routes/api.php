@@ -247,6 +247,23 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:5,60');
         Route::delete('/id-proof/{idProof}', [\App\Http\Controllers\Api\V1\IdProofController::class, 'destroy']);
 
+        // Settings (week 4 step 12). Read unthrottled, mutations 30/min,
+        // password 10/min (anti-brute), delete 5/hour (anti-mistake).
+        Route::get('/settings', [\App\Http\Controllers\Api\V1\SettingsController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::put('/settings/visibility', [\App\Http\Controllers\Api\V1\SettingsController::class, 'visibility'])
+            ->middleware('throttle:30,1');
+        Route::put('/settings/alerts', [\App\Http\Controllers\Api\V1\SettingsController::class, 'alerts'])
+            ->middleware('throttle:30,1');
+        Route::put('/settings/password', [\App\Http\Controllers\Api\V1\SettingsController::class, 'password'])
+            ->middleware('throttle:10,1');
+        Route::post('/settings/hide', [\App\Http\Controllers\Api\V1\SettingsController::class, 'hide'])
+            ->middleware('throttle:30,1');
+        Route::post('/settings/unhide', [\App\Http\Controllers\Api\V1\SettingsController::class, 'unhide'])
+            ->middleware('throttle:30,1');
+        Route::post('/settings/delete', [\App\Http\Controllers\Api\V1\SettingsController::class, 'delete'])
+            ->middleware('throttle:5,60');
+
         // Payment gateway endpoints (week 4 step 4) — multi-gateway
         // architecture, Razorpay first. {gateway} resolved at runtime
         // via PaymentGatewayManager. Adding a new gateway = single
