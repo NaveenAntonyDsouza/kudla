@@ -214,6 +214,31 @@ Route::prefix('v1')->group(function () {
         Route::get('/views', [\App\Http\Controllers\Api\V1\ProfileViewController::class, 'index'])
             ->middleware('throttle:60,1');
 
+        // Block list (week 4 step 10). List 60/min; mutations 20/min
+        // (state changes that affect both parties).
+        Route::get('/blocked', [\App\Http\Controllers\Api\V1\BlockController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::post('/profiles/{matriId}/block', [\App\Http\Controllers\Api\V1\BlockController::class, 'block'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:20,1');
+        Route::post('/profiles/{matriId}/unblock', [\App\Http\Controllers\Api\V1\BlockController::class, 'unblock'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:20,1');
+
+        // Profile reports (week 4 step 10). Tighter 10/min throttle —
+        // anti-spam for the abuse-flagging surface.
+        Route::post('/profiles/{matriId}/report', [\App\Http\Controllers\Api\V1\ReportController::class, 'store'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:10,1');
+
+        // Ignore list (week 4 step 10). Soft "hide from search" without
+        // the bidirectional cancel that block does.
+        Route::get('/ignored', [\App\Http\Controllers\Api\V1\IgnoredProfileController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::post('/profiles/{matriId}/ignore-toggle', [\App\Http\Controllers\Api\V1\IgnoredProfileController::class, 'toggle'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:20,1');
+
         // Payment gateway endpoints (week 4 step 4) — multi-gateway
         // architecture, Razorpay first. {gateway} resolved at runtime
         // via PaymentGatewayManager. Adding a new gateway = single
