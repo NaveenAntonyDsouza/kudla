@@ -83,6 +83,22 @@ class PaymentController extends BaseApiController
      * @response 422 scenario="coupon-invalid" {"success": false, "error": {"code": "COUPON_INVALID", "message": "..."}}
      * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "..."}}
      * @response 502 scenario="gateway-error" {"success": false, "error": {"code": "GATEWAY_ERROR", "message": "..."}}
+     *
+     * @response 201 scenario="full-discount-coupon" {
+     *   "success": true,
+     *   "data": {
+     *     "subscription_id": 124,
+     *     "gateway": "coupon",
+     *     "amount_inr": 0,
+     *     "currency": "INR",
+     *     "gateway_data": null,
+     *     "is_active": true,
+     *     "payment_status": "paid",
+     *     "activated_via": "full_discount_coupon",
+     *     "starts_at": "2026-04-27T00:00:00+05:30",
+     *     "expires_at": "2027-04-27T00:00:00+05:30"
+     *   }
+     * }
      */
     public function createOrder(Request $request, string $gatewaySlug): JsonResponse
     {
@@ -160,6 +176,40 @@ class PaymentController extends BaseApiController
             'payment_status' => 'pending',
             'is_active' => false,
         ]);
+
+        // Full-discount coupon shortcut — when the discount equals the
+        // plan price, the user owes nothing. Skip the gateway entirely
+        // and activate the membership through the same idempotent
+        // SubscriptionActivator that /verify uses. Flutter sees the
+        // `activated_via` field on the response and routes straight to
+        // the "membership active" UI without making a /verify call.
+        // Acceptance reference: week-04-acceptance.md edge case #5.
+        if ($finalPaise === 0 && $coupon !== null) {
+            $subscription->update([
+                'gateway' => 'coupon',
+                'gateway_metadata' => [
+                    'activated_via' => 'full_discount_coupon',
+                    'original_gateway' => $gateway->getSlug(),
+                    'coupon_code' => (string) $coupon->code,
+                ],
+            ]);
+
+            app(SubscriptionActivator::class)->activate($subscription);
+            $subscription->refresh();
+
+            return ApiResponse::created([
+                'subscription_id' => (int) $subscription->id,
+                'gateway' => 'coupon',
+                'amount_inr' => 0,
+                'currency' => 'INR',
+                'gateway_data' => null,
+                'is_active' => (bool) $subscription->is_active,
+                'payment_status' => (string) $subscription->payment_status,
+                'activated_via' => 'full_discount_coupon',
+                'starts_at' => $subscription->starts_at?->toIso8601String(),
+                'expires_at' => $subscription->expires_at?->toIso8601String(),
+            ]);
+        }
 
         // Call the gateway. On any failure, mark the subscription as
         // failed (don't delete — keeps reconciliation history) and

@@ -1228,7 +1228,7 @@ explicitly enable email OTP login via site_settings).</h2>
     --header "Accept: application/json" \
     --data "{
     \"email\": \"gbailey@example.net\",
-    \"purpose\": \"reset\"
+    \"purpose\": \"login\"
 }"
 </code></pre></div>
 
@@ -1245,7 +1245,7 @@ const headers = {
 
 let body = {
     "email": "gbailey@example.net",
-    "purpose": "reset"
+    "purpose": "login"
 };
 
 fetch(url, {
@@ -1349,10 +1349,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-email-send"
-               value="reset"
+               value="login"
                data-component="body">
     <br>
-<p>Example: <code>reset</code></p>
+<p>Example: <code>login</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
         </div>
@@ -1378,7 +1378,7 @@ by phone OTP (single source of truth for the 3 purpose branches).</h2>
     --data "{
     \"email\": \"gbailey@example.net\",
     \"otp\": \"569775\",
-    \"purpose\": \"login\",
+    \"purpose\": \"reset\",
     \"device_name\": \"n\"
 }"
 </code></pre></div>
@@ -1397,7 +1397,7 @@ const headers = {
 let body = {
     "email": "gbailey@example.net",
     "otp": "569775",
-    "purpose": "login",
+    "purpose": "reset",
     "device_name": "n"
 };
 
@@ -1514,10 +1514,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="purpose"                data-endpoint="POSTapi-v1-auth-otp-email-verify"
-               value="login"
+               value="reset"
                data-component="body">
     <br>
-<p>Example: <code>login</code></p>
+<p>Example: <code>reset</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>register</code></li> <li><code>login</code></li> <li><code>reset</code></li></ul>
         </div>
@@ -2036,7 +2036,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "religious_observance=architecto"\
     --form "jain_sect=architecto"\
     --form "other_religion_name=architecto"\
-    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\php7353.tmp" </code></pre></div>
+    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\phpE119.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2461,7 +2461,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php7353.tmp</code></p>
+<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpE119.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>muslim_sect</code></b>&nbsp;&nbsp;
@@ -5728,7 +5728,7 @@ admin reviews from scratch.</p>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "document_type=architecto"\
-    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\phpD9BB.tmp" </code></pre></div>
+    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\php4196.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -5887,7 +5887,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpD9BB.tmp</code></p>
+<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php4196.tmp</code></p>
         </div>
         </form>
 
@@ -10659,7 +10659,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"location\": {
         \"residing_country\": \"b\",
         \"residency_status\": \"n\",
-        \"outstation_leave_date_from\": \"2026-04-26T19:13:19\",
+        \"outstation_leave_date_from\": \"2026-04-26T19:22:30\",
         \"outstation_leave_date_to\": \"2052-05-19\"
     },
     \"contact\": {
@@ -10696,7 +10696,7 @@ let body = {
     "location": {
         "residing_country": "b",
         "residency_status": "n",
-        "outstation_leave_date_from": "2026-04-26T19:13:19",
+        "outstation_leave_date_from": "2026-04-26T19:22:30",
         "outstation_leave_date_to": "2052-05-19"
     },
     "contact": {
@@ -10840,10 +10840,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="location.outstation_leave_date_from"                data-endpoint="POSTapi-v1-onboarding-step-2"
-               value="2026-04-26T19:13:19"
+               value="2026-04-26T19:22:30"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-04-26T19:13:19</code></p>
+<p>Must be a valid date. Example: <code>2026-04-26T19:22:30</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>outstation_leave_date_to</code></b>&nbsp;&nbsp;
@@ -12292,6 +12292,27 @@ fetch(url, {
 }</code>
  </pre>
             <blockquote>
+            <p>Example response (201, full-discount-coupon):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;subscription_id&quot;: 124,
+        &quot;gateway&quot;: &quot;coupon&quot;,
+        &quot;amount_inr&quot;: 0,
+        &quot;currency&quot;: &quot;INR&quot;,
+        &quot;gateway_data&quot;: null,
+        &quot;is_active&quot;: true,
+        &quot;payment_status&quot;: &quot;paid&quot;,
+        &quot;activated_via&quot;: &quot;full_discount_coupon&quot;,
+        &quot;starts_at&quot;: &quot;2026-04-27T00:00:00+05:30&quot;,
+        &quot;expires_at&quot;: &quot;2027-04-27T00:00:00+05:30&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
             <p>Example response (404, unknown-gateway):</p>
         </blockquote>
                 <pre>
@@ -13695,7 +13716,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "photo_type=album"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php68A1.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\phpCA23.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -13870,7 +13891,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php68A1.tmp</code></p>
+<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpCA23.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>photo_type</code></b>&nbsp;&nbsp;
@@ -19510,7 +19531,7 @@ approval gates publication.</h2>
     --form "story=architecto"\
     --form "wedding_date=architecto"\
     --form "location=architecto"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\phpFB5F.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php61D3.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -19691,7 +19712,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpFB5F.tmp</code></p>
+<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php61D3.tmp</code></p>
         </div>
         </form>
 

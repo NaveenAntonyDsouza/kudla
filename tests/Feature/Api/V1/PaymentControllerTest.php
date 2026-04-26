@@ -375,6 +375,64 @@ it('createOrder applies a valid coupon and reduces the persisted amount', functi
     expect($sub->coupon_code)->toBe('WELCOME20');
 });
 
+it('createOrder skips the gateway and activates immediately for a 100% discount coupon', function () {
+    // Acceptance gate: week-04-acceptance.md edge case #5 — "100% coupon
+    // skips Razorpay, activates directly". Without this branch, the
+    // gateway would be called with amount=0 and reject the order.
+    $user = buildPaymentUser();
+    $plan = seedPaymentPlan(['price_inr' => 1000]);
+    Coupon::create([
+        'code' => 'FULLFREE',
+        'discount_type' => 'percentage',
+        'discount_value' => 100,
+        'usage_limit_per_user' => 1,
+        'is_active' => true,
+    ]);
+    $fakeGateway = new FakeGateway();
+    bindFakeGatewayManager($fakeGateway);
+
+    $response = app(PaymentController::class)->createOrder(
+        paymentRequest($user, 'POST', [
+            'plan_id' => $plan->id,
+            'coupon_code' => 'FULLFREE',
+        ], '/api/v1/payment/fake/order'),
+        'fake',
+    );
+
+    expect($response->getStatusCode())->toBe(201);
+    $data = $response->getData(true)['data'];
+    expect($data['amount_inr'])->toBe(0);
+    expect($data['gateway'])->toBe('coupon');
+    expect($data['gateway_data'])->toBeNull();
+    expect($data['is_active'])->toBeTrue();
+    expect($data['payment_status'])->toBe('paid');
+    expect($data['activated_via'])->toBe('full_discount_coupon');
+    expect($data['starts_at'])->not->toBeNull();
+    expect($data['expires_at'])->not->toBeNull();
+
+    // Critical: the gateway was NEVER called — no createOrder /
+    // verifyPayment invocations on the fake.
+    expect($fakeGateway->calls)->toBeEmpty();
+
+    // Subscription is paid + active and remembers the original gateway
+    // the user had selected for audit purposes.
+    $sub = Subscription::find($data['subscription_id']);
+    expect($sub->payment_status)->toBe('paid');
+    expect($sub->is_active)->toBeTrue();
+    expect($sub->gateway)->toBe('coupon');
+    expect($sub->gateway_metadata)->toMatchArray([
+        'activated_via' => 'full_discount_coupon',
+        'original_gateway' => 'fake',
+        'coupon_code' => 'FULLFREE',
+    ]);
+
+    // UserMembership row exists + is active.
+    $membership = UserMembership::where('user_id', $user->id)->first();
+    expect($membership)->not->toBeNull();
+    expect($membership->is_active)->toBeTrue();
+    expect($membership->plan_id)->toBe($plan->id);
+});
+
 it('createOrder rejects an invalid coupon with 422 COUPON_INVALID', function () {
     $user = buildPaymentUser();
     $plan = seedPaymentPlan();
