@@ -28,8 +28,10 @@ body:json {
   }
 }
 
-vars:post-response {
-  interestId: res.body.data.id
+script:post-response {
+  if (res.status === 201 && res.body && res.body.data && res.body.data.id) {
+    bru.setVar("interestId", res.body.data.id);
+  }
 }
 
 tests {

@@ -14,8 +14,10 @@ auth:bearer {
   token: {{token}}
 }
 
-vars:post-response {
-  notificationId: res.body.data[0]?.id
+script:post-response {
+  if (res.status === 200 && Array.isArray(res.body && res.body.data) && res.body.data.length > 0) {
+    bru.setVar("notificationId", res.body.data[0].id);
+  }
 }
 
 tests {

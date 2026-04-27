@@ -20,8 +20,14 @@ tests {
   test("status is 200", () => {
     expect(res.status).to.equal(200);
   });
-  test("payload reports status=ok", () => {
-    expect(res.body).to.have.property("status");
-    expect(res.body.status).to.equal("ok");
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("payload reports data.status=ok", () => {
+    expect(res.body.data).to.have.property("status");
+    expect(res.body.data.status).to.equal("ok");
+  });
+  test("payload reports data.version=v1", () => {
+    expect(res.body.data.version).to.equal("v1");
   });
 }

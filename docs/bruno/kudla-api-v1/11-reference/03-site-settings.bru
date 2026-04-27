@@ -23,8 +23,12 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("payload exposes branding + features", () => {
-    expect(res.body.data).to.have.property("branding");
-    expect(res.body.data).to.have.property("features");
+  test("payload exposes site + theme blocks", () => {
+    expect(res.body.data).to.have.property("site");
+    expect(res.body.data).to.have.property("theme");
+  });
+  test("site block has name + tagline", () => {
+    expect(res.body.data.site).to.have.property("name");
+    expect(res.body.data.site).to.have.property("tagline");
   });
 }

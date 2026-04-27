@@ -32,9 +32,15 @@ body:json {
   }
 }
 
-vars:post-response {
-  token: res.body.data.token
-  matriId: res.body.data.profile.matri_id
+script:post-response {
+  // Capture the Sanctum token + matri_id into env vars so every subsequent
+  // .bru file in this run can read them via {{token}} and {{matriId}}.
+  // We use bru.setVar (script form) instead of vars:post-response — the
+  // latter has Bruno v3 quirks that occasionally fail silently across files.
+  if (res.status === 201 && res.body && res.body.data) {
+    bru.setVar("token", res.body.data.token);
+    bru.setVar("matriId", res.body.data.profile.matri_id);
+  }
 }
 
 tests {

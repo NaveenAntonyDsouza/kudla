@@ -19,17 +19,26 @@ docs {
   into {{deviceId}} for later teardown via DELETE /devices/{id}.
 }
 
+script:pre-request {
+  // FCM tokens are user-scoped (post-Vuln-2 migration: composite unique
+  // on user_id + fcm_token). Use a fresh random suffix per run so we
+  // never collide with prior test devices.
+  bru.setVar("brunoFcmToken", "FAKE-FCM-FROM-BRUNO-" + Date.now());
+}
+
 body:json {
   {
-    "token": "FAKE-FCM-TOKEN-FROM-BRUNO-{{$randomInt}}",
+    "fcm_token": "{{brunoFcmToken}}",
     "platform": "android",
-    "device_name": "Bruno Smoke Test Device",
+    "device_model": "Bruno Smoke Test Device",
     "app_version": "1.0.0"
   }
 }
 
-vars:post-response {
-  deviceId: res.body.data.id
+script:post-response {
+  if ((res.status === 201 || res.status === 200) && res.body && res.body.data && res.body.data.device_id) {
+    bru.setVar("deviceId", res.body.data.device_id);
+  }
 }
 
 tests {
@@ -39,9 +48,8 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("response carries device id + platform", () => {
-    expect(res.body.data).to.have.property("id");
-    expect(res.body.data).to.have.property("platform");
-    expect(res.body.data.platform).to.equal("android");
+  test("response carries device_id", () => {
+    expect(res.body.data).to.have.property("device_id");
+    expect(res.body.data.device_id).to.be.a("number");
   });
 }

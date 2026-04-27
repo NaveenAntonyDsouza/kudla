@@ -23,8 +23,9 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("data is a non-empty array of catalog entries", () => {
-    expect(res.body.data).to.be.an("array");
-    expect(res.body.data.length).to.be.greaterThan(0);
+  test("data.lists is a non-empty array of catalog slugs", () => {
+    expect(res.body.data).to.have.property("lists");
+    expect(res.body.data.lists).to.be.an("array");
+    expect(res.body.data.lists.length).to.be.greaterThan(0);
   });
 }
