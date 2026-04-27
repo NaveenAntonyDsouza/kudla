@@ -28,6 +28,19 @@ use Illuminate\Support\Facades\Schema;
  * factory reset, FCM token rotation across users) result in old-row-
  * inactive + new-row-active rather than failing the insert.
  *
+ * Pre-deploy data check (paranoia, since the prior unique constraint
+ * should have prevented this state, but cheap to verify):
+ *
+ *     SELECT fcm_token, COUNT(DISTINCT user_id) AS users
+ *     FROM devices
+ *     GROUP BY fcm_token
+ *     HAVING users > 1;
+ *
+ * Should return zero rows. If it doesn't, manually pick a user_id to
+ * keep per fcm_token and DELETE the rest before running this migration —
+ * otherwise the new composite unique applies fine but the duplicates
+ * stay around as silent stale rows.
+ *
  * Reference: Phase 2a security audit, Vuln 2.
  */
 return new class extends Migration

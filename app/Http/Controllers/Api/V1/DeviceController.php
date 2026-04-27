@@ -72,26 +72,34 @@ class DeviceController extends BaseApiController
         // re-issue across re-installs / device hand-offs), so the legitimate
         // ownership transfer is "old user's row → inactive, new user gets
         // their own row" rather than a silent ownership flip.
-        Device::where('fcm_token', $data['fcm_token'])
-            ->where('user_id', '!=', $user->id)
-            ->update(['is_active' => false]);
+        //
+        // Wrapped in a transaction so the deactivation pre-pass + upsert
+        // are atomic — without it, two concurrent registers for the same
+        // fcm_token from different users could interleave such that one
+        // user's freshly-inserted row gets deactivated by the other's
+        // pre-pass running afterwards.
+        $device = \DB::transaction(function () use ($data, $user, $currentTokenId) {
+            Device::where('fcm_token', $data['fcm_token'])
+                ->where('user_id', '!=', $user->id)
+                ->update(['is_active' => false]);
 
-        $device = Device::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'fcm_token' => $data['fcm_token'],
-            ],
-            [
-                'personal_access_token_id' => $currentTokenId,
-                'platform' => $data['platform'],
-                'device_model' => $data['device_model'] ?? null,
-                'app_version' => $data['app_version'] ?? null,
-                'os_version' => $data['os_version'] ?? null,
-                'locale' => $data['locale'] ?? 'en',
-                'last_seen_at' => now(),
-                'is_active' => true,
-            ],
-        );
+            return Device::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'fcm_token' => $data['fcm_token'],
+                ],
+                [
+                    'personal_access_token_id' => $currentTokenId,
+                    'platform' => $data['platform'],
+                    'device_model' => $data['device_model'] ?? null,
+                    'app_version' => $data['app_version'] ?? null,
+                    'os_version' => $data['os_version'] ?? null,
+                    'locale' => $data['locale'] ?? 'en',
+                    'last_seen_at' => now(),
+                    'is_active' => true,
+                ],
+            );
+        });
 
         return ApiResponse::created(['device_id' => $device->id]);
     }

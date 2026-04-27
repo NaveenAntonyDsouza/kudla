@@ -4,6 +4,49 @@ All plan revisions logged here. Most recent at top.
 
 ---
 
+## 2.2.0 — 2026-04-27 (Phase 2a wrap-up + security audit)
+
+**Phase 2a is code-complete.** Closes the API surface, comprehensive validation across 6 audit categories, plus 2 HIGH-severity security fixes surfaced and patched.
+
+### ⚠ Breaking change — `PaymentGatewayInterface::verifyPayment`
+
+Signature changed from `verifyPayment(array $data): bool` → `verifyPayment(array $data, Subscription $subscription): bool`. Any third-party gateway implementation a buyer maintains in their fork must add the second parameter and use it to assert the supplied gateway-token IDs match the IDs persisted on the subscription during `createOrder`.
+
+Reference implementation in every shipped gateway (Razorpay / Stripe / PayPal / Paytm / PhonePe): see the `// Anti-substitution: …` comment block at the top of each `verifyPayment` body. The bind compares with `hash_equals(...)` against `$subscription->razorpay_order_id` (Razorpay) or `$subscription->gateway_metadata[<id_key>]` (others). Reject (return false) on mismatch BEFORE the gateway-side network verification.
+
+The bind closes Phase 2a security audit Vuln 1: a user with two pending subscriptions in their own account could pay the cheap one and replay its gateway IDs against the premium subscription's `verify` call.
+
+### Added
+
+- `tests/Tools/{route-audit,auth-middleware-audit,openapi-validate,bruno-lint,mass-assignment-audit}.php` — five static linters that pin contract-, auth-, and route-level invariants. CI-runnable.
+- `docs/mobile-app/reference/acceptance-runbook.md` — single-source step-by-step for the buyer-side acceptance phase (Bruno run, Razorpay, FCM, k6, prod deploy).
+- `tests/load/search-100rps.js` — k6 load script with thresholds wired to the acceptance gate.
+- `app/Exceptions/Interest/DailyLimitReachedException.php` — typed exception so the daily-cap path returns canonical `429 DAILY_LIMIT_REACHED` (was `422 INVALID_INTEREST`).
+- `database/migrations/2026_04_27_220500_fix_devices_unique_to_user_fcm_pair.php` — composite unique on devices to close the FCM-token hijack.
+- `tests/Feature/Api/V1/{ResourceShapeContractTest,DeviceControllerTest}.php` — 16 new shape + security regression tests.
+- 100%-coupon shortcut on `/payment/{gateway}/order` — bypasses gateway when `final_amount = 0`.
+
+### Changed
+
+- `docs/mobile-app/reference/error-codes.md` rewritten as the authoritative list (28 codes) — was drifted from the actual emitted codes by 8.
+- `docs/mobile-app/reference/endpoint-catalogue.md` realigned with `routes/api.php` — 96 routes = 96 documented (was 89/96 with 7 stale + 8 missing).
+- `app/Services/DashboardService.php` — eager-load fix on `recent_views` + `newly_joined` carousels; saves ~110 N+1 queries per dashboard load.
+- `config/scribe.php` — `auth.enabled = true`, `auth.name = "Authorization"`. Was previously generating an OpenAPI spec with `security: []` on every endpoint.
+- `config/matrimony.php` — `max_photo_size_mb` aligned at 5 across web + API + admin (was 30 in config, hardcoded 5 in web).
+- `.env.example` — 25 missing project keys added (Razorpay/Stripe/PayPal/Paytm/PhonePe/Matri/Scribe).
+
+### Removed
+
+- Aspirational error codes that were never emitted: `PAYMENT_FAILED` (use `SIGNATURE_INVALID`), `PROFILE_INCOMPLETE` (use `PROFILE_REQUIRED`), `SELF_ACTION` (use `INVALID_TARGET` / `INVALID_INTEREST` / `SELF_REQUEST`), `OTP_COOLDOWN` (`THROTTLED` fires instead), `OTP_EXPIRED` (`OTP_INVALID` covers wrong + expired). Splitting OTP_INVALID is a Phase 2c UX-polish task.
+- `tests/Feature/ExampleTest.php` — Phase-1 Laravel scaffold that had been silently failing every full-suite run since project init.
+
+### Security
+
+- **HIGH** Vuln 1 — payment-substitution across subscriptions. Closed at the gateway-interface layer (above).
+- **HIGH** Vuln 2 — device-row hijack via FCM-token submission. Closed by composite-unique migration + ownership-scoped `updateOrCreate` + transaction-wrapped deactivation pre-pass.
+
+---
+
 ## 2.1.0 — 2026-04-24 (afternoon, mid-Phase-2a)
 
 **UI-Safe API bar raised.** After Week 2 shipped, user asked: "can you

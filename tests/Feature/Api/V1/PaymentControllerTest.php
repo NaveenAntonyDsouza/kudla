@@ -74,6 +74,19 @@ class FakeGateway implements PaymentGatewayInterface
     public function verifyPayment(array $data, \App\Models\Subscription $subscription): bool
     {
         $this->calls[] = ['method' => 'verifyPayment', 'args' => $data, 'sub_id' => $subscription->id];
+
+        // Mirror the real gateways: bind the supplied fake_order_id to
+        // this subscription's persisted one (Phase 2a Vuln 1). When the
+        // verify body doesn't carry fake_order_id we skip the bind check
+        // for backwards-compat with tests that only exercise the signature
+        // success/failure axis.
+        if (isset($data['fake_order_id'])) {
+            $persisted = (string) ($subscription->gateway_metadata['fake_order_id'] ?? '');
+            if ($persisted === '' || ! hash_equals($persisted, (string) $data['fake_order_id'])) {
+                return false;
+            }
+        }
+
         return $this->verifySucceeds;
     }
 
@@ -81,6 +94,7 @@ class FakeGateway implements PaymentGatewayInterface
     {
         return [
             'fake_signature' => 'required|string',
+            'fake_order_id' => 'nullable|string',
         ];
     }
 
@@ -612,6 +626,66 @@ it('verify is idempotent — second call returns already_verified=true', functio
     expect($response->getStatusCode())->toBe(200);
     expect($data['already_verified'])->toBeTrue();
     expect($data['subscription_id'])->toBe($sub->id);
+});
+
+it('verify REJECTS gateway-id substitution across subscriptions (Vuln 1 controller-level regression)', function () {
+    // Defense-in-depth on top of the per-gateway tests: if a future
+    // refactor moves the bind out of the gateway service or introduces
+    // a code path that bypasses verifyPayment, this controller-level
+    // test still trips the trap.
+    //
+    // Scenario: attacker holds two pending subscriptions in their own
+    // account. They pay sub_A and try to apply sub_A's gateway ids to
+    // sub_B's verify call. Both subs pass the user_id ownership check,
+    // so the only thing that stops the swap is the gateway-id bind.
+    $user = buildPaymentUser();
+    $plan = seedPaymentPlan();
+
+    $subA = Subscription::create([
+        'user_id' => $user->id,
+        'plan_id' => $plan->id,
+        'gateway' => 'fake',
+        'amount' => 99900,
+        'payment_status' => 'pending',
+        'gateway_metadata' => ['fake_order_id' => 'order_AAA_paid'],
+    ]);
+    $subB = Subscription::create([
+        'user_id' => $user->id,
+        'plan_id' => $plan->id,
+        'gateway' => 'fake',
+        'amount' => 199900,
+        'payment_status' => 'pending',
+        'gateway_metadata' => ['fake_order_id' => 'order_BBB_premium'],
+    ]);
+
+    $fake = new FakeGateway();
+    $fake->verifySucceeds = true;  // gateway-side check passes …
+    bindFakeGatewayManager($fake);
+
+    // Submit sub_A's order id against sub_B's verify call.
+    $response = app(PaymentController::class)->verifyPayment(
+        paymentRequest($user, 'POST', [
+            'subscription_id' => $subB->id,
+            'fake_signature' => 'genuine-sig-for-sub-A',
+            'fake_order_id' => 'order_AAA_paid',  // ← belongs to subA, not subB
+        ], '/api/v1/payment/fake/verify'),
+        'fake',
+    );
+
+    // … but the bind-to-subscription check inside the gateway rejects.
+    expect($response->getStatusCode())->toBe(422);
+    expect($response->getData(true)['error']['code'])->toBe('SIGNATURE_INVALID');
+
+    // Critical: NEITHER subscription was activated.
+    $subA->refresh();
+    $subB->refresh();
+    expect($subA->payment_status)->toBe('pending');
+    expect($subA->is_active)->toBeFalse();
+    expect($subB->payment_status)->toBe('pending');
+    expect($subB->is_active)->toBeFalse();
+
+    // No UserMembership row should have been created.
+    expect(UserMembership::where('user_id', $user->id)->count())->toBe(0);
 });
 
 it('verify returns 422 SIGNATURE_INVALID when gateway rejects', function () {
