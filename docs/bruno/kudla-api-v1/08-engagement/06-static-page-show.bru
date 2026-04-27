@@ -10,9 +10,11 @@ get {
   auth: none
 }
 
-# Public CMS page lookup. 404 is a valid pass when the seed has not
-# created an "about-us" page — swap the slug to a seeded one for a
-# guaranteed 200 (e.g. "terms-of-service", "privacy-policy").
+docs {
+  Public CMS page lookup. 404 is a valid pass when the seed has not
+  created an "about-us" page — swap the slug to a seeded one for a
+  guaranteed 200 (e.g. "terms-of-service", "privacy-policy").
+}
 
 tests {
   test("status is 200 or 404", () => {

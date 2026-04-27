@@ -104,16 +104,36 @@ foreach ($bruFiles as $path) {
         $totalAssertions += $assertionCount;
     }
 
-    // 6. collect all {{var}} references
+    // 6. collect all {{var}} references — variables can be declared in three places:
+    //    a) environments/local.bru (env-level, shared across the whole collection)
+    //    b) vars:post-response { ... } in this or an earlier file (chain captures)
+    //    c) script:pre-request via bru.setVar("name", value) (runtime-set)
+    // Build a per-file set of locally-set vars (b + c), then validate every {{ref}}.
+    $localDeclared = [];
+    if (preg_match('/^vars:post-response\s*\{\s*$(.*?)^\}\s*$/sm', $body, $vpr)) {
+        if (preg_match_all('/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/m', $vpr[1], $names)) {
+            foreach ($names[1] as $n) {
+                $localDeclared[$n] = true;
+            }
+        }
+    }
+    if (preg_match('/^script:pre-request\s*\{\s*$(.*?)^\}\s*$/sm', $body, $spr)) {
+        if (preg_match_all('/bru\.setVar\(\s*[\'"]([a-zA-Z_][a-zA-Z0-9_]*)[\'"]/', $spr[1], $names)) {
+            foreach ($names[1] as $n) {
+                $localDeclared[$n] = true;
+            }
+        }
+    }
+
     if (preg_match_all('/\{\{([a-zA-Z_][a-zA-Z0-9_]*)\}\}/', $body, $vm)) {
         foreach ($vm[1] as $varName) {
             $varsUsed[$varName] = true;
-            if (! isset($declaredVars[$varName])) {
+            if (! isset($declaredVars[$varName]) && ! isset($localDeclared[$varName])) {
                 // Bruno also supports special $randomInt etc. — skip those
                 if (str_starts_with($varName, '$')) {
                     continue;
                 }
-                $errors[] = "$rel: references {{".$varName."}} but it's not declared in environments/local.bru";
+                $errors[] = "$rel: references {{".$varName."}} but it's not declared in environments/local.bru, vars:post-response, or set via script:pre-request";
             }
         }
     }

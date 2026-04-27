@@ -10,9 +10,11 @@ get {
   auth: none
 }
 
-# Public bootstrap payload for mobile / web clients: branding, feature
-# flags, contact info, social links. No auth required so cold-start
-# clients can hydrate before the user logs in.
+docs {
+  Public bootstrap payload for mobile / web clients: branding, feature
+  flags, contact info, social links. No auth required so cold-start
+  clients can hydrate before the user logs in.
+}
 
 tests {
   test("status is 200", () => {

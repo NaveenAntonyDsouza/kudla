@@ -14,9 +14,11 @@ auth:bearer {
   token: {{token}}
 }
 
-# {{matriId}} is captured by 01-auth/01-register-step-1.bru. Self-viewing
-# is allowed (the 7-gate ProfileAccessService treats self-view as
-# REASON_SELF and lets it through).
+docs {
+  {{matriId}} is captured by 01-auth/01-register-step-1.bru. Self-viewing
+  is allowed (the 7-gate ProfileAccessService treats self-view as
+  REASON_SELF and lets it through).
+}
 
 tests {
   test("status is 200 (or 404 if matriId not seeded)", () => {

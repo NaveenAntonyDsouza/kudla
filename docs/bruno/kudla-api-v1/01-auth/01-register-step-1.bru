@@ -10,11 +10,22 @@ post {
   auth: none
 }
 
+script:pre-request {
+  // Bruno v3 dropped support for `{{$randomInt(min, max)}}` parameterized form.
+  // Compute a guaranteed-unique 10-digit phone + a unique email here, in JS
+  // that v3 reliably evaluates. Date.now() is millisecond-precise so two
+  // consecutive runs in the same second still get distinct values.
+  const ts = String(Date.now());
+  bru.setVar("brunoEmail", "bruno-" + ts + "@test.local");
+  bru.setVar("brunoPhone", "9" + ts.slice(-9));  // "9" + last 9 digits = exactly 10 digits
+  bru.setVar("brunoFullName", "Bruno Test " + ts);
+}
+
 body:json {
   {
-    "full_name": "Bruno Test {{$timestamp}}",
-    "email": "bruno-{{$timestamp}}@test.local",
-    "phone": "98888{{$randomInt(10000, 99999)}}",
+    "full_name": "{{brunoFullName}}",
+    "email": "{{brunoEmail}}",
+    "phone": "{{brunoPhone}}",
     "password": "password",
     "gender": "male",
     "date_of_birth": "1995-04-12"

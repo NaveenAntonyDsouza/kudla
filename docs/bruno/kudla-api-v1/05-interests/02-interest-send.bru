@@ -14,10 +14,12 @@ auth:bearer {
   token: {{token}}
 }
 
-# Self-interest is blocked by InterestService — this returns 422
-# INVALID_INTEREST when {{matriId}} is the viewer's own. Swap matriId
-# to a different seeded profile (opposite gender) for the happy-path
-# 201 response.
+docs {
+  Self-interest is blocked by InterestService — this returns 422
+  INVALID_INTEREST when {{matriId}} is the viewer's own. Swap matriId
+  to a different seeded profile (opposite gender) for the happy-path
+  201 response.
+}
 
 body:json {
   {

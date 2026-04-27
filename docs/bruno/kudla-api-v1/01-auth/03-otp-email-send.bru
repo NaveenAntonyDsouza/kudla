@@ -17,9 +17,17 @@ body:json {
   }
 }
 
+docs {
+  Email-OTP login is opt-in via SiteSetting.email_otp_login_enabled
+  (default = "0"). When disabled the controller returns 403 with a
+  clear message — admin enables it from Filament's Site Settings page.
+  This test accepts 200, 403, or 422 so it passes regardless of the
+  buyer's admin setting.
+}
+
 tests {
-  test("status is 200 or 422 (rate-limit gate)", () => {
-    expect([200, 422]).to.include(res.status);
+  test("status is 200 / 403 (login disabled) / 422 (rate-limit)", () => {
+    expect([200, 403, 422]).to.include(res.status);
   });
   test("envelope shape valid", () => {
     if (res.status === 200) {

@@ -14,8 +14,10 @@ auth:bearer {
   token: {{token}}
 }
 
-# Toggles profile to hidden. Idempotent — re-running on an already
-# hidden profile still returns 200 with hidden=true.
+docs {
+  Toggles profile to hidden. Idempotent — re-running on an already
+  hidden profile still returns 200 with hidden=true.
+}
 
 tests {
   test("status is 200", () => {

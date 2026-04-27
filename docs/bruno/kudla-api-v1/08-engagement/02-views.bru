@@ -14,8 +14,10 @@ auth:bearer {
   token: {{token}}
 }
 
-# Free user: total_count exposed, viewers empty.
-# Premium user: paginated viewer profile cards.
+docs {
+  Free user: total_count exposed, viewers empty.
+  Premium user: paginated viewer profile cards.
+}
 
 tests {
   test("status is 200", () => {

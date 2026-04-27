@@ -14,8 +14,10 @@ auth:bearer {
   token: {{token}}
 }
 
-# Restores profile visibility. Run after 03-settings-hide to keep
-# the test profile discoverable for downstream search/discover suites.
+docs {
+  Restores profile visibility. Run after 03-settings-hide to keep
+  the test profile discoverable for downstream search/discover suites.
+}
 
 tests {
   test("status is 200", () => {

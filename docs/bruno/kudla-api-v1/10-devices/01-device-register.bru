@@ -14,8 +14,10 @@ auth:bearer {
   token: {{token}}
 }
 
-# Registers a fake FCM device token. The bound device row is captured
-# into {{deviceId}} for later teardown via DELETE /devices/{id}.
+docs {
+  Registers a fake FCM device token. The bound device row is captured
+  into {{deviceId}} for later teardown via DELETE /devices/{id}.
+}
 
 body:json {
   {

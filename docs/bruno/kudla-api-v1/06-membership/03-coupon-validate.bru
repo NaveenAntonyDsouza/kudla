@@ -14,9 +14,11 @@ auth:bearer {
   token: {{token}}
 }
 
-# Sends a known-bad code so the test passes regardless of seeded
-# coupons. Swap to a seeded code (e.g. WELCOME20) for the happy-path
-# 200 response that includes a discount calculation.
+docs {
+  Sends a known-bad code so the test passes regardless of seeded
+  coupons. Swap to a seeded code (e.g. WELCOME20) for the happy-path
+  200 response that includes a discount calculation.
+}
 
 body:json {
   {
