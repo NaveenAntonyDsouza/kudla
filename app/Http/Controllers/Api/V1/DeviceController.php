@@ -60,10 +60,28 @@ class DeviceController extends BaseApiController
         $user = $request->user();
         $currentTokenId = $user->currentAccessToken()?->id;
 
+        // Anti-hijack: scope updateOrCreate to (user_id, fcm_token). Keying
+        // on fcm_token alone would let an attacker who learned another
+        // user's FCM token (via analytics SDK leak / crash report / on-
+        // device exfiltration) submit it from their own session and rewrite
+        // user_id on the row — redirecting pushes AND giving them a
+        // Sanctum-revoke primitive via DELETE /devices/{id}.
+        //
+        // We also defensively deactivate any prior row that holds the same
+        // fcm_token under a DIFFERENT user_id (FCM tokens routinely
+        // re-issue across re-installs / device hand-offs), so the legitimate
+        // ownership transfer is "old user's row → inactive, new user gets
+        // their own row" rather than a silent ownership flip.
+        Device::where('fcm_token', $data['fcm_token'])
+            ->where('user_id', '!=', $user->id)
+            ->update(['is_active' => false]);
+
         $device = Device::updateOrCreate(
-            ['fcm_token' => $data['fcm_token']],
             [
                 'user_id' => $user->id,
+                'fcm_token' => $data['fcm_token'],
+            ],
+            [
                 'personal_access_token_id' => $currentTokenId,
                 'platform' => $data['platform'],
                 'device_model' => $data['device_model'] ?? null,
