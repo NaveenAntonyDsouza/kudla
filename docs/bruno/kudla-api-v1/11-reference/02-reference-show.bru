@@ -5,14 +5,16 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/reference/religions
+  url: {{baseUrl}}/api/v1/reference/languages
   body: none
   auth: none
 }
 
 docs {
-  Resolves a single reference list. Swap "religions" for any slug
-  returned by 01-reference-list (e.g. languages, education_levels).
+  Resolves a single reference list. Slug must come from 01-reference-list
+  (e.g. languages, denominations, castes, occupations, education-levels).
+  Each list returns a flat array of strings — the catalog of allowed
+  values for that field.
 }
 
 tests {
@@ -22,11 +24,9 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("data is an array of {id,label} pairs", () => {
+  test("data is a non-empty array of strings", () => {
     expect(res.body.data).to.be.an("array");
-    if (res.body.data.length > 0) {
-      expect(res.body.data[0]).to.have.property("id");
-      expect(res.body.data[0]).to.have.property("label");
-    }
+    expect(res.body.data.length).to.be.greaterThan(0);
+    expect(res.body.data[0]).to.be.a("string");
   });
 }

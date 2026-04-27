@@ -1,7 +1,7 @@
 meta {
-  name: POST /auth/logout
+  name: POST /auth/logout (collection cleanup)
   type: http
-  seq: 6
+  seq: 1
 }
 
 post {
@@ -12,6 +12,14 @@ post {
 
 auth:bearer {
   token: {{token}}
+}
+
+docs {
+  Logout MUST run last in the collection — it revokes the bearer token
+  captured by 01-auth/01-register-step-1.bru, so any test that runs
+  after this would 401. The folder is named 12-cleanup so it sorts
+  AFTER every other group (01-auth … 11-reference) when bru-run walks
+  the collection alphabetically.
 }
 
 tests {
