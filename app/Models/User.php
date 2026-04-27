@@ -12,12 +12,13 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use BranchScopable, HasFactory, HasRoles, Notifiable;
+    use BranchScopable, HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -99,6 +100,11 @@ class User extends Authenticatable implements FilamentUser
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
     }
 
     /* ------------------------------------------------------------------
@@ -281,6 +287,70 @@ class User extends Authenticatable implements FilamentUser
             })
             ->latest('starts_at')
             ->first();
+    }
+
+    /**
+     * Does this user hold an active membership on a plan with the
+     * `allows_free_member_chat` flag set?
+     *
+     * Used by App\Services\InterestService to decide whether free
+     * members on the OTHER side of an interest can send custom-text
+     * messages or chat replies to this user. Models the BharatMatrimony
+     * Platinum convention — high-end-tier holders accept full expressive
+     * contact from free senders.
+     *
+     * Returns false defensively on any DB failure (matches the
+     * test-environment-safe pattern used across the service layer).
+     */
+    public function activePlanAllowsFreeMemberChat(): bool
+    {
+        try {
+            return $this->userMemberships()
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>', now());
+                })
+                ->whereHas('plan', function ($query) {
+                    $query->where('allows_free_member_chat', true);
+                })
+                ->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Does this user hold an active membership on a plan with the
+     * `exposes_contact_to_free` flag set?
+     *
+     * Used by App\Services\ProfileAccessService::canViewContact() to
+     * decide whether free viewers can see this user's phone + email
+     * directly on the profile page (bypassing the interest flow).
+     * Models the Shaadi.com "Plus" convention — Plus-tier holders make
+     * their contact details discoverable to free members.
+     *
+     * Independent of activePlanAllowsFreeMemberChat — a single plan can
+     * have either, both, or neither flag set.
+     *
+     * Returns false defensively on any DB failure.
+     */
+    public function activePlanExposesContactToFree(): bool
+    {
+        try {
+            return $this->userMemberships()
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>', now());
+                })
+                ->whereHas('plan', function ($query) {
+                    $query->where('exposes_contact_to_free', true);
+                })
+                ->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**

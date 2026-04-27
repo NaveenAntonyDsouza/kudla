@@ -1,0 +1,28 @@
+meta {
+  name: GET /success-stories (public)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/success-stories?per_page=10
+  body: none
+  auth: none
+}
+
+# Public — feed of admin-approved testimonials.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("data is an array", () => {
+    expect(res.body.data).to.be.an("array");
+  });
+  test("meta has pagination", () => {
+    expect(res.body.meta).to.have.property("total");
+  });
+}

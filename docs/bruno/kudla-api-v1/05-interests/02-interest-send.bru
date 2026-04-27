@@ -1,0 +1,49 @@
+meta {
+  name: POST /profiles/{matriId}/interest (send)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/profiles/{{matriId}}/interest
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# Self-interest is blocked by InterestService — this returns 422
+# INVALID_INTEREST when {{matriId}} is the viewer's own. Swap matriId
+# to a different seeded profile (opposite gender) for the happy-path
+# 201 response.
+
+body:json {
+  {
+    "template_id": null,
+    "custom_message": null
+  }
+}
+
+vars:post-response {
+  interestId: res.body.data.id
+}
+
+tests {
+  test("status is 201 or 422 (self-target blocked)", () => {
+    expect([201, 422]).to.include(res.status);
+  });
+  test("response shape on 201 carries an interest id", () => {
+    if (res.status === 201) {
+      expect(res.body.success).to.equal(true);
+      expect(res.body.data.id).to.be.a("number");
+      expect(res.body.data.status).to.equal("pending");
+    }
+  });
+  test("error code on 422", () => {
+    if (res.status === 422) {
+      expect(res.body.error.code).to.match(/^(INVALID_INTEREST|VALIDATION_FAILED|PROFILE_REQUIRED)$/);
+    }
+  });
+}

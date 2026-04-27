@@ -1,0 +1,28 @@
+meta {
+  name: GET /site/settings
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/site/settings
+  body: none
+  auth: none
+}
+
+# Public bootstrap payload for mobile / web clients: branding, feature
+# flags, contact info, social links. No auth required so cold-start
+# clients can hydrate before the user logs in.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("payload exposes branding + features", () => {
+    expect(res.body.data).to.have.property("branding");
+    expect(res.body.data).to.have.property("features");
+  });
+}

@@ -24,6 +24,10 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overrideMailConfig($settings);
         $this->overrideSmsConfig($settings);
         $this->overrideRazorpayConfig($settings);
+        $this->overrideStripeConfig($settings);
+        $this->overridePayPalConfig($settings);
+        $this->overridePaytmConfig($settings);
+        $this->overridePhonePeConfig($settings);
     }
 
     protected function overrideMailConfig(array $settings): void
@@ -77,6 +81,98 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['razorpay_webhook_secret'])) {
             config(['services.razorpay.webhook_secret' => $settings['razorpay_webhook_secret']]);
+        }
+    }
+
+    protected function overrideStripeConfig(array $settings): void
+    {
+        if (!empty($settings['stripe_key'])) {
+            config(['services.stripe.key' => $settings['stripe_key']]);
+        }
+
+        if (!empty($settings['stripe_secret'])) {
+            config(['services.stripe.secret' => $settings['stripe_secret']]);
+        }
+
+        if (!empty($settings['stripe_webhook_secret'])) {
+            config(['services.stripe.webhook_secret' => $settings['stripe_webhook_secret']]);
+        }
+    }
+
+    protected function overridePayPalConfig(array $settings): void
+    {
+        if (!empty($settings['paypal_client_id'])) {
+            config(['services.paypal.client_id' => $settings['paypal_client_id']]);
+        }
+
+        if (!empty($settings['paypal_secret'])) {
+            config(['services.paypal.secret' => $settings['paypal_secret']]);
+        }
+
+        if (!empty($settings['paypal_mode'])) {
+            config(['services.paypal.mode' => $settings['paypal_mode']]);
+        }
+
+        if (!empty($settings['paypal_webhook_id'])) {
+            config(['services.paypal.webhook_id' => $settings['paypal_webhook_id']]);
+        }
+
+        if (!empty($settings['paypal_currency'])) {
+            config(['services.paypal.currency' => $settings['paypal_currency']]);
+        }
+    }
+
+    protected function overridePaytmConfig(array $settings): void
+    {
+        if (!empty($settings['paytm_mid'])) {
+            config(['services.paytm.mid' => $settings['paytm_mid']]);
+        }
+
+        if (!empty($settings['paytm_key'])) {
+            config(['services.paytm.key' => $settings['paytm_key']]);
+        }
+
+        if (!empty($settings['paytm_mode'])) {
+            config(['services.paytm.mode' => $settings['paytm_mode']]);
+        }
+
+        if (!empty($settings['paytm_website'])) {
+            config(['services.paytm.website' => $settings['paytm_website']]);
+        }
+
+        if (!empty($settings['paytm_industry_type'])) {
+            config(['services.paytm.industry_type' => $settings['paytm_industry_type']]);
+        }
+
+        if (!empty($settings['paytm_channel_id'])) {
+            config(['services.paytm.channel_id' => $settings['paytm_channel_id']]);
+        }
+    }
+
+    protected function overridePhonePeConfig(array $settings): void
+    {
+        if (!empty($settings['phonepe_client_id'])) {
+            config(['services.phonepe.client_id' => $settings['phonepe_client_id']]);
+        }
+
+        if (!empty($settings['phonepe_client_secret'])) {
+            config(['services.phonepe.client_secret' => $settings['phonepe_client_secret']]);
+        }
+
+        if (!empty($settings['phonepe_client_version'])) {
+            config(['services.phonepe.client_version' => $settings['phonepe_client_version']]);
+        }
+
+        if (!empty($settings['phonepe_mode'])) {
+            config(['services.phonepe.mode' => $settings['phonepe_mode']]);
+        }
+
+        if (!empty($settings['phonepe_webhook_username'])) {
+            config(['services.phonepe.webhook_username' => $settings['phonepe_webhook_username']]);
+        }
+
+        if (!empty($settings['phonepe_webhook_password'])) {
+            config(['services.phonepe.webhook_password' => $settings['phonepe_webhook_password']]);
         }
     }
 }

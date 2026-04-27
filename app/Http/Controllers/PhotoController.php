@@ -43,8 +43,13 @@ class PhotoController extends Controller
     {
         $profile = auth()->user()->profile;
 
+        // Photo size limit is sourced from config so web + API + admin
+        // settings stay aligned. See config/matrimony.php and the
+        // matching API rule in app/Http/Requests/Api/V1/Photo/UploadPhotoRequest.php.
+        $maxKilobytes = (int) config('matrimony.max_photo_size_mb', 5) * 1024;
+
         $request->validate([
-            'photo' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+            'photo' => "required|image|mimes:jpg,jpeg,png,gif,webp|max:{$maxKilobytes}",
             'photo_type' => 'required|in:profile,album,family',
         ]);
 

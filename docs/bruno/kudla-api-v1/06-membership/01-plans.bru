@@ -1,0 +1,25 @@
+meta {
+  name: GET /membership/plans (public)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/membership/plans
+  body: none
+  auth: none
+}
+
+# Public — pricing page surface.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("plans is an array", () => {
+    expect(res.body.data).to.be.an("array");
+  });
+}

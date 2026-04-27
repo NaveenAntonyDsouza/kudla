@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\Interest\DailyLimitReachedException;
 use App\Mail\InterestAcceptedMail;
 use App\Mail\InterestDeclinedMail;
 use App\Mail\InterestReceivedMail;
@@ -45,14 +46,25 @@ class InterestService
             throw new \RuntimeException('Cannot send interest to this profile.');
         }
 
-        // Check daily limit (plan-based)
+        // Check daily limit (plan-based). Typed exception so the API
+        // controller can render the canonical DAILY_LIMIT_REACHED (429)
+        // envelope instead of the generic INVALID_INTEREST (422) used
+        // for other service-level failures.
         $usage = $this->canSendToday($sender);
         if (! $usage['can_send']) {
-            throw new \RuntimeException("Daily interest limit reached ({$usage['limit']}/day). Upgrade your plan for more interests.");
+            throw new DailyLimitReachedException(
+                limit: (int) ($usage['limit'] ?? self::FREE_DAILY_LIMIT),
+                used: (int) ($usage['used'] ?? ($usage['limit'] ?? self::FREE_DAILY_LIMIT)),
+            );
         }
 
-        // Personalized messages require a paid plan
-        if ($customMessage && !$sender->user->isPremium()) {
+        // Personalized messages require a paid plan — UNLESS the receiver
+        // is on a high-end tier with `allows_free_member_chat=true`, in which
+        // case free senders may include custom text. Models the BharatMatrimony
+        // Platinum convention; see config/matrimony.php + MembershipPlan.
+        if ($customMessage
+            && !$sender->user->isPremium()
+            && !$receiver->user?->activePlanAllowsFreeMemberChat()) {
             throw new \RuntimeException('Upgrade to a paid plan to send personalized messages.');
         }
 
@@ -208,24 +220,34 @@ class InterestService
      */
     public function sendMessage(Interest $interest, Profile $sender, string $message): InterestReply
     {
-        // Premium check — free users cannot chat
-        if (!$sender->user->isPremium()) {
-            throw new \RuntimeException('Upgrade to a paid plan to send messages.');
+        // Verify sender is part of this interest before any other check —
+        // otherwise an unrelated free user could probe for status.
+        if ($interest->sender_profile_id !== $sender->id && $interest->receiver_profile_id !== $sender->id) {
+            throw new \RuntimeException('You are not part of this conversation.');
         }
 
         if ($interest->status !== 'accepted') {
             throw new \RuntimeException('Messages can only be sent in accepted interests.');
         }
 
-        // Verify sender is part of this interest
-        if ($interest->sender_profile_id !== $sender->id && $interest->receiver_profile_id !== $sender->id) {
-            throw new \RuntimeException('You are not part of this conversation.');
-        }
-
-        // Check if either party has blocked the other
+        // Identify the other party (needed for both the chat-allow check
+        // and the block check below).
         $otherProfileId = $interest->sender_profile_id === $sender->id
             ? $interest->receiver_profile_id
             : $interest->sender_profile_id;
+
+        // Premium check — free users normally cannot chat. Exception:
+        // when the OTHER party is on a high-end tier with
+        // `allows_free_member_chat=true`, the free sender may reply.
+        // Mirrors the BharatMatrimony Platinum convention.
+        if (!$sender->user->isPremium()) {
+            $otherProfile = $interest->sender_profile_id === $sender->id
+                ? $interest->receiverProfile
+                : $interest->senderProfile;
+            if (! $otherProfile?->user?->activePlanAllowsFreeMemberChat()) {
+                throw new \RuntimeException('Upgrade to a paid plan to send messages.');
+            }
+        }
 
         $isBlocked = \App\Models\BlockedProfile::where(function ($q) use ($sender, $otherProfileId) {
             $q->where('profile_id', $sender->id)->where('blocked_profile_id', $otherProfileId);

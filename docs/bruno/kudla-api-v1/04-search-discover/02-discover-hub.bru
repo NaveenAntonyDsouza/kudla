@@ -1,0 +1,25 @@
+meta {
+  name: GET /discover (hub - public)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/discover
+  body: none
+  auth: none
+}
+
+# Public endpoint — no token. Mirrors web's /discover index.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("hub returns category sections", () => {
+    expect(res.body.data).to.be.an("object");
+  });
+}

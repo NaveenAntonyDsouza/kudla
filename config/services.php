@@ -46,6 +46,69 @@ return [
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
+    'stripe' => [
+        // Publishable key — pk_test_... / pk_live_... — safe to ship to Flutter.
+        'key' => env('STRIPE_KEY'),
+        // Secret API key — sk_test_... / sk_live_... — server-only, used for HTTP Basic auth.
+        'secret' => env('STRIPE_SECRET'),
+        // Webhook signing secret — whsec_... — used to verify Stripe-Signature header.
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'paypal' => [
+        // PayPal REST app credentials (Developer dashboard → My Apps & Credentials).
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+
+        // 'sandbox' or 'live' — determines the API base URL.
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+
+        // The webhook ID PayPal assigns when you register a webhook URL in
+        // their dashboard. Used (with the transmission headers) to call
+        // POST /v1/notifications/verify-webhook-signature for inbound auth.
+        'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+
+        // 3-letter ISO currency for the PayPal order. PayPal-India merchant
+        // accounts cannot receive INR — default to USD. Buyers targeting
+        // other markets override via SiteSetting / .env.
+        'currency' => env('PAYPAL_CURRENCY', 'USD'),
+    ],
+
+    'paytm' => [
+        // Merchant ID — assigned by Paytm when you onboard.
+        'mid' => env('PAYTM_MID'),
+        // Merchant Key — secret used for AES-128-CBC checksum generation.
+        'key' => env('PAYTM_MERCHANT_KEY'),
+        // 'sandbox' (securegw-stage) or 'production' (securegw).
+        'mode' => env('PAYTM_MODE', 'sandbox'),
+        // Website name — usually 'WEBSTAGING' for sandbox, merchant-specific
+        // for production. Provided by Paytm at onboarding.
+        'website' => env('PAYTM_WEBSITE', 'WEBSTAGING'),
+        // Industry type — e.g. 'Retail'. Provided by Paytm.
+        'industry_type' => env('PAYTM_INDUSTRY_TYPE', 'Retail'),
+        // Channel ID — 'WEB' for browser flows, 'WAP' for mobile app SDK.
+        'channel_id' => env('PAYTM_CHANNEL_ID', 'WAP'),
+    ],
+
+    'phonepe' => [
+        // PhonePe V2 Standard Checkout credentials (from Developer Settings →
+        // PG V2 keys in the merchant dashboard).
+        'client_id' => env('PHONEPE_CLIENT_ID'),
+        'client_secret' => env('PHONEPE_CLIENT_SECRET'),
+        // Provided by PhonePe — typically '1' for the initial onboarded version.
+        'client_version' => env('PHONEPE_CLIENT_VERSION', '1'),
+
+        // 'sandbox' or 'production' — selects api-preprod vs api hosts.
+        'mode' => env('PHONEPE_MODE', 'sandbox'),
+
+        // Webhook auth — username + password are merchant-CONFIGURED in the
+        // PhonePe dashboard's webhook section (NOT the API client_id/secret).
+        // PhonePe sends Authorization: SHA256(username:password) on every
+        // webhook delivery; we recompute and compare.
+        'webhook_username' => env('PHONEPE_WEBHOOK_USERNAME'),
+        'webhook_password' => env('PHONEPE_WEBHOOK_PASSWORD'),
+    ],
+
     'cloudinary' => [
         'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),

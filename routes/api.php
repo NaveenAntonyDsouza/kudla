@@ -1,0 +1,362 @@
+<?php
+
+use App\Http\Responses\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API v1 Routes
+|--------------------------------------------------------------------------
+| All routes are prefixed with /api/v1/ (the /api/ prefix is applied
+| automatically by Laravel; we add /v1/ here for versioning).
+|
+| Design reference: docs/mobile-app/design/01-api-foundations.md
+|
+| Route groups grow through Phase 2a weeks 2–4. This skeleton establishes
+| the /v1/ prefix + public vs auth separation + a working health + ping.
+*/
+
+Route::prefix('v1')->group(function () {
+
+    // ── Public (no auth) ────────────────────────────────────────
+    Route::get('/health', fn () => ApiResponse::ok([
+        'status' => 'ok',
+        'version' => 'v1',
+    ]));
+
+    // Site configuration (step 6) — theme, branding, feature toggles,
+    // Razorpay key, app version gates. Flutter calls on every launch.
+    Route::get('/site/settings', [\App\Http\Controllers\Api\V1\SiteSettingsController::class, 'show']);
+
+    // Reference dropdown data (step 7) — castes, occupations, countries, etc.
+    // Supports ?flat=1 (flatten grouped) and ?options=1 (key-value pairs).
+    Route::get('/reference', [\App\Http\Controllers\Api\V1\ReferenceDataController::class, 'index']);
+    Route::get('/reference/{list}', [\App\Http\Controllers\Api\V1\ReferenceDataController::class, 'show'])
+        ->where('list', '[a-z-]+');
+
+    // Auth — registration (week 2 step 6+). Step 1 creates the account
+    // and returns a Sanctum token that authenticates steps 2-5.
+    Route::post('/auth/register/step-1', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step1']);
+
+    // Phone OTP (week 2 step 8) — 3 purposes: register|login|reset.
+    // Rate limits prevent SMS spam + OTP brute force.
+    Route::post('/auth/otp/phone/send', [\App\Http\Controllers\Api\V1\AuthController::class, 'sendPhoneOtp'])
+        ->middleware('throttle:5,1');   // 5 sends per minute per IP
+    Route::post('/auth/otp/phone/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyPhoneOtp'])
+        ->middleware('throttle:10,1');  // 10 verifies per minute per IP
+
+    // Email OTP (week 2 step 9) — mirror of phone OTP.
+    Route::post('/auth/otp/email/send', [\App\Http\Controllers\Api\V1\AuthController::class, 'sendEmailOtp'])
+        ->middleware('throttle:5,1');
+    Route::post('/auth/otp/email/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyEmailOtp'])
+        ->middleware('throttle:10,1');
+
+    // Login — email + password (week 2 step 10). Primary login flow.
+    // Login via phone / email OTP is handled by the purpose=login branch of
+    // /auth/otp/phone/verify and /auth/otp/email/verify (steps 8/9) — no
+    // separate endpoints needed.
+    Route::post('/auth/login/password', [\App\Http\Controllers\Api\V1\AuthController::class, 'loginPassword'])
+        ->middleware('throttle:10,1');
+
+    // Forgot + reset password (week 2 step 13). Uses Laravel's Password
+    // broker — same reset-link tokens the web app uses.
+    Route::post('/auth/password/forgot', [\App\Http\Controllers\Api\V1\AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,1');
+    Route::post('/auth/password/reset', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword'])
+        ->middleware('throttle:5,1');
+
+    // Payment-gateway webhooks (week 4 step 5+) — public endpoints
+    // (gateway servers can't carry Sanctum tokens). Authenticity is
+    // established by per-gateway signature verification inside the
+    // gateway service's handleWebhook method. NOT throttled — Razorpay
+    // / Stripe / PayPal control their own retry rates.
+    Route::post('/webhooks/{gateway}', [\App\Http\Controllers\Api\V1\PaymentController::class, 'webhook'])
+        ->where('gateway', '[a-z0-9-]+');
+
+    // Public membership plans (week 4 step 3) — pricing page surface.
+    // Mirrors web's public /membership-plans index. Throttled to
+    // 60/min/IP since it's a public, abuse-vulnerable endpoint.
+    Route::get('/membership/plans', [\App\Http\Controllers\Api\V1\MembershipController::class, 'plans'])
+        ->middleware('throttle:60,1');
+
+    // Engagement public surface (week 4 step 13) — contact form, DB-
+    // backed static pages, success-story feed. Contact submit tightly
+    // throttled (anti-spam); pages cacheable so unthrottled; story
+    // feed 60/min/IP for browse.
+    Route::post('/contact', [\App\Http\Controllers\Api\V1\ContactController::class, 'submit'])
+        ->middleware('throttle:5,60');
+    Route::get('/static-pages/{slug}', [\App\Http\Controllers\Api\V1\StaticPageController::class, 'show'])
+        ->where('slug', '[a-z0-9-]+');
+    Route::get('/success-stories', [\App\Http\Controllers\Api\V1\SuccessStoryController::class, 'index'])
+        ->middleware('throttle:60,1');
+
+    // Discover — category-based public browsing (week 3 step 14).
+    // No auth required: mirrors web's public /discover routes. Throttled
+    // 60/min per IP since public endpoints are exposed to abuse.
+    Route::get('/discover', [\App\Http\Controllers\Api\V1\DiscoverController::class, 'hub'])
+        ->middleware('throttle:60,1');
+    Route::get('/discover/{category}', [\App\Http\Controllers\Api\V1\DiscoverController::class, 'category'])
+        ->where('category', '[a-z0-9-]+')
+        ->middleware('throttle:60,1');
+    Route::get('/discover/{category}/{slug}', [\App\Http\Controllers\Api\V1\DiscoverController::class, 'results'])
+        ->where('category', '[a-z0-9-]+')
+        ->where('slug', '[a-z0-9-]+')
+        ->middleware('throttle:60,1');
+    // - /auth/password/forgot|reset     (week 2)
+    // - /membership/plans               (week 4)
+    // - /success-stories                (week 4)
+    // - /static-pages/{slug}            (week 4)
+    // - /discover, /discover/{cat}[/{slug}]  (week 3)
+    // - /webhooks/razorpay              (week 4)
+    // - /contact                        (week 4)
+
+    // ── Auth required ───────────────────────────────────────────
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/auth/ping', fn (Request $request) => ApiResponse::ok([
+            'user_id' => $request->user()->id,
+            'message' => 'authenticated',
+        ]));
+
+        // Registration steps 2–5 (the Sanctum token returned from step-1
+        // authenticates the caller through the rest of registration).
+        Route::post('/auth/register/step-2', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step2']);
+        Route::post('/auth/register/step-3', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step3']);
+        Route::post('/auth/register/step-4', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step4']);
+        Route::post('/auth/register/step-5', [\App\Http\Controllers\Api\V1\RegistrationController::class, 'step5']);
+
+        // /me + /logout (week 2 step 14). /me validates stored token on app launch.
+        Route::get('/auth/me', [\App\Http\Controllers\Api\V1\AuthController::class, 'me']);
+        Route::post('/auth/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
+
+        // FCM device registration (week 2 step 15). Called after each login
+        // + on Firebase's onTokenRefresh. Idempotent on fcm_token.
+        Route::post('/devices', [\App\Http\Controllers\Api\V1\DeviceController::class, 'register']);
+        Route::delete('/devices/{device}', [\App\Http\Controllers\Api\V1\DeviceController::class, 'revoke']);
+
+        // Dashboard (week 3 step 3). Single-call home screen — CTA, stats,
+        // 4 carousels, discover teasers. Flutter calls on every app launch.
+        Route::get('/dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'show']);
+
+        // Own profile (week 3 step 4). Full profile with all 9 sections,
+        // contact populated (self-view). Used by the profile screen.
+        Route::get('/profile/me', [\App\Http\Controllers\Api\V1\ProfileController::class, 'me']);
+
+        // View another profile by matri_id (week 3 step 5). Applies all
+        // 7 ProfileAccessService gates, tracks a 24h-deduped ProfileView,
+        // returns viewer-context (match score, interest status, etc.).
+        // matri_id is alphanumeric uppercase (AM###### convention).
+        Route::get('/profiles/{matriId}', [\App\Http\Controllers\Api\V1\ProfileController::class, 'show'])
+            ->where('matriId', '[A-Z0-9]+');
+
+        // Update a single profile section (week 3 step 6). Nine allowed
+        // section names — the whereIn locks the router so bad section
+        // names 404 before the controller even runs. Throttled to
+        // 30 edits/min per authenticated user.
+        Route::put('/profile/me/{section}', [\App\Http\Controllers\Api\V1\ProfileController::class, 'updateSection'])
+            ->whereIn('section', [
+                'primary', 'religious', 'education', 'family', 'location',
+                'contact', 'hobbies', 'social', 'partner',
+            ])
+            ->middleware('throttle:30,1');
+
+        // Partner search (week 3 step 12). 17+ query-param filters,
+        // 5 sort modes, paginated (default 20, max 50). Throttled to
+        // 60/min/user — search is chatty during typing / filter-chip
+        // toggling but shouldn't exceed 1/sec sustained.
+        Route::get('/search/partner', [\App\Http\Controllers\Api\V1\SearchController::class, 'partner'])
+            ->middleware('throttle:60,1');
+
+        // Interest endpoints (week 4 step 1) — the conversation core.
+        // /messages is throttled tighter (30/hour) since it's the chat
+        // hot-path; the rest are unthrottled (low-volume per-user).
+        Route::get('/interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
+        Route::get('/interests/{interest}', [\App\Http\Controllers\Api\V1\InterestController::class, 'show']);
+        Route::post('/profiles/{matriId}/interest', [\App\Http\Controllers\Api\V1\InterestController::class, 'send'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:60,1');
+        Route::post('/interests/{interest}/accept', [\App\Http\Controllers\Api\V1\InterestController::class, 'accept']);
+        Route::post('/interests/{interest}/decline', [\App\Http\Controllers\Api\V1\InterestController::class, 'decline']);
+        Route::post('/interests/{interest}/cancel', [\App\Http\Controllers\Api\V1\InterestController::class, 'cancel']);
+        Route::post('/interests/{interest}/star', [\App\Http\Controllers\Api\V1\InterestController::class, 'star']);
+        Route::post('/interests/{interest}/trash', [\App\Http\Controllers\Api\V1\InterestController::class, 'trash']);
+        Route::post('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'reply'])
+            ->middleware('throttle:30,60');
+        // Chat polling (week 4 step 2) — Flutter polls ~every 10s while
+        // chat screen is open. Throttled higher than POST since GET is
+        // cheap and idle-screen polling shouldn't hit limits.
+        Route::get('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'messages'])
+            ->middleware('throttle:120,1');
+
+        // Membership read-side (week 4 step 3). /me returns viewer's
+        // active membership + today's usage. /coupon/validate runs the
+        // canonical Coupon::validateFor logic — auth-required because
+        // we need user_id for the per-user usage check. Throttled
+        // tighter on validate to prevent code-bombing.
+        Route::get('/membership/me', [\App\Http\Controllers\Api\V1\MembershipController::class, 'mine']);
+        Route::post('/membership/coupon/validate', [\App\Http\Controllers\Api\V1\MembershipController::class, 'validateCoupon'])
+            ->middleware('throttle:30,1');
+
+        // Notification list/read endpoints (week 4 step 8). Reads are
+        // chatty (badge refresh on every screen) — throttle 60/min/user.
+        // Mutations stay tighter (30/min). Specific routes registered
+        // BEFORE the {notification} param route so unread-count and
+        // read-all aren't matched as ids.
+        Route::get('/notifications', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount'])
+            ->middleware('throttle:60,1');
+        Route::post('/notifications/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead'])
+            ->middleware('throttle:30,1');
+        Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead'])
+            ->middleware('throttle:30,1');
+
+        // Shortlist (week 4 step 9) — saved/favorited profiles.
+        // Toggle uses matri_id in URL so Flutter doesn't need to know
+        // numeric profile ids. Throttle list 60/min, toggle 30/min.
+        Route::get('/shortlist', [\App\Http\Controllers\Api\V1\ShortlistController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::post('/profiles/{matriId}/shortlist', [\App\Http\Controllers\Api\V1\ShortlistController::class, 'toggle'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:30,1');
+
+        // Profile views (week 4 step 9) — "who viewed me" + "I viewed".
+        // viewed_by tab is premium-gated (count exposed for upgrade CTA).
+        Route::get('/views', [\App\Http\Controllers\Api\V1\ProfileViewController::class, 'index'])
+            ->middleware('throttle:60,1');
+
+        // Block list (week 4 step 10). List 60/min; mutations 20/min
+        // (state changes that affect both parties).
+        Route::get('/blocked', [\App\Http\Controllers\Api\V1\BlockController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::post('/profiles/{matriId}/block', [\App\Http\Controllers\Api\V1\BlockController::class, 'block'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:20,1');
+        Route::post('/profiles/{matriId}/unblock', [\App\Http\Controllers\Api\V1\BlockController::class, 'unblock'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:20,1');
+
+        // Profile reports (week 4 step 10). Tighter 10/min throttle —
+        // anti-spam for the abuse-flagging surface.
+        Route::post('/profiles/{matriId}/report', [\App\Http\Controllers\Api\V1\ReportController::class, 'store'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:10,1');
+
+        // Ignore list (week 4 step 10). Soft "hide from search" without
+        // the bidirectional cancel that block does.
+        Route::get('/ignored', [\App\Http\Controllers\Api\V1\IgnoredProfileController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::post('/profiles/{matriId}/ignore-toggle', [\App\Http\Controllers\Api\V1\IgnoredProfileController::class, 'toggle'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:20,1');
+
+        // ID proof / KYC (week 4 step 11). Read unthrottled (cheap),
+        // upload tightly throttled to 5/hour to discourage spam-uploads
+        // of large files. Single active record per profile.
+        Route::get('/id-proof', [\App\Http\Controllers\Api\V1\IdProofController::class, 'show']);
+        Route::post('/id-proof', [\App\Http\Controllers\Api\V1\IdProofController::class, 'store'])
+            ->middleware('throttle:5,60');
+        Route::delete('/id-proof/{idProof}', [\App\Http\Controllers\Api\V1\IdProofController::class, 'destroy']);
+
+        // Success-story submission (week 4 step 13) — auth required since
+        // we attach submitted_by_user_id. 3/hour anti-spam (file upload).
+        Route::post('/success-stories', [\App\Http\Controllers\Api\V1\SuccessStoryController::class, 'store'])
+            ->middleware('throttle:3,60');
+
+        // Onboarding (week 4 step 14) — 5 OPTIONAL post-registration steps
+        // that raise profile_completion_pct. Flutter walks through after
+        // /auth/register/step-5 if onboarding_completed is still false.
+        // Throttled 30/min — frequent saves while editing forms; the
+        // service's updateOrCreate makes each step idempotent.
+        Route::prefix('onboarding')->middleware('throttle:30,1')->group(function () {
+            Route::post('/step-1', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'step1']);
+            Route::post('/step-2', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'step2']);
+            Route::post('/partner-preferences', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'partnerPrefs']);
+            Route::post('/lifestyle', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'lifestyle']);
+            Route::post('/finish', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'finish']);
+        });
+
+        // Settings (week 4 step 12). Read unthrottled, mutations 30/min,
+        // password 10/min (anti-brute), delete 5/hour (anti-mistake).
+        Route::get('/settings', [\App\Http\Controllers\Api\V1\SettingsController::class, 'index'])
+            ->middleware('throttle:60,1');
+        Route::put('/settings/visibility', [\App\Http\Controllers\Api\V1\SettingsController::class, 'visibility'])
+            ->middleware('throttle:30,1');
+        Route::put('/settings/alerts', [\App\Http\Controllers\Api\V1\SettingsController::class, 'alerts'])
+            ->middleware('throttle:30,1');
+        Route::put('/settings/password', [\App\Http\Controllers\Api\V1\SettingsController::class, 'password'])
+            ->middleware('throttle:10,1');
+        Route::post('/settings/hide', [\App\Http\Controllers\Api\V1\SettingsController::class, 'hide'])
+            ->middleware('throttle:30,1');
+        Route::post('/settings/unhide', [\App\Http\Controllers\Api\V1\SettingsController::class, 'unhide'])
+            ->middleware('throttle:30,1');
+        Route::post('/settings/delete', [\App\Http\Controllers\Api\V1\SettingsController::class, 'delete'])
+            ->middleware('throttle:5,60');
+
+        // Payment gateway endpoints (week 4 step 4) — multi-gateway
+        // architecture, Razorpay first. {gateway} resolved at runtime
+        // via PaymentGatewayManager. Adding a new gateway = single
+        // ServiceProvider line, no route changes here. Throttled
+        // tighter since each call hits an external gateway API.
+        Route::post('/payment/{gateway}/order', [\App\Http\Controllers\Api\V1\PaymentController::class, 'createOrder'])
+            ->where('gateway', '[a-z0-9-]+')
+            ->middleware('throttle:20,1');
+        Route::post('/payment/{gateway}/verify', [\App\Http\Controllers\Api\V1\PaymentController::class, 'verifyPayment'])
+            ->where('gateway', '[a-z0-9-]+')
+            ->middleware('throttle:20,1');
+
+        // Match endpoints (week 3 step 15) — viewer's matches, mutual
+        // matches, on-demand score for a specific target. Score endpoint
+        // is throttled tighter (30/hour) since calculateScore is the
+        // most expensive operation in MatchingService.
+        Route::get('/matches/my', [\App\Http\Controllers\Api\V1\MatchController::class, 'my'])
+            ->middleware('throttle:60,1');
+        Route::get('/matches/mutual', [\App\Http\Controllers\Api\V1\MatchController::class, 'mutual'])
+            ->middleware('throttle:60,1');
+        Route::get('/matches/score/{matriId}', [\App\Http\Controllers\Api\V1\MatchController::class, 'score'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:30,60');
+
+        // Keyword + matri_id lookup + saved-search CRUD (week 3 step 13).
+        // Keyword search is also chatty — same 60/min throttle as partner.
+        // Saved-search routes are low-volume — no throttle.
+        // NOTE: the /search/saved routes are registered BEFORE
+        // /search/id/{matriId} to avoid "saved" being matched as a matri_id.
+        Route::get('/search/keyword', [\App\Http\Controllers\Api\V1\SearchController::class, 'keyword'])
+            ->middleware('throttle:60,1');
+        Route::get('/search/saved', [\App\Http\Controllers\Api\V1\SearchController::class, 'savedList']);
+        Route::post('/search/saved', [\App\Http\Controllers\Api\V1\SearchController::class, 'saveSearch']);
+        Route::delete('/search/saved/{savedSearch}', [\App\Http\Controllers\Api\V1\SearchController::class, 'deleteSaved']);
+        Route::get('/search/id/{matriId}', [\App\Http\Controllers\Api\V1\SearchController::class, 'byMatriId'])
+            ->where('matriId', '[A-Za-z0-9]+')
+            ->middleware('throttle:60,1');
+
+        // Photo-request lifecycle (week 3 step 11). send is throttled
+        // (20/min) to prevent spam; list/approve/ignore are unthrottled.
+        // Send uses matri_id in the URL so Flutter can open a profile
+        // view and kick off a request without needing the numeric profile id.
+        Route::get('/photo-requests', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'index']);
+        Route::post('/profiles/{matriId}/photo-request', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'send'])
+            ->where('matriId', '[A-Z0-9]+')
+            ->middleware('throttle:20,1');
+        Route::post('/photo-requests/{photoRequest}/approve', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'approve']);
+        Route::post('/photo-requests/{photoRequest}/ignore', [\App\Http\Controllers\Api\V1\PhotoRequestController::class, 'ignore']);
+
+        // Photo CRUD (week 3 step 9). Upload is throttled to 20/hour per
+        // user to prevent storage abuse; other routes unthrottled. DELETE
+        // soft-archives with a 30-day undo window; /permanent hard-deletes
+        // + wipes all 4 storage variants.
+        Route::get('/photos', [\App\Http\Controllers\Api\V1\PhotoController::class, 'index']);
+        Route::post('/photos', [\App\Http\Controllers\Api\V1\PhotoController::class, 'upload'])
+            ->middleware('throttle:20,60');
+        // Photo privacy toggle (week 3 step 10). Registered BEFORE the
+        // /{photo}/... routes so "/privacy" isn't captured as a photo id.
+        Route::post('/photos/privacy', [\App\Http\Controllers\Api\V1\PhotoController::class, 'updatePrivacy']);
+        Route::post('/photos/{photo}/primary', [\App\Http\Controllers\Api\V1\PhotoController::class, 'setPrimary']);
+        Route::post('/photos/{photo}/restore', [\App\Http\Controllers\Api\V1\PhotoController::class, 'restore']);
+        Route::delete('/photos/{photo}/permanent', [\App\Http\Controllers\Api\V1\PhotoController::class, 'deletePermanent']);
+        Route::delete('/photos/{photo}', [\App\Http\Controllers\Api\V1\PhotoController::class, 'destroy']);
+
+        // Protected endpoints added in rest of weeks 2–4
+    });
+});

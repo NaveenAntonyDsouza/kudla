@@ -130,6 +130,14 @@ class MembershipPlanResource extends Resource
                 ->label('Personalized Messages')
                 ->helperText('Allow sending personalized messages'),
 
+            Forms\Components\Toggle::make('allows_free_member_chat')
+                ->label('Free Member Chat')
+                ->helperText('High-end-tier flag — when ON, members on this plan can chat with free members in both directions (matches Bharat-Platinum / Shaadi-Plus convention).'),
+
+            Forms\Components\Toggle::make('exposes_contact_to_free')
+                ->label('Expose Contact to Free Members')
+                ->helperText('Plus-tier flag — when ON, free members can VIEW this plan-holder\'s phone + email on the profile page, bypassing the interest flow (matches Shaadi-Plus convention).'),
+
             Forms\Components\Toggle::make('featured_profile')
                 ->label('Featured Profile')
                 ->helperText('Profile appears in featured/highlighted section'),
@@ -208,6 +216,16 @@ class MembershipPlanResource extends Resource
                 Tables\Columns\IconColumn::make('personalized_messages')
                     ->label('Messages')
                     ->boolean(),
+
+                Tables\Columns\IconColumn::make('allows_free_member_chat')
+                    ->label('Free Chat')
+                    ->boolean()
+                    ->tooltip('When ON, members on this plan can chat with free members in both directions (Bharat-Platinum / Shaadi-Plus convention).'),
+
+                Tables\Columns\IconColumn::make('exposes_contact_to_free')
+                    ->label('Free Contact')
+                    ->boolean()
+                    ->tooltip('When ON, free members can view this plan-holder\'s phone + email on the profile page (Shaadi-Plus convention).'),
 
                 Tables\Columns\IconColumn::make('featured_profile')
                     ->label('Featured')

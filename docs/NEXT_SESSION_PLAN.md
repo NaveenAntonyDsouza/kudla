@@ -1,6 +1,7 @@
 # Next Session Plan
-**Last Updated:** April 23, 2026 (post-deploy)
+**Last Updated:** April 26, 2026 (Phase 2a Week 4 content-complete)
 **Live:** kudlamatrimony.com — fully deployed with all April 17-23 work
+**API surface:** 93 endpoints across `/api/v1/*` (Scribe-documented), 644 tests / 1,968 assertions, all green
 
 ---
 
@@ -190,6 +191,8 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 - Phase 2b Flutter MVP — 12 weeks (Riverpod + GoRouter + Dio + FCM + Razorpay SDK)
 - Phase 2c Launch — 4 weeks (internal → closed → staged production rollout)
 - **Total: ~20 weeks / 5 months** solo with design screenshots in hand
+
+**Phase 2a status (April 26, 2026): content-complete (14/14 Week 4 steps).** Steps 1-15 done — all interest, payment, push, notifications, shortlist+views, block/report/ignore, ID proof, settings, public engagement (contact + static pages + success stories), onboarding endpoints + Scribe regen. **5-gateway payment lineup**: Razorpay, Stripe, PayPal, Paytm, PhonePe V2 — order/verify + webhook + admin Filament settings for each. **kreait/laravel-firebase** wired with graceful no-credentials degradation. 644 tests / 1,968 assertions cover the full surface, zero regressions through the build. Steps 16-18 (Bruno collection, contract snapshots, Scribe audit) are operational hardening — not blocking Phase 2b. Detailed doc: [`docs/mobile-app/phase-2a-api/`](mobile-app/phase-2a-api/).
 
 **Build Order (from MOBILE_APP_PLAN.md):**
 

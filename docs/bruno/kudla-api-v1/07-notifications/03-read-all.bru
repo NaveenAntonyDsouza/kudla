@@ -1,0 +1,28 @@
+meta {
+  name: POST /notifications/read-all
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/notifications/read-all
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response carries marked_read count", () => {
+    expect(res.body.data).to.have.property("marked_read");
+    expect(res.body.data.marked_read).to.be.a("number");
+  });
+}

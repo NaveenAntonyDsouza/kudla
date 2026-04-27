@@ -14,6 +14,7 @@ class Subscription extends Model
         'user_id', 'branch_id', 'plan_id', 'plan_name',
         'coupon_id', 'coupon_code', 'discount_amount', 'original_amount',
         'amount',
+        'gateway', 'gateway_metadata',
         'razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature',
         'payment_status', 'starts_at', 'expires_at', 'is_active',
     ];
@@ -25,6 +26,7 @@ class Subscription extends Model
             'expires_at' => 'date',
             'is_active' => 'boolean',
             'amount' => 'integer',
+            'gateway_metadata' => 'array',
         ];
     }
 

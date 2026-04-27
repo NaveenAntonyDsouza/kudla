@@ -1,0 +1,31 @@
+meta {
+  name: POST /settings/hide
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/settings/hide
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# Toggles profile to hidden. Idempotent — re-running on an already
+# hidden profile still returns 200 with hidden=true.
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response confirms hidden state", () => {
+    expect(res.body.data).to.have.property("hidden");
+    expect(res.body.data.hidden).to.equal(true);
+  });
+}

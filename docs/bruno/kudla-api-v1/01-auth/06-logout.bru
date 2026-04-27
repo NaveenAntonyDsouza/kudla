@@ -1,0 +1,28 @@
+meta {
+  name: POST /auth/logout
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("response confirms logout", () => {
+    expect(res.body.data).to.have.property("logged_out");
+    expect(res.body.data.logged_out).to.equal(true);
+  });
+}

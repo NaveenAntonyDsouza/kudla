@@ -64,6 +64,35 @@ class GatewaySettings extends Page implements HasForms
             'razorpay_key_secret' => $settings['razorpay_key_secret'] ?? '',
             'razorpay_webhook_secret' => $settings['razorpay_webhook_secret'] ?? '',
             'razorpay_mode' => $settings['razorpay_mode'] ?? 'test',
+
+            // Stripe
+            'stripe_key' => $settings['stripe_key'] ?? config('services.stripe.key', ''),
+            'stripe_secret' => $settings['stripe_secret'] ?? '',
+            'stripe_webhook_secret' => $settings['stripe_webhook_secret'] ?? '',
+            'stripe_mode' => $settings['stripe_mode'] ?? 'test',
+
+            // PayPal
+            'paypal_client_id' => $settings['paypal_client_id'] ?? config('services.paypal.client_id', ''),
+            'paypal_secret' => $settings['paypal_secret'] ?? '',
+            'paypal_webhook_id' => $settings['paypal_webhook_id'] ?? config('services.paypal.webhook_id', ''),
+            'paypal_mode' => $settings['paypal_mode'] ?? config('services.paypal.mode', 'sandbox'),
+            'paypal_currency' => $settings['paypal_currency'] ?? config('services.paypal.currency', 'USD'),
+
+            // Paytm
+            'paytm_mid' => $settings['paytm_mid'] ?? config('services.paytm.mid', ''),
+            'paytm_key' => $settings['paytm_key'] ?? '',
+            'paytm_mode' => $settings['paytm_mode'] ?? config('services.paytm.mode', 'sandbox'),
+            'paytm_website' => $settings['paytm_website'] ?? config('services.paytm.website', 'WEBSTAGING'),
+            'paytm_industry_type' => $settings['paytm_industry_type'] ?? config('services.paytm.industry_type', 'Retail'),
+            'paytm_channel_id' => $settings['paytm_channel_id'] ?? config('services.paytm.channel_id', 'WAP'),
+
+            // PhonePe (V2 Standard Checkout)
+            'phonepe_client_id' => $settings['phonepe_client_id'] ?? config('services.phonepe.client_id', ''),
+            'phonepe_client_secret' => $settings['phonepe_client_secret'] ?? '',
+            'phonepe_client_version' => $settings['phonepe_client_version'] ?? config('services.phonepe.client_version', '1'),
+            'phonepe_mode' => $settings['phonepe_mode'] ?? config('services.phonepe.mode', 'sandbox'),
+            'phonepe_webhook_username' => $settings['phonepe_webhook_username'] ?? config('services.phonepe.webhook_username', ''),
+            'phonepe_webhook_password' => $settings['phonepe_webhook_password'] ?? '',
         ]);
     }
 
@@ -196,6 +225,153 @@ class GatewaySettings extends Page implements HasForms
                             ->helperText('Optional. Used to verify webhook signatures.'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (Stripe)')
+                    ->description('Configure Stripe payment integration. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('stripe_mode')
+                            ->label('Mode')
+                            ->options([
+                                'test' => 'Test Mode',
+                                'live' => 'Live Mode',
+                            ])
+                            ->default('test')
+                            ->helperText('Use Test mode until you have verified Stripe live credentials.'),
+
+                        Forms\Components\TextInput::make('stripe_key')
+                            ->label('Publishable Key')
+                            ->placeholder('pk_test_...')
+                            ->helperText('Stripe publishable key (pk_test_ / pk_live_). Safe to expose to client apps.'),
+
+                        Forms\Components\TextInput::make('stripe_secret')
+                            ->label('Secret Key')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Stripe secret key (sk_test_ / sk_live_). Leave empty to keep existing.'),
+
+                        Forms\Components\TextInput::make('stripe_webhook_secret')
+                            ->label('Webhook Signing Secret')
+                            ->password()
+                            ->revealable()
+                            ->helperText('whsec_... — used to verify Stripe-Signature header. Leave empty to keep existing.'),
+                    ])
+                    ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (PayPal)')
+                    ->description('Configure PayPal payment integration. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('paypal_mode')
+                            ->label('Mode')
+                            ->options([
+                                'sandbox' => 'Sandbox',
+                                'live' => 'Live',
+                            ])
+                            ->default('sandbox')
+                            ->helperText('Use Sandbox until you have verified PayPal live credentials.'),
+
+                        Forms\Components\TextInput::make('paypal_currency')
+                            ->label('Currency (ISO-4217)')
+                            ->placeholder('USD')
+                            ->maxLength(3)
+                            ->helperText('3-letter currency code. PayPal-India accounts cannot receive INR — default USD.'),
+
+                        Forms\Components\TextInput::make('paypal_client_id')
+                            ->label('Client ID')
+                            ->helperText('From PayPal Developer dashboard → My Apps & Credentials.'),
+
+                        Forms\Components\TextInput::make('paypal_secret')
+                            ->label('Secret')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Leave empty to keep existing secret.'),
+
+                        Forms\Components\TextInput::make('paypal_webhook_id')
+                            ->label('Webhook ID')
+                            ->helperText('The webhook id PayPal assigns when you register your webhook URL. Required to verify inbound webhook signatures.'),
+                    ])
+                    ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (Paytm)')
+                    ->description('Configure Paytm payment integration. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('paytm_mode')
+                            ->label('Mode')
+                            ->options([
+                                'sandbox' => 'Sandbox (securegw-stage)',
+                                'production' => 'Production (securegw)',
+                            ])
+                            ->default('sandbox')
+                            ->helperText('Sandbox for testing; switch to Production once Paytm activates your live MID.'),
+
+                        Forms\Components\TextInput::make('paytm_mid')
+                            ->label('Merchant ID (MID)')
+                            ->helperText('Your Paytm Merchant ID — provided by Paytm at onboarding.'),
+
+                        Forms\Components\TextInput::make('paytm_key')
+                            ->label('Merchant Key')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Secret used for AES-128-CBC checksum signing. Leave empty to keep existing.'),
+
+                        Forms\Components\TextInput::make('paytm_website')
+                            ->label('Website Name')
+                            ->placeholder('WEBSTAGING')
+                            ->helperText('Provided by Paytm. WEBSTAGING for sandbox; merchant-specific for live.'),
+
+                        Forms\Components\TextInput::make('paytm_industry_type')
+                            ->label('Industry Type')
+                            ->placeholder('Retail')
+                            ->helperText('Provided by Paytm at onboarding (e.g. Retail).'),
+
+                        Forms\Components\Select::make('paytm_channel_id')
+                            ->label('Channel ID')
+                            ->options([
+                                'WAP' => 'WAP (mobile app SDK)',
+                                'WEB' => 'WEB (browser flow)',
+                            ])
+                            ->default('WAP')
+                            ->helperText('WAP for the Flutter SDK flow; WEB for browser-based checkout.'),
+                    ])
+                    ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Payment Gateway (PhonePe V2)')
+                    ->description('Configure PhonePe Standard Checkout V2. Falls back to .env values if left empty.')
+                    ->schema([
+                        Forms\Components\Select::make('phonepe_mode')
+                            ->label('Mode')
+                            ->options([
+                                'sandbox' => 'Sandbox (api-preprod)',
+                                'production' => 'Production (api.phonepe.com)',
+                            ])
+                            ->default('sandbox')
+                            ->helperText('Sandbox for testing; switch to Production once your PG V2 keys are activated.'),
+
+                        Forms\Components\TextInput::make('phonepe_client_id')
+                            ->label('Client ID')
+                            ->helperText('From PhonePe Dashboard → Developer Settings → PG V2 keys.'),
+
+                        Forms\Components\TextInput::make('phonepe_client_secret')
+                            ->label('Client Secret')
+                            ->password()
+                            ->revealable()
+                            ->helperText('PG V2 client secret. Leave empty to keep existing.'),
+
+                        Forms\Components\TextInput::make('phonepe_client_version')
+                            ->label('Client Version')
+                            ->placeholder('1')
+                            ->helperText('Provided by PhonePe — usually 1.'),
+
+                        Forms\Components\TextInput::make('phonepe_webhook_username')
+                            ->label('Webhook Username')
+                            ->helperText('Configure in PhonePe Dashboard → Webhooks. PhonePe authenticates each callback with SHA256(username:password).'),
+
+                        Forms\Components\TextInput::make('phonepe_webhook_password')
+                            ->label('Webhook Password')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Paired with the webhook username above. Leave empty to keep existing.'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -205,7 +381,15 @@ class GatewaySettings extends Page implements HasForms
         $data = $this->form->getState();
 
         // Fields where empty means "keep existing value"
-        $passwordFields = ['mail_password', 'sms_api_key', 'razorpay_key_secret', 'razorpay_webhook_secret'];
+        $passwordFields = [
+            'mail_password',
+            'sms_api_key',
+            'razorpay_key_secret', 'razorpay_webhook_secret',
+            'stripe_secret', 'stripe_webhook_secret',
+            'paypal_secret',
+            'paytm_key',
+            'phonepe_client_secret', 'phonepe_webhook_password',
+        ];
 
         foreach ($data as $key => $value) {
             // Don't overwrite secrets with empty values

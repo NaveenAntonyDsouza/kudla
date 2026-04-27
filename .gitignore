@@ -25,3 +25,18 @@ Homestead.yaml
 Thumbs.db
 *.zip
 /.claude
+
+# Scribe internal extraction state — regenerated on every scribe:generate.
+# (The rendered view at resources/views/scribe/ IS committed.)
+/.scribe
+
+# Local pre-migration backups created by dev workflow
+/storage/backups
+
+# Firebase service-account JSON (FCM push) — buyer downloads from
+# Firebase Console; never commit. See .env.example for setup.
+/storage/app/firebase-credentials.json
+
+# Bruno CLI temp files (per-run state, never want in git)
+/docs/bruno/**/bruno-lock.json
+/docs/bruno/**/.bruno-cli

@@ -41,9 +41,10 @@ See [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) for complete feature audit.
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment guide |
 | [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) | Complete feature audit |
 | [docs/NEXT_SESSION_PLAN.md](docs/NEXT_SESSION_PLAN.md) | Roadmap and next priorities |
-| [docs/admin-panel/](docs/admin-panel/README.md) | Admin panel plan |
+| [docs/admin-panel/](docs/admin-panel/README.md) | Admin panel plan (complete — shipped) |
+| [docs/mobile-app/](docs/mobile-app/README.md) | Mobile app plan — API layer (Sanctum) + Flutter native app (current priority) |
 | [docs/SCALING_GUIDE.md](docs/SCALING_GUIDE.md) | When and how to optimize (caching, CDN, queues, indexing) |
-| [docs/MOBILE_APP_PLAN.md](docs/MOBILE_APP_PLAN.md) | Flutter mobile app plan (next priority — Android + iOS from one codebase) |
+| [docs/MOBILE_APP_PLAN.md](docs/MOBILE_APP_PLAN.md) | High-level mobile overview — superseded by `docs/mobile-app/` for implementation |
 | [docs/.env.production](docs/.env.production) | Production environment template |
 
 ## Quick Start

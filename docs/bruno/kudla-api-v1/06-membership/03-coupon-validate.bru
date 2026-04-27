@@ -1,0 +1,37 @@
+meta {
+  name: POST /membership/coupon/validate
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/membership/coupon/validate
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+# Sends a known-bad code so the test passes regardless of seeded
+# coupons. Swap to a seeded code (e.g. WELCOME20) for the happy-path
+# 200 response that includes a discount calculation.
+
+body:json {
+  {
+    "code": "DEFINITELY-INVALID-CODE",
+    "plan_id": 1
+  }
+}
+
+tests {
+  test("status is 200 or 422", () => {
+    expect([200, 422]).to.include(res.status);
+  });
+  test("error code on 422 is COUPON_INVALID or NOT_FOUND", () => {
+    if (res.status === 422) {
+      expect(res.body.error.code).to.match(/^(COUPON_INVALID|NOT_FOUND|VALIDATION_FAILED)$/);
+    }
+  });
+}

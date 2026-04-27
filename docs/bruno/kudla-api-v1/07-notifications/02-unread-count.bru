@@ -1,0 +1,28 @@
+meta {
+  name: GET /notifications/unread-count
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/notifications/unread-count
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("status is 200", () => {
+    expect(res.status).to.equal(200);
+  });
+  test("envelope success=true", () => {
+    expect(res.body.success).to.equal(true);
+  });
+  test("unread_count is a non-negative integer", () => {
+    expect(res.body.data.unread_count).to.be.a("number");
+    expect(res.body.data.unread_count).to.be.at.least(0);
+  });
+}
