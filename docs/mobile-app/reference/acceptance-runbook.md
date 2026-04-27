@@ -63,8 +63,11 @@ php artisan serve
 # 2c. Install Bruno CLI (one-time)
 npm install -g @usebruno/cli
 
-# 2d. Run the collection against the local environment
-bru run docs/bruno/kudla-api-v1 --env local
+# 2d. cd INTO the collection root (Bruno CLI v3+ requires this — the
+#     command does not accept a path argument; you must be inside the
+#     folder that contains bruno.json).
+cd docs/bruno/kudla-api-v1
+bru run --env local
 ```
 
 - [ ] Exit 0
