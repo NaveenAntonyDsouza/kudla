@@ -87,9 +87,12 @@
     @include('components.partials.tracking-head', ['gaId' => $gaId, 'gtmId' => $gtmId, 'fbPixelId' => $fbPixelId])
 
     {{-- Structured Data: WebSite --}}
+    {{-- NOTE: '@@context' (double-@) is the Blade escape for a literal '@context'.
+         Without the escape, Laravel 11's @context Blade directive intercepts the
+         JSON-LD key and compiles it to PHP, breaking SEO structured data. --}}
     <script type="application/ld+json">
     {!! json_encode([
-        '@context' => 'https://schema.org',
+        '@@context' => 'https://schema.org',
         '@type' => 'WebSite',
         'name' => $siteName,
         'url' => url('/'),
@@ -105,7 +108,7 @@
     {{-- Structured Data: Organization + LocalBusiness --}}
     <script type="application/ld+json">
     {!! json_encode(array_filter([
-        '@context' => 'https://schema.org',
+        '@@context' => 'https://schema.org',
         '@type' => 'Organization',
         'name' => $siteName,
         'url' => url('/'),
