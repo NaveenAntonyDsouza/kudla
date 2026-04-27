@@ -16,7 +16,7 @@ auth:bearer {
 
 docs {
   Toggles profile to hidden. Idempotent — re-running on an already
-  hidden profile still returns 200 with hidden=true.
+  hidden profile still returns 200 with is_hidden=true.
 }
 
 tests {
@@ -26,8 +26,8 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("response confirms hidden state", () => {
-    expect(res.body.data).to.have.property("hidden");
-    expect(res.body.data.hidden).to.equal(true);
+  test("response confirms is_hidden=true", () => {
+    expect(res.body.data).to.have.property("is_hidden");
+    expect(res.body.data.is_hidden).to.equal(true);
   });
 }

@@ -24,10 +24,19 @@ tests {
   test("status is 200 (or 404 if matriId not seeded)", () => {
     expect([200, 404]).to.include(res.status);
   });
-  test("envelope success=true on 200", () => {
+  test("envelope success=true + data.profile.matri_id matches viewer", () => {
     if (res.status === 200) {
       expect(res.body.success).to.equal(true);
-      expect(res.body.data.matri_id).to.equal(bru.getEnvVar("matriId"));
+      // Self-view: data.profile.matri_id == captured {{matriId}}.
+      // bru.getVar (NOT getEnvVar) reads runtime-set vars from
+      // 01-register-step-1's script:post-response.
+      expect(res.body.data.profile.matri_id).to.equal(bru.getVar("matriId"));
+    }
+  });
+  test("self-view exposes match_score + interest_status keys", () => {
+    if (res.status === 200) {
+      expect(res.body.data).to.have.property("match_score");
+      expect(res.body.data).to.have.property("interest_status");
     }
   });
 }

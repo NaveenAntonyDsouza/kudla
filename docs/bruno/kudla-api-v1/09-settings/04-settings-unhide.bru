@@ -26,8 +26,8 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("response confirms hidden=false", () => {
-    expect(res.body.data).to.have.property("hidden");
-    expect(res.body.data.hidden).to.equal(false);
+  test("response confirms is_hidden=false", () => {
+    expect(res.body.data).to.have.property("is_hidden");
+    expect(res.body.data.is_hidden).to.equal(false);
   });
 }

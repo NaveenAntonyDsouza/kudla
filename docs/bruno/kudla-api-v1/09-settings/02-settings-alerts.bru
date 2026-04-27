@@ -16,9 +16,14 @@ auth:bearer {
 
 body:json {
   {
-    "email_alerts": true,
-    "push_alerts": true,
-    "sms_alerts": false
+    "email_interest": true,
+    "email_accepted": true,
+    "email_views": false,
+    "push_interest": true,
+    "push_accepted": true,
+    "push_views": false,
+    "quiet_hours_start": "22:00",
+    "quiet_hours_end": "07:00"
   }
 }
 
@@ -29,9 +34,12 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("response echoes updated alert flags", () => {
-    expect(res.body.data).to.have.property("email_alerts");
-    expect(res.body.data).to.have.property("push_alerts");
-    expect(res.body.data).to.have.property("sms_alerts");
+  test("response confirms updated=true", () => {
+    // PUT /settings/alerts persists per-channel toggles (email_*, push_*)
+    // + quiet-hours window into users.notification_preferences JSON.
+    // It returns just {updated: true} — verifying the persisted shape is
+    // the GET /settings test's job, not this one.
+    expect(res.body.data).to.have.property("updated");
+    expect(res.body.data.updated).to.equal(true);
   });
 }

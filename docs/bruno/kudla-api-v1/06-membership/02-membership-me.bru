@@ -21,8 +21,16 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("response carries plan + usage sections", () => {
-    expect(res.body.data).to.have.property("plan");
-    expect(res.body.data).to.have.property("usage");
+  test("response carries membership + usage_today blocks", () => {
+    expect(res.body.data).to.have.property("membership");
+    expect(res.body.data).to.have.property("usage_today");
+  });
+  test("membership block exposes is_premium + plan_name", () => {
+    expect(res.body.data.membership).to.have.property("is_premium");
+    expect(res.body.data.membership).to.have.property("plan_name");
+  });
+  test("usage_today carries interests counters", () => {
+    expect(res.body.data.usage_today).to.have.property("interests_sent");
+    expect(res.body.data.usage_today).to.have.property("interests_limit");
   });
 }

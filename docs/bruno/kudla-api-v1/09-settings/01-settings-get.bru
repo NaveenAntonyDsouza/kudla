@@ -21,9 +21,14 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("payload exposes alerts + privacy + visibility groups", () => {
-    expect(res.body.data).to.have.property("alerts");
-    expect(res.body.data).to.have.property("privacy");
+  test("payload exposes visibility + alerts + auth + account groups", () => {
     expect(res.body.data).to.have.property("visibility");
+    expect(res.body.data).to.have.property("alerts");
+    expect(res.body.data).to.have.property("auth");
+    expect(res.body.data).to.have.property("account");
+  });
+  test("visibility exposes show_profile_to + is_hidden", () => {
+    expect(res.body.data.visibility).to.have.property("show_profile_to");
+    expect(res.body.data.visibility).to.have.property("is_hidden");
   });
 }

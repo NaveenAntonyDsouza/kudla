@@ -21,7 +21,18 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("data is an array (possibly empty for fresh user)", () => {
-    expect(res.body.data).to.be.an("array");
+  test("payload exposes the slot-bucket structure", () => {
+    // /photos returns a structured object with limits, counts, slot
+    // buckets (active.{profile,album,family}), pending/rejected/archived
+    // arrays, and the privacy block — NOT a flat list.
+    expect(res.body.data).to.have.property("limits");
+    expect(res.body.data).to.have.property("counts");
+    expect(res.body.data).to.have.property("active");
+    expect(res.body.data).to.have.property("privacy");
+  });
+  test("active block has profile/album/family arrays", () => {
+    expect(res.body.data.active.profile).to.be.an("array");
+    expect(res.body.data.active.album).to.be.an("array");
+    expect(res.body.data.active.family).to.be.an("array");
   });
 }

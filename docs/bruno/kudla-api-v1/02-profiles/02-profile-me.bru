@@ -21,10 +21,12 @@ tests {
   test("envelope success=true", () => {
     expect(res.body.success).to.equal(true);
   });
-  test("matri_id present + uppercase alphanumeric", () => {
-    expect(res.body.data.matri_id).to.match(/^[A-Z]+\d+$/);
+  test("data.profile.matri_id present + uppercase alphanumeric", () => {
+    expect(res.body.data.profile.matri_id).to.match(/^[A-Z]+\d+$/);
   });
   test("contact section is populated for self-view", () => {
-    expect(res.body.data).to.have.property("contact");
+    // /profile/me passes includeContact=true to ProfileResource, so the
+    // sections.contact block is filled (not null) for the viewer's own profile.
+    expect(res.body.data.profile.sections).to.have.property("contact");
   });
 }
