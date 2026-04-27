@@ -165,10 +165,17 @@ class PaytmService implements PaymentGatewayInterface
      * TXN_SUCCESS (the merchant-facing success code; not the same as
      * the initiate API's 'S' resultStatus).
      */
-    public function verifyPayment(array $data): bool
+    public function verifyPayment(array $data, Subscription $subscription): bool
     {
         $orderId = (string) ($data['paytm_order_id'] ?? '');
         if ($orderId === '' || ! $this->isConfigured()) {
+            return false;
+        }
+
+        // Anti-substitution: bind to the order id we stored on this
+        // subscription during createOrder. (Phase 2a security audit, Vuln 1.)
+        $persisted = (string) (($subscription->gateway_metadata['paytm_order_id'] ?? null));
+        if ($persisted === '' || ! hash_equals($persisted, $orderId)) {
             return false;
         }
 

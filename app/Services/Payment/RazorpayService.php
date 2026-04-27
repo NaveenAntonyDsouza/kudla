@@ -104,14 +104,27 @@ class RazorpayService implements PaymentGatewayInterface
      *
      * Pure math — no network call. hash_equals used to defend against
      * timing attacks on the comparison.
+     *
+     * Anti-substitution: the supplied `razorpay_order_id` MUST match the
+     * order id we stored on this subscription during createOrder, otherwise
+     * a user with two pending subs could pay one and replay the IDs against
+     * the other. (Phase 2a security audit, Vuln 1.)
      */
-    public function verifyPayment(array $data): bool
+    public function verifyPayment(array $data, Subscription $subscription): bool
     {
         $orderId = (string) ($data['razorpay_order_id'] ?? '');
         $paymentId = (string) ($data['razorpay_payment_id'] ?? '');
         $signature = (string) ($data['razorpay_signature'] ?? '');
 
         if ($orderId === '' || $paymentId === '' || $signature === '' || ! $this->isConfigured()) {
+            return false;
+        }
+
+        // Bind to this subscription. hash_equals to keep the comparison
+        // timing-safe (overkill here but keeps the invariant uniform with
+        // the signature check below).
+        $expectedOrderId = (string) ($subscription->razorpay_order_id ?? '');
+        if ($expectedOrderId === '' || ! hash_equals($expectedOrderId, $orderId)) {
             return false;
         }
 

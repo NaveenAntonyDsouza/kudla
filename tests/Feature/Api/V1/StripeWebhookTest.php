@@ -245,6 +245,20 @@ it('stripe createOrder throws when API returns error', function () {
         ->toThrow(\RuntimeException::class);
 });
 
+/**
+ * Build an in-memory Subscription with payment_intent_id in
+ * gateway_metadata — verifyPayment now binds against it (Phase 2a Vuln 1).
+ */
+function stripeSubscription(string $intentId = 'pi_M_xxx'): \App\Models\Subscription
+{
+    $sub = new \App\Models\Subscription();
+    $sub->forceFill([
+        'id' => 1,
+        'gateway_metadata' => ['payment_intent_id' => $intentId],
+    ]);
+    return $sub;
+}
+
 it('stripe verifyPayment returns true when intent status=succeeded', function () {
     Http::fake([
         'api.stripe.com/v1/payment_intents/pi_M_xxx' => Http::response([
@@ -253,7 +267,10 @@ it('stripe verifyPayment returns true when intent status=succeeded', function ()
         ], 200),
     ]);
 
-    $ok = app(StripeService::class)->verifyPayment(['payment_intent_id' => 'pi_M_xxx']);
+    $ok = app(StripeService::class)->verifyPayment(
+        ['payment_intent_id' => 'pi_M_xxx'],
+        stripeSubscription('pi_M_xxx'),
+    );
 
     expect($ok)->toBeTrue();
 });
@@ -266,7 +283,25 @@ it('stripe verifyPayment returns false when intent is not succeeded', function (
         ], 200),
     ]);
 
-    expect(app(StripeService::class)->verifyPayment(['payment_intent_id' => 'pi_M_xxx']))->toBeFalse();
+    expect(app(StripeService::class)->verifyPayment(
+        ['payment_intent_id' => 'pi_M_xxx'],
+        stripeSubscription('pi_M_xxx'),
+    ))->toBeFalse();
+});
+
+it('stripe verifyPayment REJECTS replay across subscriptions (Vuln 1 anti-substitution)', function () {
+    Http::fake([
+        'api.stripe.com/v1/payment_intents/pi_PAID' => Http::response([
+            'id' => 'pi_PAID',
+            'status' => 'succeeded',
+        ], 200),
+    ]);
+
+    // Subscription B has its own payment_intent_id; attacker submits sub_A's.
+    expect(app(StripeService::class)->verifyPayment(
+        ['payment_intent_id' => 'pi_PAID'],
+        stripeSubscription('pi_DIFFERENT'),
+    ))->toBeFalse();
 });
 
 /* ==================================================================

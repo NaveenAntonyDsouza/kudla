@@ -326,7 +326,10 @@ it('paytm verifyPayment returns true when status API resultCode=01', function ()
         ], 200),
     ]);
 
-    $ok = app(PaytmService::class)->verifyPayment(['paytm_order_id' => 'sub_1_xxx']);
+    $ok = app(PaytmService::class)->verifyPayment(
+        ['paytm_order_id' => 'sub_1_xxx'],
+        paytmSubscription('sub_1_xxx'),
+    );
 
     expect($ok)->toBeTrue();
 });
@@ -341,12 +344,46 @@ it('paytm verifyPayment returns false when resultCode is not 01', function () {
         ], 200),
     ]);
 
-    expect(app(PaytmService::class)->verifyPayment(['paytm_order_id' => 'sub_1_xxx']))->toBeFalse();
+    expect(app(PaytmService::class)->verifyPayment(
+        ['paytm_order_id' => 'sub_1_xxx'],
+        paytmSubscription('sub_1_xxx'),
+    ))->toBeFalse();
 });
 
 it('paytm verifyPayment returns false when paytm_order_id is empty', function () {
-    expect(app(PaytmService::class)->verifyPayment([]))->toBeFalse();
+    expect(app(PaytmService::class)->verifyPayment([], paytmSubscription('sub_1_xxx')))->toBeFalse();
 });
+
+it('paytm verifyPayment REJECTS replay across subscriptions (Vuln 1 anti-substitution)', function () {
+    Http::fake([
+        'securegw-stage.paytm.in/v3/order/status' => Http::response([
+            'head' => [],
+            'body' => [
+                'resultInfo' => ['resultStatus' => 'TXN_SUCCESS', 'resultCode' => '01'],
+                'orderId' => 'sub_PAID',
+            ],
+        ], 200),
+    ]);
+
+    expect(app(PaytmService::class)->verifyPayment(
+        ['paytm_order_id' => 'sub_PAID'],
+        paytmSubscription('sub_OTHER'),
+    ))->toBeFalse();
+});
+
+/**
+ * Helper: in-memory Subscription with paytm_order_id in metadata.
+ * (Phase 2a Vuln 1.)
+ */
+function paytmSubscription(string $orderId = 'sub_1_xxx'): \App\Models\Subscription
+{
+    $sub = new \App\Models\Subscription();
+    $sub->forceFill([
+        'id' => 1,
+        'gateway_metadata' => ['paytm_order_id' => $orderId],
+    ]);
+    return $sub;
+}
 
 /* ==================================================================
  |  Paytm webhook — auth + dispatch

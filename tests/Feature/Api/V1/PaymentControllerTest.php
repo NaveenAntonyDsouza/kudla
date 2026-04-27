@@ -71,9 +71,9 @@ class FakeGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function verifyPayment(array $data): bool
+    public function verifyPayment(array $data, \App\Models\Subscription $subscription): bool
     {
-        $this->calls[] = ['method' => 'verifyPayment', 'args' => $data];
+        $this->calls[] = ['method' => 'verifyPayment', 'args' => $data, 'sub_id' => $subscription->id];
         return $this->verifySucceeds;
     }
 

@@ -76,16 +76,29 @@ interface PaymentGatewayInterface
     public function createOrder(int $amountInPaise, array $metadata = []): array;
 
     /**
-     * Verify a payment-completion callback.
+     * Verify a payment-completion callback against a specific subscription.
+     *
+     * Each implementation MUST cross-reference the supplied gateway IDs
+     * against the IDs persisted on `$subscription` during createOrder.
+     * Without this bind, an attacker with two pending subscriptions in
+     * their own account could pay the cheap one, capture its gateway IDs,
+     * and submit them under the premium subscription's id — passing the
+     * gateway's "is this id succeeded?" check while activating the wrong
+     * subscription. (Phase 2a security audit, Vuln 1.)
      *
      * @param  array  $data  Gateway-specific verify payload received from
      *                       the client (e.g. razorpay_payment_id +
      *                       razorpay_order_id + razorpay_signature for
      *                       Razorpay; payment_intent_id + status for
      *                       Stripe).
-     * @return bool  true when payment is authentic and successful.
+     * @param  Subscription  $subscription  The subscription the verify is
+     *                       being applied to. Implementations MUST reject
+     *                       (return false) if `$data`'s gateway IDs do
+     *                       not match this subscription's persisted IDs.
+     * @return bool  true when payment is authentic AND tied to this
+     *               subscription AND successful.
      */
-    public function verifyPayment(array $data): bool;
+    public function verifyPayment(array $data, Subscription $subscription): bool;
 
     /**
      * Validation rules for the verify endpoint's request body.

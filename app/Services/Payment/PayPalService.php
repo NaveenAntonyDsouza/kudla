@@ -127,10 +127,17 @@ class PayPalService implements PaymentGatewayInterface
      * on the second hit; we fall through to GET /orders/{id} and check
      * the order status.
      */
-    public function verifyPayment(array $data): bool
+    public function verifyPayment(array $data, Subscription $subscription): bool
     {
         $orderId = (string) ($data['paypal_order_id'] ?? '');
         if ($orderId === '' || ! $this->isConfigured()) {
+            return false;
+        }
+
+        // Anti-substitution: bind to the order id we stored on this
+        // subscription during createOrder. (Phase 2a security audit, Vuln 1.)
+        $persisted = (string) (($subscription->gateway_metadata['paypal_order_id'] ?? null));
+        if ($persisted === '' || ! hash_equals($persisted, $orderId)) {
             return false;
         }
 

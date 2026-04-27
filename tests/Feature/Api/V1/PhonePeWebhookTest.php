@@ -321,7 +321,10 @@ it('phonepe verifyPayment GETs order status + returns true on COMPLETED', functi
         ], 200),
     ]);
 
-    $ok = app(PhonePeService::class)->verifyPayment(['phonepe_merchant_order_id' => 'MOI_X']);
+    $ok = app(PhonePeService::class)->verifyPayment(
+        ['phonepe_merchant_order_id' => 'MOI_X'],
+        phonepeSubscription('MOI_X'),
+    );
 
     expect($ok)->toBeTrue();
 });
@@ -334,12 +337,43 @@ it('phonepe verifyPayment returns false when state is not COMPLETED', function (
         ], 200),
     ]);
 
-    expect(app(PhonePeService::class)->verifyPayment(['phonepe_merchant_order_id' => 'MOI_X']))->toBeFalse();
+    expect(app(PhonePeService::class)->verifyPayment(
+        ['phonepe_merchant_order_id' => 'MOI_X'],
+        phonepeSubscription('MOI_X'),
+    ))->toBeFalse();
 });
 
 it('phonepe verifyPayment returns false when phonepe_merchant_order_id is empty', function () {
-    expect(app(PhonePeService::class)->verifyPayment([]))->toBeFalse();
+    expect(app(PhonePeService::class)->verifyPayment([], phonepeSubscription('MOI_X')))->toBeFalse();
 });
+
+it('phonepe verifyPayment REJECTS replay across subscriptions (Vuln 1 anti-substitution)', function () {
+    Http::fake([
+        'api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/MOI_PAID/status' => Http::response([
+            'orderId' => 'MOI_PAID',
+            'state' => 'COMPLETED',
+        ], 200),
+    ]);
+
+    expect(app(PhonePeService::class)->verifyPayment(
+        ['phonepe_merchant_order_id' => 'MOI_PAID'],
+        phonepeSubscription('MOI_OTHER'),
+    ))->toBeFalse();
+});
+
+/**
+ * Helper: in-memory Subscription with phonepe_merchant_order_id in metadata.
+ * (Phase 2a Vuln 1.)
+ */
+function phonepeSubscription(string $merchantOrderId = 'MOI_X'): \App\Models\Subscription
+{
+    $sub = new \App\Models\Subscription();
+    $sub->forceFill([
+        'id' => 1,
+        'gateway_metadata' => ['phonepe_merchant_order_id' => $merchantOrderId],
+    ]);
+    return $sub;
+}
 
 /* ==================================================================
  |  PhonePe webhook — auth

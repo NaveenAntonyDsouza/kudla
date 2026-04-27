@@ -125,7 +125,18 @@ it('Razorpay isConfigured returns false when secret is missing', function () {
  |  Razorpay verifyPayment — offline signature math
  | ================================================================== */
 
-it('Razorpay verifyPayment accepts a correctly-signed payload', function () {
+/**
+ * Build an in-memory Subscription with a given razorpay_order_id —
+ * the verifyPayment contract now binds to subscription->razorpay_order_id.
+ */
+function rzpSubscription(string $orderId = 'order_M1zXabcdef'): \App\Models\Subscription
+{
+    $sub = new \App\Models\Subscription();
+    $sub->forceFill(['id' => 1, 'razorpay_order_id' => $orderId]);
+    return $sub;
+}
+
+it('Razorpay verifyPayment accepts a correctly-signed payload bound to the subscription', function () {
     $secret = 'razorpay-test-secret-12345';
     config(['services.razorpay.key' => 'rzp_test_x', 'services.razorpay.secret' => $secret]);
 
@@ -134,12 +145,13 @@ it('Razorpay verifyPayment accepts a correctly-signed payload', function () {
     $signature = hash_hmac('sha256', $orderId.'|'.$paymentId, $secret);
 
     $svc = new RazorpayService();
+    $sub = rzpSubscription($orderId);
 
     expect($svc->verifyPayment([
         'razorpay_order_id' => $orderId,
         'razorpay_payment_id' => $paymentId,
         'razorpay_signature' => $signature,
-    ]))->toBeTrue();
+    ], $sub))->toBeTrue();
 });
 
 it('Razorpay verifyPayment rejects a tampered signature', function () {
@@ -151,7 +163,7 @@ it('Razorpay verifyPayment rejects a tampered signature', function () {
         'razorpay_order_id' => 'order_X',
         'razorpay_payment_id' => 'pay_X',
         'razorpay_signature' => 'totally-wrong-signature',
-    ]))->toBeFalse();
+    ], rzpSubscription('order_X')))->toBeFalse();
 });
 
 it('Razorpay verifyPayment rejects when order_id or payment_id is empty', function () {
@@ -163,7 +175,7 @@ it('Razorpay verifyPayment rejects when order_id or payment_id is empty', functi
         'razorpay_order_id' => '',
         'razorpay_payment_id' => 'pay_X',
         'razorpay_signature' => 'whatever',
-    ]))->toBeFalse();
+    ], rzpSubscription('order_X')))->toBeFalse();
 });
 
 it('Razorpay verifyPayment rejects when not configured', function () {
@@ -175,7 +187,52 @@ it('Razorpay verifyPayment rejects when not configured', function () {
         'razorpay_order_id' => 'order_X',
         'razorpay_payment_id' => 'pay_X',
         'razorpay_signature' => 'sig',
-    ]))->toBeFalse();
+    ], rzpSubscription('order_X')))->toBeFalse();
+});
+
+/* ==================================================================
+ |  Anti-substitution — Vuln 1 regression
+ | ================================================================== */
+
+it('Razorpay verifyPayment REJECTS replay across subscriptions (anti-substitution)', function () {
+    // Phase 2a security audit, Vuln 1: a user with two pending subs
+    // pays sub_A and replays the (order_id, payment_id, signature) triple
+    // against sub_B's verify call. Must be rejected because sub_B's
+    // persisted razorpay_order_id != the supplied razorpay_order_id.
+    $secret = 'razorpay-test-secret-12345';
+    config(['services.razorpay.key' => 'rzp_test_x', 'services.razorpay.secret' => $secret]);
+
+    $orderA = 'order_PAID_CHEAP';
+    $orderB = 'order_PREMIUM';
+    $paymentA = 'pay_PAID_CHEAP';
+    $sigA = hash_hmac('sha256', $orderA.'|'.$paymentA, $secret);
+
+    $svc = new RazorpayService();
+    $subB = rzpSubscription($orderB);  // attacker names sub_B in URL
+
+    // Submitted IDs are sub_A's. Signature is genuine (Razorpay would
+    // verify the HMAC math); the bind to subscription is what blocks it.
+    expect($svc->verifyPayment([
+        'razorpay_order_id' => $orderA,
+        'razorpay_payment_id' => $paymentA,
+        'razorpay_signature' => $sigA,
+    ], $subB))->toBeFalse();
+});
+
+it('Razorpay verifyPayment REJECTS when subscription has no persisted razorpay_order_id', function () {
+    // Defensive: a Subscription row that somehow lost its order_id (admin
+    // reconciliation, partial migration) must not pass verify by default.
+    config(['services.razorpay.key' => 'rzp_test_x', 'services.razorpay.secret' => 'secret']);
+
+    $svc = new RazorpayService();
+    $sub = new \App\Models\Subscription();
+    $sub->forceFill(['id' => 1, 'razorpay_order_id' => null]);
+
+    expect($svc->verifyPayment([
+        'razorpay_order_id' => 'order_anything',
+        'razorpay_payment_id' => 'pay_anything',
+        'razorpay_signature' => hash_hmac('sha256', 'order_anything|pay_anything', 'secret'),
+    ], $sub))->toBeFalse();
 });
 
 /* ==================================================================

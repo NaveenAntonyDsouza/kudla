@@ -147,10 +147,17 @@ class PhonePeService implements PaymentGatewayInterface
     /**
      * Verify by polling PhonePe's order status API.
      */
-    public function verifyPayment(array $data): bool
+    public function verifyPayment(array $data, Subscription $subscription): bool
     {
         $merchantOrderId = (string) ($data['phonepe_merchant_order_id'] ?? '');
         if ($merchantOrderId === '' || ! $this->isConfigured()) {
+            return false;
+        }
+
+        // Anti-substitution: bind to the merchant order id we stored on
+        // this subscription during createOrder. (Phase 2a security audit, Vuln 1.)
+        $persisted = (string) (($subscription->gateway_metadata['phonepe_merchant_order_id'] ?? null));
+        if ($persisted === '' || ! hash_equals($persisted, $merchantOrderId)) {
             return false;
         }
 

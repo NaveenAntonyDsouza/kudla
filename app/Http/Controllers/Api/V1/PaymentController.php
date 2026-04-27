@@ -333,7 +333,13 @@ class PaymentController extends BaseApiController
             ]);
         }
 
-        if (! $gateway->verifyPayment($data)) {
+        // Pass the resolved Subscription so the gateway can bind the
+        // verify call to *this* subscription's persisted IDs — defends
+        // against a user paying one of their own pending subs and
+        // replaying the gateway IDs against another. See
+        // PaymentGatewayInterface::verifyPayment() docblock + Phase 2a
+        // security audit Vuln 1.
+        if (! $gateway->verifyPayment($data, $subscription)) {
             return ApiResponse::error(
                 'SIGNATURE_INVALID',
                 'Payment signature could not be verified. Please contact support.',

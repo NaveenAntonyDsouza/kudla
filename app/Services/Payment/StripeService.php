@@ -117,10 +117,20 @@ class StripeService implements PaymentGatewayInterface
      * the only way to verify the payment is genuinely captured (vs.
      * just confirmed by the client).
      */
-    public function verifyPayment(array $data): bool
+    public function verifyPayment(array $data, Subscription $subscription): bool
     {
         $intentId = (string) ($data['payment_intent_id'] ?? '');
         if ($intentId === '' || ! $this->isConfigured()) {
+            return false;
+        }
+
+        // Anti-substitution: the supplied payment_intent_id MUST match the
+        // one we stored on this subscription during createOrder. Without
+        // this bind, an attacker could pay one of their own pending subs
+        // and replay the intent id against a more-expensive sub.
+        // (Phase 2a security audit, Vuln 1.)
+        $persisted = (string) (($subscription->gateway_metadata['payment_intent_id'] ?? null));
+        if ($persisted === '' || ! hash_equals($persisted, $intentId)) {
             return false;
         }
 

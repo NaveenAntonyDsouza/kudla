@@ -321,6 +321,20 @@ it('paypal createOrder triggers OAuth token fetch when cache empty', function ()
     expect(Cache::get('paypal_access_token_sandbox'))->toBe('newly-fetched-token');
 });
 
+/**
+ * Build an in-memory Subscription with paypal_order_id in
+ * gateway_metadata — verifyPayment now binds against it (Phase 2a Vuln 1).
+ */
+function paypalSubscription(string $orderId = 'ORDER_X'): \App\Models\Subscription
+{
+    $sub = new \App\Models\Subscription();
+    $sub->forceFill([
+        'id' => 1,
+        'gateway_metadata' => ['paypal_order_id' => $orderId],
+    ]);
+    return $sub;
+}
+
 it('paypal verifyPayment captures order + returns true on COMPLETED', function () {
     Http::fake([
         'api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_X/capture' => Http::response([
@@ -330,7 +344,10 @@ it('paypal verifyPayment captures order + returns true on COMPLETED', function (
         ], 201),
     ]);
 
-    $ok = app(PayPalService::class)->verifyPayment(['paypal_order_id' => 'ORDER_X']);
+    $ok = app(PayPalService::class)->verifyPayment(
+        ['paypal_order_id' => 'ORDER_X'],
+        paypalSubscription('ORDER_X'),
+    );
 
     expect($ok)->toBeTrue();
 });
@@ -343,7 +360,10 @@ it('paypal verifyPayment returns false when capture status is not COMPLETED', fu
         ], 201),
     ]);
 
-    expect(app(PayPalService::class)->verifyPayment(['paypal_order_id' => 'ORDER_X']))->toBeFalse();
+    expect(app(PayPalService::class)->verifyPayment(
+        ['paypal_order_id' => 'ORDER_X'],
+        paypalSubscription('ORDER_X'),
+    ))->toBeFalse();
 });
 
 it('paypal verifyPayment falls back to GET on ORDER_ALREADY_CAPTURED 422', function () {
@@ -358,9 +378,28 @@ it('paypal verifyPayment falls back to GET on ORDER_ALREADY_CAPTURED 422', funct
         ], 200),
     ]);
 
-    $ok = app(PayPalService::class)->verifyPayment(['paypal_order_id' => 'ORDER_X']);
+    $ok = app(PayPalService::class)->verifyPayment(
+        ['paypal_order_id' => 'ORDER_X'],
+        paypalSubscription('ORDER_X'),
+    );
 
     expect($ok)->toBeTrue();
+});
+
+it('paypal verifyPayment REJECTS replay across subscriptions (Vuln 1 anti-substitution)', function () {
+    Http::fake([
+        'api-m.sandbox.paypal.com/v2/checkout/orders/ORDER_PAID/capture' => Http::response([
+            'id' => 'ORDER_PAID',
+            'status' => 'COMPLETED',
+        ], 201),
+    ]);
+
+    // Submitted order id is sub_A's, but the named subscription has a
+    // different persisted paypal_order_id.
+    expect(app(PayPalService::class)->verifyPayment(
+        ['paypal_order_id' => 'ORDER_PAID'],
+        paypalSubscription('ORDER_OTHER'),
+    ))->toBeFalse();
 });
 
 /* ==================================================================
