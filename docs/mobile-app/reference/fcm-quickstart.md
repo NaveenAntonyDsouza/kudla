@@ -210,14 +210,16 @@ cd D:/matrimony/platform/matrimony-platform
 php artisan tinker
 ```
 
-In the tinker prompt — note `NotificationService::send()` takes 6 positional arguments (User, type, title, message, fromProfileId, data), NOT a single config array:
+In the tinker prompt — note two things:
+1. `NotificationService::send()` takes 6 positional arguments (User, type, title, message, fromProfileId, data), NOT a single config array.
+2. The `notifications.type` column is an ENUM. Only these values are accepted: `interest_received`, `interest_accepted`, `interest_declined`, `profile_view`, `system`. Anything else throws `QueryException: Data truncated for column 'type'`.
 
 ```php
 $user = \App\Models\User::where('email', 'fcm-test@example.com')->first();
 
 app(\App\Services\NotificationService::class)->send(
     $user,
-    'system_announcement',                                       // type
+    'system',                                                    // must be one of the 5 enum values
     'FCM round-trip test',                                       // title
     'If you see this in the browser, the loop is closed.',       // message
     null,                                                        // fromProfileId (null for system msgs)
