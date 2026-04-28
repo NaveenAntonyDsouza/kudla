@@ -210,16 +210,19 @@ cd D:/matrimony/platform/matrimony-platform
 php artisan tinker
 ```
 
-In the tinker prompt:
+In the tinker prompt — note `NotificationService::send()` takes 6 positional arguments (User, type, title, message, fromProfileId, data), NOT a single config array:
 
 ```php
 $user = \App\Models\User::where('email', 'fcm-test@example.com')->first();
-app(\App\Services\NotificationService::class)->send($user, [
-    'type'    => 'system_announcement',
-    'title'   => 'FCM round-trip test',
-    'message' => 'If you see this in the browser, the loop is closed.',
-    'data'    => ['source' => 'fcm-quickstart-guide'],
-]);
+
+app(\App\Services\NotificationService::class)->send(
+    $user,
+    'system_announcement',                                       // type
+    'FCM round-trip test',                                       // title
+    'If you see this in the browser, the loop is closed.',       // message
+    null,                                                        // fromProfileId (null for system msgs)
+    ['source' => 'fcm-quickstart-guide']                         // data
+);
 ```
 
 **Expected within 2-5 seconds:** the browser tab shows the JSON payload under "Incoming push messages", and a system notification appears in the OS notification center.
