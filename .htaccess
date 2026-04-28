@@ -1,0 +1,35 @@
+# ─── Security: block direct access to sensitive files ───────────
+
+# Block dotfiles (.env, .env.backup, .env.example, .gitignore, .gitattributes, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block sensitive root files (Composer, package manifests, build configs, scripts)
+<FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json|artisan|README\.md|server\.php|webpack\.mix\.js|vite\.config\.(js|ts)|tsconfig\.json|phpunit\.xml(\.dist)?|tailwind\.config\.(js|ts)|postcss\.config\.(js|ts))$">
+    Require all denied
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes
+
+# ─── Routing: send everything to public/ ───────────────────────
+#
+# Hostinger / shared-hosting Apache: document root is public_html/, but
+# Laravel's entry point lives at public_html/public/index.php. This
+# .htaccess routes incoming requests through public/ without restructuring
+# the project layout.
+#
+# (Local dev with `php artisan serve` ignores .htaccess entirely, so this
+# file is only active in production-style Apache environments.)
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Allow direct file access for existing files (CSS, JS, images at root level)
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Everything else routes through public/index.php
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
