@@ -7,6 +7,14 @@ use Knuckles\Scribe\Extracting\Strategies;
 use function Knuckles\Scribe\Config\configureStrategy;
 use function Knuckles\Scribe\Config\removeStrategies;
 
+// Scribe is a require-dev package. In production (composer install --no-dev),
+// the Scribe vendor classes won't exist, but Laravel's package:discover loads
+// every config file at boot. Short-circuit with an empty array so config evaluation
+// doesn't fatal on AuthIn::BEARER->value below.
+if (! class_exists(AuthIn::class)) {
+    return [];
+}
+
 // Only the most common configs are shown. See the https://scribe.knuckles.wtf/laravel/reference/config for all.
 
 return [
