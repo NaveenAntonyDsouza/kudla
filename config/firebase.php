@@ -50,7 +50,13 @@ return [
              *
              */
 
-            'credentials' => env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS')),
+            // Relative paths (the form documented in .env.example) are
+            // resolved against the Laravel base directory so they work
+            // uniformly from web (PHP-FPM CWD = public/), artisan, and
+            // queue workers. See App\Support\FirebaseCredentialsResolver.
+            'credentials' => \App\Support\FirebaseCredentialsResolver::resolve(
+                env('FIREBASE_CREDENTIALS') ?? env('GOOGLE_APPLICATION_CREDENTIALS')
+            ),
 
             /*
              * ------------------------------------------------------------------------
