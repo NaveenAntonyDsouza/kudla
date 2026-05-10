@@ -139,6 +139,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/register/step-4', [RegisterController::class, 'storeStep4'])->name('register.store4');
     Route::get('/register/step-5', [RegisterController::class, 'showStep5'])->name('register.step5');
     Route::post('/register/step-5', [RegisterController::class, 'storeStep5'])->name('register.store5');
+    // Optional photo step — sits between data-entry and verification. Throttled
+    // since the upload is heavier than other registration POSTs.
+    Route::get('/register/photo', [RegisterController::class, 'showPhoto'])->name('register.photo');
+    Route::post('/register/photo', [RegisterController::class, 'storePhoto'])->name('register.photo.store')->middleware('throttle:10,1');
+    Route::post('/register/photo/skip', [RegisterController::class, 'skipPhoto'])->name('register.photo.skip');
     Route::get('/register/verify', [RegisterController::class, 'showVerify'])->name('register.verify');
     Route::post('/register/verify/send-otp', [RegisterController::class, 'sendOtp'])->name('register.sendotp');
     Route::post('/register/verify', [RegisterController::class, 'verifyOtp'])->name('register.verifyotp')->middleware('throttle:10,1');

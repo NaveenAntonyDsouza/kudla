@@ -16,10 +16,14 @@ use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
 use App\Models\LocationInfo;
 use App\Models\Profile;
+use App\Models\ProfilePhoto;
 use App\Models\ReligiousInfo;
 use App\Models\User;
 use App\Services\AffiliateTracker;
+use App\Services\ImageProcessingService;
 use App\Services\OtpService;
+use App\Services\PhotoStorageService;
+use App\Services\WatermarkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -277,6 +281,28 @@ class RegisterController extends Controller
      */
     private function redirectAfterStep5()
     {
+        $user = auth()->user();
+
+        // Detour through the optional photo step if no profile photo on file
+        // yet. The photo screen has its own "Skip" button that posts to
+        // /register/photo/skip and lands here from the verify-or-complete
+        // branch — so this only fires once per registration.
+        $hasProfilePhoto = $user->profile?->profilePhotos()
+            ->ofType('profile')->visible()->exists() ?? false;
+        if (! $hasProfilePhoto) {
+            return redirect()->route('register.photo');
+        }
+
+        return $this->redirectAfterPhotoStep();
+    }
+
+    /**
+     * Verification + completion routing. Called from redirectAfterStep5() when
+     * a profile photo already exists, and from {storePhoto, skipPhoto} once
+     * the photo step is decided either way.
+     */
+    private function redirectAfterPhotoStep()
+    {
         $emailEnabled = SiteSetting::getValue('email_verification_enabled', '1') === '1';
         $phoneEnabled = SiteSetting::getValue('phone_verification_enabled', '0') === '1';
 
@@ -295,6 +321,90 @@ class RegisterController extends Controller
         // Both disabled or already verified — go straight to complete
         $user->profile->update(['onboarding_completed' => true]);
         return redirect()->route('register.complete');
+    }
+
+    // ── Photo Step (optional) ────────────────────────────────────
+    //
+    // Sits between Step 5 and email/phone verification. Always reachable
+    // via /register/photo, but {redirectAfterStep5} only routes here when
+    // the user has no visible profile photo yet — so re-visiting after a
+    // successful upload moves on to verify/complete.
+
+    public function showPhoto()
+    {
+        $profile = auth()->user()->profile;
+
+        // If a profile photo already exists, the photo step is unnecessary.
+        if ($profile->profilePhotos()->ofType('profile')->visible()->exists()) {
+            return $this->redirectAfterPhotoStep();
+        }
+
+        return view('auth.register-photo', compact('profile'));
+    }
+
+    public function storePhoto(
+        Request $request,
+        WatermarkService $watermarkService,
+        ImageProcessingService $imageProcessor,
+        PhotoStorageService $photoStorage
+    ) {
+        $profile = auth()->user()->profile;
+
+        // Same size limit as /manage-photos — keeps web + API + admin aligned.
+        $maxKilobytes = (int) config('matrimony.max_photo_size_mb', 5) * 1024;
+        $request->validate([
+            'photo' => "required|image|mimes:jpg,jpeg,png,gif,webp|max:{$maxKilobytes}",
+        ]);
+
+        // Approval honours the existing site setting. Defaults to auto-approve
+        // (matches /manage-photos behaviour and the .env.example default).
+        $autoApprove = SiteSetting::getValue('auto_approve_profile_photos', '1') === '1';
+        $approvalStatus = $autoApprove
+            ? ProfilePhoto::STATUS_APPROVED
+            : ProfilePhoto::STATUS_PENDING;
+
+        // Archive any prior profile photos (defensive — shouldn't exist at
+        // registration but a re-submit could create one).
+        $profile->profilePhotos()->visible()->ofType('profile')
+            ->update(['is_visible' => false, 'is_primary' => false]);
+
+        // Process upload — generates 3 size variants + preserves original.
+        // Picks storage driver from SiteSetting `active_storage_driver`,
+        // falls back to local if the configured driver isn't available.
+        $folder = "photos/{$profile->id}";
+        $activeDriver = $photoStorage->getActiveDriver();
+        if (! $photoStorage->isDriverConfigured($activeDriver)) {
+            $activeDriver = PhotoStorageService::DRIVER_LOCAL;
+        }
+        $paths = $imageProcessor->processUpload(
+            $request->file('photo'),
+            $folder,
+            $activeDriver
+        );
+
+        ProfilePhoto::create([
+            'profile_id' => $profile->id,
+            'photo_type' => 'profile',
+            'photo_url' => $paths['full'],
+            'thumbnail_url' => $paths['thumb'],
+            'medium_url' => $paths['medium'],
+            'original_url' => $paths['original'],
+            'storage_driver' => $paths['driver'],
+            'is_primary' => $autoApprove,
+            'is_visible' => true,
+            'display_order' => 1,
+            'approval_status' => $approvalStatus,
+            'approved_at' => $autoApprove ? now() : null,
+        ]);
+
+        return $this->redirectAfterPhotoStep();
+    }
+
+    public function skipPhoto()
+    {
+        // No-op on data — just route on. Profile remains photo-less; the
+        // "Add a photo" nudge banner on the dashboard will keep prompting.
+        return $this->redirectAfterPhotoStep();
     }
 
     // ── OTP Verification ─────────────────────────────────────────
