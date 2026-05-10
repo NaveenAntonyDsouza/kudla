@@ -27,26 +27,56 @@ class StaticPage extends Model
 
     /**
      * Get a page by slug (cached for 1 hour).
+     *
+     * Guards against __PHP_Incomplete_Class returned from stale cache
+     * deserialization — a known failure mode on LiteSpeed shared hosting
+     * where worker pool class definitions can drift across deploys, causing
+     * a previously-cached Model blob to fail unserialize() with the strict
+     * return type. Mirrors the pattern in ThemeSetting::getTheme().
      */
     public static function getBySlug(string $slug): ?self
     {
-        return Cache::remember("static_page.{$slug}", 3600, function () use ($slug) {
+        $page = Cache::remember("static_page.{$slug}", 3600, function () use ($slug) {
             return static::where('slug', $slug)->where('is_active', true)->first();
         });
+
+        if ($page !== null && ! $page instanceof self) {
+            Cache::forget("static_page.{$slug}");
+
+            return static::where('slug', $slug)->where('is_active', true)->first();
+        }
+
+        return $page;
     }
 
     /**
      * Get all active footer pages (cached).
+     *
+     * Returns plain arrays (not Eloquent models) so deserialize is safe
+     * across class-load drifts — but guard anyway for symmetry with
+     * getBySlug + ThemeSetting::getTheme.
      */
     public static function getFooterPages(): array
     {
-        return Cache::remember('static_pages.footer', 3600, function () {
+        $pages = Cache::remember('static_pages.footer', 3600, function () {
             return static::where('is_active', true)
                 ->where('show_in_footer', true)
                 ->orderBy('sort_order')
                 ->get(['slug', 'title'])
                 ->toArray();
         });
+
+        if (! is_array($pages)) {
+            Cache::forget('static_pages.footer');
+
+            return static::where('is_active', true)
+                ->where('show_in_footer', true)
+                ->orderBy('sort_order')
+                ->get(['slug', 'title'])
+                ->toArray();
+        }
+
+        return $pages;
     }
 
     /**
