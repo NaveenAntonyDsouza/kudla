@@ -1,7 +1,10 @@
 # Next Session Plan
-**Last Updated:** April 26, 2026 (Phase 2a Week 4 content-complete)
+**Last Updated:** April 30, 2026 (Phase 2b Week 1 closed — Flutter scaffold + FCM round-trip proof)
 **Live:** kudlamatrimony.com — fully deployed with all April 17-23 work
-**API surface:** 93 endpoints across `/api/v1/*` (Scribe-documented), 644 tests / 1,968 assertions, all green
+**API surface:** 96 endpoints across `/api/v1/*` (Scribe-documented), 644+ tests
+**Mobile app:** [NaveenAntonyDsouza/kudla-mobile](https://github.com/NaveenAntonyDsouza/kudla-mobile) (private), tag `mobile-v0.1.0-week-01-scaffold`
+
+**Resuming Phase 2b Mobile in a fresh session?** → start at [`docs/mobile-app/SESSION_HANDOFF.md`](mobile-app/SESSION_HANDOFF.md). It has the full pickup script, working dirs, gotchas, and recipes.
 
 ---
 
@@ -119,6 +122,18 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 - `config/discover.php` refactored: 14 closures → `App\Services\DiscoverConfigService`. `config:cache` now works on production.
 - Engagement emails (re-engagement, weekly_matches, profile_nudges) staying disabled until gradual re-enable over Apr 24-28
 
+**April 28 – 30 — Phase 2b Week 1: Flutter scaffold + FCM round-trip proof (NEW REPO):**
+- New private repo `NaveenAntonyDsouza/kudla-mobile` at `D:\matrimony\platform\flutter-app\` (sibling of `matrimony-platform`)
+- Flutter 3.41.8 pinned via FVM (4.0.5); Dart 3.11.5; AGP 8.x; Java 17; target/compile SDK 36; min SDK 21; package `com.books.KudlaMatrimony` (preserves Play Store update-in-place lock)
+- Disk cleanup: 18.6 GB freed on C: (5.4 → 24 GB free) by deleting the system Flutter SDK + a malformed NDK 27, and moving `.gradle`, `~/fvm`, and Pub cache to `D:\dev\` via persistent Windows User env vars (`GRADLE_USER_HOME`, `PUB_CACHE`, PATH appends to `D:\dev\fvm\default\bin` and `D:\dev\pub\Cache\bin`)
+- pubspec deps locked: flutter_riverpod 3.3.1 + riverpod_annotation/generator 4.x (doc had stale 2.x for both), firebase_core ^4.7.0 + firebase_messaging 16.2.0 (doc had stale core 3.x), go_router 17.2.2, hive_ce 2.19.3, dio 5.9.2, flutter_secure_storage 9.2.4, mocktail ^1.0.0 (doc had ^1.1.0 which doesn't exist on pub.dev). flutter_app_badger removed (unmaintained, missing AGP 8 namespace) — defer to `app_badge_plus` Week 6+. Core library desugaring enabled for flutter_local_notifications.
+- Firebase wired end-to-end: `flutterfire configure --project=kudla-matrimony-e3d63 --platforms=android` generated `firebase_options.dart` and `google-services.json`; `Firebase.initializeApp` in main.dart confirmed via Xiaomi logcat.
+- Production firebase-credentials.json uploaded via SCP, chmod 600. `FIREBASE_CREDENTIALS` added to `.env`. **Backend bugfix discovered + committed** (`5309b5f`): `App\Support\FirebaseCredentialsResolver` wraps relative paths in `base_path()` so `.env.example`'s `storage/app/firebase-credentials.json` works for web context too (PHP-FPM CWD = public/, not project root). Six Pest tests cover the resolver. **Not yet deployed** to prod — pending git pull.
+- SSH key auth set up: `ssh kudla-prod` works without password (key at `~/.ssh/hostinger_kudla`, registered in Hostinger SSH Access panel).
+- Code: GoRouter scaffold + 4 placeholder screens, SiteConfigData model + Hive-cached provider, AppTheme builder from API response, splash screen with 3s timeout fallback, SecureStorage wrapper, Dio client with AuthInterceptor + ErrorHandlerInterceptor + ApiException, env.dart with dev/staging/prod flavors, MaterialApp.router rewire.
+- FCM round-trip proof: production tinker dispatched "Phase 2b Week 1 proof" via `NotificationService::send`, push received on Xiaomi within 2 seconds of dispatch (2026-04-30 02:21 UTC). User 83 + 2 devices + 2 tokens cleaned up post-acceptance.
+- 19 mobile-repo commits, tag `mobile-v0.1.0-week-01-scaffold` at `4fdcc4d`. Acceptance doc: `docs/mobile-app/phase-2b-flutter/week-01-scaffold/week-01-acceptance.md` (4-of-5 criteria met; deep links deferred to Week 2 per scope). Pickup doc for Week 2: `docs/mobile-app/SESSION_HANDOFF.md`.
+
 **April 23 — POST-DEPLOY: git setup + CSS rebuild + hotfix:**
 - GitHub repo created at https://github.com/NaveenAntonyDsouza/kudla
 - 273 uncommitted files committed in 5 logical chunks (admin panel, staff, franchise, photo+reengagement, theme/deploy)
@@ -193,6 +208,8 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 - **Total: ~20 weeks / 5 months** solo with design screenshots in hand
 
 **Phase 2a status (April 26, 2026): content-complete (14/14 Week 4 steps).** Steps 1-15 done — all interest, payment, push, notifications, shortlist+views, block/report/ignore, ID proof, settings, public engagement (contact + static pages + success stories), onboarding endpoints + Scribe regen. **5-gateway payment lineup**: Razorpay, Stripe, PayPal, Paytm, PhonePe V2 — order/verify + webhook + admin Filament settings for each. **kreait/laravel-firebase** wired with graceful no-credentials degradation. 644 tests / 1,968 assertions cover the full surface, zero regressions through the build. Steps 16-18 (Bruno collection, contract snapshots, Scribe audit) are operational hardening — not blocking Phase 2b. Detailed doc: [`docs/mobile-app/phase-2a-api/`](mobile-app/phase-2a-api/).
+
+**Phase 2b status (April 30, 2026): Week 1 CLOSED.** Tag `mobile-v0.1.0-week-01-scaffold` at commit `4fdcc4d` on `NaveenAntonyDsouza/kudla-mobile`. FCM round-trip proof passed on Xiaomi 220333QBI at 02:21 UTC (production tinker → Firebase → push received). Toolchain: Flutter 3.41.8 (FVM-pinned), Dart 3.11.5, AGP 8.x, NDK 28.2, Java 17, target SDK 36, min SDK 21. Wired: Firebase init, GoRouter scaffold, SiteConfig provider with Hive cache, AppTheme from /api/v1/site/settings, Dio + AuthInterceptor + ErrorHandler + ApiException, SecureStorage wrapper, splash with 3s timeout fallback, MaterialApp.router. 19 mobile-repo commits + 1 backend fix (`5309b5f` — FirebaseCredentialsResolver via base_path). Deferred to Week 2: deep links, login/registration/OTP UI, real logo, google_fonts. **Week 2 (auth flows) starts Monday 2026-05-04** — needs design screenshots first; full pickup script at [`docs/mobile-app/SESSION_HANDOFF.md`](mobile-app/SESSION_HANDOFF.md). Acceptance artifacts: [`docs/mobile-app/phase-2b-flutter/week-01-scaffold/week-01-acceptance.md`](mobile-app/phase-2b-flutter/week-01-scaffold/week-01-acceptance.md).
 
 **Build Order (from MOBILE_APP_PLAN.md):**
 
