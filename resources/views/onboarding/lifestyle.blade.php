@@ -148,10 +148,14 @@
                 Back
             </a>
             <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                <form action="{{ route('onboarding.finish') }}" method="POST" class="order-2 sm:order-1">
-                    @csrf
-                    <button type="submit" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now</button>
-                </form>
+                {{-- Skip jumps to /manage-photos (the new Step 5) WITHOUT saving
+                     Lifestyle data. Onboarding isn't marked complete here —
+                     that happens when the user clicks "Done & finish setup"
+                     on the photo step. --}}
+                <a href="{{ route('photos.manage', ['from' => 'onboarding']) }}"
+                    class="order-2 sm:order-1 text-sm text-(--color-primary) hover:underline font-medium">
+                    Skip for now
+                </a>
                 <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"
                     class="w-full sm:w-auto bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors order-1 sm:order-2">
                     <span x-show="!submitting">Save</span>
@@ -159,10 +163,5 @@
                 </button>
             </div>
         </div>
-    </form>
-
-    {{-- Hidden skip form (outside main form to avoid nesting) --}}
-    <form id="skip-form-top" action="{{ route('onboarding.finish') }}" method="POST" class="hidden">
-        @csrf
     </form>
 </x-layouts.onboarding>

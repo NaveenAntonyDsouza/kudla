@@ -19,7 +19,7 @@ class PhotoController extends Controller
         private PhotoStorageService $photoStorage,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
         $profile = auth()->user()->profile;
         $photos = $profile->profilePhotos()->orderBy('display_order')->get();
@@ -33,9 +33,28 @@ class PhotoController extends Controller
 
         $privacy = $profile->photoPrivacySetting;
 
+        // Onboarding-step-5 chrome detection. When the Lifestyle screen
+        // redirects here with ?from=onboarding we stash a session marker;
+        // subsequent navigations within the photo manager (uploads, archives)
+        // preserve it via session so the user stays in onboarding mode
+        // until they explicitly click "Done & finish setup" (which calls
+        // OnboardingController::finishOnboarding and clears the marker).
+        // Defensive cleanup: if onboarding is already complete, clear the
+        // marker — guards against it outlasting a prior session.
+        if ($request->query('from') === 'onboarding' && $profile && ! $profile->onboarding_completed) {
+            $request->session()->put('in_onboarding_photos', true);
+        }
+        if ($profile?->onboarding_completed) {
+            $request->session()->forget('in_onboarding_photos');
+        }
+        $inOnboarding = (bool) $request->session()->get('in_onboarding_photos', false)
+            && $profile
+            && ! $profile->onboarding_completed;
+
         return view('photos.manage', compact(
             'profile', 'profilePhoto', 'albumPhotos', 'familyPhotos',
-            'pendingPhotos', 'rejectedPhotos', 'archivedPhotos', 'privacy'
+            'pendingPhotos', 'rejectedPhotos', 'archivedPhotos', 'privacy',
+            'inOnboarding'
         ));
     }
 

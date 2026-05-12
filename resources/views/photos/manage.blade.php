@@ -15,14 +15,49 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, '{{ request('tab', 'album') }}')">
 
+        {{-- ── Onboarding chrome (only when user arrived via the Lifestyle
+             screen as Step 5 of the onboarding funnel; controlled by the
+             session('in_onboarding_photos') marker set in
+             PhotoController::index). The progress bar + banner + Done CTA
+             disappear once the user clicks "Done & finish setup" (which
+             marks onboarding_completed=true and clears the marker). ── --}}
+        @if(($inOnboarding ?? false))
+            <x-onboarding-progress :step="5" />
+
+            <div class="mb-6 bg-(--color-primary-light) border border-(--color-primary)/30 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-(--color-primary) shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 00.553.894l3 1.5a1 1 0 10.894-1.788L10 11.382V8a1 1 0 00-.445-.832z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">Step 5 of 5 — Add your photos to finish setup</p>
+                        <p class="text-xs text-gray-600 mt-0.5">Optional. You can upload now or skip and add later from this page anytime.</p>
+                    </div>
+                </div>
+                <form action="{{ route('onboarding.finish') }}" method="POST" class="shrink-0">
+                    @csrf
+                    <button type="submit"
+                        class="w-full sm:w-auto bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-5 py-2.5 font-semibold text-xs uppercase tracking-wider transition-colors">
+                        Done &amp; finish setup
+                    </button>
+                </form>
+            </div>
+        @endif
+
         {{-- Page Header --}}
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h1 class="text-2xl font-serif font-bold text-gray-900">Manage Photos</h1>
                 <p class="text-sm text-gray-500 mt-1">
-                    <a href="{{ route('dashboard') }}" class="hover:text-(--color-primary)">My Home</a>
-                    <span class="mx-1">/</span>
-                    <span>Manage Photos</span>
+                    @if(($inOnboarding ?? false))
+                        <span>Onboarding</span>
+                        <span class="mx-1">/</span>
+                        <span>Step 5 — Photos</span>
+                    @else
+                        <a href="{{ route('dashboard') }}" class="hover:text-(--color-primary)">My Home</a>
+                        <span class="mx-1">/</span>
+                        <span>Manage Photos</span>
+                    @endif
                 </p>
             </div>
         </div>

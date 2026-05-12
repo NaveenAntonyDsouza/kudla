@@ -389,17 +389,22 @@ class OnboardingController extends Controller
             ]
         );
 
-        // Recalculate completion & mark onboarding done
+        // Recalculate completion. Note: onboarding_completed is NOT set here
+        // anymore — the photo step (/manage-photos?from=onboarding) is now
+        // Step 5 of the onboarding funnel, and finishOnboarding() flips the
+        // flag only when the user explicitly clicks "Done & finish setup"
+        // there. See PhotoController::index for the chrome detection.
         $profile->refresh();
         $profile->update([
             'profile_completion_pct' => $profile->calculateCompletion(),
-            'onboarding_completed' => true,
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Lifestyle & social media saved successfully!');
+        return redirect()
+            ->route('photos.manage', ['from' => 'onboarding'])
+            ->with('success', 'Lifestyle & social media saved. Now add your photos to finish setup.');
     }
 
-    // ── Finish Onboarding (skip remaining steps) ────────────────
+    // ── Finish Onboarding (called from Step 5 / manage-photos) ───
 
     public function finishOnboarding()
     {
@@ -410,6 +415,8 @@ class OnboardingController extends Controller
                 'profile_completion_pct' => $profile->calculateCompletion(),
             ]);
         }
+        // Clear the session marker that drove the photo-step chrome.
+        session()->forget('in_onboarding_photos');
 
         return redirect()->route('dashboard');
     }
