@@ -2,11 +2,9 @@
 
 @php
     // Onboarding funnel: 4 data-entry steps + 1 photo step (added 2026-04-30).
-    // Step 5 ("Manage Photos") points at /manage-photos and is reached
-    // automatically after Lifestyle saves (see OnboardingController::storeLifestyle).
-    // The /manage-photos page renders this same progress bar when the user
-    // arrives with ?from=onboarding or while the session marker is set
-    // (see PhotoController::index).
+    // Step 5 lives at /onboarding/photo (OnboardingController::showPhoto)
+    // and is reached automatically after Lifestyle's Save or Skip — see
+    // OnboardingController::storeLifestyle for the redirect chain.
     $steps = [
         1 => 'Additional Info',
         2 => 'More Details',
