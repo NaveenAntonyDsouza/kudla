@@ -1,17 +1,10 @@
 <x-layouts.app title="Manage Photos">
-    {{-- Cropper.js CDN (no npm build required) --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-
-    {{-- Cropper.js visual polish: replace transparent checkerboard with clean gray,
-         use brand colors for crop box handles + guides --}}
-    <style>
-        .cropper-bg { background-image: none !important; background-color: #f3f4f6 !important; }
-        .cropper-modal { background-color: rgba(17, 24, 39, 0.5) !important; }
-        .cropper-view-box { outline: 2px solid rgba(255, 255, 255, 0.9); outline-color: rgba(255, 255, 255, 0.9); }
-        .cropper-line, .cropper-point { background-color: var(--color-primary, #8B1D91) !important; }
-        .cropper-dashed { border-color: rgba(255, 255, 255, 0.6); }
-    </style>
+    {{-- Cropper.js library + brand-color overrides. Shared with /register/photo.
+         The Alpine component below (photoManagerEditor) is bespoke to this
+         full-management context — modal-based, multi-photo, tabs. See also
+         registerPhotoEditor in /register/photo for the lightweight one-shot
+         version used at the signup funnel. --}}
+    <x-photo-cropper-assets />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, '{{ request('tab', 'album') }}')">
 

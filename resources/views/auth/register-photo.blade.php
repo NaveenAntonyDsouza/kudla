@@ -1,19 +1,10 @@
 <x-layouts.registration title="Add your photo" :step="5">
 
-    {{-- Cropper.js — same CDN + cosmetic styles as /manage-photos.
-         The cropper attaches to an <img> that uses x-show (NOT x-if) so
-         x-ref="cropperImage" is registered from page load. (Past bug: x-if
-         template mounting raced Cropper init; fixed by switching to x-show.)
-    --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <style>
-        .cropper-bg { background-image: none !important; background-color: #f3f4f6 !important; }
-        .cropper-modal { background-color: rgba(17, 24, 39, 0.5) !important; }
-        .cropper-view-box { outline: 2px solid rgba(255, 255, 255, 0.9); outline-color: rgba(255, 255, 255, 0.9); }
-        .cropper-line, .cropper-point { background-color: var(--color-primary, #8B1D91) !important; }
-        .cropper-dashed { border-color: rgba(255, 255, 255, 0.6); }
-    </style>
+    {{-- Cropper.js library + brand-color overrides. Shared with /manage-photos.
+         The Alpine component below (registerPhotoEditor) is bespoke to this
+         lightweight one-shot upload context — see also photoManagerEditor in
+         /manage-photos for the modal-based multi-photo version. --}}
+    <x-photo-cropper-assets />
 
     {{-- Reward framing — registration data is already saved. The photo step
          is a strongly-nudged opt-in, not Step 6 of 6. Progress bar above
