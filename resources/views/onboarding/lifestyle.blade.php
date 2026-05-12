@@ -23,7 +23,14 @@
         {{-- ── Lifestyle & Habits ────────────────────────────── --}}
         <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Lifestyle & Habits</h2>
-            <a href="#" @click.prevent="document.getElementById('skip-form-top').submit()" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
+            {{-- Same target as the bottom Skip button (see below). The
+                 hidden form previously triggered onboarding.finish; that
+                 hidden form was removed in 65756d2 when Skip became a
+                 direct link to /manage-photos as the new Step 5. --}}
+            <a href="{{ route('photos.manage', ['from' => 'onboarding']) }}"
+                class="text-sm text-(--color-primary) hover:underline font-medium">
+                Skip for now &rarr;
+            </a>
         </div>
 
         <div class="space-y-5 mb-10">

@@ -34,11 +34,21 @@
                         <p class="text-xs text-gray-600 mt-0.5">Optional. You can upload now or skip and add later from this page anytime.</p>
                     </div>
                 </div>
+                {{-- Button label depends on whether the user uploaded at
+                     least one approved profile photo while on this screen:
+                       0 photos → "Skip & Continue" (they're bypassing)
+                       1+ photos → "Done & Continue" (they're completing)
+                     Same destination either way: onboarding.finish flips
+                     onboarding_completed=true and lands on /dashboard. --}}
                 <form action="{{ route('onboarding.finish') }}" method="POST" class="shrink-0">
                     @csrf
                     <button type="submit"
                         class="w-full sm:w-auto bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-5 py-2.5 font-semibold text-xs uppercase tracking-wider transition-colors">
-                        Done &amp; finish setup
+                        @if($profilePhoto)
+                            Done &amp; Continue &rarr;
+                        @else
+                            Skip &amp; Continue &rarr;
+                        @endif
                     </button>
                 </form>
             </div>
