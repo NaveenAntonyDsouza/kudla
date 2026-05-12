@@ -246,18 +246,36 @@ class RegisterController extends Controller
             ]
         );
 
-        $profile->update(['onboarding_step_completed' => 4]);
+        // Profile creation details (merged from the former Step 5).
+        // Step 5's role is now taken by the optional photo step; we mark
+        // onboarding_step_completed = 5 here because Step 4 now wraps the
+        // entire data-entry portion of registration. Backward-compat: any
+        // user mid-funnel who lands on the old /register/step-5 form gets
+        // forwarded through showStep5() below.
+        $profile->update([
+            'created_by' => $validated['created_by'],
+            'creator_name' => $validated['creator_name'] ?? null,
+            'creator_contact_number' => $validated['creator_contact_number'] ?? null,
+            'how_did_you_hear_about_us' => $validated['how_did_you_hear_about_us'] ?? null,
+            'onboarding_step_completed' => 5,
+        ]);
 
-        return redirect()->route('register.step5');
+        return $this->redirectAfterStep5();
     }
 
-    // ── Step 5: Profile Creation Details ─────────────────────────
+    // ── Step 5 (legacy): now lives merged into Step 4. ───────────
+    //
+    // Kept as a backward-compat forwarder for any user who was mid-funnel
+    // when the merge deployed and is still holding a /register/step-5 URL.
+    // The form they were about to submit posts to /register/step-5 — we
+    // accept that submission, persist whichever fields it carried, then
+    // forward through the same photo detour the merged Step 4 uses.
 
     public function showStep5()
     {
-        $profile = auth()->user()->profile;
-
-        return view('auth.register-step5', compact('profile'));
+        // Old form view is gone; bounce them back to Step 4 (which now
+        // includes the fields they'd have filled here).
+        return redirect()->route('register.step4');
     }
 
     public function storeStep5(RegisterStep5Request $request)

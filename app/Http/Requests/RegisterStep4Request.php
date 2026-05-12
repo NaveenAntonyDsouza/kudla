@@ -26,6 +26,14 @@ class RegisterStep4Request extends FormRequest
             // Address
             'communication_address' => 'required|string|max:200',
             'pin_zip_code' => 'required|string|max:10',
+            // Profile creation details (merged from the former Step 5).
+            // When the user picks "Self / Candidate" the view fills creator_name +
+            // creator_contact_number with their own user data via hidden inputs,
+            // so these stay required even in the self-creator case.
+            'created_by' => 'required|string|max:50',
+            'creator_name' => 'required|string|max:100',
+            'creator_contact_number' => 'required|string|max:15',
+            'how_did_you_hear_about_us' => 'nullable|string|max:100',
         ];
     }
 
@@ -34,6 +42,8 @@ class RegisterStep4Request extends FormRequest
         return [
             'native_state.required_if' => 'State is required for India.',
             'native_district.required_if' => 'District is required for India.',
+            'creator_name.required' => 'Creator name is required.',
+            'creator_contact_number.required' => 'Creator contact number is required.',
         ];
     }
 }

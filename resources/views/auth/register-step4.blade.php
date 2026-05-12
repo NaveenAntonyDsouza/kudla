@@ -1,4 +1,4 @@
-<x-layouts.registration title="Step 4 - Location & Contact" :step="4">
+<x-layouts.registration title="Step 4 - Location, Contact & Profile Details" :step="4">
 
     <h2 class="text-lg font-semibold text-gray-900 mb-6">Location & Contact Information</h2>
 
@@ -19,6 +19,13 @@
         nativeDistrict: '{{ old('native_district', $locationInfo?->native_district ?? '') }}',
         nativeStates: [],
         nativeDistricts: [],
+
+        // Profile Creation Details (merged from former Step 5)
+        createdBy: '{{ old('created_by', $profile?->created_by ?? '') }}',
+        userName: '{{ auth()->user()->name ?? '' }}',
+        userPhone: '{{ auth()->user()->phone ?? '' }}',
+        creatorName: '{{ old('creator_name', $profile?->creator_name ?? '') }}',
+        creatorPhone: '{{ old('creator_contact_number', $profile?->creator_contact_number ?? '') }}',
 
         async fetchNativeStates() {
             if (!this.nativeCountry) {
@@ -43,8 +50,24 @@
             this.nativeDistricts = await response.json();
         },
 
+        onCreatedByChange() {
+            // 'Self / Candidate' auto-fills creator with user's own details
+            // so the validator (creator_name / creator_contact_number required)
+            // passes without showing extra fields.
+            if (this.createdBy === 'Self / Candidate') {
+                this.creatorName = this.userName;
+                this.creatorPhone = this.userPhone;
+            } else {
+                if (this.creatorName === this.userName) this.creatorName = '';
+                if (this.creatorPhone === this.userPhone) this.creatorPhone = '';
+            }
+        },
+
         init() {
             if (this.nativeCountry) this.fetchNativeStates();
+            // If the user is returning to an already-filled step (after
+            // hitting Back from the photo step), keep their selection intact.
+            this.onCreatedByChange();
         }
     }">
         @csrf
@@ -156,6 +179,60 @@
                 <input type="text" name="pin_zip_code" id="pin_zip_code" value="{{ old('pin_zip_code', $locationInfo?->pin_zip_code ?? $contactInfo?->pincode ?? '') }}" maxlength="10" required placeholder=" ">
                 <label for="pin_zip_code">PIN/ZIP Code <span class="text-red-500">*</span></label>
                 @error('pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+        </div>
+
+        {{-- ─ Profile Creation Details (merged from the former Step 5) ─ --}}
+        <h2 class="text-lg font-semibold text-gray-900 mt-8 mb-6">Profile Creation Details</h2>
+
+        <div class="space-y-5">
+            {{-- Created By --}}
+            <div class="float-field">
+                <select name="created_by" id="created_by" x-model="createdBy" @change="onCreatedByChange()" required>
+                    <option value="">Select</option>
+                    @foreach(['Self / Candidate', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Relatives'] as $opt)
+                        <option value="{{ $opt }}" {{ old('created_by', $profile?->created_by ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="created_by">Created By <span class="text-red-500">*</span></label>
+                @error('created_by') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Creator Name (visible when not Self / Candidate) --}}
+            <div x-show="createdBy && createdBy !== 'Self / Candidate'" x-transition class="float-field">
+                <input type="text" name="creator_name" id="creator_name" x-model="creatorName"
+                    :required="createdBy && createdBy !== 'Self / Candidate'" placeholder=" ">
+                <label for="creator_name">Creator's Name <span class="text-red-500">*</span></label>
+                @error('creator_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Creator Contact (visible when not Self / Candidate) --}}
+            <div x-show="createdBy && createdBy !== 'Self / Candidate'" x-transition>
+                <x-phone-input name="creator_contact_number" label="Creator's Contact Number" :value="$profile?->creator_contact_number ?? ''" xModel="creatorPhone" :required="true" />
+            </div>
+
+            {{-- Hidden mirrors for Self / Candidate so validator gets the same field names --}}
+            <template x-if="createdBy === 'Self / Candidate'">
+                <div>
+                    <input type="hidden" name="creator_name" :value="userName">
+                    <input type="hidden" name="creator_contact_number" :value="userPhone">
+                </div>
+            </template>
+
+            {{-- How did you hear about us --}}
+            <div class="float-field">
+                <select name="how_did_you_hear_about_us" id="how_did_you_hear_about_us">
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.how_did_you_hear_list') as $group => $options)
+                        <optgroup label="{{ $group }}">
+                            @foreach($options as $opt)
+                                <option value="{{ $opt }}" {{ old('how_did_you_hear_about_us', $profile?->how_did_you_hear_about_us ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
+                <label for="how_did_you_hear_about_us">How Did You Hear About Us?</label>
+                @error('how_did_you_hear_about_us') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
         </div>
 
