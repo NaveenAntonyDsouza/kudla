@@ -131,26 +131,36 @@
             </p>
         </div>
 
-        {{-- Action row --}}
+        {{-- Action row: Back ← left, Skip + Save → right.
+             Back goes to the merged Step 4 (which holds all the previously-
+             entered data, including Profile Creation Details). Pure
+             navigation — doesn't submit the form, doesn't touch the file
+             input. --}}
         <div class="flex items-center justify-between mt-6 gap-3">
-            <button type="submit"
-                formaction="{{ route('register.photo.skip') }}"
-                formmethod="POST"
-                formenctype="application/x-www-form-urlencoded"
-                formnovalidate
+            <a href="{{ route('register.step4') }}"
                 class="border border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 rounded-lg px-6 py-3 font-semibold text-sm uppercase tracking-wider transition-colors">
-                Skip for now
-            </button>
-            <button type="button" @click="submitCropped()" :disabled="!sourceImage || submitting"
-                :class="(!sourceImage || submitting) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-(--color-primary-hover)'"
-                class="bg-(--color-primary) text-white rounded-lg px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors flex items-center gap-2">
-                <svg x-show="submitting" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/>
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" class="opacity-75"/>
-                </svg>
-                <span x-show="!submitting">Save &amp; Continue</span>
-                <span x-show="submitting" x-cloak>Uploading…</span>
-            </button>
+                Back
+            </a>
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                    formaction="{{ route('register.photo.skip') }}"
+                    formmethod="POST"
+                    formenctype="application/x-www-form-urlencoded"
+                    formnovalidate
+                    class="border border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 rounded-lg px-6 py-3 font-semibold text-sm uppercase tracking-wider transition-colors">
+                    Skip for now
+                </button>
+                <button type="button" @click="submitCropped()" :disabled="!sourceImage || submitting"
+                    :class="(!sourceImage || submitting) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-(--color-primary-hover)'"
+                    class="bg-(--color-primary) text-white rounded-lg px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors flex items-center gap-2">
+                    <svg x-show="submitting" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/>
+                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" class="opacity-75"/>
+                    </svg>
+                    <span x-show="!submitting">Save &amp; Continue</span>
+                    <span x-show="submitting" x-cloak>Uploading…</span>
+                </button>
+            </div>
         </div>
     </form>
 

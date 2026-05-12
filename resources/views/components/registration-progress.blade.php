@@ -1,16 +1,17 @@
 @props(['current' => 1])
 
 @php
-    // Steps 1-4 are data entry. Step 5 is the optional photo upload —
-    // labeled "Photo" so users see it as a real step (encourages
-    // completion). Step 4 absorbed the old Step 5's "Profile Creation
-    // Details" content as part of the 2026-04-30 funnel rework.
+    // Steps 1-4 are data entry. Step 5 is the optional photo upload.
+    // Step 4 absorbed the old Step 5's "Profile Creation Details" content
+    // as part of the 2026-04-30 funnel rework. Labels stay uniform
+    // ("Step N") for visual consistency — the photo screen identifies
+    // itself in its own copy ("Add a profile photo").
     $steps = [
         1 => 'Step 1',
         2 => 'Step 2',
         3 => 'Step 3',
         4 => 'Step 4',
-        5 => 'Photo',
+        5 => 'Step 5',
     ];
 @endphp
 
