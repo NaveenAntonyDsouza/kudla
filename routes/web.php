@@ -161,6 +161,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/onboarding/partner-preferences', [OnboardingController::class, 'storePartnerPreferences'])->name('onboarding.storePreferences');
     Route::get('/onboarding/lifestyle', [OnboardingController::class, 'showLifestyle'])->name('onboarding.lifestyle');
     Route::post('/onboarding/lifestyle', [OnboardingController::class, 'storeLifestyle'])->name('onboarding.storeLifestyle');
+    // Onboarding Step 5 — optional photo upload. Mirrors /register/photo's
+    // lightweight one-shot shape but lives under the onboarding layout so
+    // the 5-step progress bar renders automatically. Throttled to limit
+    // abuse of the upload pipeline.
+    Route::get('/onboarding/photo', [OnboardingController::class, 'showPhoto'])->name('onboarding.photo');
+    Route::post('/onboarding/photo', [OnboardingController::class, 'storePhoto'])->name('onboarding.photo.store')->middleware('throttle:10,1');
+    Route::post('/onboarding/photo/skip', [OnboardingController::class, 'skipPhoto'])->name('onboarding.photo.skip');
     Route::post('/onboarding/finish', [OnboardingController::class, 'finishOnboarding'])->name('onboarding.finish');
 });
 

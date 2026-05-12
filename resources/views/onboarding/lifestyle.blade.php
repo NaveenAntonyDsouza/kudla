@@ -27,7 +27,7 @@
                  hidden form previously triggered onboarding.finish; that
                  hidden form was removed in 65756d2 when Skip became a
                  direct link to /manage-photos as the new Step 5. --}}
-            <a href="{{ route('photos.manage', ['from' => 'onboarding']) }}"
+            <a href="{{ route('onboarding.photo') }}"
                 class="text-sm text-(--color-primary) hover:underline font-medium">
                 Skip for now &rarr;
             </a>
@@ -159,7 +159,7 @@
                      Lifestyle data. Onboarding isn't marked complete here —
                      that happens when the user clicks "Done & finish setup"
                      on the photo step. --}}
-                <a href="{{ route('photos.manage', ['from' => 'onboarding']) }}"
+                <a href="{{ route('onboarding.photo') }}"
                     class="order-2 sm:order-1 text-sm text-(--color-primary) hover:underline font-medium">
                     Skip for now
                 </a>
