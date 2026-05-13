@@ -75,6 +75,11 @@ class PaytmService implements PaymentGatewayInterface
 
     public function isConfigured(): bool
     {
+        // See RazorpayService::isConfigured() for the toggle pattern.
+        if (! config('services.paytm.enabled', true)) {
+            return false;
+        }
+
         return ! empty($this->mid())
             && ! empty($this->merchantKey())
             && ! empty($this->website())

@@ -58,6 +58,11 @@ class StripeService implements PaymentGatewayInterface
 
     public function isConfigured(): bool
     {
+        // See RazorpayService::isConfigured() for the toggle pattern.
+        if (! config('services.stripe.enabled', true)) {
+            return false;
+        }
+
         return ! empty($this->secret());
     }
 

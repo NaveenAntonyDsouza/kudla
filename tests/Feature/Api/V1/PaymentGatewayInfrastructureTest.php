@@ -122,6 +122,70 @@ it('Razorpay isConfigured returns false when secret is missing', function () {
 });
 
 /* ==================================================================
+ |  Admin enable/disable toggle
+ |  --------------------------------------------------------------
+ |  isConfigured() ANDs services.{slug}.enabled with the credentials
+ |  check. The admin's "Enable this gateway" toggle in
+ |  GatewaySettings.php persists '1' / '0' to site_settings; the
+ |  GatewayConfigProvider mirrors that into the config tree at boot.
+ |  These cases lock the AND-semantics so a future refactor can't
+ |  silently re-enable a gateway whose toggle was flipped off.
+ | ================================================================== */
+
+it('Razorpay isConfigured returns false when the admin toggle is off even with credentials', function () {
+    config([
+        'services.razorpay.key' => 'rzp_test_xxxxxx',
+        'services.razorpay.secret' => 'super-secret',
+        'services.razorpay.enabled' => false,
+    ]);
+
+    expect((new RazorpayService())->isConfigured())->toBeFalse();
+});
+
+it('Razorpay isConfigured defaults to enabled when the toggle key is absent', function () {
+    config([
+        'services.razorpay.key' => 'rzp_test_xxxxxx',
+        'services.razorpay.secret' => 'super-secret',
+    ]);
+    // Note: we deliberately do NOT set services.razorpay.enabled — the
+    // default in config/services.php is true, so a fresh install (before
+    // the seed_payment_gateway_enabled_flags migration runs) keeps the
+    // pre-toggle behaviour and doesn't break checkout.
+
+    expect((new RazorpayService())->isConfigured())->toBeTrue();
+});
+
+it('PhonePe isConfigured returns false when the admin toggle is off even with full credentials', function () {
+    config([
+        'services.phonepe.client_id' => 'PHONEPE_TEST_ID',
+        'services.phonepe.client_secret' => 'phonepe-test-secret',
+        'services.phonepe.client_version' => '1',
+        'services.phonepe.enabled' => false,
+    ]);
+
+    expect((new \App\Services\Payment\PhonePeService())->isConfigured())->toBeFalse();
+});
+
+it('manager getConfigured drops a gateway whose admin toggle was flipped off', function () {
+    $manager = new PaymentGatewayManager();
+    $manager->register(new RazorpayService());
+
+    // Credentials present, toggle off → must NOT appear in getConfigured()
+    config([
+        'services.razorpay.key' => 'rzp_test_x',
+        'services.razorpay.secret' => 'secret',
+        'services.razorpay.enabled' => false,
+    ]);
+
+    expect($manager->getConfigured())->toBe([]);
+
+    // Flip the toggle back on → reappears.
+    config(['services.razorpay.enabled' => true]);
+
+    expect($manager->getConfigured())->toHaveKey('razorpay');
+});
+
+/* ==================================================================
  |  Razorpay verifyPayment — offline signature math
  | ================================================================== */
 

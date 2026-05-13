@@ -82,6 +82,13 @@ class GatewayConfigProvider extends ServiceProvider
         if (!empty($settings['razorpay_webhook_secret'])) {
             config(['services.razorpay.webhook_secret' => $settings['razorpay_webhook_secret']]);
         }
+
+        // Admin enable/disable toggle. Stored as '1' / '0' string. Unset
+        // means "use config default" (true) — preserves pre-toggle behaviour
+        // for fresh installs and tests that haven't seeded the SiteSetting.
+        if (array_key_exists('razorpay_enabled', $settings)) {
+            config(['services.razorpay.enabled' => $settings['razorpay_enabled'] === '1']);
+        }
     }
 
     protected function overrideStripeConfig(array $settings): void
@@ -96,6 +103,10 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['stripe_webhook_secret'])) {
             config(['services.stripe.webhook_secret' => $settings['stripe_webhook_secret']]);
+        }
+
+        if (array_key_exists('stripe_enabled', $settings)) {
+            config(['services.stripe.enabled' => $settings['stripe_enabled'] === '1']);
         }
     }
 
@@ -119,6 +130,10 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['paypal_currency'])) {
             config(['services.paypal.currency' => $settings['paypal_currency']]);
+        }
+
+        if (array_key_exists('paypal_enabled', $settings)) {
+            config(['services.paypal.enabled' => $settings['paypal_enabled'] === '1']);
         }
     }
 
@@ -147,6 +162,10 @@ class GatewayConfigProvider extends ServiceProvider
         if (!empty($settings['paytm_channel_id'])) {
             config(['services.paytm.channel_id' => $settings['paytm_channel_id']]);
         }
+
+        if (array_key_exists('paytm_enabled', $settings)) {
+            config(['services.paytm.enabled' => $settings['paytm_enabled'] === '1']);
+        }
     }
 
     protected function overridePhonePeConfig(array $settings): void
@@ -173,6 +192,10 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (!empty($settings['phonepe_webhook_password'])) {
             config(['services.phonepe.webhook_password' => $settings['phonepe_webhook_password']]);
+        }
+
+        if (array_key_exists('phonepe_enabled', $settings)) {
+            config(['services.phonepe.enabled' => $settings['phonepe_enabled'] === '1']);
         }
     }
 }

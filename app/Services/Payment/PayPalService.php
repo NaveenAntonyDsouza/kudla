@@ -62,6 +62,11 @@ class PayPalService implements PaymentGatewayInterface
 
     public function isConfigured(): bool
     {
+        // See RazorpayService::isConfigured() for the toggle pattern.
+        if (! config('services.paypal.enabled', true)) {
+            return false;
+        }
+
         return ! empty($this->clientId()) && ! empty($this->secret());
     }
 

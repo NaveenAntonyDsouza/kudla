@@ -60,18 +60,21 @@ class GatewaySettings extends Page implements HasForms
             'otp_expiry_minutes' => $settings['otp_expiry_minutes'] ?? '10',
 
             // Razorpay
+            'razorpay_enabled' => ($settings['razorpay_enabled'] ?? '1') === '1',
             'razorpay_key_id' => $settings['razorpay_key_id'] ?? config('services.razorpay.key', ''),
             'razorpay_key_secret' => $settings['razorpay_key_secret'] ?? '',
             'razorpay_webhook_secret' => $settings['razorpay_webhook_secret'] ?? '',
             'razorpay_mode' => $settings['razorpay_mode'] ?? 'test',
 
             // Stripe
+            'stripe_enabled' => ($settings['stripe_enabled'] ?? '1') === '1',
             'stripe_key' => $settings['stripe_key'] ?? config('services.stripe.key', ''),
             'stripe_secret' => $settings['stripe_secret'] ?? '',
             'stripe_webhook_secret' => $settings['stripe_webhook_secret'] ?? '',
             'stripe_mode' => $settings['stripe_mode'] ?? 'test',
 
             // PayPal
+            'paypal_enabled' => ($settings['paypal_enabled'] ?? '1') === '1',
             'paypal_client_id' => $settings['paypal_client_id'] ?? config('services.paypal.client_id', ''),
             'paypal_secret' => $settings['paypal_secret'] ?? '',
             'paypal_webhook_id' => $settings['paypal_webhook_id'] ?? config('services.paypal.webhook_id', ''),
@@ -79,6 +82,7 @@ class GatewaySettings extends Page implements HasForms
             'paypal_currency' => $settings['paypal_currency'] ?? config('services.paypal.currency', 'USD'),
 
             // Paytm
+            'paytm_enabled' => ($settings['paytm_enabled'] ?? '1') === '1',
             'paytm_mid' => $settings['paytm_mid'] ?? config('services.paytm.mid', ''),
             'paytm_key' => $settings['paytm_key'] ?? '',
             'paytm_mode' => $settings['paytm_mode'] ?? config('services.paytm.mode', 'sandbox'),
@@ -87,6 +91,7 @@ class GatewaySettings extends Page implements HasForms
             'paytm_channel_id' => $settings['paytm_channel_id'] ?? config('services.paytm.channel_id', 'WAP'),
 
             // PhonePe (V2 Standard Checkout)
+            'phonepe_enabled' => ($settings['phonepe_enabled'] ?? '1') === '1',
             'phonepe_client_id' => $settings['phonepe_client_id'] ?? config('services.phonepe.client_id', ''),
             'phonepe_client_secret' => $settings['phonepe_client_secret'] ?? '',
             'phonepe_client_version' => $settings['phonepe_client_version'] ?? config('services.phonepe.client_version', '1'),
@@ -198,6 +203,12 @@ class GatewaySettings extends Page implements HasForms
                 \Filament\Schemas\Components\Section::make('Payment Gateway (Razorpay)')
                     ->description('Configure Razorpay payment integration. Falls back to .env values if left empty.')
                     ->schema([
+                        Forms\Components\Toggle::make('razorpay_enabled')
+                            ->label('Enable Razorpay')
+                            ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('razorpay_mode')
                             ->label('Mode')
                             ->options([
@@ -229,6 +240,12 @@ class GatewaySettings extends Page implements HasForms
                 \Filament\Schemas\Components\Section::make('Payment Gateway (Stripe)')
                     ->description('Configure Stripe payment integration. Falls back to .env values if left empty.')
                     ->schema([
+                        Forms\Components\Toggle::make('stripe_enabled')
+                            ->label('Enable Stripe')
+                            ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('stripe_mode')
                             ->label('Mode')
                             ->options([
@@ -260,6 +277,12 @@ class GatewaySettings extends Page implements HasForms
                 \Filament\Schemas\Components\Section::make('Payment Gateway (PayPal)')
                     ->description('Configure PayPal payment integration. Falls back to .env values if left empty.')
                     ->schema([
+                        Forms\Components\Toggle::make('paypal_enabled')
+                            ->label('Enable PayPal')
+                            ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('paypal_mode')
                             ->label('Mode')
                             ->options([
@@ -294,6 +317,12 @@ class GatewaySettings extends Page implements HasForms
                 \Filament\Schemas\Components\Section::make('Payment Gateway (Paytm)')
                     ->description('Configure Paytm payment integration. Falls back to .env values if left empty.')
                     ->schema([
+                        Forms\Components\Toggle::make('paytm_enabled')
+                            ->label('Enable Paytm')
+                            ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('paytm_mode')
                             ->label('Mode')
                             ->options([
@@ -337,6 +366,12 @@ class GatewaySettings extends Page implements HasForms
                 \Filament\Schemas\Components\Section::make('Payment Gateway (PhonePe V2)')
                     ->description('Configure PhonePe Standard Checkout V2. Falls back to .env values if left empty.')
                     ->schema([
+                        Forms\Components\Toggle::make('phonepe_enabled')
+                            ->label('Enable PhonePe')
+                            ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('phonepe_mode')
                             ->label('Mode')
                             ->options([
@@ -391,9 +426,22 @@ class GatewaySettings extends Page implements HasForms
             'phonepe_client_secret', 'phonepe_webhook_password',
         ];
 
+        // Boolean toggles must be persisted as '1' / '0' strings — SiteSetting
+        // stores everything as text, and the gateway services + provider check
+        // for the literal '1'.
+        $booleanFields = [
+            'razorpay_enabled', 'stripe_enabled', 'paypal_enabled',
+            'paytm_enabled', 'phonepe_enabled',
+        ];
+
         foreach ($data as $key => $value) {
             // Don't overwrite secrets with empty values
             if (in_array($key, $passwordFields) && empty($value)) {
+                continue;
+            }
+
+            if (in_array($key, $booleanFields, true)) {
+                SiteSetting::setValue($key, $value ? '1' : '0');
                 continue;
             }
 

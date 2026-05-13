@@ -50,6 +50,15 @@ class RazorpayService implements PaymentGatewayInterface
 
     public function isConfigured(): bool
     {
+        // Admin toggle (services.razorpay.enabled) AND'd with credentials.
+        // The toggle defaults to true in config/services.php and is
+        // overridden from the `razorpay_enabled` SiteSetting at boot via
+        // GatewayConfigProvider. So an admin can flip a gateway off without
+        // wiping the keys, and the next checkout filters this gateway out.
+        if (! config('services.razorpay.enabled', true)) {
+            return false;
+        }
+
         return ! empty($this->keyId()) && ! empty($this->keySecret());
     }
 

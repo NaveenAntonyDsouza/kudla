@@ -79,6 +79,11 @@ class PhonePeService implements PaymentGatewayInterface
 
     public function isConfigured(): bool
     {
+        // See RazorpayService::isConfigured() for the toggle pattern.
+        if (! config('services.phonepe.enabled', true)) {
+            return false;
+        }
+
         return ! empty($this->clientId())
             && ! empty($this->clientSecret())
             && ! empty($this->clientVersion());

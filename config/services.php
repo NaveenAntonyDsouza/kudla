@@ -44,6 +44,12 @@ return [
         'key' => env('RAZORPAY_KEY_ID'),
         'secret' => env('RAZORPAY_KEY_SECRET'),
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+        // Admin toggle. AND'd with the credentials check in
+        // RazorpayService::isConfigured(). The DB-backed value (key
+        // `razorpay_enabled` in site_settings) overrides this default at boot
+        // via GatewayConfigProvider. true here keeps fresh installs working
+        // until the admin makes an explicit choice.
+        'enabled' => true,
     ],
 
     'stripe' => [
@@ -53,6 +59,7 @@ return [
         'secret' => env('STRIPE_SECRET'),
         // Webhook signing secret — whsec_... — used to verify Stripe-Signature header.
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'enabled' => true,
     ],
 
     'paypal' => [
@@ -72,6 +79,7 @@ return [
         // accounts cannot receive INR — default to USD. Buyers targeting
         // other markets override via SiteSetting / .env.
         'currency' => env('PAYPAL_CURRENCY', 'USD'),
+        'enabled' => true,
     ],
 
     'paytm' => [
@@ -88,6 +96,7 @@ return [
         'industry_type' => env('PAYTM_INDUSTRY_TYPE', 'Retail'),
         // Channel ID — 'WEB' for browser flows, 'WAP' for mobile app SDK.
         'channel_id' => env('PAYTM_CHANNEL_ID', 'WAP'),
+        'enabled' => true,
     ],
 
     'phonepe' => [
@@ -107,6 +116,7 @@ return [
         // webhook delivery; we recompute and compare.
         'webhook_username' => env('PHONEPE_WEBHOOK_USERNAME'),
         'webhook_password' => env('PHONEPE_WEBHOOK_PASSWORD'),
+        'enabled' => true,
     ],
 
     'cloudinary' => [
