@@ -304,9 +304,10 @@ class MembershipController extends Controller
      *
      *   • This synchronous return → calls verifyPayment() which polls
      *     PhonePe's /status API and confirms the order is COMPLETED.
-     *   • The PhonePe webhook (POST /api/v1/payment/phonepe/webhook) →
-     *     fires `checkout.order.completed` async; the
-     *     PhonePeService::handleWebhook activates the subscription.
+     *   • The PhonePe webhook (POST /api/v1/webhooks/phonepe — see the
+     *     `webhooks/{gateway}` route in routes/api.php) → fires
+     *     `checkout.order.completed` async; PhonePeService::handleWebhook
+     *     activates the subscription.
      *
      * Whichever wins activates; the other becomes a no-op because
      * SubscriptionActivator::activate is idempotent. If the buyer returns
