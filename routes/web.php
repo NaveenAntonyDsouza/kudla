@@ -196,6 +196,12 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/membership-plans/checkout', [MembershipController::class, 'checkout'])->name('membership.checkout');
     Route::post('/membership-plans/verify', [MembershipController::class, 'verify'])->name('membership.verify');
     Route::post('/membership-plans/apply-coupon', [MembershipController::class, 'applyCoupon'])->name('membership.applyCoupon');
+    // PhonePe redirect-based return URL. Receives the buyer after they
+    // complete (or cancel) payment on PhonePe's hosted checkout. The
+    // ?s={subscription_id} query param ties the return back to the
+    // pending Subscription row created at /checkout dispatch time.
+    Route::get('/membership-plans/return/phonepe', [MembershipController::class, 'returnFromPhonePe'])
+        ->name('membership.return.phonepe');
 
     // ID Proof
     Route::get('/submit-id-proof', [IdProofController::class, 'index'])->name('idproof.index');

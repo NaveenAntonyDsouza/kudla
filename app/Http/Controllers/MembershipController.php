@@ -6,11 +6,20 @@ use App\Models\Coupon;
 use App\Models\MembershipPlan;
 use App\Models\Subscription;
 use App\Models\UserMembership;
+use App\Services\Payment\PaymentGatewayInterface;
+use App\Services\Payment\PaymentGatewayManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class MembershipController extends Controller
 {
+    /**
+     * @param  PaymentGatewayManager  $gateways  Registry of all gateway
+     *         services. Bound as a singleton in AppServiceProvider; the
+     *         configured (admin-toggle-on + credentials-present) subset
+     *         drives the picker / auto-pick logic in checkout().
+     */
+    public function __construct(private PaymentGatewayManager $gateways) {}
+
     public function index()
     {
         $plans = MembershipPlan::where('is_active', true)
@@ -63,13 +72,27 @@ class MembershipController extends Controller
     }
 
     /**
-     * Create Razorpay order and redirect to checkout.
+     * Checkout entry point. Three branches:
+     *
+     *   • Free (coupon covers 100%) → activate directly, skip payment.
+     *   • One gateway enabled OR user picked from the picker → create
+     *     a pending Subscription, call the gateway's createOrder(), and
+     *     render the gateway's web flow (Razorpay JS / PhonePe redirect).
+     *   • Two-plus gateways enabled AND no `gateway` field in the form
+     *     → render the picker, which posts back here with the chosen slug.
+     *
+     * Validates the chosen gateway against PaymentGatewayManager::getConfigured()
+     * (admin toggle on + credentials present), so a toggled-off gateway
+     * can never be coerced into use via a hand-crafted POST.
      */
     public function checkout(Request $request)
     {
         $request->validate([
             'plan_id' => 'required|exists:membership_plans,id',
             'coupon_code' => 'nullable|string|max:50',
+            // Optional. Set by the gateway-picker form. Must match an
+            // entry in PaymentGatewayManager::getConfigured() if present.
+            'gateway' => 'nullable|string|max:30',
         ]);
 
         $plan = MembershipPlan::findOrFail($request->plan_id);
@@ -105,29 +128,69 @@ class MembershipController extends Controller
             return $this->activateFreePlan($plan, $coupon, $originalAmountInPaise, $discountInPaise);
         }
 
-        // Create Razorpay order
-        $response = Http::withoutVerifying()
-            ->withBasicAuth(config('services.razorpay.key'), config('services.razorpay.secret'))
-            ->post('https://api.razorpay.com/v1/orders', [
-                'amount' => $amountInPaise,
-                'currency' => 'INR',
-                'receipt' => 'sub_' . auth()->id() . '_' . time(),
-                'notes' => [
-                    'user_id' => auth()->id(),
-                    'plan_id' => $plan->id,
-                    'plan_name' => $plan->plan_name,
-                    'coupon_code' => $coupon?->code,
-                    'discount' => $discountInPaise,
-                ],
-            ]);
+        // ── Pick a gateway ────────────────────────────────────────────
+        $available = $this->gateways->getConfigured();
 
-        if (!$response->ok()) {
-            return back()->withErrors(['payment' => 'Unable to create payment order. Please try again.']);
+        if (empty($available)) {
+            return back()->withErrors([
+                'payment' => 'No payment method is currently available. Please contact support.',
+            ]);
         }
 
-        $order = $response->json();
+        $requestedSlug = $request->input('gateway');
 
-        // Save pending subscription (payment audit trail)
+        if ($requestedSlug !== null && $requestedSlug !== '') {
+            // User came back from the picker. Validate they picked a real,
+            // currently-enabled gateway — protects against a stale form
+            // posted after an admin disabled the gateway, and against
+            // hand-crafted POSTs trying to coerce a non-enabled gateway.
+            if (! isset($available[$requestedSlug])) {
+                return back()->withErrors(['payment' => 'The selected payment method is no longer available.']);
+            }
+            $gateway = $available[$requestedSlug];
+        } elseif (count($available) === 1) {
+            // Auto-pick when there's only one option — saves a click.
+            $gateway = reset($available);
+        } else {
+            // 2+ gateways enabled and the user hasn't chosen yet → show
+            // the picker. Carries plan_id + coupon_code through so the
+            // user doesn't lose their coupon when they come back here.
+            return view('membership.gateway-picker', [
+                'plan' => $plan,
+                'amount' => $amountInPaise / 100,
+                'coupon' => $coupon,
+                'discount' => $discountInPaise / 100,
+                'gateways' => $available,
+            ]);
+        }
+
+        return $this->dispatchGatewayCheckout(
+            gateway: $gateway,
+            plan: $plan,
+            coupon: $coupon,
+            originalAmountInPaise: $originalAmountInPaise,
+            amountInPaise: $amountInPaise,
+            discountInPaise: $discountInPaise,
+        );
+    }
+
+    /**
+     * Create the gateway order, persist the pending Subscription, and
+     * render the gateway's web flow. One method per gateway slug — Razorpay
+     * needs a view (JS SDK), PhonePe needs a redirect, etc.
+     */
+    protected function dispatchGatewayCheckout(
+        PaymentGatewayInterface $gateway,
+        MembershipPlan $plan,
+        ?Coupon $coupon,
+        int $originalAmountInPaise,
+        int $amountInPaise,
+        int $discountInPaise,
+    ) {
+        // Persist a pending Subscription FIRST so the gateway's order id
+        // can be tied back to a known row when the user returns / the
+        // webhook fires. gateway slug is stamped immediately so a 404
+        // verify or a webhook-without-known-order can still route correctly.
         $subscription = Subscription::create([
             'user_id' => auth()->id(),
             'plan_id' => (string) $plan->id,
@@ -137,12 +200,68 @@ class MembershipController extends Controller
             'discount_amount' => $discountInPaise,
             'original_amount' => $originalAmountInPaise,
             'amount' => $amountInPaise,
-            'razorpay_order_id' => $order['id'],
+            'gateway' => $gateway->getSlug(),
             'payment_status' => 'pending',
         ]);
 
+        try {
+            $orderResponse = $gateway->createOrder($amountInPaise, [
+                'user_id' => auth()->id(),
+                'plan_id' => $plan->id,
+                'plan_name' => $plan->plan_name,
+                'subscription_id' => $subscription->id,
+                'coupon_code' => $coupon?->code,
+                'discount' => $discountInPaise,
+                'receipt' => 'sub_'.auth()->id().'_'.$subscription->id,
+                // PhonePe consumes this as the merchantUrls.redirectUrl
+                // so the buyer lands at /membership-plans/return/phonepe
+                // after paying. Razorpay etc. ignore it (they're inline-JS
+                // flows that POST directly back to /verify).
+                'redirect_url' => route('membership.return.phonepe', ['s' => $subscription->id]),
+            ]);
+        } catch (\Throwable $e) {
+            // Roll back the pending subscription so we don't leak rows
+            // for orders that never made it past the gateway.
+            $subscription->delete();
+            report($e);
+            return back()->withErrors(['payment' => 'Unable to create payment order. Please try again.']);
+        }
+
+        // Persist gateway-specific IDs (razorpay_order_id, phonepe_merchant_order_id, etc.)
+        $gateway->applyOrderIdsToSubscription($subscription, $orderResponse);
+
+        // Render the gateway's web flow. Each slug has its own surface:
+        //   razorpay → inline JS SDK (membership.checkout view)
+        //   phonepe  → redirect to hosted PhonePe checkout
+        return match ($gateway->getSlug()) {
+            'razorpay' => $this->renderRazorpayCheckout($plan, $subscription, $orderResponse, $coupon, $amountInPaise, $discountInPaise),
+            'phonepe' => $this->renderPhonePeCheckout($orderResponse),
+            default => back()->withErrors([
+                'payment' => 'Web checkout for '.$gateway->getName().' is not yet implemented. Please pick a different method.',
+            ]),
+        };
+    }
+
+    /**
+     * Render the Razorpay browser-side JS SDK with the prepared order.
+     * The view auto-opens checkout.razorpay.com and POSTs the verify
+     * payload back to /membership-plans/verify on success.
+     */
+    protected function renderRazorpayCheckout(
+        MembershipPlan $plan,
+        Subscription $subscription,
+        array $orderResponse,
+        ?Coupon $coupon,
+        int $amountInPaise,
+        int $discountInPaise,
+    ) {
         return view('membership.checkout', [
-            'order' => $order,
+            'order' => [
+                // Old shape kept for backwards compat with the existing
+                // Razorpay JS view (which uses $order['id'] / $order['amount']).
+                'id' => $orderResponse['order_id'],
+                'amount' => $orderResponse['amount'],
+            ],
             'plan' => [
                 'id' => $plan->id,
                 'name' => $plan->plan_name,
@@ -151,11 +270,110 @@ class MembershipController extends Controller
                 'duration_months' => $plan->duration_months,
             ],
             'subscription' => $subscription,
-            'razorpayKey' => config('services.razorpay.key'),
+            'razorpayKey' => $orderResponse['key_id'],
             'user' => auth()->user(),
             'coupon' => $coupon,
             'discount' => $discountInPaise / 100,
         ]);
+    }
+
+    /**
+     * PhonePe is a redirect-based flow. PhonePe returns a hosted-checkout
+     * `redirect_url` from its /pay API; we send the buyer there and they
+     * come back to /membership-plans/return/phonepe?s={subscription_id}
+     * after paying. That handler verifies via the order-status API and
+     * activates.
+     */
+    protected function renderPhonePeCheckout(array $orderResponse)
+    {
+        $redirectUrl = $orderResponse['redirect_url'] ?? null;
+
+        if (! is_string($redirectUrl) || $redirectUrl === '') {
+            // Defensive — PhonePeService::createOrder would normally have
+            // thrown a RuntimeException already if the URL was missing.
+            return redirect()->route('membership.index')
+                ->withErrors(['payment' => 'PhonePe did not return a checkout URL. Please try again.']);
+        }
+
+        return redirect()->away($redirectUrl);
+    }
+
+    /**
+     * Handle the user's return from PhonePe's hosted checkout. Two truths
+     * race here:
+     *
+     *   • This synchronous return → calls verifyPayment() which polls
+     *     PhonePe's /status API and confirms the order is COMPLETED.
+     *   • The PhonePe webhook (POST /api/v1/payment/phonepe/webhook) →
+     *     fires `checkout.order.completed` async; the
+     *     PhonePeService::handleWebhook activates the subscription.
+     *
+     * Whichever wins activates; the other becomes a no-op because
+     * SubscriptionActivator::activate is idempotent. If the buyer returns
+     * before PhonePe has settled (rare but possible — UPI is async on
+     * PhonePe's side too), they see "Payment is still being confirmed"
+     * and a link back to the dashboard. The webhook will activate later
+     * and the dashboard will reflect it on next page load.
+     */
+    public function returnFromPhonePe(Request $request)
+    {
+        $subscriptionId = (int) $request->query('s');
+        $subscription = Subscription::where('id', $subscriptionId)
+            ->where('user_id', auth()->id())
+            ->where('gateway', 'phonepe')
+            ->first();
+
+        if (! $subscription) {
+            return redirect()->route('membership.index')
+                ->withErrors(['payment' => 'We could not find your payment. If you were charged, please contact support with your bank reference.']);
+        }
+
+        // Already activated by the webhook? Land on the success page.
+        if ($subscription->payment_status === 'paid') {
+            $planName = MembershipPlan::find($subscription->plan_id)?->plan_name ?? 'Premium';
+            return redirect()->route('membership.index')
+                ->with('success', 'Payment successful! Your '.$planName.' plan is now active.');
+        }
+
+        $merchantOrderId = $subscription->gateway_metadata['phonepe_merchant_order_id'] ?? null;
+
+        if (! $merchantOrderId) {
+            return redirect()->route('membership.index')
+                ->withErrors(['payment' => 'Payment record is missing the PhonePe reference. Please contact support.']);
+        }
+
+        $phonepe = $this->gateways->forSlug('phonepe');
+        if (! $phonepe) {
+            return redirect()->route('membership.index')
+                ->withErrors(['payment' => 'PhonePe is currently unavailable.']);
+        }
+
+        $verified = $phonepe->verifyPayment(
+            ['phonepe_merchant_order_id' => $merchantOrderId],
+            $subscription,
+        );
+
+        if (! $verified) {
+            // Could be: payment in progress (UPI lag), user cancelled, or
+            // genuine failure. Don't mark failed here — the webhook is the
+            // source of truth for that. Just tell the buyer to wait.
+            return redirect()->route('membership.index')
+                ->with('info', 'Your payment is still being confirmed. This page will reflect the change once the bank settles — usually within a few minutes.');
+        }
+
+        // Verified successful — record gateway IDs and activate. The
+        // activator is idempotent so a concurrent webhook firing is fine.
+        $phonepe->applyVerifiedIdsToSubscription($subscription, [
+            'phonepe_merchant_order_id' => $merchantOrderId,
+        ]);
+
+        $activator = app(\App\Services\Payment\SubscriptionActivator::class);
+        $activator->activate($subscription);
+
+        $planName = MembershipPlan::find($subscription->plan_id)?->plan_name ?? 'Premium';
+
+        return redirect()->route('membership.index')
+            ->with('success', 'Payment successful! Your '.$planName.' plan is now active.');
     }
 
     /**

@@ -113,10 +113,15 @@ class PhonePeService implements PaymentGatewayInterface
             'paymentFlow' => [
                 'type' => 'PG_CHECKOUT',
                 'merchantUrls' => [
-                    // Empty when we don't drive a return URL — Flutter SDK
+                    // Empty when called from the mobile API — Flutter SDK
                     // handles the post-payment flow on its own and our
                     // webhook is the source of truth for status.
-                    'redirectUrl' => '',
+                    // Non-empty when called from the web MembershipController
+                    // — PhonePe redirects the user back to this URL after
+                    // payment, where MembershipController::returnFromPhonePe
+                    // verifies the order via the status API and activates
+                    // the subscription.
+                    'redirectUrl' => (string) ($metadata['redirect_url'] ?? ''),
                 ],
             ],
             'metaInfo' => $this->buildMetaInfo($metadata),

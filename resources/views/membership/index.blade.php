@@ -19,6 +19,14 @@
             </div>
         @endif
 
+        {{-- Informational flash (e.g. PhonePe "payment still being confirmed").
+             Not an error — just a "wait a moment" hint. --}}
+        @if(session('info'))
+            <div class="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="text-sm text-blue-700 font-medium">{{ session('info') }}</p>
+            </div>
+        @endif
+
         @if($errors->any())
             <div class="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
                 @foreach($errors->all() as $error)

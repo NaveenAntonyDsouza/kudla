@@ -27,20 +27,23 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // For each gateway, check config() rather than site_settings directly
+        // — many sites (incl. Kudla on first run of this migration) keep the
+        // secret in .env while the public id is in site_settings via the
+        // admin form. config() combines both sources after GatewayConfigProvider
+        // boots, so it's the authoritative "are credentials available?" check.
         $gateways = [
-            // slug => [ list of credential keys that, when all non-empty,
-            //          mean the gateway is "configured" today ]
-            'razorpay' => ['razorpay_key_id', 'razorpay_key_secret'],
-            'stripe' => ['stripe_key', 'stripe_secret'],
-            'paypal' => ['paypal_client_id', 'paypal_secret'],
-            'paytm' => ['paytm_mid', 'paytm_key'],
-            'phonepe' => ['phonepe_client_id', 'phonepe_client_secret'],
+            'razorpay' => ['services.razorpay.key', 'services.razorpay.secret'],
+            'stripe' => ['services.stripe.key', 'services.stripe.secret'],
+            'paypal' => ['services.paypal.client_id', 'services.paypal.secret'],
+            'paytm' => ['services.paytm.mid', 'services.paytm.key'],
+            'phonepe' => ['services.phonepe.client_id', 'services.phonepe.client_secret'],
         ];
 
-        foreach ($gateways as $slug => $credentialKeys) {
+        foreach ($gateways as $slug => $configKeys) {
             $hasCredentials = true;
-            foreach ($credentialKeys as $credKey) {
-                $value = DB::table('site_settings')->where('key', $credKey)->value('value');
+            foreach ($configKeys as $configKey) {
+                $value = config($configKey);
                 if (empty($value)) {
                     $hasCredentials = false;
                     break;
