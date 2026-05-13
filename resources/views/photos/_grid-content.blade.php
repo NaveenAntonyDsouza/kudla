@@ -101,14 +101,41 @@
                             @endphp
 
                             <div class="space-y-3" :class="saving && 'opacity-50 pointer-events-none'">
-                                @foreach([
-                                    'profile' => ['label' => 'Profile Photo', 'icon' => '👤'],
-                                    'album' => ['label' => 'Album Photos', 'icon' => '🖼️'],
-                                    'family' => ['label' => 'Family Photos', 'icon' => '👨‍👩‍👧'],
-                                ] as $type => $meta)
+                                @php
+                                    // Outline Heroicons — same `user` silhouette already used in 17
+                                    // other views (profile-card, dashboard, profile/show…), so the
+                                    // three privacy rows look like the rest of the site instead of
+                                    // emoji whose glyphs differ across Windows/macOS/Android.
+                                    $privacyTypes = [
+                                        'profile' => 'Profile Photo',
+                                        'album' => 'Album Photos',
+                                        'family' => 'Family Photos',
+                                    ];
+                                @endphp
+                                @foreach($privacyTypes as $type => $rowLabel)
                                     <div>
-                                        <label class="flex items-center justify-between text-xs font-medium text-gray-700 mb-1">
-                                            <span><span class="mr-1">{{ $meta['icon'] }}</span>{{ $meta['label'] }}</span>
+                                        <label class="flex items-center gap-1.5 text-xs font-medium text-gray-700 mb-1">
+                                            @switch($type)
+                                                @case('profile')
+                                                    {{-- Heroicon user (outline) — single person --}}
+                                                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                                                    </svg>
+                                                    @break
+                                                @case('album')
+                                                    {{-- Heroicon photo (outline) — landscape with sun --}}
+                                                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                                                    </svg>
+                                                    @break
+                                                @case('family')
+                                                    {{-- Heroicon user-group (outline) — three people --}}
+                                                    <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
+                                                    </svg>
+                                                    @break
+                                            @endswitch
+                                            <span>{{ $rowLabel }}</span>
                                         </label>
                                         <select name="{{ $type }}_photo_privacy"
                                             class="w-full text-sm border-gray-300 rounded-md focus:ring-(--color-primary) focus:border-(--color-primary)"
@@ -127,10 +154,14 @@
                         </form>
                     </div>
 
-                    {{-- Photo Guidelines --}}
+                    {{-- Photo Guidelines.
+                         list-disc + list-inside gets us actual bullet markers
+                         — Tailwind's preflight strips list-style from <ul> by
+                         default, which is why these four lines previously
+                         rendered as a flat block of text. --}}
                     <div class="border-t border-gray-100 pt-4 mt-4">
                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Photo Policy</h3>
-                        <ul class="text-xs text-gray-500 space-y-1">
+                        <ul class="text-xs text-gray-500 space-y-1 list-disc list-inside marker:text-gray-300">
                             <li>Upload clear, recent photos</li>
                             <li>Max {{ (int) config('matrimony.max_photo_size_mb', 5) }} MB per photo</li>
                             <li>JPG, PNG, GIF, WebP accepted</li>
