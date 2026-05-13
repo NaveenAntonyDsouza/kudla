@@ -60,13 +60,55 @@ class PaymentHistoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('razorpay_payment_id')
+                // Transaction ID is gateway-specific. Razorpay stores it
+                // in razorpay_payment_id; PhonePe stores it in
+                // gateway_metadata->phonepe_transaction_id; future gateways
+                // can extend the match below. `searchable(query: ...)` keeps
+                // the search box working across both columns.
+                Tables\Columns\TextColumn::make('transaction_id')
                     ->label('Transaction ID')
-                    ->searchable()
+                    ->getStateUsing(fn (Subscription $record): ?string => match ($record->gateway) {
+                        'razorpay' => $record->razorpay_payment_id,
+                        'phonepe' => $record->gateway_metadata['phonepe_transaction_id'] ?? null,
+                        default => $record->razorpay_payment_id, // legacy rows pre-multi-gateway
+                    })
+                    ->searchable(query: fn ($query, string $search) => $query
+                        ->where('razorpay_payment_id', 'like', "%{$search}%")
+                        ->orWhere('gateway_metadata->phonepe_transaction_id', 'like', "%{$search}%")
+                    )
                     ->copyable()
                     ->placeholder('—')
                     ->limit(20)
-                    ->tooltip(fn (Subscription $record) => $record->razorpay_payment_id),
+                    ->tooltip(fn (Subscription $record): ?string => match ($record->gateway) {
+                        'razorpay' => $record->razorpay_payment_id,
+                        'phonepe' => $record->gateway_metadata['phonepe_transaction_id'] ?? null,
+                        default => $record->razorpay_payment_id,
+                    }),
+
+                // Which gateway processed this payment. Badge colors mirror
+                // the gateway picker cards on /membership-plans so admins
+                // build the same mental association across surfaces.
+                Tables\Columns\TextColumn::make('gateway')
+                    ->label('Gateway')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'razorpay' => 'info',
+                        'phonepe' => 'success',
+                        'stripe' => 'primary',
+                        'paypal' => 'warning',
+                        'paytm' => 'gray',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'razorpay' => 'Razorpay',
+                        'phonepe' => 'PhonePe',
+                        'stripe' => 'Stripe',
+                        'paypal' => 'PayPal',
+                        'paytm' => 'Paytm',
+                        null, '' => '—',
+                        default => ucfirst((string) $state),
+                    })
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('User')
@@ -143,6 +185,16 @@ class PaymentHistoryResource extends Resource
                         ->pluck('plan_name', 'plan_name')
                         ->toArray()
                     ),
+
+                Tables\Filters\SelectFilter::make('gateway')
+                    ->label('Gateway')
+                    ->options([
+                        'razorpay' => 'Razorpay',
+                        'phonepe' => 'PhonePe',
+                        'stripe' => 'Stripe',
+                        'paypal' => 'PayPal',
+                        'paytm' => 'Paytm',
+                    ]),
             ])
             ->actions([
                 \Filament\Actions\Action::make('viewDetails')
