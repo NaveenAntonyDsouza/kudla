@@ -1321,13 +1321,18 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Branch scoping: Branch Manager / Branch Staff see only profiles in their branch.
+        // Branch scoping: Branch Manager / Branch Staff see profiles in their branch
+        // PLUS any with branch_id IS NULL (defense in depth — AffiliateTracker now
+        // stamps every new signup with the first active branch, but if an edge
+        // case ever leaves a profile orphan, branch staff still see it and can
+        // re-assign rather than being blind to it).
+        //
         // Note: this resource manages Profile (member-facing), not the User model directly.
         return parent::getEloquentQuery()
             ->whereNotNull('full_name')
             ->whereHas('user', fn ($q) => $q->whereNull('staff_role_id'))
             ->with(['user', 'religiousInfo', 'educationDetail', 'locationInfo', 'primaryPhoto'])
             ->withCount('profileNotes')
-            ->forUserBranch();
+            ->forUserBranch(null, true);
     }
 }

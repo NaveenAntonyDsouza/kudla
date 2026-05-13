@@ -106,20 +106,47 @@ class AffiliateTracker
     }
 
     /**
-     * Called when a User registers — attributes them to their affiliate branch and
-     * updates the most recent matching click row.
+     * Called when a User registers — attributes them to a branch and (if the
+     * visitor arrived via an affiliate cookie) links the corresponding click row.
+     *
+     * Two paths:
+     *   • Affiliate cookie present → use the cookie's branch + create / update
+     *     the AffiliateClick → registered_user_id linkage.
+     *   • No cookie (direct signup) → fall back to the FIRST active branch
+     *     so the user/profile doesn't go orphan with branch_id=NULL. On a
+     *     single-branch deployment this is always Head Office; on multi-
+     *     branch deployments, "default web traffic" lands at the lowest-
+     *     id branch (conventionally HQ) for staff there to triage / reassign.
+     *     This fallback is what fixes the prior bug where branch-bound staff
+     *     couldn't see the direct-signup half of the user base, since
+     *     BranchScopable::scopeForUserBranch hides NULL records by default.
      */
     public function attributeRegistration(Request $request, User $user): void
     {
         $branch = $this->getAttributedBranch($request);
+        $viaAffiliateCookie = $branch !== null;
+
+        // Fallback: direct signup, no affiliate cookie.
         if (!$branch) {
-            return; // no affiliate cookie — nothing to do
+            $branch = Branch::active()->orderBy('id')->first();
+        }
+
+        // No branches configured at all (fresh install / test fixture without
+        // seeded branches) — bail rather than blow up registration.
+        if (!$branch) {
+            return;
         }
 
         // Stamp the branch on the user (only if not already set)
         if ($user->branch_id === null) {
             $user->branch_id = $branch->id;
             $user->saveQuietly(); // skip events to avoid loop
+        }
+
+        // AffiliateClick bookkeeping only applies to cookie-attributed visits —
+        // direct signups never had a click row to begin with.
+        if (!$viaAffiliateCookie) {
+            return;
         }
 
         // Find the most recent unconverted click from this visitor and link it
