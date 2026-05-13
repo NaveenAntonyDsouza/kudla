@@ -24,16 +24,18 @@ use Illuminate\Database\Eloquent\Builder;
  *   • A 30-min buffer lets a slow webhook still land cleanly without
  *     the row showing up here as abandoned.
  *
- * NOTE: every now()->subMinutes(30) call is INLINE inside the closure
- * — never captured into an outer $abandonedSince and reused. The
- * previous iteration of this file captured the Carbon value once at
- * getTabs() entry and reused it inside the modifyQueryUsing closure;
- * that produced a "Call to a member function newQueryWithoutRelationships()
- * on null" 500 on Livewire AJAX updates (filter / sort interactions),
- * apparently because Livewire's serialise → re-evaluate path doesn't
- * preserve the captured Carbon instance cleanly for the deferred
- * filter-apply pass. Inline now() calls match the (stable)
- * LeadResource + UserResource tabs and avoid the issue.
+ * IMPORTANT: each modifyQueryUsing closure MUST name its parameter
+ * `$query` — NOT `$q` or anything else. Filament's EvaluatesClosures
+ * trait resolves closure parameters by name; Tab::modifyQuery passes
+ * the active Builder under the key `'query'`. If the closure's
+ * parameter is named differently, name-lookup fails, the fallback
+ * type-resolver calls `app()->make(Builder::class)` which constructs
+ * a brand-new Eloquent\Builder *without a model set*, and the next
+ * downstream `$query->where(Closure)` inside HasFilters explodes with
+ * "Call to a member function newQueryWithoutRelationships() on null".
+ * That bug took two prod 500s to track down; the parameter name is
+ * load-bearing. See LeadResource + UserResource for the same
+ * convention.
  *
  * Badge counts are unscoped intentionally — matches the LeadResource
  * pattern. Branch-bound admins will see counts across all branches in
@@ -55,13 +57,13 @@ class ListPaymentHistory extends ListRecords
 
             'paid' => Tab::make('Paid')
                 ->icon('heroicon-o-check-badge')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('payment_status', 'paid'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('payment_status', 'paid'))
                 ->badge(fn () => Subscription::where('payment_status', 'paid')->count() ?: null)
                 ->badgeColor('success'),
 
             'pending_recent' => Tab::make('Pending (recent)')
                 ->icon('heroicon-o-clock')
-                ->modifyQueryUsing(fn (Builder $q) => $q
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->where('payment_status', 'pending')
                     ->where('created_at', '>', now()->subMinutes(self::ABANDONED_AFTER_MINUTES))
                 )
@@ -73,7 +75,7 @@ class ListPaymentHistory extends ListRecords
 
             'abandoned' => Tab::make('Abandoned Pending')
                 ->icon('heroicon-o-exclamation-triangle')
-                ->modifyQueryUsing(fn (Builder $q) => $q
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->where('payment_status', 'pending')
                     ->where('created_at', '<=', now()->subMinutes(self::ABANDONED_AFTER_MINUTES))
                 )
@@ -85,7 +87,7 @@ class ListPaymentHistory extends ListRecords
 
             'failed' => Tab::make('Failed')
                 ->icon('heroicon-o-x-circle')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('payment_status', 'failed'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('payment_status', 'failed'))
                 ->badge(fn () => Subscription::where('payment_status', 'failed')->count() ?: null)
                 ->badgeColor('gray'),
         ];
