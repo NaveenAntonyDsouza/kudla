@@ -33,12 +33,6 @@ class PhotoController extends Controller
 
         $privacy = $profile->photoPrivacySetting;
 
-        // Defensive cleanup of any leftover onboarding session marker from
-        // the prior /manage-photos?from=onboarding flow (replaced by the
-        // dedicated /onboarding/photo route). Safe to remove this line
-        // once we're confident no users still hold the marker (~30 days).
-        session()->forget('in_onboarding_photos');
-
         return view('photos.manage', compact(
             'profile', 'profilePhoto', 'albumPhotos', 'familyPhotos',
             'pendingPhotos', 'rejectedPhotos', 'archivedPhotos', 'privacy'
@@ -57,6 +51,9 @@ class PhotoController extends Controller
         $request->validate([
             'photo' => "required|image|mimes:jpg,jpeg,png,gif,webp|max:{$maxKilobytes}",
             'photo_type' => 'required|in:profile,album,family',
+            // Optional. Whitelisted below — prevents this endpoint from
+            // being abused as an open redirect.
+            'redirect_to' => 'nullable|string',
         ]);
 
         $type = $request->input('photo_type');
@@ -123,7 +120,21 @@ class PhotoController extends Controller
             ? ucfirst($type) . ' photo uploaded successfully!'
             : ucfirst($type) . ' photo uploaded and sent for admin approval.';
 
-        return redirect()->route('photos.manage', ['tab' => $request->input('tab', $tab)])
+        // /onboarding/photo embeds this controller's UI via a shared partial
+        // and supplies redirect_to so the user stays on the onboarding step
+        // after uploading (vs. being kicked to /manage-photos). The whitelist
+        // is exhaustive — any other value falls back to /manage-photos so
+        // redirect_to can never be turned into an open-redirect vector.
+        $allowedRoutes = ['photos.manage', 'onboarding.photo'];
+        $redirectName = 'photos.manage';
+        foreach ($allowedRoutes as $name) {
+            if ($request->input('redirect_to') === route($name)) {
+                $redirectName = $name;
+                break;
+            }
+        }
+
+        return redirect()->route($redirectName, ['tab' => $request->input('tab', $tab)])
             ->with('success', $message);
     }
 

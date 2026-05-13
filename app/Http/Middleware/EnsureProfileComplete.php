@@ -43,6 +43,21 @@ class EnsureProfileComplete
                 return $next($request);
             }
 
+            // Onboarding Step 5 (/onboarding/photo) renders the full
+            // /manage-photos grid via a shared partial, so its forms post
+            // directly to the photo action endpoints below. Permit them
+            // so an onboarding user can actually upload / archive / set
+            // primary before they hit "Continue". We deliberately do NOT
+            // allow photos.manage itself — incomplete users still belong
+            // on /onboarding/photo, not /manage-photos.
+            $onboardingPhotoActions = [
+                'photos.upload', 'photos.destroy', 'photos.restore',
+                'photos.primary', 'photos.privacy', 'photos.deletePermanent',
+            ];
+            if (in_array($currentRoute, $onboardingPhotoActions, true)) {
+                return $next($request);
+            }
+
             // Redirect to the next incomplete step
             if ($step < 5) {
                 return redirect()->route('register.step' . ($step + 1));

@@ -9,11 +9,7 @@ use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\PartnerPreference;
 use App\Models\Profile;
-use App\Models\ProfilePhoto;
-use App\Models\SiteSetting;
 use App\Models\SocialMediaLink;
-use App\Services\ImageProcessingService;
-use App\Services\PhotoStorageService;
 use Illuminate\Http\Request;
 
 class OnboardingController extends Controller
@@ -409,75 +405,34 @@ class OnboardingController extends Controller
 
     // ── Step 5: Optional Photo Upload ────────────────────────────
     //
-    // Mirrors the shape of /register/photo (RegisterController::showPhoto +
-    // storePhoto + skipPhoto) but lives under the onboarding layout so the
-    // 5-step progress bar renders automatically. Different exit destination:
-    // both Save and Skip route through finishOnboarding() → dashboard.
+    // Renders the same rich grid as /manage-photos (profile slot, album /
+    // family tabs, archive accordion, Cropper.js modal) inside the
+    // onboarding layout so the 5-step progress bar renders. The view shares
+    // photos._grid-content with /manage-photos; uploads go through
+    // PhotoController::upload, which respects a whitelisted redirect_to
+    // field so the user stays on /onboarding/photo until they explicitly
+    // click Continue. That Continue button posts to /onboarding/finish.
 
     public function showPhoto()
     {
         $profile = auth()->user()->profile;
-        $hasProfilePhoto = $profile?->profilePhotos()
-            ->ofType('profile')->visible()->exists() ?? false;
-        $completionPct = $profile?->calculateCompletion() ?? 0;
 
-        return view('onboarding.photo', compact('profile', 'hasProfilePhoto', 'completionPct'));
-    }
+        // Same query shape as PhotoController::index — fetch once, partition
+        // in memory so the shared partial gets the variables it expects.
+        $photos = $profile->profilePhotos()->orderBy('display_order')->get();
 
-    public function storePhoto(
-        Request $request,
-        ImageProcessingService $imageProcessor,
-        PhotoStorageService $photoStorage
-    ) {
-        $profile = auth()->user()->profile;
+        $profilePhoto = $photos->where('photo_type', 'profile')->where('is_visible', true)->where('approval_status', 'approved')->first();
+        $albumPhotos = $photos->where('photo_type', 'album')->where('is_visible', true)->where('approval_status', 'approved')->values();
+        $familyPhotos = $photos->where('photo_type', 'family')->where('is_visible', true)->where('approval_status', 'approved')->values();
+        $archivedPhotos = $photos->where('is_visible', false)->where('approval_status', '!=', 'rejected')->values();
 
-        $maxKilobytes = (int) config('matrimony.max_photo_size_mb', 5) * 1024;
-        $request->validate([
-            'photo' => "required|image|mimes:jpg,jpeg,png,gif,webp|max:{$maxKilobytes}",
-        ]);
+        $privacy = $profile->photoPrivacySetting;
+        $completionPct = $profile->calculateCompletion();
 
-        $autoApprove = SiteSetting::getValue('auto_approve_profile_photos', '1') === '1';
-        $approvalStatus = $autoApprove
-            ? ProfilePhoto::STATUS_APPROVED
-            : ProfilePhoto::STATUS_PENDING;
-
-        // Archive any prior profile photos defensively — re-uploads at this
-        // step shouldn't accumulate.
-        $profile->profilePhotos()->visible()->ofType('profile')
-            ->update(['is_visible' => false, 'is_primary' => false]);
-
-        $folder = "photos/{$profile->id}";
-        $activeDriver = $photoStorage->getActiveDriver();
-        if (! $photoStorage->isDriverConfigured($activeDriver)) {
-            $activeDriver = PhotoStorageService::DRIVER_LOCAL;
-        }
-        $paths = $imageProcessor->processUpload(
-            $request->file('photo'),
-            $folder,
-            $activeDriver
-        );
-
-        ProfilePhoto::create([
-            'profile_id' => $profile->id,
-            'photo_type' => 'profile',
-            'photo_url' => $paths['full'],
-            'thumbnail_url' => $paths['thumb'],
-            'medium_url' => $paths['medium'],
-            'original_url' => $paths['original'],
-            'storage_driver' => $paths['driver'],
-            'is_primary' => $autoApprove,
-            'is_visible' => true,
-            'display_order' => 1,
-            'approval_status' => $approvalStatus,
-            'approved_at' => $autoApprove ? now() : null,
-        ]);
-
-        return $this->finishOnboarding();
-    }
-
-    public function skipPhoto()
-    {
-        return $this->finishOnboarding();
+        return view('onboarding.photo', compact(
+            'profile', 'profilePhoto', 'albumPhotos', 'familyPhotos',
+            'archivedPhotos', 'privacy', 'completionPct'
+        ));
     }
 
     // ── Finish Onboarding (called from Step 5 / onboarding/photo) ───

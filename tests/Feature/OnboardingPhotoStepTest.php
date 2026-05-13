@@ -1,107 +1,36 @@
 <?php
 
+use App\Models\PhotoPrivacySetting;
 use App\Models\Profile;
 use App\Models\ProfilePhoto;
 use App\Models\ThemeSetting;
 use App\Models\User;
-use App\Services\ImageProcessingService;
-use App\Services\PhotoStorageService;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 /*
 |--------------------------------------------------------------------------
-| Onboarding Photo Step (web)
+| Onboarding Photo Step (web) — v2
 |--------------------------------------------------------------------------
-| Step 5 of the onboarding funnel. Lifestyle's Save and Skip-for-now both
-| land here. Uploading or skipping calls finishOnboarding() →
-| onboarding_completed=true → /dashboard.
+| Step 5 of the onboarding funnel. The page itself (GET /onboarding/photo)
+| now embeds the same rich /manage-photos grid via a shared partial; uploads
+| go through PhotoController::upload (covered by its own tests). The
+| onboarding-specific endpoints exercised here are:
 |
-| Mirrors RegistrationPhotoStepTest's setup pattern (inline profile_photos
-| schema, fake Image/Storage services, pre-populated cache for the
-| SiteSetting keys the controller queries). The test user is configured
-| with onboarding_completed=false so the photo step is meaningful.
+|   GET  /onboarding/photo     — renders the grid with a Continue CTA
+|   POST /onboarding/finish    — flips onboarding_completed=true and lands
+|                                on /dashboard
+|
+| The old POST /onboarding/photo and POST /onboarding/photo/skip endpoints
+| were removed in this refactor. The corresponding RegisterController-style
+| anonymous-Profile stubbing (with its FK-derivation workaround) was deleted
+| with them — the controller no longer touches profilePhotos at all.
 |
 | Reference: docs/mobile-app/00-decisions-and-context.md (the photo-on-
-| registration + photo-on-onboarding pair agreed 2026-04-30).
+| registration + photo-on-onboarding pair agreed 2026-04-30) and the v2
+| decision on 2026-05-12 to consolidate onto the /manage-photos UI.
 */
-
-function createProfilePhotosTableForOnboardingTest(): void
-{
-    if (Schema::hasTable('profile_photos')) {
-        return;
-    }
-
-    Schema::create('profile_photos', function (Blueprint $t) {
-        $t->id();
-        $t->unsignedBigInteger('profile_id');
-        $t->string('photo_type');
-        $t->string('photo_url')->nullable();
-        $t->string('cloudinary_public_id')->nullable();
-        $t->string('thumbnail_url')->nullable();
-        $t->string('medium_url')->nullable();
-        $t->string('original_url')->nullable();
-        $t->string('storage_driver')->default('public');
-        $t->boolean('is_primary')->default(false);
-        $t->boolean('is_visible')->default(true);
-        $t->integer('display_order')->default(0);
-        $t->string('approval_status')->default('pending');
-        $t->string('rejection_reason')->nullable();
-        $t->unsignedBigInteger('approved_by')->nullable();
-        $t->timestamp('approved_at')->nullable();
-        $t->timestamps();
-
-        $t->index('profile_id');
-    });
-}
-
-function bindFakeImageProcessorForOnboardingTest(): void
-{
-    $fake = new class extends ImageProcessingService
-    {
-        public function __construct() {}
-
-        public function processUpload($file, string $storagePath, string $disk = 'public'): array
-        {
-            return [
-                'original' => "{$storagePath}/fake-original.jpg",
-                'full' => "{$storagePath}/fake-full.webp",
-                'medium' => "{$storagePath}/fake-medium.webp",
-                'thumb' => "{$storagePath}/fake-thumb.webp",
-                'driver' => $disk,
-            ];
-        }
-
-        public function deleteVariants(array $paths, string $disk = 'public'): void {}
-    };
-    app()->instance(ImageProcessingService::class, $fake);
-}
-
-function bindFakeStorageServiceForOnboardingTest(): void
-{
-    $fake = new class extends PhotoStorageService
-    {
-        public function __construct() {}
-
-        public function getActiveDriver(): string
-        {
-            return self::DRIVER_LOCAL;
-        }
-
-        public function isDriverConfigured(string $driver): bool
-        {
-            return true;
-        }
-    };
-    app()->instance(PhotoStorageService::class, $fake);
-}
-
-function seedSiteSettingsCacheForOnboardingTest(): void
-{
-    Cache::put('site_setting.auto_approve_profile_photos', '1', 3600);
-}
 
 function seedThemeSettingsCacheForOnboardingTest(): void
 {
@@ -126,6 +55,43 @@ function seedThemeSettingsCacheForOnboardingTest(): void
     Cache::put('site_setting.site_name', 'Test Matrimony', 3600);
 }
 
+function createMinimalSchemaForOnboardingTest(): void
+{
+    if (! Schema::hasTable('profile_photos')) {
+        Schema::create('profile_photos', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('profile_id');
+            $t->string('photo_type');
+            $t->string('photo_url')->nullable();
+            $t->string('thumbnail_url')->nullable();
+            $t->string('medium_url')->nullable();
+            $t->string('original_url')->nullable();
+            $t->string('storage_driver')->default('public');
+            $t->boolean('is_primary')->default(false);
+            $t->boolean('is_visible')->default(true);
+            $t->integer('display_order')->default(0);
+            $t->string('approval_status')->default('pending');
+            $t->timestamps();
+            $t->index('profile_id');
+        });
+    }
+
+    // photo_privacy_settings is queried via the photoPrivacySetting HasOne
+    // relation during showPhoto. The table must exist even if empty.
+    if (! Schema::hasTable('photo_privacy_settings')) {
+        Schema::create('photo_privacy_settings', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('profile_id');
+            $t->string('privacy_level')->nullable();
+            $t->string('profile_photo_privacy')->nullable();
+            $t->string('album_photos_privacy')->nullable();
+            $t->string('family_photos_privacy')->nullable();
+            $t->timestamps();
+            $t->index('profile_id');
+        });
+    }
+}
+
 function actingAsOnboardingUser(int $userId = 7001, int $profileId = 7001): User
 {
     $user = new User();
@@ -140,18 +106,17 @@ function actingAsOnboardingUser(int $userId = 7001, int $profileId = 7001): User
         'phone_verified_at' => now(),
     ]);
 
-    // Anonymous class stubbing three Profile concerns that finishOnboarding()
-    // and storePhoto() would otherwise hit:
+    // Anonymous Profile subclass — same pattern as RegistrationPhotoStepTest:
     //   calculateCompletion() — walks religious_info / education_detail /
-    //     lifestyle_info / etc. tables which the inline test schema
-    //     deliberately doesn't bootstrap. Returns a fixed % instead.
-    //   update() — would persist onboarding_completed=true to a missing
-    //     profiles table. No-op; the test asserts the redirect destination,
-    //     not the persisted side effect.
-    //   profilePhotos() — must EXPLICITLY name 'profile_id' as the FK.
-    //     Default hasMany derivation uses the parent-class snake_case name,
-    //     which for an anonymous class becomes something like
-    //     "onboarding_photo_step_test.php:151$1cb_id" → SQL: no such column.
+    //     lifestyle_info / etc. tables which this inline schema doesn't
+    //     bootstrap. Returns a fixed % instead.
+    //   update() — would persist to a profiles table this test doesn't
+    //     create. No-op; assertions look at redirect destinations, not
+    //     persisted side effects.
+    //   profilePhotos() — explicitly names 'profile_id' as the FK because
+    //     anonymous classes break Eloquent's default snake_case-of-parent
+    //     FK derivation (it would produce e.g. "onboarding_photo_step_test
+    //     .php:NNN$xxx_id"). Required for showPhoto's photo queries.
     $profile = new class extends Profile
     {
         public function calculateCompletion(): int { return 50; }
@@ -159,6 +124,10 @@ function actingAsOnboardingUser(int $userId = 7001, int $profileId = 7001): User
         public function profilePhotos(): \Illuminate\Database\Eloquent\Relations\HasMany
         {
             return $this->hasMany(ProfilePhoto::class, 'profile_id', 'id');
+        }
+        public function photoPrivacySetting(): \Illuminate\Database\Eloquent\Relations\HasOne
+        {
+            return $this->hasOne(PhotoPrivacySetting::class, 'profile_id', 'id');
         }
     };
     $profile->exists = true;
@@ -181,10 +150,7 @@ function actingAsOnboardingUser(int $userId = 7001, int $profileId = 7001): User
 }
 
 beforeEach(function () {
-    createProfilePhotosTableForOnboardingTest();
-    bindFakeImageProcessorForOnboardingTest();
-    bindFakeStorageServiceForOnboardingTest();
-    seedSiteSettingsCacheForOnboardingTest();
+    createMinimalSchemaForOnboardingTest();
     seedThemeSettingsCacheForOnboardingTest();
 });
 
@@ -195,37 +161,43 @@ afterEach(function () {
     Cache::flush();
 });
 
-it('uploads a photo, creates a primary ProfilePhoto row, and redirects to dashboard', function () {
-    $user = actingAsOnboardingUser(userId: 7002, profileId: 7002);
+it('renders the photo step page with the manage-photos grid', function () {
+    actingAsOnboardingUser(userId: 7002, profileId: 7002);
 
-    $file = UploadedFile::fake()->image('me.jpg', 800, 1000);
+    $response = $this->get('/onboarding/photo');
 
-    $this->post('/onboarding/photo', ['photo' => $file])
-        ->assertRedirect(route('dashboard'));
-
-    $row = \DB::table('profile_photos')->where('profile_id', $user->profile->id)->first();
-    expect($row)->not->toBeNull();
-    expect($row->photo_type)->toBe('profile');
-    expect((bool) $row->is_primary)->toBeTrue();
-    expect((bool) $row->is_visible)->toBeTrue();
-    expect($row->approval_status)->toBe(ProfilePhoto::STATUS_APPROVED);
+    $response->assertOk();
+    // The shared partial drives the Alpine grid; its component name is the
+    // canonical signal that we're rendering the rich UI (not the old
+    // standalone cropper page).
+    $response->assertSee('photoManagerEditor');
+    // Continue button posts to /onboarding/finish, not the old endpoints.
+    $response->assertSee(route('onboarding.finish'), false);
 });
 
-it('rejects an empty photo upload with a validation error', function () {
+it('finish endpoint redirects to dashboard', function () {
     actingAsOnboardingUser(userId: 7003, profileId: 7003);
 
-    $this->post('/onboarding/photo', [])
-        ->assertSessionHasErrors('photo');
-
-    expect(\DB::table('profile_photos')->count())->toBe(0);
+    $this->post('/onboarding/finish')
+        ->assertRedirect(route('dashboard'));
 });
 
-it('skip endpoint creates no photo row and redirects to dashboard', function () {
-    $user = actingAsOnboardingUser(userId: 7004, profileId: 7004);
+it('removed POST /onboarding/photo no longer routes', function () {
+    actingAsOnboardingUser(userId: 7004, profileId: 7004);
 
-    $this->post('/onboarding/photo/skip')
-        ->assertRedirect(route('dashboard'));
+    // The old POST /onboarding/photo (storePhoto) was removed in v2 — the
+    // upload now goes through PhotoController::upload instead. Hitting the
+    // old endpoint should 405 (method not allowed) since GET still exists.
+    $this->post('/onboarding/photo', [])
+        ->assertStatus(405);
+});
 
-    expect(\DB::table('profile_photos')->where('profile_id', $user->profile->id)->count())
-        ->toBe(0);
+it('removed POST /onboarding/photo/skip no longer exists', function () {
+    actingAsOnboardingUser(userId: 7005, profileId: 7005);
+
+    // The old POST /onboarding/photo/skip was removed in v2 — finish is
+    // the single exit. 404 because no /onboarding/photo/skip route exists
+    // for any verb.
+    $this->post('/onboarding/photo/skip', [])
+        ->assertStatus(404);
 });
