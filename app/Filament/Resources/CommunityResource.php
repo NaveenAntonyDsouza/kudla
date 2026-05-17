@@ -118,10 +118,22 @@ class CommunityResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                // sub_communities is stored as a JSON array (TagsInput
+                // writes it back as `['Bunt', 'Mangalore Bunts', ...]`).
+                // Filament's TextColumn unwraps an array state and runs
+                // formatStateUsing once PER ELEMENT — so the old
+                // `count($state) . ' items'` ran on each string item,
+                // saw "not an array", and emitted "0 items" four times.
+                // Render as badges instead — shows the actual names,
+                // limits to 3 with click-to-expand, and stays single-
+                // row in the table.
                 Tables\Columns\TextColumn::make('sub_communities')
                     ->label('Sub-Communities')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state) . ' items' : '0 items')
-                    ->color('gray'),
+                    ->badge()
+                    ->color('gray')
+                    ->limitList(3)
+                    ->expandableLimitedList()
+                    ->placeholder('—'),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
