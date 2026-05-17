@@ -4,7 +4,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field">
             <select name="family_status"><option value="">Select</option>
-                @foreach(['Middle Class', 'Upper Middle Class', 'Rich', 'Affluent'] as $opt)
+                @foreach(config('reference_data.family_status_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($f?->family_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Family Status</label>

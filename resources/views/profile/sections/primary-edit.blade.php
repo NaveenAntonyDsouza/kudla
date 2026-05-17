@@ -23,7 +23,7 @@
         <div class="float-field">
             <select name="complexion">
                 <option value="">Select</option>
-                @foreach(['Very Fair', 'Fair', 'Medium', 'Wheatish', 'Dark'] as $opt)
+                @foreach(config('reference_data.complexion_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($p->complexion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select>
@@ -32,7 +32,7 @@
         <div class="float-field">
             <select name="body_type">
                 <option value="">Select</option>
-                @foreach(['Slim', 'Average', 'Athletic', 'Heavy'] as $opt)
+                @foreach(config('reference_data.body_type_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($p->body_type ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select>
@@ -41,7 +41,7 @@
         <div class="float-field">
             <select name="blood_group">
                 <option value="">Select</option>
-                @foreach(['A+ve', 'A-ve', 'B+ve', 'B-ve', 'AB+ve', 'AB-ve', 'O+ve', 'O-ve', 'Not Known'] as $opt)
+                @foreach(config('reference_data.blood_group_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($p->blood_group ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select>

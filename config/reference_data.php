@@ -292,7 +292,42 @@ return [
     // for already-saved rows.
     'blood_group_list' => ['A+ve', 'A-ve', 'B+ve', 'B-ve', 'O+ve', 'O-ve', 'AB+ve', 'AB-ve'],
     'custodian_relation_list' => ['Self', 'Father', 'Mother', 'Brother', 'Sister', 'Relative', 'Friend'],
-    'preferred_call_time_list' => ['Morning (9 AM - 12 PM)', 'Afternoon (12 PM - 5 PM)', 'Evening (5 PM - 9 PM)', 'Anytime'],
+
+    // preferred_call_time format MUST match what existing rows in
+    // contact_info.preferred_call_time already use ("8 AM - 10 AM IST",
+    // "Any Time", etc.). The contact_info column is varchar(100) so
+    // every option fits.
+    'preferred_call_time_list' => [
+        '8 AM - 10 AM IST', '10 AM - 12 PM IST', '12 PM - 2 PM IST',
+        '2 PM - 4 PM IST', '4 PM - 6 PM IST', '6 PM - 8 PM IST',
+        '8 PM - 10 PM IST', 'Any Time',
+    ],
+
+    // Religion list. Includes "No Religion" + "Other" because
+    // register-step2 has both, and existing prod data has users
+    // with religion = "No Religion". The Religion column is on
+    // religious_info.religion.
+    'religion_list' => ['Hindu', 'Christian', 'Muslim', 'Sikh', 'Jain', 'Buddhist', 'No Religion', 'Other'],
+
+    // Family economic status. family_details.family_status +
+    // partner_preferences.family_status. Existing prod values include
+    // "Lower Middle Class" which the old inline family-edit array
+    // omitted (users with that value couldn't edit their own family
+    // section without losing the field).
+    'family_status_list' => ['Lower Middle Class', 'Middle Class', 'Upper Middle Class', 'Rich', 'Affluent'],
+
+    // Residency / visa status on location_info.residency_status.
+    'residency_status_list' => ['Permanent Resident', 'Citizen', 'Work Permit', 'Student Visa', 'Temporary Visa'],
+
+    // Marital status. Union of what the registration wizard offers
+    // (Unmarried / Divorced / Widow/Widower / Awaiting Divorce /
+    // Annulled) and what partner-edit historically allowed (added
+    // "Separated"). Sticking with the union so neither edit surface
+    // renders blank for an already-saved value.
+    'marital_status_list' => [
+        'Unmarried', 'Divorced', 'Widow/Widower', 'Awaiting Divorce',
+        'Annulled', 'Separated',
+    ],
 
     'hobbies_list' => [
         'Cooking', 'Nature', 'Dancing', 'Painting', 'Pets', 'Photography', 'Puzzles',

@@ -4,21 +4,21 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field">
             <select name="diet"><option value="">Select</option>
-                @foreach(['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan'] as $opt)
+                @foreach(config('reference_data.eating_habits', []) as $opt)
                     <option value="{{ $opt }}" {{ ($h?->diet ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Diet</label>
         </div>
         <div class="float-field">
             <select name="smoking"><option value="">Select</option>
-                @foreach(['No', 'Occasionally', 'Yes'] as $opt)
+                @foreach(config('reference_data.smoking_habits', []) as $opt)
                     <option value="{{ $opt }}" {{ ($h?->smoking ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Smoking</label>
         </div>
         <div class="float-field">
             <select name="drinking"><option value="">Select</option>
-                @foreach(['No', 'Occasionally', 'Yes'] as $opt)
+                @foreach(config('reference_data.drinking_habits', []) as $opt)
                     <option value="{{ $opt }}" {{ ($h?->drinking ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Drinking</label>

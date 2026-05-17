@@ -5,7 +5,7 @@
         <div class="float-field">
             <select name="religion" x-model="religion" required>
                 <option value="">Select</option>
-                @foreach(['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other'] as $opt)
+                @foreach(config('reference_data.religion_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($r?->religion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select>

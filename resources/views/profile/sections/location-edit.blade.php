@@ -20,7 +20,7 @@
         </div>
         <div x-show="residingCountry && residingCountry !== 'India'" class="float-field">
             <select name="residency_status"><option value="">Select</option>
-                @foreach(['Permanent Resident', 'Citizen', 'Work Permit', 'Student Visa', 'Temporary Visa'] as $opt)
+                @foreach(config('reference_data.residency_status_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($l?->residency_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Residency Status</label>

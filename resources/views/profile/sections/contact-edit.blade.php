@@ -7,7 +7,7 @@
         <x-phone-input name="residential_phone_number" label="Residential Phone" :value="$c?->residential_phone_number ?? ''" maxlength="20" />
         <div class="float-field">
             <select name="preferred_call_time"><option value="">Select</option>
-                @foreach(['8 AM - 10 AM IST', '10 AM - 12 PM IST', '12 PM - 2 PM IST', '2 PM - 4 PM IST', '4 PM - 6 PM IST', '6 PM - 8 PM IST', '8 PM - 10 PM IST', 'Any Time'] as $opt)
+                @foreach(config('reference_data.preferred_call_time_list', []) as $opt)
                     <option value="{{ $opt }}" {{ ($c?->preferred_call_time ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
             </select><label>Preferred Call Time</label>
