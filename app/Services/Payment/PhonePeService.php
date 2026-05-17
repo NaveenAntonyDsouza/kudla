@@ -155,6 +155,36 @@ class PhonePeService implements PaymentGatewayInterface
     }
 
     /**
+     * Query PhonePe's order-status API and return the parsed response —
+     * raw access for admin tooling that needs to know more than just
+     * "is it COMPLETED?". Returns null when the gateway is unconfigured,
+     * the merchantOrderId is empty, or the HTTP call fails.
+     *
+     * Response shape (subset we care about):
+     *   { state: COMPLETED|PENDING|FAILED, paymentDetails: [...], ... }
+     *
+     * Used by the Filament "Refresh from PhonePe" row action so admins
+     * can reconcile a row whose webhook never arrived (and whose
+     * synchronous return URL was missed because the buyer closed the
+     * tab before redirecting back).
+     */
+    public function fetchOrderStatus(string $merchantOrderId): ?array
+    {
+        if ($merchantOrderId === '' || ! $this->isConfigured()) {
+            return null;
+        }
+
+        $response = $this->authenticatedRequest()
+            ->get($this->payApiBase().'/checkout/v2/order/'.urlencode($merchantOrderId).'/status');
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        return $response->json();
+    }
+
+    /**
      * Verify by polling PhonePe's order status API.
      */
     public function verifyPayment(array $data, Subscription $subscription): bool
