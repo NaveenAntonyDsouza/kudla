@@ -271,6 +271,29 @@ return [
 
     'cultural_background_list' => ['Traditional', 'Moderate', 'Modern', 'Liberal'],
 
+    // Personal-info dropdown options. These mirror the inline arrays
+    // currently hard-coded in resources/views/auth/register-step2.blade.php
+    // so the admin Edit User form and the member-facing registration
+    // wizard offer the same canonical choices. If you change a list
+    // here, the register view will keep working with its inline copy
+    // until you also refactor it to read from config — defer that
+    // cleanup until both surfaces need a value added in lockstep.
+    'complexion_list' => ['Very Fair', 'Fair', 'Moderate Fair', 'Medium', 'Dark', 'Prefer Not to Say'],
+    'body_type_list' => ['Slim', 'Athletic', 'Average', 'Heavy', 'Prefer Not to Say'],
+    'physical_status_list' => ['Normal', 'Differently Abled'],
+
+    // Standard matrimony domain — admin-only fields that the public
+    // registration doesn't ask for.
+    //
+    // blood_group format: existing prod data + the legacy varchar(5)
+    // schema both use the Indian medical "+ve / -ve" convention
+    // (O+ve, AB-ve, etc.) — not the international "+/-" form. Stick
+    // with the existing format so the Select doesn't render blank
+    // for already-saved rows.
+    'blood_group_list' => ['A+ve', 'A-ve', 'B+ve', 'B-ve', 'O+ve', 'O-ve', 'AB+ve', 'AB-ve'],
+    'custodian_relation_list' => ['Self', 'Father', 'Mother', 'Brother', 'Sister', 'Relative', 'Friend'],
+    'preferred_call_time_list' => ['Morning (9 AM - 12 PM)', 'Afternoon (12 PM - 5 PM)', 'Evening (5 PM - 9 PM)', 'Anytime'],
+
     'hobbies_list' => [
         'Cooking', 'Nature', 'Dancing', 'Painting', 'Pets', 'Photography', 'Puzzles',
         'Gardening', 'Art / Handicraft', 'Listening to Music', 'Movies', 'Internet Surfing', 'Traveling',

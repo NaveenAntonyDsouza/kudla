@@ -1157,13 +1157,40 @@ class UserResource extends Resource
                             'Unmarried' => 'Unmarried', 'Divorced' => 'Divorced',
                             'Widow/Widower' => 'Widow/Widower', 'Awaiting Divorce' => 'Awaiting Divorce', 'Annulled' => 'Annulled',
                         ]),
-                        Forms\Components\TextInput::make('mother_tongue')->label('Mother Tongue')->maxLength(50),
-                        Forms\Components\TextInput::make('height')->maxLength(50),
-                        Forms\Components\TextInput::make('weight_kg')->label('Weight (kg)')->maxLength(20),
-                        Forms\Components\TextInput::make('complexion')->maxLength(30),
-                        Forms\Components\TextInput::make('body_type')->label('Body Type')->maxLength(30),
-                        Forms\Components\TextInput::make('blood_group')->label('Blood Group')->maxLength(10),
-                        Forms\Components\TextInput::make('physical_status')->label('Physical Status')->maxLength(50),
+                        // Selects use the same canonical lists as the
+                        // member-facing registration wizard. The lists
+                        // live in config/reference_data.php so the admin
+                        // and member surfaces stay in sync. ->searchable()
+                        // is on the longer ones (height, weight, language)
+                        // so admins can type to filter instead of scrolling
+                        // through 80+ options.
+                        Forms\Components\Select::make('mother_tongue')
+                            ->label('Mother Tongue')
+                            ->options(fn () => self::listToOptions(config('reference_data.language_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('height')
+                            ->options(fn () => self::listToOptions(config('reference_data.height_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('weight_kg')
+                            ->label('Weight (kg)')
+                            ->options(fn () => self::listToOptions(config('reference_data.weight_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('complexion')
+                            ->options(fn () => self::listToOptions(config('reference_data.complexion_list', []))),
+                        Forms\Components\Select::make('body_type')
+                            ->label('Body Type')
+                            ->options(fn () => self::listToOptions(config('reference_data.body_type_list', []))),
+                        Forms\Components\Select::make('blood_group')
+                            ->label('Blood Group')
+                            ->options(fn () => self::listToOptions(config('reference_data.blood_group_list', []))),
+                        Forms\Components\Select::make('physical_status')
+                            ->label('Physical Status')
+                            ->options(fn () => self::listToOptions(config('reference_data.physical_status_list', [])))
+                            // profiles.physical_status is NOT NULL — must always
+                            // resolve to a value. Default to 'Normal' which is
+                            // the same default the registration wizard uses.
+                            ->default('Normal')
+                            ->required(),
                         Forms\Components\Textarea::make('about_me')->label('About Me')->rows(3)->columnSpanFull(),
                     ]),
 
@@ -1179,8 +1206,12 @@ class UserResource extends Resource
                             ->unique(table: 'users', column: 'phone', ignoreRecord: true),
                         Forms\Components\TextInput::make('cont_whatsapp')->label('WhatsApp')->maxLength(15),
                         Forms\Components\TextInput::make('cont_custodian_name')->label('Custodian Name')->maxLength(100),
-                        Forms\Components\TextInput::make('cont_custodian_relation')->label('Custodian Relation')->maxLength(100),
-                        Forms\Components\TextInput::make('cont_preferred_call_time')->label('Preferred Call Time')->maxLength(50),
+                        Forms\Components\Select::make('cont_custodian_relation')
+                            ->label('Custodian Relation')
+                            ->options(fn () => self::listToOptions(config('reference_data.custodian_relation_list', []))),
+                        Forms\Components\Select::make('cont_preferred_call_time')
+                            ->label('Preferred Call Time')
+                            ->options(fn () => self::listToOptions(config('reference_data.preferred_call_time_list', []))),
                         Forms\Components\Textarea::make('cont_communication_address')->label('Communication Address')->rows(2)->maxLength(200)->columnSpanFull(),
                         Forms\Components\TextInput::make('cont_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
                         Forms\Components\TextInput::make('cont_reference_name')->label('Reference Name')->maxLength(100),
@@ -1334,5 +1365,15 @@ class UserResource extends Resource
             ->with(['user', 'religiousInfo', 'educationDetail', 'locationInfo', 'primaryPhoto'])
             ->withCount('profileNotes')
             ->forUserBranch(null, true);
+    }
+
+    /**
+     * Convert a zero-indexed reference_data list into the [value => label]
+     * shape Filament Select expects. Both halves point at the same
+     * string — we store and display the option label, not a separate id.
+     */
+    private static function listToOptions(array $list): array
+    {
+        return array_combine($list, $list) ?: [];
     }
 }
