@@ -28,6 +28,59 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overridePayPalConfig($settings);
         $this->overridePaytmConfig($settings);
         $this->overridePhonePeConfig($settings);
+        $this->overrideReferenceData($settings);
+    }
+
+    /**
+     * Apply admin overrides to reference_data option lists.
+     *
+     * Background: Admin → Content Management → Reference Data
+     * (App\Filament\Pages\ReferenceDataEditor) lets admins edit
+     * dropdown option lists — Mother Tongues, Eating Habits,
+     * Education Qualifications, etc. — by writing JSON into
+     * site_settings keyed `ref_data_{config_key}`. Before this
+     * method existed, those edits saved cleanly but nothing read
+     * them — every view called `config('reference_data.X_list')`
+     * which hit the static PHP file, not the override.
+     *
+     * Mirroring the same boot-time override pattern used for SMTP +
+     * payment gateway credentials, we now hydrate the config tree
+     * from those JSON overrides during the boot phase. Result:
+     * every existing `config('reference_data.…')` callsite (views,
+     * Filament forms, API responses) automatically sees the admin's
+     * overrides. No callsite changes needed.
+     *
+     * Resolution per category:
+     *   1. site_settings.ref_data_{key} exists + decodes to an array
+     *      → that value wins.
+     *   2. Otherwise the value from config/reference_data.php
+     *      remains (the system default the file ships with).
+     *
+     * Storage shape is whatever ReferenceDataEditor writes (flat
+     * arrays for ordinary lists, grouped arrays for grouped
+     * categories like educational_qualifications_list). We don't
+     * inspect the shape — we just hand the decoded array back to
+     * config() and let the consumer handle it the same way it
+     * would handle the config-file version.
+     */
+    protected function overrideReferenceData(array $settings): void
+    {
+        foreach ($settings as $key => $value) {
+            if (! is_string($key) || ! str_starts_with($key, 'ref_data_')) {
+                continue;
+            }
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            $decoded = json_decode($value, true);
+            if (! is_array($decoded) || empty($decoded)) {
+                continue;
+            }
+
+            $listKey = substr($key, strlen('ref_data_'));
+            config(['reference_data.'.$listKey => $decoded]);
+        }
     }
 
     protected function overrideMailConfig(array $settings): void
