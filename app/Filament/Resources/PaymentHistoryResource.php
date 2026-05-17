@@ -319,6 +319,124 @@ class PaymentHistoryResource extends Resource
                             ->send();
                     }),
 
+                // "Refresh from Razorpay" — sibling of refreshFromPhonePe
+                // for stuck-pending Razorpay rows. Walks the
+                // /v1/orders/{id}/payments collection looking for any
+                // `captured` payment — if found, that's authoritative
+                // proof the buyer paid (Razorpay's own API said so,
+                // authenticated with our secret), so we activate even
+                // without the JS-side signature the normal /verify
+                // endpoint needs. If every payment in the collection is
+                // `failed`, we markFailed. Otherwise stays pending and
+                // the latest_status is mirrored into gateway_metadata
+                // for the admin to inspect.
+                \Filament\Actions\Action::make('refreshFromRazorpay')
+                    ->label('Refresh from Razorpay')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->visible(fn (Subscription $record) =>
+                        $record->gateway === 'razorpay'
+                        && $record->payment_status === 'pending'
+                    )
+                    ->requiresConfirmation()
+                    ->modalHeading('Re-check this order with Razorpay?')
+                    ->modalDescription('Hits Razorpay\'s /v1/orders/{id}/payments API. If they confirm a captured payment, the subscription activates immediately. If all attempts failed, the row moves to the Failed tab. Otherwise stays pending and we just record the latest reported state.')
+                    ->modalSubmitActionLabel('Check now')
+                    ->action(function (Subscription $record) {
+                        $orderId = $record->razorpay_order_id ?? null;
+                        if (! $orderId) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Cannot refresh')
+                                ->body('No Razorpay order id recorded for this row.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $razorpay = app(\App\Services\Payment\PaymentGatewayManager::class)->forSlug('razorpay');
+                        if (! $razorpay instanceof \App\Services\Payment\RazorpayService) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Cannot refresh')
+                                ->body('Razorpay service is not currently configured.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $result = $razorpay->fetchOrderPayments($orderId);
+                        if (! is_array($result)) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Razorpay API call failed')
+                                ->body('Could not reach Razorpay or the order id is unknown to them. Check the order in Razorpay\'s dashboard manually.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $items = $result['items'] ?? [];
+
+                        // Look for any captured payment — that's the
+                        // authoritative "paid" signal. Take the first
+                        // captured one for record-keeping (the more
+                        // common case is exactly one captured payment).
+                        $captured = collect($items)->firstWhere('status', 'captured');
+
+                        if ($captured) {
+                            $paymentId = (string) ($captured['id'] ?? '');
+                            // Persist the payment id we learned from the
+                            // API. Signature stays empty (Razorpay only
+                            // emits the signature client-side in the JS
+                            // callback flow; the API path doesn't expose
+                            // it). That's fine — authenticity is
+                            // established by the Basic-Auth-protected
+                            // API call itself.
+                            if ($paymentId !== '' && empty($record->razorpay_payment_id)) {
+                                $record->update(['razorpay_payment_id' => $paymentId]);
+                            }
+
+                            $activator = app(\App\Services\Payment\SubscriptionActivator::class);
+                            $activated = $activator->activate($record->fresh());
+
+                            \Filament\Notifications\Notification::make()
+                                ->title($activated ? 'Activated' : 'Already paid')
+                                ->body($activated
+                                    ? "Razorpay confirms a captured payment (pay_{$paymentId}). Subscription #{$record->id} is now active."
+                                    : "Subscription #{$record->id} was already in a paid state — no change.")
+                                ->success()
+                                ->send();
+                            return;
+                        }
+
+                        // No captured payment. Are ALL attempts failed?
+                        // (count > 0 means attempts exist; if every one
+                        // is 'failed', the order is dead.)
+                        $statuses = collect($items)->pluck('status');
+                        if ($statuses->isNotEmpty() && $statuses->every(fn ($s) => $s === 'failed')) {
+                            app(\App\Services\Payment\SubscriptionActivator::class)->markFailed($record->fresh());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Marked failed')
+                                ->body("All payment attempts on this order failed at Razorpay. Subscription #{$record->id} moved to the Failed tab.")
+                                ->warning()
+                                ->send();
+                            return;
+                        }
+
+                        // Still in an intermediate state — no payments
+                        // yet, or authorized-but-not-captured, or a mix.
+                        // Don't change payment_status; report the count
+                        // so admin can decide whether to wait or
+                        // manually mark failed.
+                        \Filament\Notifications\Notification::make()
+                            ->title('Still pending')
+                            ->body(sprintf(
+                                'Razorpay reports %d payment attempt(s), none captured yet. Statuses: %s. Try again later or use "Mark as Failed" if you\'ve confirmed with the buyer.',
+                                $statuses->count(),
+                                $statuses->isEmpty() ? '(none)' : $statuses->unique()->implode(', '),
+                            ))
+                            ->info()
+                            ->send();
+                    }),
+
                 // "Mark as Failed" — only visible on pending rows. Support
                 // workflow: user calls saying "I tried to pay but it didn't
                 // go through", admin checks the row, confirms with the user

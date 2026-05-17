@@ -63,6 +63,46 @@ class RazorpayService implements PaymentGatewayInterface
     }
 
     /**
+     * Query Razorpay's /v1/orders/{order_id}/payments — lists every
+     * payment attempt against the order with its captured/failed/
+     * authorized status. Returns null on transport / auth failure.
+     *
+     * Response shape:
+     *   { entity: "collection", count: N, items: [ {id, status, amount, ...}, ... ] }
+     *
+     * Where item.status is one of:
+     *   - created     payment started, not yet authorized
+     *   - authorized  authorized (money on hold) but not captured
+     *   - captured    money received — equivalent to "paid"
+     *   - failed      payment failed at the bank / network layer
+     *   - refunded    captured then refunded
+     *
+     * Used by the Filament "Refresh from Razorpay" row action. The action
+     * walks `items[]` looking for any captured payment — its existence is
+     * authoritative ("Razorpay says money landed") and bypasses the
+     * client-side signature check that the normal /verify endpoint
+     * requires (we're authenticated via Basic Auth with our secret, so
+     * the API itself is the trust root).
+     */
+    public function fetchOrderPayments(string $orderId): ?array
+    {
+        if ($orderId === '' || ! $this->isConfigured()) {
+            return null;
+        }
+
+        $response = Http::withoutVerifying()
+            ->withBasicAuth($this->keyId(), $this->keySecret())
+            ->acceptJson()
+            ->get('https://api.razorpay.com/v1/orders/'.urlencode($orderId).'/payments');
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        return $response->json();
+    }
+
+    /**
      * Creates an order on Razorpay's API and returns a payload Flutter
      * can pass directly into the Razorpay client SDK.
      *
