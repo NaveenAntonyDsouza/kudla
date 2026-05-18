@@ -68,7 +68,7 @@
             <div class="float-field">
                 <select name="education_level" id="education_level" required>
                     <option value="">Select</option>
-                    @foreach(['High School', 'Diploma', "Bachelor's", "Master's", 'PhD', 'PG Diploma'] as $opt)
+                    @foreach(config('reference_data.education_level_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('education_level', $educationDetail?->education_level ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
@@ -117,7 +117,7 @@
             <div class="float-field">
                 <select name="employment_category" id="employment_category" required>
                     <option value="">Select</option>
-                    @foreach(['Central Govt.', 'Entrepreneurship', 'Govt.', 'MNC', 'Others', 'Overseas', 'Own Business', 'Private', 'Public Limited', 'Semi Govt.'] as $opt)
+                    @foreach(config('reference_data.employment_category_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('employment_category', $educationDetail?->employment_category ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>

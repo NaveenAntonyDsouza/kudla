@@ -66,7 +66,7 @@
             <div class="float-field">
                 <select name="complexion" id="complexion" required>
                     <option value="">Select</option>
-                    @foreach(['Very Fair', 'Fair', 'Moderate Fair', 'Medium', 'Dark', 'Prefer Not to Say'] as $opt)
+                    @foreach(config('reference_data.complexion_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('complexion', $profile->complexion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
@@ -78,7 +78,7 @@
             <div class="float-field">
                 <select name="body_type" id="body_type" required>
                     <option value="">Select</option>
-                    @foreach(['Slim', 'Athletic', 'Average', 'Heavy', 'Prefer Not to Say'] as $opt)
+                    @foreach(config('reference_data.body_type_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('body_type', $profile->body_type ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
@@ -90,8 +90,9 @@
             <div class="float-field">
                 <select name="physical_status" id="physical_status" x-model="physicalStatus" required>
                     <option value="">Select</option>
-                    <option value="Normal" {{ old('physical_status', $profile->physical_status ?? '') === 'Normal' ? 'selected' : '' }}>Normal</option>
-                    <option value="Differently Abled" {{ old('physical_status', $profile->physical_status ?? '') === 'Differently Abled' ? 'selected' : '' }}>Differently Abled</option>
+                    @foreach(config('reference_data.physical_status_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('physical_status', $profile->physical_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
                 </select>
                 <label for="physical_status">Physical Status <span class="text-red-500">*</span></label>
                 @error('physical_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -127,7 +128,7 @@
             <div class="float-field">
                 <select name="marital_status" id="marital_status" x-model="maritalStatus" required>
                     <option value="">Select</option>
-                    @foreach(['Unmarried', 'Divorcee', 'Awaiting Divorce', 'Widower', 'Annulled'] as $opt)
+                    @foreach(config('reference_data.marital_status_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('marital_status', $profile->marital_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
@@ -155,7 +156,7 @@
             <div class="float-field">
                 <select name="family_status" id="family_status" required>
                     <option value="">Select</option>
-                    @foreach(['Lower Middle Class', 'Middle Class', 'Upper Middle Class', 'Rich'] as $opt)
+                    @foreach(config('reference_data.family_status_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('family_status', $familyDetail?->family_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>

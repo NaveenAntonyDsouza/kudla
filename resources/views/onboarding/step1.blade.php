@@ -46,7 +46,12 @@
             <div class="float-field">
                 <select name="blood_group" id="blood_group">
                     <option value="">Select</option>
-                    @foreach(['A+ve', 'A-ve', 'B+ve', 'B-ve', 'AB+ve', 'AB-ve', 'O+ve', 'O-ve', 'Prefer Not to Say'] as $bg)
+                    {{-- Note: the previous inline list included "Prefer Not to Say"
+                         but the profiles.blood_group column is varchar(5) — that
+                         option could never be saved (would have thrown a data-
+                         truncation error). Now reads from the canonical list
+                         which only holds the 8 codes that actually fit. --}}
+                    @foreach(config('reference_data.blood_group_list', []) as $bg)
                         <option value="{{ $bg }}" {{ old('blood_group', $profile?->blood_group ?? '') === $bg ? 'selected' : '' }}>{{ $bg }}</option>
                     @endforeach
                 </select>

@@ -319,14 +319,45 @@ return [
     // Residency / visa status on location_info.residency_status.
     'residency_status_list' => ['Permanent Resident', 'Citizen', 'Work Permit', 'Student Visa', 'Temporary Visa'],
 
-    // Marital status. Union of what the registration wizard offers
-    // (Unmarried / Divorced / Widow/Widower / Awaiting Divorce /
-    // Annulled) and what partner-edit historically allowed (added
-    // "Separated"). Sticking with the union so neither edit surface
-    // renders blank for an already-saved value.
+    // Marital status — union of every value that prod data actually
+    // uses. Three separate histories of inline arrays drifted over
+    // time:
+    //   - register-step2 used 'Divorcee' / 'Widower' (152 profiles)
+    //   - old partner-edit used 'Divorced' / 'Widow/Widower'
+    //     (partner_preferences rows from later code)
+    //   - my earlier canonical added 'Separated' for completeness
+    // We include EVERY variant so no select renders blank for a row
+    // that already exists. The 'Divorced'-vs-'Divorcee' /
+    // 'Widow/Widower'-vs-'Widower' duplication is real prod data
+    // inconsistency — fix later via a data-migration commit after
+    // deciding which form is canonical.
     'marital_status_list' => [
-        'Unmarried', 'Divorced', 'Widow/Widower', 'Awaiting Divorce',
-        'Annulled', 'Separated',
+        'Unmarried', 'Divorced', 'Divorcee', 'Widow/Widower', 'Widower',
+        'Awaiting Divorce', 'Annulled', 'Separated',
+    ],
+
+    // Highest academic credential bucket. Used by register-step3
+    // alongside the more detailed educational_qualifications_list.
+    // Six bands, matrimony convention.
+    'education_level_list' => [
+        'High School', 'Diploma', "Bachelor's", "Master's", 'PhD', 'PG Diploma',
+    ],
+
+    // Employer type for the candidate's current job. Used by
+    // register-step3 employment_category select. 10 buckets — matches
+    // what register-step3 has inlined since day one.
+    'employment_category_list' => [
+        'Central Govt.', 'Entrepreneurship', 'Govt.', 'MNC', 'Others',
+        'Overseas', 'Own Business', 'Private', 'Public Limited', 'Semi Govt.',
+    ],
+
+    // Relationship of the person creating the profile to the candidate.
+    // Distinct concept from custodian_relation_list (matched by name
+    // value: "Self / Candidate" vs "Self", "Relatives" vs "Relative")
+    // — different existing prod data, so kept as a separate list rather
+    // than consolidated. All seven values appear in prod profiles.created_by.
+    'created_by_list' => [
+        'Self / Candidate', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Relatives',
     ],
 
     'hobbies_list' => [

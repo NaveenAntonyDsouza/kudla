@@ -190,7 +190,7 @@
             <div class="float-field">
                 <select name="created_by" id="created_by" x-model="createdBy" @change="onCreatedByChange()" required>
                     <option value="">Select</option>
-                    @foreach(['Self / Candidate', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Relatives'] as $opt)
+                    @foreach(config('reference_data.created_by_list', []) as $opt)
                         <option value="{{ $opt }}" {{ old('created_by', $profile?->created_by ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
