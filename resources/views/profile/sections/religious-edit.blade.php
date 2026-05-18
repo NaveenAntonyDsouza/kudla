@@ -3,11 +3,24 @@
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field">
+            @php
+                $religionOptions = config('reference_data.religion_list', []);
+                $currentReligion = $r?->religion ?? '';
+            @endphp
             <select name="religion" x-model="religion" required>
                 <option value="">Select</option>
-                @foreach(config('reference_data.religion_list', []) as $opt)
-                    <option value="{{ $opt }}" {{ ($r?->religion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                @foreach($religionOptions as $opt)
+                    <option value="{{ $opt }}" {{ $currentReligion === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                 @endforeach
+                {{-- Preserve the user's saved religion in the dropdown even
+                     if the admin has deactivated it. Without this, deactivating
+                     "Jain" would make 1 existing user's stored value invisible
+                     in this select; they'd save and lose their value. The
+                     "(no longer offered)" suffix makes it clear admins removed
+                     it but doesn't lose the user's data. --}}
+                @if($currentReligion && ! in_array($currentReligion, $religionOptions, true))
+                    <option value="{{ $currentReligion }}" selected>{{ $currentReligion }} (no longer offered)</option>
+                @endif
             </select>
             <label>Religion <span class="text-red-500">*</span></label>
         </div>

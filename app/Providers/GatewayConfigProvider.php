@@ -29,6 +29,113 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overridePaytmConfig($settings);
         $this->overridePhonePeConfig($settings);
         $this->overrideReferenceData($settings);
+        $this->overrideReferenceDataFromOptionsTable();
+    }
+
+    /**
+     * Apply per-row admin overrides from reference_data_options.
+     *
+     * Runs AFTER overrideReferenceData (the JSON-via-SiteSetting path
+     * used by the textarea editor for grouped lists). For flat lists
+     * (religion, complexion, blood_group, …), the table takes
+     * precedence: if a category has any rows, the active rows
+     * replace whatever's in config (and whatever the JSON path set).
+     *
+     * Why two paths?
+     *   - The textarea ReferenceDataEditor stores grouped JSON
+     *     ({"South India":["Tamil","Telugu"], "North India":[...]}) —
+     *     can't be flattened to per-row toggles without losing the
+     *     grouping. Stays JSON.
+     *   - For flat lists, per-row CRUD with is_active is the proper
+     *     UX (deactivate without delete, no data loss for users who
+     *     already have that value).
+     *
+     * Both populate config('reference_data.{category}_list') so views
+     * don't need to know which path is active.
+     *
+     * Category names in the table use short form ('religion',
+     * 'complexion'). Config keys use the `_list` suffix
+     * ('religion_list', 'complexion_list') — and the helper picks
+     * the right one (e.g. eating_habits has no _list suffix). The
+     * mapping below mirrors what the seed migration uses.
+     */
+    protected function overrideReferenceDataFromOptionsTable(): void
+    {
+        // category in the table  =>  config key in reference_data.php
+        // (matches database/migrations/.../seed_reference_data_options_from_config.php)
+        $categoryToConfigKey = [
+            'complexion' => 'complexion_list',
+            'body_type' => 'body_type_list',
+            'blood_group' => 'blood_group_list',
+            'physical_status' => 'physical_status_list',
+            'mother_tongue' => 'language_list',
+            'religion' => 'religion_list',
+            'family_status' => 'family_status_list',
+            'residency_status' => 'residency_status_list',
+            'preferred_call_time' => 'preferred_call_time_list',
+            'marital_status' => 'marital_status_list',
+            'custodian_relation' => 'custodian_relation_list',
+            'created_by' => 'created_by_list',
+            'education_level' => 'education_level_list',
+            'employment_category' => 'employment_category_list',
+            'diet' => 'eating_habits',
+            'drinking' => 'drinking_habits',
+            'smoking' => 'smoking_habits',
+            'cultural_background' => 'cultural_background_list',
+            'hobbies' => 'hobbies_list',
+            'music' => 'music_list',
+            'books' => 'books_list',
+            'movies' => 'movies_list',
+            'sports' => 'sports_list',
+            'cuisine' => 'cuisine_list',
+            'annual_income' => 'annual_income_list',
+        ];
+
+        try {
+            // Guard against the table not existing yet (fresh install
+            // before the create_reference_data_options_table migration
+            // runs — happens during the initial `php artisan migrate`).
+            if (! \Illuminate\Support\Facades\Schema::hasTable('reference_data_options')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        // One query fetches every active row across every category;
+        // we group in PHP. Cheaper than 25 separate queries — matches
+        // how the SiteSetting overrides also do a single pluck.
+        try {
+            $rows = \DB::table('reference_data_options')
+                ->where('is_active', true)
+                ->orderBy('category')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get(['category', 'value']);
+        } catch (\Throwable $e) {
+            // Don't blow up every request if the table read fails —
+            // fall back to whatever previous override paths set.
+            return;
+        }
+
+        $byCategory = [];
+        foreach ($rows as $row) {
+            $byCategory[$row->category][] = (string) $row->value;
+        }
+
+        foreach ($byCategory as $category => $values) {
+            $configKey = $categoryToConfigKey[$category] ?? null;
+            if (! $configKey) {
+                continue; // unknown category, skip (don't override)
+            }
+            // ONLY override if there's at least one active value. An
+            // empty category in the table (all rows inactive or
+            // deleted) leaves config-or-textarea-override-or-PHP-default
+            // in place rather than producing an empty dropdown.
+            if (! empty($values)) {
+                config(['reference_data.'.$configKey => $values]);
+            }
+        }
     }
 
     /**
