@@ -14,7 +14,7 @@
                         <div class="text-sm text-gray-600">
                             <span>{{ $profile->user?->phone ?? '-' }}</span>
                             <span class="ml-3">{{ $profile->user?->email ?? '-' }}</span>
-                            <span class="ml-3 text-red-600">Deleted: {{ $profile->deleted_at?->format('d M Y, h:i A') }} ({{ $profile->deleted_at?->diffForHumans() }})</span>
+                            <span class="ml-3 text-red-600">Deleted: {{ $profile->deleted_at?->displayTz()->format('d M Y, h:i A') }} ({{ $profile->deleted_at?->diffForHumans() }})</span>
                             @if($profile->deletion_reason)
                                 <span class="ml-3">Reason: {{ $profile->deletion_reason }}</span>
                             @endif

@@ -156,7 +156,7 @@
         </div>
         <div>
             <p class="text-gray-500 text-xs">Payment Date</p>
-            <p class="font-medium">{{ $payment->created_at?->format('d M Y H:i') }}</p>
+            <p class="font-medium">{{ $payment->created_at?->displayTz()->format('d M Y H:i') }}</p>
         </div>
     </div>
 </div>

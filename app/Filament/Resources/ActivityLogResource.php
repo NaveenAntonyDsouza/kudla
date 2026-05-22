@@ -101,7 +101,7 @@ class ActivityLogResource extends Resource
                     ->label('When')
                     ->since()
                     ->sortable()
-                    ->tooltip(fn (AdminActivityLog $record): string => $record->created_at->format('M j, Y g:i A')),
+                    ->tooltip(fn (AdminActivityLog $record): string => $record->created_at->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('M j, Y g:i A')),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('action')

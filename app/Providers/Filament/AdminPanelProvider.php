@@ -22,6 +22,28 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    /**
+     * Set the display timezone for ALL Filament date/time columns,
+     * entries, and pickers. Storage stays in UTC (config/app.php
+     * timezone = 'UTC'); this only affects how times are rendered +
+     * how date-picker input is interpreted in the admin panel.
+     *
+     * Driven by config('app.display_timezone') so a white-label buyer
+     * in another region can change it via APP_DISPLAY_TIMEZONE in .env
+     * without editing code. Defaults to Asia/Kolkata.
+     *
+     * NOTE: this does NOT reach custom formatStateUsing closures that
+     * call ->format() on a raw Carbon — those convert explicitly with
+     * ->timezone(config('app.display_timezone')). See UserResource
+     * "Registered" / "Last Login" columns.
+     */
+    public function boot(): void
+    {
+        \Filament\Support\Facades\FilamentTimezone::set(
+            config('app.display_timezone', 'Asia/Kolkata')
+        );
+    }
+
     public function panel(Panel $panel): Panel
     {
         // Load branding from database (white-label)

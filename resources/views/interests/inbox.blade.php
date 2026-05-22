@@ -138,7 +138,7 @@
                                     </span>
 
                                     {{-- Date --}}
-                                    <p class="text-xs text-gray-400 shrink-0 hidden sm:block">{{ $interest->updated_at->format('d M, h:i A') }}</p>
+                                    <p class="text-xs text-gray-400 shrink-0 hidden sm:block">{{ $interest->updated_at->displayTz()->format('d M, h:i A') }}</p>
                                 </a>
                             @endforeach
                         </div>

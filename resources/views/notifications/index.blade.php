@@ -38,7 +38,7 @@
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm {{ !$notif->is_read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700' }}">{{ $notif->title }}</p>
                                             <p class="text-sm text-gray-600 mt-0.5">{{ $notif->message }}</p>
-                                            <p class="text-xs text-gray-400 mt-1">{{ $notif->created_at->format('d/m/Y h:i A') }}</p>
+                                            <p class="text-xs text-gray-400 mt-1">{{ $notif->created_at->displayTz()->format('d/m/Y h:i A') }}</p>
                                         </div>
                                         @if(!$notif->is_read)
                                             <div class="w-2.5 h-2.5 rounded-full bg-(--color-primary) shrink-0 mt-2"></div>

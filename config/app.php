@@ -69,6 +69,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Display Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Storage stays in UTC (the 'timezone' above) — the correct, portable
+    | default. This value is the timezone times are CONVERTED TO for display
+    | in the admin panel and the user-facing website. India-only deployment
+    | defaults to Asia/Kolkata (IST); a white-label buyer elsewhere sets
+    | APP_DISPLAY_TIMEZONE in .env. Never used for storage or for the
+    | mobile API (which emits UTC ISO-8601 and lets the device localise).
+    |
+    */
+
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Asia/Kolkata'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

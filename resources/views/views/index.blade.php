@@ -61,7 +61,7 @@
                                     {{ collect([$otherProfile->age ? $otherProfile->age . ' Yrs' : null, $otherProfile->religiousInfo?->religion, $otherProfile->educationDetail?->occupation, $otherProfile->locationInfo?->native_state])->filter()->implode(', ') }}
                                 </p>
                             </div>
-                            <p class="text-xs text-gray-400 shrink-0">{{ $view->viewed_at->format('d M Y, h:i A') }}</p>
+                            <p class="text-xs text-gray-400 shrink-0">{{ $view->viewed_at->displayTz()->format('d M Y, h:i A') }}</p>
                         </a>
                     @endif
                 @endforeach

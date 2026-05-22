@@ -246,7 +246,7 @@
 
 {{-- Footer --}}
 <div class="footer">
-    <p>{{ $siteName }} | {{ $profile->matri_id }} | Printed on {{ now()->format('d M Y, h:i A') }}</p>
+    <p>{{ $siteName }} | {{ $profile->matri_id }} | Printed on {{ now()->displayTz()->format('d M Y, h:i A') }}</p>
     <p>This profile is confidential. Please do not share without permission.</p>
 </div>
 

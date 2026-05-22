@@ -113,7 +113,7 @@ class LoginHistoryResource extends Resource
                     ->label('When')
                     ->since()
                     ->sortable()
-                    ->tooltip(fn (LoginHistory $record): string => $record->logged_in_at->format('M j, Y g:i:s A')),
+                    ->tooltip(fn (LoginHistory $record): string => $record->logged_in_at->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('M j, Y g:i:s A')),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('login_method')

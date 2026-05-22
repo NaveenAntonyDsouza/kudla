@@ -8,6 +8,7 @@ use App\Services\Payment\PaytmService;
 use App\Services\Payment\PhonePeService;
 use App\Services\Payment\RazorpayService;
 use App\Services\Payment\StripeService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,6 +40,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Carbon ->displayTz() macro: convert a UTC-stored timestamp to
+        // the configured display timezone (Asia/Kolkata by default) for
+        // rendering. Storage stays UTC; this is display-only.
         //
+        // Usage in Blade:  {{ $model->created_at->displayTz()->format('d M Y, h:i A') }}
+        //
+        // copy() so we never mutate the model's underlying attribute
+        // (which other code may read assuming UTC). Returns a new
+        // instance in the display timezone. Registered on Illuminate's
+        // Carbon (what Eloquent date casts return).
+        Carbon::macro('displayTz', function () {
+            /** @var Carbon $this */
+            return $this->copy()->timezone(config('app.display_timezone', 'Asia/Kolkata'));
+        });
     }
 }

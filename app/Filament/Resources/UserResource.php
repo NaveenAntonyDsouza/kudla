@@ -234,7 +234,11 @@ class UserResource extends Resource
                                 ->getStateUsing(function (Profile $record): string {
                                     $date = $record->created_at;
                                     if (!$date) return 'Registered: -';
-                                    return 'Registered: ' . $date->format('d M Y, h:i A') . ' (' . $date->diffForHumans() . ')';
+                                    // Convert UTC -> display timezone (IST). copy() so we
+                                    // don't mutate the model attribute. diffForHumans is
+                                    // an absolute diff so it's correct either way.
+                                    $local = $date->copy()->timezone(config('app.display_timezone', 'Asia/Kolkata'));
+                                    return 'Registered: ' . $local->format('d M Y, h:i A') . ' (' . $local->diffForHumans() . ')';
                                 })
                                 ->sortable()
                                 ->color('gray')
@@ -245,7 +249,7 @@ class UserResource extends Resource
                                 ->getStateUsing(function (Profile $record): string {
                                     $lastLogin = $record->user?->last_login_at;
                                     if (!$lastLogin) return 'Last Login: Never';
-                                    $lastLogin = Carbon::parse($lastLogin);
+                                    $lastLogin = Carbon::parse($lastLogin)->timezone(config('app.display_timezone', 'Asia/Kolkata'));
                                     return 'Last Login: ' . $lastLogin->format('d M Y, h:i A') . ' (' . $lastLogin->diffForHumans() . ')';
                                 })
                                 ->color('gray')
@@ -799,15 +803,15 @@ class UserResource extends Resource
                                     Infolists\Components\TextEntry::make('user.email')->label('Email'),
                                     Infolists\Components\TextEntry::make('user.phone')->label('Phone'),
                                     Infolists\Components\TextEntry::make('user.email_verified_at')->label('Email Verified')
-                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d M Y, h:i A') : 'Not verified')
+                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('d M Y, h:i A') : 'Not verified')
                                         ->color(fn ($state) => $state ? 'success' : 'danger'),
                                     Infolists\Components\TextEntry::make('user.phone_verified_at')->label('Phone Verified')
-                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d M Y, h:i A') : 'Not verified')
+                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('d M Y, h:i A') : 'Not verified')
                                         ->color(fn ($state) => $state ? 'success' : 'danger'),
                                     Infolists\Components\TextEntry::make('user.last_login_at')->label('Last Login')
-                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d M Y, h:i A') . ' (' . Carbon::parse($state)->diffForHumans() . ')' : 'Never'),
+                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('d M Y, h:i A') . ' (' . Carbon::parse($state)->diffForHumans() . ')' : 'Never'),
                                     Infolists\Components\TextEntry::make('created_at')->label('Registered')
-                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d M Y, h:i A') . ' (' . Carbon::parse($state)->diffForHumans() . ')' : '-'),
+                                        ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('d M Y, h:i A') . ' (' . Carbon::parse($state)->diffForHumans() . ')' : '-'),
                                 ]),
                                 Section::make('Contact Details')->columns(3)->schema([
                                     Infolists\Components\TextEntry::make('contactInfo.whatsapp_number')->label('WhatsApp')->default('-'),
@@ -1097,7 +1101,7 @@ class UserResource extends Resource
                                             Infolists\Components\TextEntry::make('logged_in_at')
                                                 ->label('When')
                                                 ->since()
-                                                ->tooltip(fn ($record) => $record->logged_in_at?->format('M j, Y g:i:s A')),
+                                                ->tooltip(fn ($record) => $record->logged_in_at?->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('M j, Y g:i:s A')),
                                             Infolists\Components\TextEntry::make('login_method')
                                                 ->label('Method')
                                                 ->badge()

@@ -68,7 +68,7 @@ class CallLogsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('called_at')
                     ->label('When')
                     ->since()
-                    ->tooltip(fn ($record) => $record->called_at?->format('M j, Y g:i A')),
+                    ->tooltip(fn ($record) => $record->called_at?->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('M j, Y g:i A')),
 
                 Tables\Columns\TextColumn::make('call_type')
                     ->label('Type')

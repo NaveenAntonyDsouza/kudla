@@ -20,7 +20,7 @@
         </tr>
         <tr style="border-bottom: 1px solid #f3f4f6;">
             <td style="padding: 0.5rem 0; color: #6b7280;">Time</td>
-            <td style="padding: 0.5rem 0;">{{ $record->created_at->format('M j, Y g:i:s A') }}</td>
+            <td style="padding: 0.5rem 0;">{{ $record->created_at->displayTz()->format('M j, Y g:i:s A') }}</td>
         </tr>
         @if($record->changes)
         <tr>
