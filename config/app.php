@@ -60,12 +60,18 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions.
+    |
+    | kudlamatrimony is a single-region (India) deployment, so the app runs
+    | natively in IST — now(), Eloquent timestamps, queries, charts, and
+    | filters all operate in Asia/Kolkata. Existing UTC-stored timestamps
+    | were shifted +5:30 once by the
+    | 2026_05_22_*_shift_existing_timestamps_to_ist migration. White-label
+    | buyers in another region set APP_TIMEZONE in .env.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
 
     /*
     |--------------------------------------------------------------------------
