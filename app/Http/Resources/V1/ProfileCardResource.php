@@ -66,7 +66,7 @@ class ProfileCardResource extends JsonResource
             'education_short'   => $profile->educationDetail?->educational_qualification,
             'primary_photo'     => $this->primaryPhotoShape($profile),
             'badges'            => $this->computeBadges($profile),
-            'last_active_at'    => $profile->user?->last_login_at?->toIso8601String(),
+            'last_active_at'    => $profile->user?->last_login_at?->toUtcIso(),
             'last_active_label' => $profile->user?->last_login_at?->diffForHumans(),
             'match_score'       => $this->resolveMatchScore($profile),
             'match_badge'       => $this->resolveMatchBadge($profile),

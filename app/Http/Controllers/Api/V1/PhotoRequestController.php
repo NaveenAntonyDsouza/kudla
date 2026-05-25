@@ -496,7 +496,7 @@ class PhotoRequestController extends BaseApiController
                     'id' => (int) $r->id,
                     $cardKey => $card,
                     'status' => (string) $r->status,
-                    'created_at' => $r->created_at?->toIso8601String(),
+                    'created_at' => $r->created_at?->toUtcIso(),
                 ];
             })
             ->all();

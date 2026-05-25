@@ -340,7 +340,7 @@ class PhotoController extends BaseApiController
             'photo_id' => (int) $photo->id,
             // 30-day undo window — Flutter can show "Undo" for that long.
             // Hard delete is a separate endpoint, not time-based.
-            'undo_until' => Carbon::now()->addDays(30)->toIso8601String(),
+            'undo_until' => Carbon::now()->addDays(30)->toUtcIso(),
         ]);
     }
 

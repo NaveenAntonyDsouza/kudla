@@ -54,5 +54,21 @@ class AppServiceProvider extends ServiceProvider
             /** @var Carbon $this */
             return $this->copy()->timezone(config('app.display_timezone', 'Asia/Kolkata'));
         });
+
+        // Carbon ->toUtcIso() macro: serialize a timestamp as UTC ISO-8601
+        // (e.g. 2026-05-22T13:44:59+00:00) regardless of the app's display
+        // timezone. The mobile/JSON API uses this so its timestamp contract
+        // stays UTC and timezone-agnostic — the Flutter client localises to
+        // the device. Without this, after the app switched to Asia/Kolkata
+        // the API's ->toIso8601String() started emitting +05:30, silently
+        // changing the contract the Phase 2a app was built against.
+        //
+        // copy() so we never mutate the model attribute; utc() converts the
+        // instant to UTC; the +00:00 offset matches exactly what the API
+        // emitted before the IST switch.
+        Carbon::macro('toUtcIso', function () {
+            /** @var Carbon $this */
+            return $this->copy()->utc()->toIso8601String();
+        });
     }
 }

@@ -206,8 +206,8 @@ class PaymentController extends BaseApiController
                 'is_active' => (bool) $subscription->is_active,
                 'payment_status' => (string) $subscription->payment_status,
                 'activated_via' => 'full_discount_coupon',
-                'starts_at' => $subscription->starts_at?->toIso8601String(),
-                'expires_at' => $subscription->expires_at?->toIso8601String(),
+                'starts_at' => $subscription->starts_at?->toUtcIso(),
+                'expires_at' => $subscription->expires_at?->toUtcIso(),
             ]);
         }
 
@@ -380,8 +380,8 @@ class PaymentController extends BaseApiController
             'subscription_id' => (int) $subscription->id,
             'payment_status' => (string) $subscription->payment_status,
             'is_active' => (bool) $subscription->is_active,
-            'starts_at' => $subscription->starts_at?->toIso8601String(),
-            'expires_at' => $subscription->expires_at?->toIso8601String(),
+            'starts_at' => $subscription->starts_at?->toUtcIso(),
+            'expires_at' => $subscription->expires_at?->toUtcIso(),
             'membership' => $plan ? [
                 'plan_id' => (int) $plan->id,
                 'plan_name' => (string) $plan->plan_name,

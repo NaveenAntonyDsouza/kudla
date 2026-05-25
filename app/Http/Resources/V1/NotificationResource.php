@@ -34,7 +34,7 @@ class NotificationResource extends JsonResource
             'message' => (string) $this->message,
             'data' => $this->data ?? [],
             'is_read' => (bool) $this->is_read,
-            'created_at' => $this->created_at?->toIso8601String(),
+            'created_at' => $this->created_at?->toUtcIso(),
             'icon_type' => self::iconType((string) $this->type),
             'from_profile_id' => $this->profile_id ? (int) $this->profile_id : null,
         ];

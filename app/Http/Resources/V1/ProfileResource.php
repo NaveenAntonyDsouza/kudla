@@ -72,8 +72,8 @@ class ProfileResource extends JsonResource
             'suspension_status'        => $profile->suspension_status ?? 'active',
 
             // ── Timestamps (ISO 8601) ──────────────────────────────
-            'created_at'               => $profile->created_at?->toIso8601String(),
-            'last_active_at'           => $profile->user?->last_login_at?->toIso8601String(),
+            'created_at'               => $profile->created_at?->toUtcIso(),
+            'last_active_at'           => $profile->user?->last_login_at?->toUtcIso(),
 
             // ── 9 editable sections ────────────────────────────────
             'sections' => [

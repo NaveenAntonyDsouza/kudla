@@ -701,7 +701,7 @@ class InterestController extends BaseApiController
                 ->all(),
             'latest_message_id' => $latestId,
             'thread_status' => (string) $threadStatus,
-            'polled_at' => Carbon::now()->toIso8601String(),
+            'polled_at' => Carbon::now()->toUtcIso(),
         ]);
     }
 
@@ -718,7 +718,7 @@ class InterestController extends BaseApiController
             'type' => (string) $reply->reply_type,
             'template_id' => $reply->template_id,
             'text' => $reply->custom_message,
-            'created_at' => $reply->created_at?->toIso8601String(),
+            'created_at' => $reply->created_at?->toUtcIso(),
         ];
     }
 
@@ -768,8 +768,8 @@ class InterestController extends BaseApiController
                 ? (new ProfileCardResource($other))->resolve()
                 : null,
             'replies' => $this->renderReplies($interest),
-            'created_at' => $interest->created_at?->toIso8601String(),
-            'updated_at' => $interest->updated_at?->toIso8601String(),
+            'created_at' => $interest->created_at?->toUtcIso(),
+            'updated_at' => $interest->updated_at?->toUtcIso(),
         ];
     }
 
@@ -791,7 +791,7 @@ class InterestController extends BaseApiController
                 'template_id' => $reply->template_id,
                 'text' => $reply->custom_message,
                 'is_silent_decline' => (bool) ($reply->is_silent_decline ?? false),
-                'created_at' => $reply->created_at?->toIso8601String(),
+                'created_at' => $reply->created_at?->toUtcIso(),
             ])
             ->values()
             ->all();

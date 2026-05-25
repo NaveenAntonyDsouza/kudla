@@ -220,8 +220,8 @@ class IdProofController extends BaseApiController
             'document_url' => $p->document_url ? Storage::disk(self::DISK)->url($p->document_url) : null,
             'verification_status' => (string) $p->verification_status,
             'rejection_reason' => $p->rejection_reason,
-            'submitted_at' => $p->created_at?->toIso8601String(),
-            'verified_at' => $p->verified_at?->toIso8601String(),
+            'submitted_at' => $p->created_at?->toUtcIso(),
+            'verified_at' => $p->verified_at?->toUtcIso(),
         ];
     }
 

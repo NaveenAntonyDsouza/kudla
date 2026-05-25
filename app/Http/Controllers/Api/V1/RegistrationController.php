@@ -203,8 +203,8 @@ class RegistrationController extends BaseApiController
                 'onboarding_completed' => (bool) $profile->fresh()->onboarding_completed,
             ],
             'user' => [
-                'email_verified_at' => $request->user()->email_verified_at?->toIso8601String(),
-                'phone_verified_at' => $request->user()->phone_verified_at?->toIso8601String(),
+                'email_verified_at' => $request->user()->email_verified_at?->toUtcIso(),
+                'phone_verified_at' => $request->user()->phone_verified_at?->toUtcIso(),
             ],
             'next_step' => $nextStep,
             'email_verification_enabled' => \App\Models\SiteSetting::getValue('email_verification_enabled', '1') === '1',

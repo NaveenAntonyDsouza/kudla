@@ -27,10 +27,10 @@ class UserResource extends JsonResource
             'role'              => $this->role,
             'branch_id'         => $this->branch_id,
             'is_active'         => (bool) $this->is_active,
-            'email_verified_at' => $this->email_verified_at?->toIso8601String(),
-            'phone_verified_at' => $this->phone_verified_at?->toIso8601String(),
-            'last_login_at'     => $this->last_login_at?->toIso8601String(),
-            'created_at'        => $this->created_at?->toIso8601String(),
+            'email_verified_at' => $this->email_verified_at?->toUtcIso(),
+            'phone_verified_at' => $this->phone_verified_at?->toUtcIso(),
+            'last_login_at'     => $this->last_login_at?->toUtcIso(),
+            'created_at'        => $this->created_at?->toUtcIso(),
         ];
     }
 }

@@ -665,7 +665,7 @@ class SearchController extends BaseApiController
             'id' => (int) $s->id,
             'name' => (string) $s->search_name,
             'filters' => $s->criteria ?? [],
-            'created_at' => $s->created_at?->toIso8601String(),
+            'created_at' => $s->created_at?->toUtcIso(),
         ];
     }
 }

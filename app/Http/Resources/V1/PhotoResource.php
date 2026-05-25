@@ -59,8 +59,8 @@ class PhotoResource extends JsonResource
                                      : null,
             'display_order'     => (int) ($photo->display_order ?? 0),
             'storage_driver'    => (string) ($photo->storage_driver ?? 'public'),
-            'approved_at'       => $photo->approved_at?->toIso8601String(),
-            'created_at'        => $photo->created_at?->toIso8601String(),
+            'approved_at'       => $photo->approved_at?->toUtcIso(),
+            'created_at'        => $photo->created_at?->toUtcIso(),
         ];
     }
 

@@ -52,7 +52,7 @@ class StaticPageController extends BaseApiController
             'content_html' => $page->rendered_content,
             'meta_title' => $page->meta_title,
             'meta_description' => $page->meta_description,
-            'updated_at' => $page->updated_at?->toIso8601String(),
+            'updated_at' => $page->updated_at?->toUtcIso(),
         ]);
     }
 

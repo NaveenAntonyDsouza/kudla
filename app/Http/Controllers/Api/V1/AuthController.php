@@ -445,8 +445,8 @@ class AuthController extends BaseApiController
         return ApiResponse::ok([
             'verified' => true,
             'user' => [
-                'phone_verified_at' => $user->fresh()->phone_verified_at?->toIso8601String(),
-                'email_verified_at' => $user->fresh()->email_verified_at?->toIso8601String(),
+                'phone_verified_at' => $user->fresh()->phone_verified_at?->toUtcIso(),
+                'email_verified_at' => $user->fresh()->email_verified_at?->toUtcIso(),
             ],
             'onboarding_completed' => (bool) $user->fresh()->profile?->onboarding_completed,
             'next_step' => $nextStep === 'complete' ? 'dashboard' : $nextStep,
@@ -518,7 +518,7 @@ class AuthController extends BaseApiController
 
         return [
             'plan' => $active?->plan?->title ?? 'Free',
-            'ends_at' => $active?->ends_at?->toIso8601String(),
+            'ends_at' => $active?->ends_at?->toUtcIso(),
             'is_premium' => $user->isPremium(),
         ];
     }
