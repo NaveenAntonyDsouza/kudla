@@ -1303,20 +1303,46 @@ class UserResource extends Resource
                     ->icon('heroicon-o-globe-alt')
                     ->columns(3)
                     ->schema([
-                        Forms\Components\TextInput::make('rel_religion')->label('Religion')->maxLength(50),
-                        Forms\Components\TextInput::make('rel_denomination')->label('Denomination')->maxLength(100),
-                        Forms\Components\TextInput::make('rel_diocese')->label('Diocese')->maxLength(100),
+                        Forms\Components\Select::make('rel_religion')->label('Religion')
+                            ->options(fn () => self::listToOptions(config('reference_data.religion_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_denomination')->label('Denomination')
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.denomination_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_diocese')->label('Diocese')
+                            ->options(fn () => self::listToOptions(config('reference_data.diocese_list', [])))
+                            ->searchable(),
+                        // Free-text: only relevant when Diocese = "Other".
                         Forms\Components\TextInput::make('rel_diocese_name')->label('Diocese Name (Other)')->maxLength(100),
                         Forms\Components\TextInput::make('rel_parish')->label('Parish Name / Place')->maxLength(200),
-                        Forms\Components\TextInput::make('rel_caste')->label('Caste / Community')->maxLength(100),
-                        Forms\Components\TextInput::make('rel_sub_caste')->label('Sub-Caste')->maxLength(100),
-                        Forms\Components\TextInput::make('rel_gotra')->label('Gotra / Gothram')->maxLength(100),
-                        Forms\Components\TextInput::make('rel_nakshatra')->label('Nakshatra (Star)')->maxLength(50),
-                        Forms\Components\TextInput::make('rel_rashi')->label('Rashi (Zodiac)')->maxLength(50),
-                        Forms\Components\TextInput::make('rel_manglik')->label('Manglik / Dosh')->maxLength(50),
-                        Forms\Components\TextInput::make('rel_muslim_sect')->label('Muslim Sect')->maxLength(50),
-                        Forms\Components\TextInput::make('rel_muslim_community')->label('Muslim Community')->maxLength(100),
-                        Forms\Components\TextInput::make('rel_jain_sect')->label('Jain Sect')->maxLength(50),
+                        // Caste/sub-caste carry region-specific Community values
+                        // (Bunts, GSB, Billava…) beyond the generic config list —
+                        // merge curated + existing so nothing is hidden.
+                        Forms\Components\Select::make('rel_caste')->label('Caste / Community')
+                            ->options(fn () => self::optionsPlusExisting(config('reference_data.caste_list', []), 'religious_info', 'caste'))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
+                            ->options(fn () => self::optionsPlusExisting(config('reference_data.sub_caste_list', []), 'religious_info', 'sub_caste'))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_gotra')->label('Gotra / Gothram')
+                            ->options(fn () => self::optionsPlusExisting(config('reference_data.gothram_list', []), 'religious_info', 'gotra'))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_nakshatra')->label('Nakshatra (Star)')
+                            ->options(fn () => self::listToOptions(config('reference_data.nakshatra_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_rashi')->label('Rashi (Zodiac)')
+                            ->options(fn () => self::listToOptions(config('reference_data.rasi_list', []))),
+                        // Manglik/Dosh — simple yes/no/unknown, no config list.
+                        Forms\Components\Select::make('rel_manglik')->label('Manglik / Dosh')
+                            ->options(['Yes' => 'Yes', 'No' => 'No', "Don't Know" => "Don't Know"]),
+                        Forms\Components\Select::make('rel_muslim_sect')->label('Muslim Sect')
+                            ->options(fn () => self::listToOptions(config('reference_data.muslim_sect_list', []))),
+                        Forms\Components\Select::make('rel_muslim_community')->label('Muslim Community')
+                            ->options(fn () => self::listToOptions(config('reference_data.jamath_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('rel_jain_sect')->label('Jain Sect')
+                            ->options(fn () => self::listToOptions(config('reference_data.jain_sect_list', []))),
+                        // Free-text: clock time + birthplace.
                         Forms\Components\TextInput::make('rel_time_of_birth')->label('Time of Birth')->maxLength(20),
                         Forms\Components\TextInput::make('rel_place_of_birth')->label('Place of Birth')->maxLength(100),
                     ]),
@@ -1326,16 +1352,28 @@ class UserResource extends Resource
                     ->icon('heroicon-o-academic-cap')
                     ->columns(3)
                     ->schema([
-                        Forms\Components\TextInput::make('edu_highest_education')->label('Highest Education')->maxLength(100),
-                        Forms\Components\TextInput::make('edu_education_level')->label('Education Level')->maxLength(50),
+                        Forms\Components\Select::make('edu_highest_education')->label('Highest Education')
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.educational_qualifications_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('edu_education_level')->label('Education Level')
+                            ->options(fn () => self::listToOptions(config('reference_data.education_level_list', []))),
+                        // Free-text: specialization / college / employer.
                         Forms\Components\TextInput::make('edu_education_detail')->label('Education Details')->maxLength(200),
                         Forms\Components\TextInput::make('edu_college_name')->label('College / University')->maxLength(200),
-                        Forms\Components\TextInput::make('edu_occupation')->label('Occupation')->maxLength(100),
+                        Forms\Components\Select::make('edu_occupation')->label('Occupation')
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.occupation_category_list', [])))
+                            ->searchable(),
                         Forms\Components\TextInput::make('edu_occupation_detail')->label('Occupation Details')->maxLength(200),
-                        Forms\Components\TextInput::make('edu_employment_category')->label('Employment Category')->maxLength(100),
+                        Forms\Components\Select::make('edu_employment_category')->label('Employment Category')
+                            ->options(fn () => self::listToOptions(config('reference_data.employment_category_list', []))),
                         Forms\Components\TextInput::make('edu_employer_name')->label('Employer Name')->maxLength(200),
-                        Forms\Components\TextInput::make('edu_annual_income')->label('Annual Income')->maxLength(50),
-                        Forms\Components\TextInput::make('edu_working_country')->label('Working Country')->maxLength(100),
+                        Forms\Components\Select::make('edu_annual_income')->label('Annual Income')
+                            ->options(fn () => self::listToOptions(config('reference_data.annual_income_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('edu_working_country')->label('Working Country')
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
+                            ->searchable(),
+                        // Free-text: state/district have no canonical list.
                         Forms\Components\TextInput::make('edu_working_state')->label('Working State')->maxLength(100),
                         Forms\Components\TextInput::make('edu_working_district')->label('Working District')->maxLength(100),
                     ]),
@@ -1353,7 +1391,8 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('fam_mother_occupation')->label('Mother Occupation')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_house_name')->label('Mother House Name')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_native_place')->label('Mother Native Place')->maxLength(100),
-                        Forms\Components\TextInput::make('fam_family_status')->label('Family Status')->maxLength(50),
+                        Forms\Components\Select::make('fam_family_status')->label('Family Status')
+                            ->options(fn () => self::listToOptions(config('reference_data.family_status_list', []))),
                         Forms\Components\TextInput::make('fam_brothers_married')->label('Brothers (Married)')->numeric()->minValue(0),
                         Forms\Components\TextInput::make('fam_brothers_unmarried')->label('Brothers (Unmarried)')->numeric()->minValue(0),
                         Forms\Components\TextInput::make('fam_brothers_priest')->label('Brothers (Priest)')->numeric()->minValue(0),
@@ -1369,11 +1408,17 @@ class UserResource extends Resource
                     ->icon('heroicon-o-map-pin')
                     ->columns(3)
                     ->schema([
-                        Forms\Components\TextInput::make('loc_native_country')->label('Native Country')->maxLength(100),
+                        Forms\Components\Select::make('loc_native_country')->label('Native Country')
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
+                            ->searchable(),
+                        // Free-text: state/district have no canonical list.
                         Forms\Components\TextInput::make('loc_native_state')->label('Native State')->maxLength(100),
                         Forms\Components\TextInput::make('loc_native_district')->label('Native District')->maxLength(100),
-                        Forms\Components\TextInput::make('loc_residing_country')->label('Residing Country')->maxLength(100),
-                        Forms\Components\TextInput::make('loc_residency_status')->label('Residency Status')->maxLength(50),
+                        Forms\Components\Select::make('loc_residing_country')->label('Residing Country')
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
+                            ->searchable(),
+                        Forms\Components\Select::make('loc_residency_status')->label('Residency Status')
+                            ->options(fn () => self::listToOptions(config('reference_data.residency_status_list', []))),
                         Forms\Components\TextInput::make('loc_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
                     ]),
 
@@ -1383,10 +1428,14 @@ class UserResource extends Resource
                     ->columns(3)
                     ->collapsed()
                     ->schema([
-                        Forms\Components\TextInput::make('life_diet')->label('Diet')->maxLength(50),
-                        Forms\Components\TextInput::make('life_smoking')->label('Smoking')->maxLength(50),
-                        Forms\Components\TextInput::make('life_drinking')->label('Drinking')->maxLength(50),
-                        Forms\Components\TextInput::make('life_cultural_background')->label('Cultural Background')->maxLength(100),
+                        Forms\Components\Select::make('life_diet')->label('Diet')
+                            ->options(fn () => self::listToOptions(config('reference_data.eating_habits', []))),
+                        Forms\Components\Select::make('life_smoking')->label('Smoking')
+                            ->options(fn () => self::listToOptions(config('reference_data.smoking_habits', []))),
+                        Forms\Components\Select::make('life_drinking')->label('Drinking')
+                            ->options(fn () => self::listToOptions(config('reference_data.drinking_habits', []))),
+                        Forms\Components\Select::make('life_cultural_background')->label('Cultural Background')
+                            ->options(fn () => self::listToOptions(config('reference_data.cultural_background_list', []))),
                     ]),
 
                 // ── Section 8: Social Media ──
@@ -1455,5 +1504,56 @@ class UserResource extends Resource
     private static function listToOptions(array $list): array
     {
         return array_combine($list, $list) ?: [];
+    }
+
+    /**
+     * Convert a GROUPED reference list (['Group' => ['A','B'], ...]) into
+     * Filament's grouped-options shape (['Group' => ['A'=>'A','B'=>'B']]).
+     * Used for occupation_category_list, country_list, denomination_list,
+     * educational_qualifications_list. Stray flat items (no group) are
+     * placed at the top level.
+     */
+    private static function listToGroupedOptions(array $grouped): array
+    {
+        $out = [];
+        foreach ($grouped as $group => $items) {
+            if (is_array($items)) {
+                $out[$group] = array_combine($items, $items);
+            } else {
+                $out[$items] = $items; // flat item mixed into a grouped list
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Options for a field whose stored data may contain values outside the
+     * curated list (caste / sub_caste / gotra carry region-specific +
+     * legacy values). Merges the curated source with every distinct value
+     * already in the column, so a Select can NEVER hide — and on save wipe
+     * — an existing value. Searchable so the merged list stays usable.
+     *
+     * @param  array  $curated  Curated option values (e.g. config list or Community names).
+     */
+    private static function optionsPlusExisting(array $curated, string $table, string $column): array
+    {
+        $values = $curated;
+
+        try {
+            $existing = \DB::table($table)
+                ->whereNotNull($column)
+                ->where($column, '!=', '')
+                ->distinct()
+                ->pluck($column)
+                ->all();
+            $values = array_merge($values, $existing);
+        } catch (\Throwable $e) {
+            // Table/column unavailable (fresh install) — fall back to curated only.
+        }
+
+        // Dedupe, keep curated order first, drop empties.
+        $values = array_values(array_unique(array_filter($values, fn ($v) => $v !== null && $v !== '')));
+
+        return array_combine($values, $values) ?: [];
     }
 }
