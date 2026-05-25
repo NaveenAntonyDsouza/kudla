@@ -1,5 +1,48 @@
 @php $r = $profile->religiousInfo; @endphp
-<form method="POST" action="{{ route('profile.update', 'religious') }}" enctype="multipart/form-data" x-data="{ submitting: false, religion: '{{ $r?->religion ?? '' }}' }" @submit="submitting = true">
+<form method="POST" action="{{ route('profile.update', 'religious') }}" enctype="multipart/form-data" @submit="submitting = true" x-data="{
+    submitting: false,
+    religion: '{{ $r?->religion ?? '' }}',
+    communities: [],
+    subCommunities: [],
+    selectedCaste: '{{ $r?->caste ?? '' }}',
+    selectedSubCaste: '{{ $r?->sub_caste ?? '' }}',
+
+    async fetchCommunities(preserve = false) {
+        const keepCaste = this.selectedCaste;
+        if (!this.religion || this.religion === 'Other' || this.religion === 'No Religion') {
+            this.communities = []; this.subCommunities = [];
+            this.selectedCaste = ''; this.selectedSubCaste = '';
+            return;
+        }
+        try {
+            const res = await fetch('/api/cascade/communities?religion=' + encodeURIComponent(this.religion));
+            this.communities = await res.json();
+        } catch (e) { this.communities = []; }
+        // Safety net: keep an existing caste even if it's no longer in the
+        // managed Communities list, so a member never has their saved value
+        // silently dropped by a closed dropdown on save.
+        if (preserve && keepCaste && !this.communities.some(c => c.community_name === keepCaste)) {
+            this.communities.push({ id: 'existing', community_name: keepCaste, sub_communities: [] });
+        }
+        this.selectedCaste = preserve ? keepCaste : '';
+        this.loadSubCommunities(preserve);
+    },
+
+    loadSubCommunities(preserve = false) {
+        const keepSub = this.selectedSubCaste;
+        const community = this.communities.find(c => c.community_name === this.selectedCaste);
+        this.subCommunities = community ? (community.sub_communities || []) : [];
+        // Same safety net for an existing sub-caste not in the managed list.
+        if (preserve && keepSub && !this.subCommunities.includes(keepSub)) {
+            this.subCommunities.push(keepSub);
+        }
+        this.selectedSubCaste = preserve ? keepSub : '';
+    },
+
+    init() {
+        if (this.religion) this.fetchCommunities(true);
+    }
+}">
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field">
@@ -7,7 +50,7 @@
                 $religionOptions = config('reference_data.religion_list', []);
                 $currentReligion = $r?->religion ?? '';
             @endphp
-            <select name="religion" x-model="religion" required>
+            <select name="religion" x-model="religion" @change="fetchCommunities()" required>
                 <option value="">Select</option>
                 @foreach($religionOptions as $opt)
                     <option value="{{ $opt }}" {{ $currentReligion === $opt ? 'selected' : '' }}>{{ $opt }}</option>
@@ -47,8 +90,29 @@
         {{-- Hindu/Jain fields --}}
         <template x-if="religion === 'Hindu' || religion === 'Jain'">
             <div class="contents">
-                <div class="float-field"><input type="text" name="caste" value="{{ $r?->caste ?? '' }}" placeholder=" "><label>Caste</label></div>
-                <div class="float-field"><input type="text" name="sub_caste" value="{{ $r?->sub_caste ?? '' }}" placeholder=" "><label>Sub Caste</label></div>
+                {{-- Caste / Sub-Caste mirror the registration cascade: options
+                     load from the admin-managed Communities table
+                     (/api/cascade/communities), religion-filtered. preserve=true
+                     on init keeps a member's saved value selectable even if it's
+                     no longer in the managed list (no silent data-loss on save). --}}
+                <div class="float-field">
+                    <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
+                        <option value="">Select</option>
+                        <template x-for="community in communities" :key="community.id">
+                            <option :value="community.community_name" x-text="community.community_name" :selected="community.community_name === selectedCaste"></option>
+                        </template>
+                    </select>
+                    <label>Caste / Community</label>
+                </div>
+                <div class="float-field" x-show="subCommunities.length > 0" x-transition>
+                    <select name="sub_caste" x-model="selectedSubCaste">
+                        <option value="">Select</option>
+                        <template x-for="sub in subCommunities" :key="sub">
+                            <option :value="sub" x-text="sub" :selected="sub === selectedSubCaste"></option>
+                        </template>
+                    </select>
+                    <label>Sub Caste</label>
+                </div>
                 <div class="float-field"><input type="text" name="gotra" value="{{ $r?->gotra ?? '' }}" placeholder=" "><label>Gotra</label></div>
                 <div class="float-field">
                     <select name="nakshatra"><option value="">Select</option>
