@@ -53,15 +53,9 @@ class LoginHistory extends Model
      */
     public function getDeviceTypeAttribute(): string
     {
-        $ua = strtolower($this->user_agent ?? '');
-
-        if (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) {
-            return 'Tablet';
-        }
-        if (str_contains($ua, 'mobile') || str_contains($ua, 'android') || str_contains($ua, 'iphone')) {
-            return 'Mobile';
-        }
-        return 'Desktop';
+        // Shared heuristic with profiles.registration_source — see
+        // App\Support\DeviceDetector (single source of truth).
+        return \App\Support\DeviceDetector::type($this->user_agent);
     }
 
     /**

@@ -25,6 +25,7 @@ class Profile extends Model
         'created_by',
         'creator_name',
         'created_by_staff_id',
+        'registration_source',
         'branch_id',
         'creator_contact_number',
         'marital_status',

@@ -95,6 +95,8 @@ class RegisterController extends Controller
             'is_active' => true,
             'is_approved' => $autoApprove,
             'branch_id' => $user->branch_id, // mirror user's branch attribution
+            // Web sign-up: classify Desktop/Mobile/Tablet from the UA.
+            'registration_source' => \App\Support\DeviceDetector::type($request->userAgent()),
         ]);
 
         Auth::login($user);

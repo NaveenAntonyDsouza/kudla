@@ -97,6 +97,7 @@ class ListUsers extends ListRecords
                             'created_by' => 'staff',
                             'creator_name' => auth()->user()->name,
                             'created_by_staff_id' => auth()->id(),
+                            'registration_source' => \App\Support\DeviceDetector::ADMIN,
                             'is_active' => true,
                             'is_approved' => $autoApprove,
                             'onboarding_completed' => false,

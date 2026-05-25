@@ -73,6 +73,9 @@ class RegistrationService
             'is_active' => true,
             'is_approved' => $autoApprove,
             'branch_id' => $user->branch_id,
+            // This service is the native-app registration path (only the
+            // /api/v1 AuthController + RegistrationController call it).
+            'registration_source' => \App\Support\DeviceDetector::APP,
         ]);
 
         return ['user' => $user, 'profile' => $profile];

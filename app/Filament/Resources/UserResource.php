@@ -214,6 +214,39 @@ class UserResource extends Resource
                                 ->placeholder('')
                                 ->color('gray')
                                 ->grow(false),
+
+                            // Which device/channel the member registered from.
+                            // Only set on sign-ups after this feature shipped —
+                            // older profiles show "—".
+                            Tables\Columns\TextColumn::make('registration_source')
+                                ->label('Source')
+                                ->badge()
+                                ->icon(fn (?string $state): ?string => match ($state) {
+                                    'Desktop' => 'heroicon-o-computer-desktop',
+                                    'Mobile' => 'heroicon-o-device-phone-mobile',
+                                    'Tablet' => 'heroicon-o-device-tablet',
+                                    'App' => 'heroicon-o-device-phone-mobile',
+                                    'Admin' => 'heroicon-o-user',
+                                    default => null,
+                                })
+                                ->color(fn (?string $state): string => match ($state) {
+                                    'Desktop' => 'info',
+                                    'Mobile' => 'success',
+                                    'Tablet' => 'warning',
+                                    'App' => 'primary',
+                                    'Admin' => 'gray',
+                                    default => 'gray',
+                                })
+                                ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                    'Desktop' => 'Desktop/Laptop',
+                                    'Mobile' => 'Mobile Web',
+                                    'Tablet' => 'Tablet',
+                                    'App' => 'Mobile App',
+                                    'Admin' => 'Admin',
+                                    default => '—',
+                                })
+                                ->placeholder('—')
+                                ->grow(false),
                         ]),
 
                         // Row 4: Profile Completion, Registered, Last Login, Notes, ID Verified
@@ -387,6 +420,17 @@ class UserResource extends Resource
                         'sibling' => 'Sibling',
                         'relative' => 'Relative',
                         'friend' => 'Friend',
+                    ]),
+
+                // Registration source / device
+                Tables\Filters\SelectFilter::make('registration_source')
+                    ->label('Registered Via')
+                    ->options([
+                        'Desktop' => 'Desktop/Laptop',
+                        'Mobile' => 'Mobile Web',
+                        'Tablet' => 'Tablet',
+                        'App' => 'Mobile App',
+                        'Admin' => 'Admin',
                     ]),
 
                 // Registration Date Range

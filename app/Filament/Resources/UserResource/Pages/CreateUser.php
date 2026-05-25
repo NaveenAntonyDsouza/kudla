@@ -55,6 +55,7 @@ class CreateUser extends CreateRecord
             'mother_tongue' => $data['mother_tongue'] ?? null,
             'about_me' => $data['about_me'] ?? null,
             'created_by' => 'admin',
+            'registration_source' => \App\Support\DeviceDetector::ADMIN,
             'is_approved' => $data['is_approved'] ?? true,
             'is_active' => $data['is_active'] ?? true,
             'onboarding_completed' => true,
