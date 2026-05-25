@@ -1315,14 +1315,21 @@ class UserResource extends Resource
                         // Free-text: only relevant when Diocese = "Other".
                         Forms\Components\TextInput::make('rel_diocese_name')->label('Diocese Name (Other)')->maxLength(100),
                         Forms\Components\TextInput::make('rel_parish')->label('Parish Name / Place')->maxLength(200),
-                        // Caste/sub-caste carry region-specific Community values
-                        // (Bunts, GSB, Billava…) beyond the generic config list —
-                        // merge curated + existing so nothing is hidden.
+                        // Caste / Sub-Caste are sourced from the admin-managed
+                        // Communities table (App\Models\Community) — the same
+                        // source the public registration cascade uses — so a
+                        // community added on the Communities admin page shows up
+                        // here immediately. Merged with the column's existing
+                        // distinct values so any legacy value still renders +
+                        // can't be wiped on save. Searchable (the list spans all
+                        // religions; admins type to filter — deliberately NOT
+                        // religion-cascaded so staff can correct a mis-set
+                        // community freely).
                         Forms\Components\Select::make('rel_caste')->label('Caste / Community')
-                            ->options(fn () => self::optionsPlusExisting(config('reference_data.caste_list', []), 'religious_info', 'caste'))
+                            ->options(fn () => self::optionsPlusExisting(\App\Models\Community::getCasteList(), 'religious_info', 'caste'))
                             ->searchable(),
                         Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
-                            ->options(fn () => self::optionsPlusExisting(config('reference_data.sub_caste_list', []), 'religious_info', 'sub_caste'))
+                            ->options(fn () => self::optionsPlusExisting(\App\Models\Community::getSubCasteList(), 'religious_info', 'sub_caste'))
                             ->searchable(),
                         Forms\Components\Select::make('rel_gotra')->label('Gotra / Gothram')
                             ->options(fn () => self::optionsPlusExisting(config('reference_data.gothram_list', []), 'religious_info', 'gotra'))
