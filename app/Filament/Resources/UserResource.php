@@ -288,6 +288,38 @@ class UserResource extends Resource
                                 ->color('gray')
                                 ->grow(false),
 
+                            // Device of the member's most recent login, derived
+                            // from the latest LoginHistory row (user.latestLogin,
+                            // eager-loaded). Distinct from registration_source:
+                            // a member can sign up on desktop but later log in on
+                            // mobile. Shows nothing when they've never logged in.
+                            Tables\Columns\TextColumn::make('last_login_device')
+                                ->label('Last Device')
+                                ->badge()
+                                ->getStateUsing(fn (Profile $record): ?string => $record->user?->latestLogin?->device_type)
+                                ->icon(fn (?string $state): ?string => match ($state) {
+                                    'Desktop' => 'heroicon-o-computer-desktop',
+                                    'Mobile', 'App' => 'heroicon-o-device-phone-mobile',
+                                    'Tablet' => 'heroicon-o-device-tablet',
+                                    default => null,
+                                })
+                                ->color(fn (?string $state): string => match ($state) {
+                                    'Desktop' => 'info',
+                                    'Mobile' => 'success',
+                                    'Tablet' => 'warning',
+                                    'App' => 'primary',
+                                    default => 'gray',
+                                })
+                                ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                    'Desktop' => 'Desktop/Laptop',
+                                    'Mobile' => 'Mobile Web',
+                                    'Tablet' => 'Tablet',
+                                    'App' => 'Mobile App',
+                                    default => '—',
+                                })
+                                ->placeholder('—')
+                                ->grow(false),
+
                             Tables\Columns\TextColumn::make('profile_notes_count')
                                 ->label('Notes')
                                 ->formatStateUsing(fn ($state) => ($state ?? 0) . ' notes')
@@ -1410,7 +1442,7 @@ class UserResource extends Resource
         return parent::getEloquentQuery()
             ->whereNotNull('full_name')
             ->whereHas('user', fn ($q) => $q->whereNull('staff_role_id'))
-            ->with(['user', 'religiousInfo', 'educationDetail', 'locationInfo', 'primaryPhoto'])
+            ->with(['user', 'user.latestLogin', 'religiousInfo', 'educationDetail', 'locationInfo', 'primaryPhoto'])
             ->withCount('profileNotes')
             ->forUserBranch(null, true);
     }

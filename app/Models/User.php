@@ -92,6 +92,18 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(LoginHistory::class)->latest('logged_in_at');
     }
 
+    /**
+     * The single most recent login row — for cheap eager-loading when a
+     * list only needs "last login device" without pulling full history.
+     * latestOfMany generates one correlated subquery, so eager-loading
+     * `user.latestLogin` across a paginated table is a single extra
+     * query (no N+1).
+     */
+    public function latestLogin(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(LoginHistory::class)->latestOfMany('logged_in_at');
+    }
+
     public function staffRole(): BelongsTo
     {
         return $this->belongsTo(StaffRole::class, 'staff_role_id');
