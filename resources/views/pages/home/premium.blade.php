@@ -118,8 +118,8 @@
         </div>
     </section>
 
-    {{-- 3. Editor's Picks — featured profiles, magazine-cover style --}}
-    @if($featuredProfiles->count() > 0)
+    {{-- 3. Editor's Picks — featured profiles (toggle: Homepage Content → Featured Profiles) --}}
+    @if($showFeatured && $featuredProfiles->count() > 0)
     <section class="py-16 md:py-24" style="background: #fafaf8;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">

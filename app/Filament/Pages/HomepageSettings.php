@@ -57,6 +57,9 @@ class HomepageSettings extends Page implements HasForms
             'years_of_service' => $settings['years_of_service'] ?? '1',
             'stats_auto_compute' => ($settings['stats_auto_compute'] ?? '0') === '1',
 
+            // Featured Profiles section visibility (default ON)
+            'show_featured_profiles' => ($settings['show_featured_profiles'] ?? '1') === '1',
+
             // CTA Section
             'cta_title' => $settings['cta_title'] ?? 'Register Free Today',
             'cta_description' => $settings['cta_description'] ?? 'Join thousands of families who found their perfect match.',
@@ -150,6 +153,14 @@ class HomepageSettings extends Page implements HasForms
                     ])
                     ->columns(3),
 
+                \Filament\Schemas\Components\Section::make('Featured Profiles')
+                    ->description('The "Featured Profiles" showcase on the homepage (VIP / featured / recent members).')
+                    ->schema([
+                        Forms\Components\Toggle::make('show_featured_profiles')
+                            ->label('Show the Featured Profiles section')
+                            ->helperText('When OFF, the Featured Profiles section is hidden from the homepage for all visitors. Default: ON.'),
+                    ]),
+
                 \Filament\Schemas\Components\Section::make('CTA Banner')
                     ->description('Call-to-action section that encourages visitors to register.')
                     ->schema([
@@ -234,7 +245,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'stats_auto_compute'];
+        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles'];
         $skipFields = ['hero_image_upload', 'current_hero_image'];
 
         foreach ($data as $key => $value) {

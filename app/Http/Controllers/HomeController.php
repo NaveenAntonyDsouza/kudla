@@ -15,11 +15,16 @@ class HomeController extends Controller
             return redirect()->route('dashboard');
         }
 
+        // Community browse sections on the homepage: show only these religions,
+        // in this order. (Muslim is intentionally not shown here — edit this list
+        // to change which community sections appear on the homepage or reorder them.)
+        $homeReligions = ['Hindu', 'Jain', 'Christian'];
         $communities = Community::active()
-            ->orderBy('religion')
+            ->whereIn('religion', $homeReligions)
             ->orderBy('sort_order')
             ->get()
-            ->groupBy('religion');
+            ->groupBy('religion')
+            ->sortKeysUsing(fn ($a, $b) => array_search($a, $homeReligions) <=> array_search($b, $homeReligions));
 
         // Stats: Total Members respects the admin's auto-compute toggle.
         // When ON, show live DB count of active + approved members. When OFF, show manual value.
@@ -51,6 +56,10 @@ class HomeController extends Controller
 
         $totalProfiles = Profile::where('is_active', true)->count();
 
+        // Admin toggle (Homepage Content → Featured Profiles): hide the
+        // "Featured Profiles" section site-wide. Defaults to shown.
+        $showFeatured = SiteSetting::getValue('show_featured_profiles', '1') === '1';
+
         $faqs = Faq::visible()->orderBy('display_order')->limit(4)->get();
 
         // SEO: Homepage-specific title and description
@@ -64,6 +73,6 @@ class HomeController extends Controller
         $template = SiteSetting::getValue('homepage_template', 'classic');
         $template = in_array($template, ['classic', 'modern', 'premium'], true) ? $template : 'classic';
 
-        return view("pages.home.{$template}", compact('communities', 'stats', 'featuredProfiles', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
+        return view("pages.home.{$template}", compact('communities', 'stats', 'featuredProfiles', 'showFeatured', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
     }
 }

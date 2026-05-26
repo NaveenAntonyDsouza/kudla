@@ -197,8 +197,8 @@
     </section>
     @endif
 
-    {{-- 5. Featured profiles — bigger cards, modern --}}
-    @if($featuredProfiles->count() > 0)
+    {{-- 5. Featured profiles — bigger cards (toggle: Homepage Content → Featured Profiles) --}}
+    @if($showFeatured && $featuredProfiles->count() > 0)
     <section class="py-16 md:py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-end justify-between mb-8">

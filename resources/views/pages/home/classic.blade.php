@@ -479,8 +479,8 @@
     </section>
     @endif
 
-    {{-- 5b. Featured Profiles --}}
-    @if($featuredProfiles->count() > 0)
+    {{-- 5b. Featured Profiles (toggle: Homepage Content → Featured Profiles) --}}
+    @if($showFeatured && $featuredProfiles->count() > 0)
     <section class="py-12 sm:py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-8">
