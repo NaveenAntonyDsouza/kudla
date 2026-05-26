@@ -27,6 +27,21 @@ class HomeController extends Controller
             ->groupBy('religion')
             ->sortKeysUsing(fn ($a, $b) => array_search($a, $homeReligions) <=> array_search($b, $homeReligions));
 
+        // Optionally hide communities (and whole religion sections) that have no
+        // active, approved profiles yet, so browse chips never lead to empty
+        // results. Off by default. (Homepage Content → Community Sections.)
+        if (SiteSetting::getValue('hide_empty_communities', '0') === '1') {
+            $populated = array_flip(
+                \App\Models\ReligiousInfo::query()
+                    ->whereHas('profile', fn ($q) => $q->where('is_active', true)->approved())
+                    ->whereNotNull('caste')->where('caste', '!=', '')
+                    ->distinct()->pluck('caste')->all()
+            );
+            $communities = $communities
+                ->map(fn ($group) => $group->filter(fn ($c) => isset($populated[$c->community_name]))->values())
+                ->filter(fn ($group) => $group->isNotEmpty());
+        }
+
         // Stats: Total Members respects the admin's auto-compute toggle.
         // When ON, show live DB count of active + approved members. When OFF, show manual value.
         $autoComputeMembers = SiteSetting::getValue('stats_auto_compute', '0') === '1';

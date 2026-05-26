@@ -72,6 +72,7 @@ class HomepageSettings extends Page implements HasForms
             'community_religions' => collect(
                 json_decode($settings['homepage_community_religions'] ?? '["Hindu","Jain","Christian"]', true) ?: ['Hindu', 'Jain', 'Christian']
             )->map(fn ($r) => ['religion' => $r])->all(),
+            'hide_empty_communities' => ($settings['hide_empty_communities'] ?? '0') === '1',
 
             // CTA Section
             'cta_title' => $settings['cta_title'] ?? 'Register Free Today',
@@ -220,6 +221,10 @@ class HomepageSettings extends Page implements HasForms
                             ->reorderable()
                             ->grid(1)
                             ->helperText('Only religions that have communities are listed. The order here is the display order on the homepage.'),
+
+                        Forms\Components\Toggle::make('hide_empty_communities')
+                            ->label('Hide communities with no profiles yet')
+                            ->helperText('When ON, community chips (and a whole religion section) with zero active, approved profiles are hidden, so visitors never land on an empty result. Default: OFF.'),
                     ]),
 
                 \Filament\Schemas\Components\Section::make('CTA Banner')
@@ -306,7 +311,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only'];
+        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,
