@@ -70,6 +70,15 @@ class GatewayConfigProvider extends ServiceProvider
             'physical_status' => 'physical_status_list',
             'mother_tongue' => 'language_list',
             'religion' => 'religion_list',
+            'denomination' => 'denomination_list',
+            'diocese' => 'diocese_list',
+            'muslim_sect' => 'muslim_sect_list',
+            'jamath' => 'jamath_list',
+            'jain_sect' => 'jain_sect_list',
+            'religious_observance' => 'religious_observance_list',
+            'gothram' => 'gothram_list',
+            'nakshatra' => 'nakshatra_list',
+            'rasi' => 'rasi_list',
             'family_status' => 'family_status_list',
             'residency_status' => 'residency_status_list',
             'preferred_call_time' => 'preferred_call_time_list',
@@ -106,12 +115,16 @@ class GatewayConfigProvider extends ServiceProvider
         // we group in PHP. Cheaper than 25 separate queries — matches
         // how the SiteSetting overrides also do a single pluck.
         try {
+            // group_label may not exist yet on a fresh install mid-migrate;
+            // select it only when present so the read never errors.
+            $hasGroupCol = \Illuminate\Support\Facades\Schema::hasColumn('reference_data_options', 'group_label');
+            $columns = $hasGroupCol ? ['category', 'value', 'group_label'] : ['category', 'value'];
             $rows = \DB::table('reference_data_options')
                 ->where('is_active', true)
                 ->orderBy('category')
                 ->orderBy('sort_order')
                 ->orderBy('id')
-                ->get(['category', 'value']);
+                ->get($columns);
         } catch (\Throwable $e) {
             // Don't blow up every request if the table read fails —
             // fall back to whatever previous override paths set.
@@ -120,20 +133,25 @@ class GatewayConfigProvider extends ServiceProvider
 
         $byCategory = [];
         foreach ($rows as $row) {
-            $byCategory[$row->category][] = (string) $row->value;
+            $byCategory[$row->category][] = [
+                'value' => (string) $row->value,
+                'group_label' => $row->group_label ?? null,
+            ];
         }
 
-        foreach ($byCategory as $category => $values) {
+        foreach ($byCategory as $category => $catRows) {
             $configKey = $categoryToConfigKey[$category] ?? null;
             if (! $configKey) {
                 continue; // unknown category, skip (don't override)
             }
-            // ONLY override if there's at least one active value. An
-            // empty category in the table (all rows inactive or
-            // deleted) leaves config-or-textarea-override-or-PHP-default
-            // in place rather than producing an empty dropdown.
-            if (! empty($values)) {
-                config(['reference_data.'.$configKey => $values]);
+            // Rebuild the list in the shape config expects — flat, or grouped
+            // when rows carry a group_label (e.g. Denomination). ONLY override
+            // when there's at least one active value, so an all-inactive
+            // category leaves the config / textarea / PHP default in place
+            // rather than producing an empty dropdown.
+            $assembled = \App\Models\ReferenceDataOption::assembleList($catRows);
+            if (! empty($assembled)) {
+                config(['reference_data.'.$configKey => $assembled]);
             }
         }
     }

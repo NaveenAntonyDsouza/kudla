@@ -62,14 +62,10 @@ class ReferenceDataEditor extends Page implements HasForms
             'height_list' => ['label' => 'Height Options', 'grouped' => false],
             'weight_list' => ['label' => 'Weight Options', 'grouped' => false],
             'country_list' => ['label' => 'Countries', 'grouped' => true],
-            'denomination_list' => ['label' => 'Denominations', 'grouped' => true],
-            'diocese_list' => ['label' => 'Dioceses', 'grouped' => true],
-            'rasi_list' => ['label' => 'Rasi (Zodiac)', 'grouped' => false],
-            'nakshatra_list' => ['label' => 'Nakshatra (Stars)', 'grouped' => false],
-            'gothram_list' => ['label' => 'Gothram / Gothra', 'grouped' => false],
-            'muslim_sect_list' => ['label' => 'Muslim Sects', 'grouped' => false],
-            'jain_sect_list' => ['label' => 'Jain Sects', 'grouped' => false],
-            'jamath_list' => ['label' => 'Muslim Jamath / Community', 'grouped' => false],
+            // Religion lists (Denomination, Diocese, Rasi, Nakshatra, Gothram,
+            // Muslim Sect, Jain Sect, Jamath) moved to the per-row "Dropdown
+            // Options" page (Content Management → Dropdown Options), where they're
+            // managed with Active toggles + sort order in one structured place.
         ];
     }
 

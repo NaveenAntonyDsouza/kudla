@@ -29,7 +29,7 @@ class ReferenceDataOption extends Model
     protected $table = 'reference_data_options';
 
     protected $fillable = [
-        'category', 'value', 'label', 'sort_order', 'is_active',
+        'category', 'group_label', 'value', 'label', 'sort_order', 'is_active',
     ];
 
     protected function casts(): array
@@ -38,6 +38,43 @@ class ReferenceDataOption extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Assemble pre-sorted, active rows into the shape config() expects:
+     *   - a FLAT list ['A', 'B', ...] when no row carries a group_label
+     *   - a GROUPED list ['Group 1' => ['A', 'B'], 'Group 2' => [...]] when
+     *     group_labels are present (e.g. Denomination → Catholic / Non-Catholic)
+     * Group order follows first appearance in $rows (callers pass them ordered
+     * by sort_order). This matches the exact shapes the config file ships and
+     * the views already consume, so no callsite changes are needed.
+     *
+     * @param  array<int, array{value: string, group_label: ?string}>  $rows
+     * @return array<int, string>|array<string, array<int, string>>
+     */
+    public static function assembleList(array $rows): array
+    {
+        $hasGroups = false;
+        foreach ($rows as $r) {
+            if (($r['group_label'] ?? null) !== null && $r['group_label'] !== '') {
+                $hasGroups = true;
+                break;
+            }
+        }
+
+        if (! $hasGroups) {
+            return array_values(array_map(fn ($r) => (string) $r['value'], $rows));
+        }
+
+        $grouped = [];
+        foreach ($rows as $r) {
+            $group = (($r['group_label'] ?? null) !== null && $r['group_label'] !== '')
+                ? (string) $r['group_label']
+                : 'Other';
+            $grouped[$group][] = (string) $r['value'];
+        }
+
+        return $grouped;
     }
 
     protected static function booted(): void
