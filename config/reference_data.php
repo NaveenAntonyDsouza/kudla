@@ -77,6 +77,21 @@ return [
         ],
     ],
 
+    // Maps each Catholic denomination to its rite, which drives the
+    // Denomination → Diocese cascade: a denomination shows only the dioceses
+    // tagged (cascade_group) with its rite. Non-Catholic denominations are
+    // intentionally absent — they get a free-text diocese instead, since their
+    // dioceses aren't in the (Catholic) diocese_list. Stable church structure.
+    'denomination_rite' => [
+        'Roman Catholic' => 'Latin',
+        'Anglo Indian' => 'Latin',
+        'Nadar Christian' => 'Latin',
+        'Cheramar Christian' => 'Latin',
+        'Syrian Catholic' => 'Syro-Malabar',
+        'Knanaya Catholic' => 'Syro-Malabar',
+        'Malankara Catholic' => 'Syro-Malankara',
+    ],
+
     'diocese_list' => [
         'Adilabad', 'Agartala', 'Agra', 'Ahmedabad', 'Aizawl', 'Ajmer', 'Allahabad', 'Alleppey', 'Ambikapur', 'Amravati', 'Asansol', 'Aurangabad',
         'Bagdogra', 'Balasore', 'Bangalore', 'Bareilly', 'Baroda', 'Baruipur', 'Battery', 'Belgaum', 'Bellary', 'Belthangady', 'Berhampur', 'Bettiah',

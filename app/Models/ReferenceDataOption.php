@@ -29,7 +29,7 @@ class ReferenceDataOption extends Model
     protected $table = 'reference_data_options';
 
     protected $fillable = [
-        'category', 'group_label', 'value', 'label', 'sort_order', 'is_active',
+        'category', 'group_label', 'cascade_group', 'value', 'label', 'sort_order', 'is_active',
     ];
 
     protected function casts(): array

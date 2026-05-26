@@ -78,44 +78,82 @@
             <label>Religion <span class="text-red-500">*</span></label>
         </div>
 
-        {{-- Christian fields. Diocese is now a dropdown (matches registration +
-             admin); the free-text "Diocese Name" only appears when Diocese =
-             "Other". Every select preserves a stored value not in its list as a
-             selected option, so a member can never lose it on save. --}}
+        {{-- Christian fields. Diocese cascades from Denomination by rite via
+             /api/cascade/dioceses (Latin / Syro-Malabar / Syro-Malankara);
+             "Other (not listed)" reveals a free-text box — also the path for
+             Non-Catholic denominations. Denomination preserves a stored value
+             not in its list; the saved diocese is preserved via "Other" if it
+             falls outside the chosen rite. --}}
         <template x-if="religion === 'Christian'">
-            <div class="contents" x-data="{ selectedDiocese: '{{ $r?->diocese ?? '' }}' }">
-                @php
-                    $denomFlat = collect(config('reference_data.denomination_list', []))->flatten()->all();
-                    $dioceseOpts = config('reference_data.diocese_list', []);
-                @endphp
+            <div class="contents" x-data="{
+                selectedDenomination: '{{ $r?->denomination ?? '' }}',
+                dioceses: [],
+                dioceseChoice: '',
+                dioceseOther: '',
+                savedDiocese: '{{ $r?->diocese ?? '' }}',
+                savedDioceseName: '{{ $r?->diocese_name ?? '' }}',
+
+                async fetchDioceses(preserve = false) {
+                    if (!this.selectedDenomination) {
+                        this.dioceses = [];
+                        if (!preserve) { this.dioceseChoice = ''; this.dioceseOther = ''; }
+                        return;
+                    }
+                    try {
+                        const res = await fetch('/api/cascade/dioceses?denomination=' + encodeURIComponent(this.selectedDenomination));
+                        this.dioceses = await res.json();
+                    } catch (e) { this.dioceses = []; }
+                    if (preserve) {
+                        const saved = this.savedDiocese;
+                        if (saved && saved !== 'Other' && this.dioceses.includes(saved)) {
+                            this.dioceseChoice = saved; this.dioceseOther = '';
+                        } else if (saved === 'Other' || this.savedDioceseName || saved) {
+                            this.dioceseChoice = '__other__';
+                            this.dioceseOther = this.savedDioceseName || (saved !== 'Other' ? saved : '');
+                        } else {
+                            this.dioceseChoice = ''; this.dioceseOther = '';
+                        }
+                    } else {
+                        this.dioceseChoice = ''; this.dioceseOther = '';
+                    }
+                },
+
+                init() { if (this.selectedDenomination) this.fetchDioceses(true); }
+            }">
+                @php $denomFlat = collect(config('reference_data.denomination_list', []))->flatten()->all(); @endphp
                 <div class="float-field">
-                    <select name="denomination"><option value="">Select</option>
+                    <select name="denomination" x-model="selectedDenomination" @change="fetchDioceses()"><option value="">Select</option>
                         @foreach(config('reference_data.denomination_list', []) as $group => $items)
                             <optgroup label="{{ $group }}">
                                 @foreach($items as $opt)
-                                    <option value="{{ $opt }}" {{ ($r?->denomination ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                    <option value="{{ $opt }}">{{ $opt }}</option>
                                 @endforeach
                             </optgroup>
                         @endforeach
                         @if(($r?->denomination ?? '') !== '' && ! in_array($r?->denomination, $denomFlat, true))
-                            <optgroup label="Current"><option value="{{ $r->denomination }}" selected>{{ $r->denomination }}</option></optgroup>
+                            <optgroup label="Current"><option value="{{ $r->denomination }}">{{ $r->denomination }}</option></optgroup>
                         @endif
                     </select><label>Denomination</label>
                 </div>
-                <div class="float-field">
-                    <select name="diocese" x-model="selectedDiocese"><option value="">Select</option>
-                        @foreach($dioceseOpts as $dio)
-                            <option value="{{ $dio }}" {{ ($r?->diocese ?? '') === $dio ? 'selected' : '' }}>{{ $dio }}</option>
-                        @endforeach
-                        @if(($r?->diocese ?? '') !== '' && ! in_array($r?->diocese, $dioceseOpts, true))
-                            <option value="{{ $r->diocese }}" selected>{{ $r->diocese }}</option>
-                        @endif
-                    </select><label>Diocese</label>
-                </div>
-                <div class="float-field" x-show="selectedDiocese === 'Other'" x-transition>
-                    <input type="text" name="diocese_name" value="{{ $r?->diocese_name ?? '' }}" placeholder=" ">
-                    <label>Diocese Name (if Other)</label>
-                </div>
+                {{-- Diocese cascade (shown once a denomination is picked) --}}
+                <template x-if="selectedDenomination">
+                    <div class="contents">
+                        <div class="float-field">
+                            <select x-model="dioceseChoice"><option value="">Select</option>
+                                <template x-for="d in dioceses" :key="d">
+                                    <option :value="d" x-text="d"></option>
+                                </template>
+                                <option value="__other__">Other (not listed)</option>
+                            </select><label>Diocese</label>
+                        </div>
+                        <div class="float-field" x-show="dioceseChoice === '__other__'" x-transition>
+                            <input type="text" x-model="dioceseOther" maxlength="100" placeholder=" ">
+                            <label>Diocese Name</label>
+                        </div>
+                        <input type="hidden" name="diocese" :value="dioceseChoice === '__other__' ? 'Other' : dioceseChoice">
+                        <input type="hidden" name="diocese_name" :value="dioceseChoice === '__other__' ? dioceseOther : ''">
+                    </div>
+                </template>
                 <div class="float-field"><input type="text" name="parish_name_place" value="{{ $r?->parish_name_place ?? '' }}" placeholder=" "><label>Parish Name & Place</label></div>
             </div>
         </template>

@@ -1318,12 +1318,15 @@ class UserResource extends Resource
                             ->searchable()
                             ->live(),
                         // ── Christian ──
+                        // Denomination is ->live() so Diocese can cascade off it
+                        // by rite (Latin / Syro-Malabar / Syro-Malankara).
                         Forms\Components\Select::make('rel_denomination')->label('Denomination')
                             ->options(fn () => self::listToGroupedOptions(config('reference_data.denomination_list', [])))
                             ->searchable()
+                            ->live()
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         Forms\Components\Select::make('rel_diocese')->label('Diocese')
-                            ->options(fn () => self::listToOptions(config('reference_data.diocese_list', [])))
+                            ->options(fn (Get $get) => self::dioceseOptionsFor($get('rel_denomination'), $get('rel_diocese')))
                             ->searchable()
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         // Free-text: only relevant when Diocese = "Other".
@@ -1622,5 +1625,32 @@ class UserResource extends Resource
         }
 
         return $opts;
+    }
+
+    /**
+     * Diocese options for the admin form, filtered to the selected
+     * denomination's rite (config denomination_rite + the diocese rows'
+     * cascade_group). Non-Catholic / no denomination → no rite → just keep the
+     * record's current value selectable. Full-list fallback if a rite has no
+     * tagged dioceses. Always preserves the stored value via optionsWithCurrent.
+     */
+    private static function dioceseOptionsFor($denomination, $current): array
+    {
+        $rite = is_string($denomination) && $denomination !== ''
+            ? (config('reference_data.denomination_rite')[$denomination] ?? null)
+            : null;
+
+        $list = [];
+        if ($rite) {
+            $base = fn () => \App\Models\ReferenceDataOption::query()
+                ->where('category', 'diocese')->where('is_active', true)
+                ->orderBy('sort_order')->orderBy('value');
+            $list = $base()->where('cascade_group', $rite)->pluck('value')->all();
+            if (empty($list)) {
+                $list = $base()->pluck('value')->all(); // fallback: all dioceses
+            }
+        }
+
+        return self::optionsWithCurrent($list, $current);
     }
 }

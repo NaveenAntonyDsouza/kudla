@@ -167,6 +167,12 @@ class ReferenceDataOptionResource extends Resource
                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('category'), self::GROUPED_CATEGORIES, true))
                 ->helperText('Only for grouped lists like Denomination — e.g. "Catholic" or "Non-Catholic". Leave blank for ordinary lists.'),
 
+            Forms\Components\Select::make('cascade_group')
+                ->label('Rite (Diocese cascade)')
+                ->options(['Latin' => 'Latin', 'Syro-Malabar' => 'Syro-Malabar', 'Syro-Malankara' => 'Syro-Malankara'])
+                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('category') === 'diocese')
+                ->helperText('Which rite this diocese belongs to — drives the Denomination → Diocese cascade (Roman Catholic → Latin, Syrian Catholic → Syro-Malabar, Malankara Catholic → Syro-Malankara). Only shown for dioceses.'),
+
             Forms\Components\TextInput::make('value')
                 ->label('Stored Value')
                 ->required()
@@ -205,6 +211,11 @@ class ReferenceDataOptionResource extends Resource
 
                 Tables\Columns\TextColumn::make('group_label')
                     ->label('Group')
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('cascade_group')
+                    ->label('Rite')
                     ->placeholder('—')
                     ->toggleable(),
 

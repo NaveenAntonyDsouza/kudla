@@ -105,6 +105,7 @@ Route::post('/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordControl
 // Cascade API endpoints (no auth required, used during registration)
 Route::prefix('api/cascade')->group(function () {
     Route::get('/communities', [CascadeController::class, 'communities']);
+    Route::get('/dioceses', [CascadeController::class, 'dioceses']);
     Route::get('/states', [CascadeController::class, 'states']);
     Route::get('/districts', [CascadeController::class, 'districts']);
     Route::get('/countries', [CascadeController::class, 'countries']);
