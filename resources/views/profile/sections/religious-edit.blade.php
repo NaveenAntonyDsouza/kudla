@@ -5,13 +5,15 @@
     communities: [],
     subCommunities: [],
     selectedCaste: '{{ $r?->caste ?? '' }}',
-    selectedSubCaste: '{{ $r?->sub_caste ?? '' }}',
+    subCasteChoice: '',
+    subCasteOther: '',
+    savedSubCaste: '{{ $r?->sub_caste ?? '' }}',
 
     async fetchCommunities(preserve = false) {
         const keepCaste = this.selectedCaste;
         if (!this.religion || this.religion === 'Other' || this.religion === 'No Religion') {
             this.communities = []; this.subCommunities = [];
-            this.selectedCaste = ''; this.selectedSubCaste = '';
+            this.selectedCaste = ''; this.resetSubCaste();
             return;
         }
         try {
@@ -29,15 +31,23 @@
     },
 
     loadSubCommunities(preserve = false) {
-        const keepSub = this.selectedSubCaste;
         const community = this.communities.find(c => c.community_name === this.selectedCaste);
         this.subCommunities = community ? (community.sub_communities || []) : [];
-        // Same safety net for an existing sub-caste not in the managed list.
-        if (preserve && keepSub && !this.subCommunities.includes(keepSub)) {
-            this.subCommunities.push(keepSub);
+        if (preserve && this.savedSubCaste) {
+            // Map the saved sub-caste onto the control: a listed value selects
+            // it; an unlisted value routes to the 'Other' free-text box so it
+            // survives and stays editable (no silent loss on save).
+            if (this.subCommunities.includes(this.savedSubCaste)) {
+                this.subCasteChoice = this.savedSubCaste; this.subCasteOther = '';
+            } else {
+                this.subCasteChoice = '__other__'; this.subCasteOther = this.savedSubCaste;
+            }
+        } else {
+            this.resetSubCaste();
         }
-        this.selectedSubCaste = preserve ? keepSub : '';
     },
+
+    resetSubCaste() { this.subCasteChoice = ''; this.subCasteOther = ''; },
 
     init() {
         if (this.religion) this.fetchCommunities(true);
@@ -104,15 +114,32 @@
                     </select>
                     <label>Caste / Community</label>
                 </div>
-                <div class="float-field" x-show="subCommunities.length > 0" x-transition>
-                    <select name="sub_caste" x-model="selectedSubCaste">
-                        <option value="">Select</option>
-                        <template x-for="sub in subCommunities" :key="sub">
-                            <option :value="sub" x-text="sub" :selected="sub === selectedSubCaste"></option>
-                        </template>
-                    </select>
-                    <label>Sub Caste</label>
-                </div>
+                {{-- Sub-Caste: options come from the chosen community's
+                     sub-communities, plus an "Other (not listed)" escape hatch
+                     so a member whose sub-caste isn't in the managed list can
+                     still enter it. The <select> is UI-only; the hidden input
+                     carries the real submitted value (typed text when "Other",
+                     else the picked option). An existing saved sub-caste not in
+                     the list auto-routes to "Other" pre-filled — never lost. --}}
+                <template x-if="selectedCaste">
+                    <div class="contents">
+                        <div class="float-field">
+                            <select x-model="subCasteChoice">
+                                <option value="">Select</option>
+                                <template x-for="sub in subCommunities" :key="sub">
+                                    <option :value="sub" x-text="sub"></option>
+                                </template>
+                                <option value="__other__">Other (not listed)</option>
+                            </select>
+                            <label>Sub Caste</label>
+                        </div>
+                        <div class="float-field" x-show="subCasteChoice === '__other__'" x-transition>
+                            <input type="text" x-model="subCasteOther" maxlength="50" placeholder=" ">
+                            <label>Enter Sub-Caste</label>
+                        </div>
+                        <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
+                    </div>
+                </template>
                 <div class="float-field"><input type="text" name="gotra" value="{{ $r?->gotra ?? '' }}" placeholder=" "><label>Gotra</label></div>
                 <div class="float-field">
                     <select name="nakshatra"><option value="">Select</option>

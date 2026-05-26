@@ -20,31 +20,49 @@
         communities: [],
         subCommunities: [],
         selectedCaste: '{{ old('caste', $religiousInfo->caste ?? '') }}',
-        selectedSubCaste: '{{ old('sub_caste', $religiousInfo->sub_caste ?? '') }}',
+        subCasteChoice: '',
+        subCasteOther: '',
+        savedSubCaste: '{{ old('sub_caste', $religiousInfo->sub_caste ?? '') }}',
 
-        async fetchCommunities() {
+        async fetchCommunities(preserve = false) {
+            const keepCaste = this.selectedCaste;
             if (!this.religion || this.religion === 'Other' || this.religion === 'No Religion') {
-                this.communities = [];
-                this.subCommunities = [];
-                this.selectedCaste = '';
-                this.selectedSubCaste = '';
+                this.communities = []; this.subCommunities = [];
+                this.selectedCaste = ''; this.resetSubCaste();
                 return;
             }
-            const response = await fetch(`/api/cascade/communities?religion=${encodeURIComponent(this.religion)}`);
-            this.communities = await response.json();
-            this.subCommunities = [];
-            this.selectedSubCaste = '';
-            if (this.selectedCaste) this.loadSubCommunities();
+            try {
+                const res = await fetch('/api/cascade/communities?religion=' + encodeURIComponent(this.religion));
+                this.communities = await res.json();
+            } catch (e) { this.communities = []; }
+            // Keep an existing caste even if it's no longer in the managed list.
+            if (preserve && keepCaste && !this.communities.some(c => c.community_name === keepCaste)) {
+                this.communities.push({ id: 'existing', community_name: keepCaste, sub_communities: [] });
+            }
+            this.selectedCaste = preserve ? keepCaste : '';
+            this.loadSubCommunities(preserve);
         },
 
-        loadSubCommunities() {
+        loadSubCommunities(preserve = false) {
             const community = this.communities.find(c => c.community_name === this.selectedCaste);
             this.subCommunities = community ? (community.sub_communities || []) : [];
-            this.selectedSubCaste = '';
+            if (preserve && this.savedSubCaste) {
+                // A listed value selects it; an unlisted value routes to the
+                // 'Other' free-text box (preserves old() on validation re-render).
+                if (this.subCommunities.includes(this.savedSubCaste)) {
+                    this.subCasteChoice = this.savedSubCaste; this.subCasteOther = '';
+                } else {
+                    this.subCasteChoice = '__other__'; this.subCasteOther = this.savedSubCaste;
+                }
+            } else {
+                this.resetSubCaste();
+            }
         },
 
+        resetSubCaste() { this.subCasteChoice = ''; this.subCasteOther = ''; },
+
         init() {
-            if (this.religion) this.fetchCommunities();
+            if (this.religion) this.fetchCommunities(true);
         }
     }">
         @csrf
@@ -239,16 +257,30 @@
                         <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
                         @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
-                    <div x-show="subCommunities.length > 0" x-transition class="float-field">
-                        <select name="sub_caste" id="sub_caste" x-model="selectedSubCaste">
-                            <option value="">Select</option>
-                            <template x-for="sub in subCommunities" :key="sub">
-                                <option :value="sub" x-text="sub" :selected="sub === selectedSubCaste"></option>
-                            </template>
-                        </select>
-                        <label for="sub_caste">Sub-Caste / Sub-Community</label>
-                        @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
+                    {{-- Sub-Caste: from the chosen community's sub-communities,
+                         plus an "Other (not listed)" escape hatch. The <select>
+                         is UI-only; the hidden input submits the real value
+                         (typed text when "Other", else the picked option). --}}
+                    <template x-if="selectedCaste">
+                        <div class="space-y-5">
+                            <div class="float-field">
+                                <select id="sub_caste" x-model="subCasteChoice">
+                                    <option value="">Select</option>
+                                    <template x-for="sub in subCommunities" :key="sub">
+                                        <option :value="sub" x-text="sub"></option>
+                                    </template>
+                                    <option value="__other__">Other (not listed)</option>
+                                </select>
+                                <label for="sub_caste">Sub-Caste / Sub-Community</label>
+                            </div>
+                            <div class="float-field" x-show="subCasteChoice === '__other__'" x-transition>
+                                <input type="text" id="sub_caste_other" x-model="subCasteOther" maxlength="50" placeholder=" ">
+                                <label for="sub_caste_other">Enter Sub-Caste / Sub-Community</label>
+                            </div>
+                            <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
+                            @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </template>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="float-field">
                             <input type="time" name="time_of_birth" id="time_of_birth" value="{{ old('time_of_birth', $religiousInfo->time_of_birth ?? '') }}" placeholder=" ">
