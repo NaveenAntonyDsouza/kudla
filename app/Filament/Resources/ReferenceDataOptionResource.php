@@ -253,13 +253,23 @@ class ReferenceDataOptionResource extends Resource
 
                 // Filter dioceses by rite. Pair with Category = Diocese to see/
                 // edit only Latin, only Syro-Malabar, or only Syro-Malankara.
+                // Only shown when viewing dioceses (or no category yet) — rite
+                // is meaningless for other categories, so it's hidden there.
                 Tables\Filters\SelectFilter::make('cascade_group')
                     ->label('Rite (dioceses)')
                     ->options([
                         'Latin' => 'Latin (Roman Catholic)',
                         'Syro-Malabar' => 'Syro-Malabar (Syrian Catholic)',
                         'Syro-Malankara' => 'Syro-Malankara (Malankara Catholic)',
-                    ]),
+                    ])
+                    ->visible(function ($livewire) {
+                        try {
+                            $category = $livewire->getTableFilterState('category')['value'] ?? null;
+                            return blank($category) || $category === 'diocese';
+                        } catch (\Throwable $e) {
+                            return true; // fail open — never break the page
+                        }
+                    }),
 
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active'),
