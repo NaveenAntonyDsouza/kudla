@@ -151,29 +151,33 @@ class EditUser extends EditRecord
             'phone' => $data['user_phone'] ?? $profile->user->phone,
         ]);
 
-        // Update religious info
+        // Update religious info. Clear fields that don't belong to the chosen
+        // religion, so changing a profile's religion never leaves stale data
+        // behind (and the View page never shows mismatched fields).
+        $relData = [
+            'religion' => $data['rel_religion'] ?? null,
+            'denomination' => $data['rel_denomination'] ?? null,
+            'diocese' => $data['rel_diocese'] ?? null,
+            'diocese_name' => $data['rel_diocese_name'] ?? null,
+            'parish_name_place' => $data['rel_parish'] ?? null,
+            'caste' => $data['rel_caste'] ?? null,
+            'sub_caste' => $data['rel_sub_caste'] ?? null,
+            'gotra' => $data['rel_gotra'] ?? null,
+            'nakshatra' => $data['rel_nakshatra'] ?? null,
+            'rashi' => $data['rel_rashi'] ?? null,
+            'dosh' => $data['rel_manglik'] ?? null,
+            'muslim_sect' => $data['rel_muslim_sect'] ?? null,
+            'muslim_community' => $data['rel_muslim_community'] ?? null,
+            'jain_sect' => $data['rel_jain_sect'] ?? null,
+            'religious_observance' => $data['rel_religious_observance'] ?? null,
+            'other_religion_name' => $data['rel_other_religion_name'] ?? null,
+            'time_of_birth' => $data['rel_time_of_birth'] ?? null,
+            'place_of_birth' => $data['rel_place_of_birth'] ?? null,
+        ];
+        $relData = ReligiousInfo::clearFieldsForReligion($relData, $data['rel_religion'] ?? null);
         ReligiousInfo::updateOrCreate(
             ['profile_id' => $profile->id],
-            [
-                'religion' => $data['rel_religion'] ?? null,
-                'denomination' => $data['rel_denomination'] ?? null,
-                'diocese' => $data['rel_diocese'] ?? null,
-                'diocese_name' => $data['rel_diocese_name'] ?? null,
-                'parish_name_place' => $data['rel_parish'] ?? null,
-                'caste' => $data['rel_caste'] ?? null,
-                'sub_caste' => $data['rel_sub_caste'] ?? null,
-                'gotra' => $data['rel_gotra'] ?? null,
-                'nakshatra' => $data['rel_nakshatra'] ?? null,
-                'rashi' => $data['rel_rashi'] ?? null,
-                'dosh' => $data['rel_manglik'] ?? null,
-                'muslim_sect' => $data['rel_muslim_sect'] ?? null,
-                'muslim_community' => $data['rel_muslim_community'] ?? null,
-                'jain_sect' => $data['rel_jain_sect'] ?? null,
-                'religious_observance' => $data['rel_religious_observance'] ?? null,
-                'other_religion_name' => $data['rel_other_religion_name'] ?? null,
-                'time_of_birth' => $data['rel_time_of_birth'] ?? null,
-                'place_of_birth' => $data['rel_place_of_birth'] ?? null,
-            ]
+            $relData
         );
 
         // Update education

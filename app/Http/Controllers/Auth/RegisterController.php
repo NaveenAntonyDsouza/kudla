@@ -138,29 +138,33 @@ class RegisterController extends Controller
             ['family_status' => $validated['family_status'] ?? null]
         );
 
-        // Create religious info
+        // Create religious info. Clear fields that don't belong to the chosen
+        // religion, so changing religion (e.g. back-and-edit during onboarding)
+        // leaves no stale data behind.
+        $relData = [
+            'religion' => $validated['religion'],
+            'caste' => $validated['caste'] ?? null,
+            'sub_caste' => $validated['sub_caste'] ?? null,
+            'gotra' => $validated['gotra'] ?? null,
+            'nakshatra' => $validated['nakshatra'] ?? null,
+            'rashi' => $validated['rashi'] ?? null,
+            'dosh' => $validated['manglik'] ?? null,
+            'denomination' => $validated['denomination'] ?? null,
+            'diocese' => $validated['diocese'] ?? null,
+            'diocese_name' => $validated['diocese_name'] ?? null,
+            'parish_name_place' => $validated['parish_name_place'] ?? null,
+            'time_of_birth' => $validated['time_of_birth'] ?? null,
+            'place_of_birth' => $validated['place_of_birth'] ?? null,
+            'muslim_sect' => $validated['muslim_sect'] ?? null,
+            'muslim_community' => $validated['muslim_community'] ?? null,
+            'religious_observance' => $validated['religious_observance'] ?? null,
+            'jain_sect' => $validated['jain_sect'] ?? null,
+            'other_religion_name' => $validated['other_religion_name'] ?? null,
+        ];
+        $relData = ReligiousInfo::clearFieldsForReligion($relData, $validated['religion']);
         ReligiousInfo::updateOrCreate(
             ['profile_id' => $profile->id],
-            [
-                'religion' => $validated['religion'],
-                'caste' => $validated['caste'] ?? null,
-                'sub_caste' => $validated['sub_caste'] ?? null,
-                'gotra' => $validated['gotra'] ?? null,
-                'nakshatra' => $validated['nakshatra'] ?? null,
-                'rashi' => $validated['rashi'] ?? null,
-                'dosh' => $validated['manglik'] ?? null,
-                'denomination' => $validated['denomination'] ?? null,
-                'diocese' => $validated['diocese'] ?? null,
-                'diocese_name' => $validated['diocese_name'] ?? null,
-                'parish_name_place' => $validated['parish_name_place'] ?? null,
-                'time_of_birth' => $validated['time_of_birth'] ?? null,
-                'place_of_birth' => $validated['place_of_birth'] ?? null,
-                'muslim_sect' => $validated['muslim_sect'] ?? null,
-                'muslim_community' => $validated['muslim_community'] ?? null,
-                'religious_observance' => $validated['religious_observance'] ?? null,
-                'jain_sect' => $validated['jain_sect'] ?? null,
-                'other_religion_name' => $validated['other_religion_name'] ?? null,
-            ]
+            $relData
         );
 
         // Save differently abled info

@@ -190,6 +190,10 @@ class ProfileController extends Controller
         $data = collect($validated)->except('jathakam', 'manglik')->toArray();
         $data['dosh'] = $validated['manglik'] ?? null;
 
+        // Clear any fields that don't belong to the chosen religion, so
+        // switching religion never leaves stale data behind.
+        $data = ReligiousInfo::clearFieldsForReligion($data, $validated['religion'] ?? null);
+
         ReligiousInfo::updateOrCreate(
             ['profile_id' => $profile->id],
             $data
