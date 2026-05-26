@@ -4,9 +4,13 @@
 @else
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
     <div><p class="text-xs text-gray-500">Religion</p><p class="text-sm font-medium text-gray-900">{{ $r->religion ?? 'Not Mentioned' }}</p></div>
+    @if($r->religion === 'Other' && $r->other_religion_name)
+        <div><p class="text-xs text-gray-500">Religion (specified)</p><p class="text-sm font-medium text-gray-900">{{ $r->other_religion_name }}</p></div>
+    @endif
     @if($r->religion === 'Christian')
         <div><p class="text-xs text-gray-500">Denomination</p><p class="text-sm font-medium text-gray-900">{{ $r->denomination ?? 'Not Mentioned' }}</p></div>
-        <div><p class="text-xs text-gray-500">Diocese</p><p class="text-sm font-medium text-gray-900">{{ $r->diocese_name ?? $r->diocese ?? 'Not Mentioned' }}</p></div>
+        @php $dioceseDisplay = $r->diocese === 'Other' ? ($r->diocese_name ?: 'Other') : ($r->diocese ?: ''); @endphp
+        <div><p class="text-xs text-gray-500">Diocese</p><p class="text-sm font-medium text-gray-900">{{ $dioceseDisplay ?: 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Parish Name & Place</p><p class="text-sm font-medium text-gray-900">{{ $r->parish_name_place ?? 'Not Mentioned' }}</p></div>
     @endif
     @if(in_array($r->religion, ['Hindu', 'Jain']))
@@ -20,6 +24,7 @@
     @if($r->religion === 'Muslim')
         <div><p class="text-xs text-gray-500">Muslim Sect</p><p class="text-sm font-medium text-gray-900">{{ $r->muslim_sect ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Muslim Community</p><p class="text-sm font-medium text-gray-900">{{ $r->muslim_community ?? 'Not Mentioned' }}</p></div>
+        <div><p class="text-xs text-gray-500">Religious Observance</p><p class="text-sm font-medium text-gray-900">{{ $r->religious_observance ?? 'Not Mentioned' }}</p></div>
     @endif
     @if($r->religion === 'Jain')
         <div><p class="text-xs text-gray-500">Jain Sect</p><p class="text-sm font-medium text-gray-900">{{ $r->jain_sect ?? 'Not Mentioned' }}</p></div>

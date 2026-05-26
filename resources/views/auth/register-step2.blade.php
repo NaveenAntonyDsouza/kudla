@@ -191,12 +191,9 @@
             <div class="float-field">
                 <select name="religion" id="religion" x-model="religion" @change="fetchCommunities()" required>
                     <option value="">Select</option>
-                    <option value="Christian">Christian</option>
-                    <option value="Hindu">Hindu</option>
-                    <option value="Muslim">Muslim</option>
-                    <option value="Jain">Jain</option>
-                    <option value="No Religion">No Religion</option>
-                    <option value="Other">Other</option>
+                    @foreach(config('reference_data.religion_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('religion', $religiousInfo->religion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
                 </select>
                 <label for="religion">Religion <span class="text-red-500">*</span></label>
                 @error('religion') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -346,7 +343,7 @@
                     <div x-show="religion === 'Jain'" x-transition class="float-field">
                         <select name="jain_sect" id="jain_sect">
                             <option value="">Select</option>
-                            @foreach(['Digambar', 'Svetambara', 'Other'] as $opt)
+                            @foreach(config('reference_data.jain_sect_list', []) as $opt)
                                 <option value="{{ $opt }}" {{ old('jain_sect', $religiousInfo->jain_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
@@ -361,7 +358,7 @@
                     <div class="float-field">
                         <select name="muslim_sect" id="muslim_sect" required>
                             <option value="">Select</option>
-                            @foreach(['Sunni', 'Shia', 'Ahmadiyya', 'Sufi', 'Other', 'Prefer Not to Say'] as $opt)
+                            @foreach(config('reference_data.muslim_sect_list', []) as $opt)
                                 <option value="{{ $opt }}" {{ old('muslim_sect', $religiousInfo->muslim_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>
@@ -379,7 +376,7 @@
                     <div class="float-field">
                         <select name="religious_observance" id="religious_observance">
                             <option value="">Select</option>
-                            @foreach(['Practicing', 'Moderately Practicing', 'Non-practicing', 'Prefer Not to Say'] as $opt)
+                            @foreach(config('reference_data.religious_observance_list', []) as $opt)
                                 <option value="{{ $opt }}" {{ old('religious_observance', $religiousInfo->religious_observance ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                             @endforeach
                         </select>

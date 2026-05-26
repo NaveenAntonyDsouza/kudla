@@ -1349,6 +1349,9 @@ class UserResource extends Resource
                             ->searchable(),
                         Forms\Components\Select::make('rel_jain_sect')->label('Jain Sect')
                             ->options(fn () => self::listToOptions(config('reference_data.jain_sect_list', []))),
+                        Forms\Components\Select::make('rel_religious_observance')->label('Religious Observance')
+                            ->options(fn () => self::listToOptions(config('reference_data.religious_observance_list', []))),
+                        Forms\Components\TextInput::make('rel_other_religion_name')->label('Other Religion (if "Other")')->maxLength(50),
                         // Free-text: clock time + birthplace.
                         Forms\Components\TextInput::make('rel_time_of_birth')->label('Time of Birth')->maxLength(20),
                         Forms\Components\TextInput::make('rel_place_of_birth')->label('Place of Birth')->maxLength(100),

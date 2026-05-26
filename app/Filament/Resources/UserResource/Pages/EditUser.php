@@ -61,6 +61,8 @@ class EditUser extends EditRecord
         $data['rel_muslim_sect'] = $rel?->muslim_sect;
         $data['rel_muslim_community'] = $rel?->muslim_community;
         $data['rel_jain_sect'] = $rel?->jain_sect;
+        $data['rel_religious_observance'] = $rel?->religious_observance;
+        $data['rel_other_religion_name'] = $rel?->other_religion_name;
         $data['rel_time_of_birth'] = $rel?->time_of_birth;
         $data['rel_place_of_birth'] = $rel?->place_of_birth;
 
@@ -167,6 +169,8 @@ class EditUser extends EditRecord
                 'muslim_sect' => $data['rel_muslim_sect'] ?? null,
                 'muslim_community' => $data['rel_muslim_community'] ?? null,
                 'jain_sect' => $data['rel_jain_sect'] ?? null,
+                'religious_observance' => $data['rel_religious_observance'] ?? null,
+                'other_religion_name' => $data['rel_other_religion_name'] ?? null,
                 'time_of_birth' => $data['rel_time_of_birth'] ?? null,
                 'place_of_birth' => $data['rel_place_of_birth'] ?? null,
             ]

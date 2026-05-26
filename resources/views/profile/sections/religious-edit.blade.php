@@ -78,9 +78,16 @@
             <label>Religion <span class="text-red-500">*</span></label>
         </div>
 
-        {{-- Christian fields --}}
+        {{-- Christian fields. Diocese is now a dropdown (matches registration +
+             admin); the free-text "Diocese Name" only appears when Diocese =
+             "Other". Every select preserves a stored value not in its list as a
+             selected option, so a member can never lose it on save. --}}
         <template x-if="religion === 'Christian'">
-            <div class="contents">
+            <div class="contents" x-data="{ selectedDiocese: '{{ $r?->diocese ?? '' }}' }">
+                @php
+                    $denomFlat = collect(config('reference_data.denomination_list', []))->flatten()->all();
+                    $dioceseOpts = config('reference_data.diocese_list', []);
+                @endphp
                 <div class="float-field">
                     <select name="denomination"><option value="">Select</option>
                         @foreach(config('reference_data.denomination_list', []) as $group => $items)
@@ -90,9 +97,25 @@
                                 @endforeach
                             </optgroup>
                         @endforeach
+                        @if(($r?->denomination ?? '') !== '' && ! in_array($r?->denomination, $denomFlat, true))
+                            <optgroup label="Current"><option value="{{ $r->denomination }}" selected>{{ $r->denomination }}</option></optgroup>
+                        @endif
                     </select><label>Denomination</label>
                 </div>
-                <div class="float-field"><input type="text" name="diocese_name" value="{{ $r?->diocese_name ?? $r?->diocese ?? '' }}" placeholder=" "><label>Diocese</label></div>
+                <div class="float-field">
+                    <select name="diocese" x-model="selectedDiocese"><option value="">Select</option>
+                        @foreach($dioceseOpts as $dio)
+                            <option value="{{ $dio }}" {{ ($r?->diocese ?? '') === $dio ? 'selected' : '' }}>{{ $dio }}</option>
+                        @endforeach
+                        @if(($r?->diocese ?? '') !== '' && ! in_array($r?->diocese, $dioceseOpts, true))
+                            <option value="{{ $r->diocese }}" selected>{{ $r->diocese }}</option>
+                        @endif
+                    </select><label>Diocese</label>
+                </div>
+                <div class="float-field" x-show="selectedDiocese === 'Other'" x-transition>
+                    <input type="text" name="diocese_name" value="{{ $r?->diocese_name ?? '' }}" placeholder=" ">
+                    <label>Diocese Name (if Other)</label>
+                </div>
                 <div class="float-field"><input type="text" name="parish_name_place" value="{{ $r?->parish_name_place ?? '' }}" placeholder=" "><label>Parish Name & Place</label></div>
             </div>
         </template>
@@ -140,7 +163,17 @@
                         <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
                     </div>
                 </template>
-                <div class="float-field"><input type="text" name="gotra" value="{{ $r?->gotra ?? '' }}" placeholder=" "><label>Gotra</label></div>
+                <div class="float-field">
+                    @php $gotraOpts = config('reference_data.gothram_list', []); @endphp
+                    <select name="gotra"><option value="">Select</option>
+                        @foreach($gotraOpts as $opt)
+                            <option value="{{ $opt }}" {{ ($r?->gotra ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                        @if(($r?->gotra ?? '') !== '' && ! in_array($r?->gotra, $gotraOpts, true))
+                            <option value="{{ $r->gotra }}" selected>{{ $r->gotra }}</option>
+                        @endif
+                    </select><label>Gotra / Gothram</label>
+                </div>
                 <div class="float-field">
                     <select name="nakshatra"><option value="">Select</option>
                         @foreach(config('reference_data.nakshatra_list', []) as $opt)
@@ -162,14 +195,70 @@
                         @endforeach
                     </select><label>Manglik / Chovva Dosham</label>
                 </div>
+                {{-- Jain Sect — shown for Jain only. --}}
+                <div class="float-field" x-show="religion === 'Jain'" x-transition>
+                    @php $jainOpts = config('reference_data.jain_sect_list', []); @endphp
+                    <select name="jain_sect"><option value="">Select</option>
+                        @foreach($jainOpts as $opt)
+                            <option value="{{ $opt }}" {{ ($r?->jain_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                        @if(($r?->jain_sect ?? '') !== '' && ! in_array($r?->jain_sect, $jainOpts, true))
+                            <option value="{{ $r->jain_sect }}" selected>{{ $r->jain_sect }}</option>
+                        @endif
+                    </select><label>Jain Sect</label>
+                </div>
             </div>
         </template>
 
-        {{-- Muslim fields --}}
+        {{-- Muslim fields — dropdowns from config (matches registration + admin),
+             each preserving a stored value not in its list. --}}
         <template x-if="religion === 'Muslim'">
             <div class="contents">
-                <div class="float-field"><input type="text" name="muslim_sect" value="{{ $r?->muslim_sect ?? '' }}" placeholder=" "><label>Muslim Sect</label></div>
-                <div class="float-field"><input type="text" name="muslim_community" value="{{ $r?->muslim_community ?? '' }}" placeholder=" "><label>Muslim Community</label></div>
+                @php
+                    $sectOpts = config('reference_data.muslim_sect_list', []);
+                    $jamathOpts = config('reference_data.jamath_list', []);
+                    $observanceOpts = config('reference_data.religious_observance_list', []);
+                @endphp
+                <div class="float-field">
+                    <select name="muslim_sect"><option value="">Select</option>
+                        @foreach($sectOpts as $opt)
+                            <option value="{{ $opt }}" {{ ($r?->muslim_sect ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                        @if(($r?->muslim_sect ?? '') !== '' && ! in_array($r?->muslim_sect, $sectOpts, true))
+                            <option value="{{ $r->muslim_sect }}" selected>{{ $r->muslim_sect }}</option>
+                        @endif
+                    </select><label>Muslim Sect</label>
+                </div>
+                <div class="float-field">
+                    <select name="muslim_community"><option value="">Select</option>
+                        @foreach($jamathOpts as $opt)
+                            <option value="{{ $opt }}" {{ ($r?->muslim_community ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                        @if(($r?->muslim_community ?? '') !== '' && ! in_array($r?->muslim_community, $jamathOpts, true))
+                            <option value="{{ $r->muslim_community }}" selected>{{ $r->muslim_community }}</option>
+                        @endif
+                    </select><label>Community / Jamath</label>
+                </div>
+                <div class="float-field">
+                    <select name="religious_observance"><option value="">Select</option>
+                        @foreach($observanceOpts as $opt)
+                            <option value="{{ $opt }}" {{ ($r?->religious_observance ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                        @if(($r?->religious_observance ?? '') !== '' && ! in_array($r?->religious_observance, $observanceOpts, true))
+                            <option value="{{ $r->religious_observance }}" selected>{{ $r->religious_observance }}</option>
+                        @endif
+                    </select><label>Religious Observance</label>
+                </div>
+            </div>
+        </template>
+
+        {{-- Other religion — free-text name, shown only when "Other". --}}
+        <template x-if="religion === 'Other'">
+            <div class="contents">
+                <div class="float-field">
+                    <input type="text" name="other_religion_name" value="{{ $r?->other_religion_name ?? '' }}" placeholder=" ">
+                    <label>Specify Religion</label>
+                </div>
             </div>
         </template>
 

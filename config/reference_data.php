@@ -108,6 +108,10 @@ return [
         'Digambar', 'Svetambara', 'Other',
     ],
 
+    'religious_observance_list' => [
+        'Practicing', 'Moderately Practicing', 'Non-practicing', 'Prefer Not to Say',
+    ],
+
     'sub_caste_list' => [
         'Shetty', 'Hegde', 'Rai', 'Poojary', 'Nayak', 'Amin', 'Karkera', 'Salian', 'Puthran', 'Suvarna', 'Kotian', 'Bangera',
         'Moolya', 'Kulal', 'Acharya', 'Kammara', 'Kansara', 'Shilpi', 'Menon', 'Pillai', 'Kurup', 'Nambiar', 'Iyer', 'Iyengar',
