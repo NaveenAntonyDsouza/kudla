@@ -1310,7 +1310,11 @@ class UserResource extends Resource
                         // its relevant fields (no cross-religion clutter). This
                         // is visibility only — values still load + save normally.
                         Forms\Components\Select::make('rel_religion')->label('Religion')
-                            ->options(fn () => self::listToOptions(config('reference_data.religion_list', [])))
+                            // optionsWithCurrent keeps the profile's stored religion selectable
+                            // even if it's been deactivated in Dropdown Options, so editing such
+                            // a profile here can't blank the religion (and cascade-clear its
+                            // sub-fields) on save.
+                            ->options(fn (Get $get) => self::optionsWithCurrent(config('reference_data.religion_list', []), $get('rel_religion')))
                             ->searchable()
                             ->live(),
                         // ── Christian ──
@@ -1337,14 +1341,14 @@ class UserResource extends Resource
                         // outside the filtered list, e.g. after a religion
                         // change), so it can never be hidden or wiped on save.
                         Forms\Components\Select::make('rel_caste')->label('Caste / Community')
-                            ->options(fn (Get $get) => self::religionScopedOptions(
+                            ->options(fn (Get $get) => self::optionsWithCurrent(
                                 \App\Models\Community::getCasteList($get('rel_religion')),
                                 $get('rel_caste'),
                             ))
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
-                            ->options(fn (Get $get) => self::religionScopedOptions(
+                            ->options(fn (Get $get) => self::optionsWithCurrent(
                                 \App\Models\Community::getSubCasteList($get('rel_religion')),
                                 $get('rel_sub_caste'),
                             ))
@@ -1599,18 +1603,17 @@ class UserResource extends Resource
     }
 
     /**
-     * Options for the religion-scoped Caste / Sub-Caste selects on the admin
-     * form. The list is already filtered to the selected religion by the
-     * caller (Community::getCasteList($religion)); this shapes it as
-     * [value => value] and guarantees the record's currently-stored value
-     * stays selectable even if it falls outside the filtered list (e.g. a
-     * legacy value, or after the admin changes religion) — so a closed Select
-     * can never hide and then wipe it on save.
+     * Shape a flat list of option values as [value => value] and guarantee the
+     * record's currently-stored value stays selectable even if it's not in the
+     * list — e.g. a Caste/Sub-Caste outside the religion-filtered set, or a
+     * Religion that's been deactivated in Dropdown Options. Without this a
+     * closed Select would hide the value and then blank it on save. Used by the
+     * Religion, Caste and Sub-Caste selects.
      *
-     * @param  array  $list     Religion-filtered option values.
-     * @param  mixed  $current  The field's current stored value.
+     * @param  array  $list     The current option values (already filtered, if applicable).
+     * @param  mixed  $current  The field's current stored value to preserve.
      */
-    private static function religionScopedOptions(array $list, $current): array
+    private static function optionsWithCurrent(array $list, $current): array
     {
         $opts = array_combine($list, $list) ?: [];
 
