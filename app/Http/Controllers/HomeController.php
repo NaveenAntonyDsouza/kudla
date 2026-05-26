@@ -43,16 +43,23 @@ class HomeController extends Controller
             'years' => SiteSetting::getValue('years_of_service', '1'),
         ];
 
-        // Get VIP/Featured profiles first, then recent active profiles to fill up to 8
+        // Featured Profiles selection (Homepage Content → Featured Profiles Options):
+        // how many to show (clamped 1–24), and whether to show ONLY manually-marked
+        // VIP/Featured profiles (when off, VIP/Featured come first, then recent
+        // members auto-fill up to the count).
+        $featuredCount = max(1, min((int) SiteSetting::getValue('featured_profiles_count', '8'), 24));
+        $featuredManualOnly = SiteSetting::getValue('featured_profiles_manual_only', '0') === '1';
+
         $featuredProfiles = Profile::where('is_active', true)
             ->approved()
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->whereNotNull('full_name')
+            ->when($featuredManualOnly, fn($q) => $q->where(fn($sub) => $sub->where('is_vip', true)->orWhere('is_featured', true)))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
             ->orderBy('is_vip', 'desc')
             ->orderBy('is_featured', 'desc')
             ->orderBy('created_at', 'desc')
-            ->limit(8)
+            ->limit($featuredCount)
             ->get();
 
         $totalProfiles = Profile::where('is_active', true)->count();

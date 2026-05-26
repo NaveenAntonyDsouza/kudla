@@ -64,6 +64,10 @@ class HomepageSettings extends Page implements HasForms
             'show_success_stories' => ($settings['show_success_stories'] ?? '1') === '1',
             'show_faq_section' => ($settings['show_faq_section'] ?? '1') === '1',
 
+            // Featured Profiles options
+            'featured_profiles_count' => $settings['featured_profiles_count'] ?? '8',
+            'featured_profiles_manual_only' => ($settings['featured_profiles_manual_only'] ?? '0') === '1',
+
             // Homepage community sections — ordered list of religions (Repeater rows)
             'community_religions' => collect(
                 json_decode($settings['homepage_community_religions'] ?? '["Hindu","Jain","Christian"]', true) ?: ['Hindu', 'Jain', 'Christian']
@@ -183,6 +187,22 @@ class HomepageSettings extends Page implements HasForms
                     ])
                     ->columns(2),
 
+                \Filament\Schemas\Components\Section::make('Featured Profiles Options')
+                    ->description('Fine-tune the Featured Profiles section (only applies when it is shown above).')
+                    ->schema([
+                        Forms\Components\TextInput::make('featured_profiles_count')
+                            ->label('How many profiles to show')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(24)
+                            ->default(8)
+                            ->helperText('Between 1 and 24. Default: 8.'),
+                        Forms\Components\Toggle::make('featured_profiles_manual_only')
+                            ->label('Only show profiles marked VIP / Featured')
+                            ->helperText('When ON, only profiles you have manually marked VIP or Featured appear (no auto-fill). When OFF, VIP/Featured come first, then recent members fill the rest.'),
+                    ])
+                    ->columns(2),
+
                 \Filament\Schemas\Components\Section::make('Community Sections')
                     ->description('Which religion community sections appear on the homepage (the browse chips + the quick community search dropdown), and in what order. Drag to reorder; remove all rows to hide community sections entirely.')
                     ->schema([
@@ -286,7 +306,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section'];
+        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,
