@@ -30,15 +30,27 @@ class HomeController extends Controller
         // Optionally hide communities (and whole religion sections) that have no
         // active, approved profiles yet, so browse chips never lead to empty
         // results. Off by default. (Homepage Content → Community Sections.)
+        // Each religion stores its community in a different column — Christian →
+        // denomination, Muslim → muslim_community, otherwise caste (matches the
+        // browse chip's own filter field) — so non-Hindu sections aren't wrongly
+        // hidden. One small query per shown religion, only when the toggle is on.
         if (SiteSetting::getValue('hide_empty_communities', '0') === '1') {
-            $populated = array_flip(
-                \App\Models\ReligiousInfo::query()
-                    ->whereHas('profile', fn ($q) => $q->where('is_active', true)->approved())
-                    ->whereNotNull('caste')->where('caste', '!=', '')
-                    ->distinct()->pluck('caste')->all()
-            );
             $communities = $communities
-                ->map(fn ($group) => $group->filter(fn ($c) => isset($populated[$c->community_name]))->values())
+                ->map(function ($group, $religion) {
+                    $field = match ($religion) {
+                        'Christian' => 'denomination',
+                        'Muslim' => 'muslim_community',
+                        default => 'caste',
+                    };
+                    $populated = array_flip(
+                        \App\Models\ReligiousInfo::query()
+                            ->where('religion', $religion)
+                            ->whereHas('profile', fn ($q) => $q->where('is_active', true)->approved())
+                            ->whereNotNull($field)->where($field, '!=', '')
+                            ->distinct()->pluck($field)->all()
+                    );
+                    return $group->filter(fn ($c) => isset($populated[$c->community_name]))->values();
+                })
                 ->filter(fn ($group) => $group->isNotEmpty());
         }
 
