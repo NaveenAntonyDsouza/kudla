@@ -15,10 +15,11 @@ class HomeController extends Controller
             return redirect()->route('dashboard');
         }
 
-        // Community browse sections on the homepage: show only these religions,
-        // in this order. (Muslim is intentionally not shown here — edit this list
-        // to change which community sections appear on the homepage or reorder them.)
-        $homeReligions = ['Hindu', 'Jain', 'Christian'];
+        // Community browse sections on the homepage: which religions show + their
+        // order is admin-controlled (Homepage Content → Community Sections),
+        // stored as an ordered JSON list. Falls back to Hindu, Jain, Christian.
+        $homeReligions = json_decode(SiteSetting::getValue('homepage_community_religions', '["Hindu","Jain","Christian"]'), true);
+        $homeReligions = (is_array($homeReligions) && $homeReligions !== []) ? $homeReligions : ['Hindu', 'Jain', 'Christian'];
         $communities = Community::active()
             ->whereIn('religion', $homeReligions)
             ->orderBy('sort_order')

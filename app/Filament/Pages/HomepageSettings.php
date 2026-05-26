@@ -60,6 +60,11 @@ class HomepageSettings extends Page implements HasForms
             // Featured Profiles section visibility (default ON)
             'show_featured_profiles' => ($settings['show_featured_profiles'] ?? '1') === '1',
 
+            // Homepage community sections — ordered list of religions (Repeater rows)
+            'community_religions' => collect(
+                json_decode($settings['homepage_community_religions'] ?? '["Hindu","Jain","Christian"]', true) ?: ['Hindu', 'Jain', 'Christian']
+            )->map(fn ($r) => ['religion' => $r])->all(),
+
             // CTA Section
             'cta_title' => $settings['cta_title'] ?? 'Register Free Today',
             'cta_description' => $settings['cta_description'] ?? 'Join thousands of families who found their perfect match.',
@@ -161,6 +166,25 @@ class HomepageSettings extends Page implements HasForms
                             ->helperText('When OFF, the Featured Profiles section is hidden from the homepage for all visitors. Default: ON.'),
                     ]),
 
+                \Filament\Schemas\Components\Section::make('Community Sections')
+                    ->description('Which religion community sections appear on the homepage (the browse chips + the quick community search dropdown), and in what order. Drag to reorder; remove all rows to hide community sections entirely.')
+                    ->schema([
+                        Forms\Components\Repeater::make('community_religions')
+                            ->label('')
+                            ->schema([
+                                Forms\Components\Select::make('religion')
+                                    ->label('Religion')
+                                    ->options(fn () => \App\Models\Community::query()
+                                        ->select('religion')->distinct()->orderBy('religion')
+                                        ->pluck('religion', 'religion')->all())
+                                    ->required(),
+                            ])
+                            ->addActionLabel('Add a religion section')
+                            ->reorderable()
+                            ->grid(1)
+                            ->helperText('Only religions that have communities are listed. The order here is the display order on the homepage.'),
+                    ]),
+
                 \Filament\Schemas\Components\Section::make('CTA Banner')
                     ->description('Call-to-action section that encourages visitors to register.')
                     ->schema([
@@ -246,7 +270,17 @@ class HomepageSettings extends Page implements HasForms
         }
 
         $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles'];
-        $skipFields = ['hero_image_upload', 'current_hero_image'];
+        $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
+
+        // Homepage community sections: store the Repeater rows as an ordered,
+        // de-duplicated JSON list of religion names.
+        $communityReligions = collect($data['community_religions'] ?? [])
+            ->pluck('religion')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        SiteSetting::setValue('homepage_community_religions', json_encode($communityReligions));
 
         foreach ($data as $key => $value) {
             if (in_array($key, $skipFields)) {
