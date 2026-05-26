@@ -13,6 +13,7 @@ use Filament\Forms;
 use Filament\Infolists;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -1303,18 +1304,30 @@ class UserResource extends Resource
                     ->icon('heroicon-o-globe-alt')
                     ->columns(3)
                     ->schema([
+                        // Religion drives which sub-fields show. ->live() so the
+                        // form reacts the moment staff change it; ->visible()
+                        // gates each block by religion so a profile only shows
+                        // its relevant fields (no cross-religion clutter). This
+                        // is visibility only — values still load + save normally.
                         Forms\Components\Select::make('rel_religion')->label('Religion')
                             ->options(fn () => self::listToOptions(config('reference_data.religion_list', [])))
-                            ->searchable(),
+                            ->searchable()
+                            ->live(),
+                        // ── Christian ──
                         Forms\Components\Select::make('rel_denomination')->label('Denomination')
                             ->options(fn () => self::listToGroupedOptions(config('reference_data.denomination_list', [])))
-                            ->searchable(),
+                            ->searchable()
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         Forms\Components\Select::make('rel_diocese')->label('Diocese')
                             ->options(fn () => self::listToOptions(config('reference_data.diocese_list', [])))
-                            ->searchable(),
+                            ->searchable()
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         // Free-text: only relevant when Diocese = "Other".
-                        Forms\Components\TextInput::make('rel_diocese_name')->label('Diocese Name (Other)')->maxLength(100),
-                        Forms\Components\TextInput::make('rel_parish')->label('Parish Name / Place')->maxLength(200),
+                        Forms\Components\TextInput::make('rel_diocese_name')->label('Diocese Name (Other)')->maxLength(100)
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
+                        Forms\Components\TextInput::make('rel_parish')->label('Parish Name / Place')->maxLength(200)
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
+                        // ── Hindu / Jain ──
                         // Caste / Sub-Caste are sourced from the admin-managed
                         // Communities table (App\Models\Community) — the same
                         // source the public registration cascade uses — so a
@@ -1327,32 +1340,46 @@ class UserResource extends Resource
                         // community freely).
                         Forms\Components\Select::make('rel_caste')->label('Caste / Community')
                             ->options(fn () => self::optionsPlusExisting(\App\Models\Community::getCasteList(), 'religious_info', 'caste'))
-                            ->searchable(),
+                            ->searchable()
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
                             ->options(fn () => self::optionsPlusExisting(\App\Models\Community::getSubCasteList(), 'religious_info', 'sub_caste'))
-                            ->searchable(),
+                            ->searchable()
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_gotra')->label('Gotra / Gothram')
                             ->options(fn () => self::optionsPlusExisting(config('reference_data.gothram_list', []), 'religious_info', 'gotra'))
-                            ->searchable(),
+                            ->searchable()
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_nakshatra')->label('Nakshatra (Star)')
                             ->options(fn () => self::listToOptions(config('reference_data.nakshatra_list', [])))
-                            ->searchable(),
+                            ->searchable()
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_rashi')->label('Rashi (Zodiac)')
-                            ->options(fn () => self::listToOptions(config('reference_data.rasi_list', []))),
+                            ->options(fn () => self::listToOptions(config('reference_data.rasi_list', [])))
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         // Manglik/Dosh — simple yes/no/unknown, no config list.
                         Forms\Components\Select::make('rel_manglik')->label('Manglik / Dosh')
-                            ->options(['Yes' => 'Yes', 'No' => 'No', "Don't Know" => "Don't Know"]),
+                            ->options(['Yes' => 'Yes', 'No' => 'No', "Don't Know" => "Don't Know"])
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
+                        // ── Muslim ──
                         Forms\Components\Select::make('rel_muslim_sect')->label('Muslim Sect')
-                            ->options(fn () => self::listToOptions(config('reference_data.muslim_sect_list', []))),
+                            ->options(fn () => self::listToOptions(config('reference_data.muslim_sect_list', [])))
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Muslim'),
                         Forms\Components\Select::make('rel_muslim_community')->label('Muslim Community')
                             ->options(fn () => self::listToOptions(config('reference_data.jamath_list', [])))
-                            ->searchable(),
-                        Forms\Components\Select::make('rel_jain_sect')->label('Jain Sect')
-                            ->options(fn () => self::listToOptions(config('reference_data.jain_sect_list', []))),
+                            ->searchable()
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Muslim'),
                         Forms\Components\Select::make('rel_religious_observance')->label('Religious Observance')
-                            ->options(fn () => self::listToOptions(config('reference_data.religious_observance_list', []))),
-                        Forms\Components\TextInput::make('rel_other_religion_name')->label('Other Religion (if "Other")')->maxLength(50),
-                        // Free-text: clock time + birthplace.
+                            ->options(fn () => self::listToOptions(config('reference_data.religious_observance_list', [])))
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Muslim'),
+                        // ── Jain ──
+                        Forms\Components\Select::make('rel_jain_sect')->label('Jain Sect')
+                            ->options(fn () => self::listToOptions(config('reference_data.jain_sect_list', [])))
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Jain'),
+                        // ── Other ──
+                        Forms\Components\TextInput::make('rel_other_religion_name')->label('Other Religion (if "Other")')->maxLength(50)
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Other'),
+                        // Always shown (any religion).
                         Forms\Components\TextInput::make('rel_time_of_birth')->label('Time of Birth')->maxLength(20),
                         Forms\Components\TextInput::make('rel_place_of_birth')->label('Place of Birth')->maxLength(100),
                     ]),
