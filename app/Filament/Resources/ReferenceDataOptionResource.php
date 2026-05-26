@@ -251,6 +251,16 @@ class ReferenceDataOptionResource extends Resource
                     ->options(self::CATEGORY_LABELS)
                     ->searchable(),
 
+                // Filter dioceses by rite. Pair with Category = Diocese to see/
+                // edit only Latin, only Syro-Malabar, or only Syro-Malankara.
+                Tables\Filters\SelectFilter::make('cascade_group')
+                    ->label('Rite (dioceses)')
+                    ->options([
+                        'Latin' => 'Latin (Roman Catholic)',
+                        'Syro-Malabar' => 'Syro-Malabar (Syrian Catholic)',
+                        'Syro-Malankara' => 'Syro-Malankara (Malankara Catholic)',
+                    ]),
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active'),
             ])
