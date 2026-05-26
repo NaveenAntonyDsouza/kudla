@@ -246,29 +246,41 @@ class ReferenceDataOptionResource extends Resource
             ])
             ->defaultGroup('category')
             ->filters([
-                Tables\Filters\SelectFilter::make('category')
-                    ->label('Category')
-                    ->options(self::CATEGORY_LABELS)
-                    ->searchable(),
-
-                // Filter dioceses by rite. Pair with Category = Diocese to see/
-                // edit only Latin, only Syro-Malabar, or only Syro-Malankara.
-                // Only shown when viewing dioceses (or no category yet) — rite
-                // is meaningless for other categories, so it's hidden there.
-                Tables\Filters\SelectFilter::make('cascade_group')
-                    ->label('Rite (dioceses)')
-                    ->options([
-                        'Latin' => 'Latin (Roman Catholic)',
-                        'Syro-Malabar' => 'Syro-Malabar (Syrian Catholic)',
-                        'Syro-Malankara' => 'Syro-Malankara (Malankara Catholic)',
+                // Combined Category + (conditional) Rite filter. The "Rite" field
+                // appears only when Category = Diocese, via intra-form reactivity
+                // ($get on the sibling field) — reliable, unlike trying to react
+                // across two separate filters (which Filament doesn't do, esp.
+                // with deferred "Apply filters").
+                Tables\Filters\Filter::make('category')
+                    ->form([
+                        Forms\Components\Select::make('category')
+                            ->label('Category')
+                            ->options(self::categoryOptions())
+                            ->searchable()
+                            ->live(),
+                        Forms\Components\Select::make('rite')
+                            ->label('Rite (dioceses)')
+                            ->options([
+                                'Latin' => 'Latin (Roman Catholic)',
+                                'Syro-Malabar' => 'Syro-Malabar (Syrian Catholic)',
+                                'Syro-Malankara' => 'Syro-Malankara (Malankara Catholic)',
+                            ])
+                            ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('category') === 'diocese'),
                     ])
-                    ->visible(function ($livewire) {
-                        try {
-                            $category = $livewire->getTableFilterState('category')['value'] ?? null;
-                            return blank($category) || $category === 'diocese';
-                        } catch (\Throwable $e) {
-                            return true; // fail open — never break the page
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                        return $query
+                            ->when($data['category'] ?? null, fn ($q, $c) => $q->where('category', $c))
+                            ->when($data['rite'] ?? null, fn ($q, $r) => $q->where('cascade_group', $r));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['category'] ?? null) {
+                            $indicators[] = Tables\Filters\Indicator::make('Category: ' . (self::CATEGORY_LABELS[$data['category']] ?? $data['category']));
                         }
+                        if ($data['rite'] ?? null) {
+                            $indicators[] = Tables\Filters\Indicator::make('Rite: ' . $data['rite']);
+                        }
+                        return $indicators;
                     }),
 
                 Tables\Filters\TernaryFilter::make('is_active')
