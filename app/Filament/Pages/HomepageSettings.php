@@ -57,8 +57,12 @@ class HomepageSettings extends Page implements HasForms
             'years_of_service' => $settings['years_of_service'] ?? '1',
             'stats_auto_compute' => ($settings['stats_auto_compute'] ?? '0') === '1',
 
-            // Featured Profiles section visibility (default ON)
+            // Homepage section visibility toggles (default ON)
             'show_featured_profiles' => ($settings['show_featured_profiles'] ?? '1') === '1',
+            'show_communities_section' => ($settings['show_communities_section'] ?? '1') === '1',
+            'show_why_choose_us' => ($settings['show_why_choose_us'] ?? '1') === '1',
+            'show_success_stories' => ($settings['show_success_stories'] ?? '1') === '1',
+            'show_faq_section' => ($settings['show_faq_section'] ?? '1') === '1',
 
             // Homepage community sections — ordered list of religions (Repeater rows)
             'community_religions' => collect(
@@ -158,13 +162,26 @@ class HomepageSettings extends Page implements HasForms
                     ])
                     ->columns(3),
 
-                \Filament\Schemas\Components\Section::make('Featured Profiles')
-                    ->description('The "Featured Profiles" showcase on the homepage (VIP / featured / recent members).')
+                \Filament\Schemas\Components\Section::make('Homepage Sections')
+                    ->description('Show or hide each optional section of the homepage. Applies to all homepage designs. Default: all shown.')
                     ->schema([
                         Forms\Components\Toggle::make('show_featured_profiles')
-                            ->label('Show the Featured Profiles section')
-                            ->helperText('When OFF, the Featured Profiles section is hidden from the homepage for all visitors. Default: ON.'),
-                    ]),
+                            ->label('Featured Profiles')
+                            ->helperText('The showcase of VIP / featured / recent members.'),
+                        Forms\Components\Toggle::make('show_communities_section')
+                            ->label('Community Browse')
+                            ->helperText('The "browse by community" chips grouped by religion.'),
+                        Forms\Components\Toggle::make('show_why_choose_us')
+                            ->label('Why Choose Us')
+                            ->helperText('The feature highlights edited under "Why Choose Us" above.'),
+                        Forms\Components\Toggle::make('show_success_stories')
+                            ->label('Success Stories')
+                            ->helperText('The testimonials section (also hides automatically when there are no testimonials).'),
+                        Forms\Components\Toggle::make('show_faq_section')
+                            ->label('FAQ')
+                            ->helperText('The frequently-asked-questions preview.'),
+                    ])
+                    ->columns(2),
 
                 \Filament\Schemas\Components\Section::make('Community Sections')
                     ->description('Which religion community sections appear on the homepage (the browse chips + the quick community search dropdown), and in what order. Drag to reorder; remove all rows to hide community sections entirely.')
@@ -269,7 +286,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles'];
+        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,

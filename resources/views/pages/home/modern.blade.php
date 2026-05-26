@@ -175,7 +175,7 @@
     </section>
 
     {{-- 4. Why Choose Us — modern card grid --}}
-    @if(count($whyChooseUs) > 0)
+    @if($showWhyChooseUs && count($whyChooseUs) > 0)
     <section class="py-16 md:py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
@@ -247,7 +247,7 @@
     @endif
 
     {{-- 6. Success Stories — card grid (not carousel) --}}
-    @if($successStories->count() > 0)
+    @if($showSuccessStories && $successStories->count() > 0)
     <section class="py-16 md:py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
@@ -277,7 +277,7 @@
     @endif
 
     {{-- 7. Browse by community — compact tab row --}}
-    @if($communities->count() > 0)
+    @if($showCommunities && $communities->count() > 0)
     <section class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl md:text-3xl font-serif font-bold text-gray-900 text-center mb-8">Browse by Community</h2>

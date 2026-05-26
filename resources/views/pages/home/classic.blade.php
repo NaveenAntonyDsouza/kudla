@@ -383,6 +383,7 @@
         ];
         $colClass = count($whyChooseUs) <= 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4';
     @endphp
+    @if($showWhyChooseUs)
     <section class="py-16 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Why Choose {{ $siteName }}?</h2>
@@ -398,12 +399,13 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- 5. Success Stories (Carousel) --}}
     @php
         $successStories = \App\Models\Testimonial::where('is_visible', true)->orderBy('display_order')->limit(8)->get();
     @endphp
-    @if($successStories->count() > 0)
+    @if($showSuccessStories && $successStories->count() > 0)
     <section class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Success Stories</h2>
@@ -503,7 +505,7 @@
     @endif
 
     {{-- 6. Community Browse --}}
-    @if($communities->count() > 0)
+    @if($showCommunities && $communities->count() > 0)
     <section class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-12">Browse by Community</h2>

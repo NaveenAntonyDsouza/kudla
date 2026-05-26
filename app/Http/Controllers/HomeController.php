@@ -57,11 +57,20 @@ class HomeController extends Controller
 
         $totalProfiles = Profile::where('is_active', true)->count();
 
-        // Admin toggle (Homepage Content → Featured Profiles): hide the
-        // "Featured Profiles" section site-wide. Defaults to shown.
+        // Homepage section show/hide toggles (Homepage Content → Homepage
+        // Sections). All default to shown.
         $showFeatured = SiteSetting::getValue('show_featured_profiles', '1') === '1';
+        $showCommunities = SiteSetting::getValue('show_communities_section', '1') === '1';
+        $showWhyChooseUs = SiteSetting::getValue('show_why_choose_us', '1') === '1';
+        $showSuccessStories = SiteSetting::getValue('show_success_stories', '1') === '1';
+        $showFaq = SiteSetting::getValue('show_faq_section', '1') === '1';
 
         $faqs = Faq::visible()->orderBy('display_order')->limit(4)->get();
+        // FAQ toggle: empty the collection so the (count-guarded) FAQ section
+        // hides across all three templates without per-template edits.
+        if (! $showFaq) {
+            $faqs = collect();
+        }
 
         // SEO: Homepage-specific title and description
         $siteName = SiteSetting::getValue('site_name', 'Matrimony');
@@ -74,6 +83,6 @@ class HomeController extends Controller
         $template = SiteSetting::getValue('homepage_template', 'classic');
         $template = in_array($template, ['classic', 'modern', 'premium'], true) ? $template : 'classic';
 
-        return view("pages.home.{$template}", compact('communities', 'stats', 'featuredProfiles', 'showFeatured', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
+        return view("pages.home.{$template}", compact('communities', 'stats', 'featuredProfiles', 'showFeatured', 'showCommunities', 'showWhyChooseUs', 'showSuccessStories', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
     }
 }

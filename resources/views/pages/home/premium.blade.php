@@ -160,7 +160,7 @@
     @endif
 
     {{-- 4. Why we're different — editorial 3-col --}}
-    @if(count($whyChooseUs) > 0)
+    @if($showWhyChooseUs && count($whyChooseUs) > 0)
     <section class="py-16 md:py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
@@ -181,7 +181,7 @@
     @endif
 
     {{-- 5. Success Stories — long-form interview style --}}
-    @if($successStories->count() > 0)
+    @if($showSuccessStories && $successStories->count() > 0)
     <section class="py-16 md:py-24" style="background: #fafaf8;">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
@@ -251,7 +251,7 @@
     </section>
 
     {{-- 7. Browse communities — visual tiles --}}
-    @if($communities->count() > 0)
+    @if($showCommunities && $communities->count() > 0)
     <section class="py-16 md:py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
