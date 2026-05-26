@@ -1328,22 +1328,26 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('rel_parish')->label('Parish Name / Place')->maxLength(200)
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         // ── Hindu / Jain ──
-                        // Caste / Sub-Caste are sourced from the admin-managed
-                        // Communities table (App\Models\Community) — the same
-                        // source the public registration cascade uses — so a
-                        // community added on the Communities admin page shows up
-                        // here immediately. Merged with the column's existing
-                        // distinct values so any legacy value still renders +
-                        // can't be wiped on save. Searchable (the list spans all
-                        // religions; admins type to filter — deliberately NOT
-                        // religion-cascaded so staff can correct a mis-set
-                        // community freely).
+                        // Caste / Sub-Caste options come from the admin-managed
+                        // Communities table, filtered to the selected religion
+                        // (Hindu vs Jain) so a profile only sees its religion's
+                        // communities — the same source + filtering as the public
+                        // registration cascade. The record's currently-stored
+                        // value is always kept selectable (even if it falls
+                        // outside the filtered list, e.g. after a religion
+                        // change), so it can never be hidden or wiped on save.
                         Forms\Components\Select::make('rel_caste')->label('Caste / Community')
-                            ->options(fn () => self::optionsPlusExisting(\App\Models\Community::getCasteList(), 'religious_info', 'caste'))
+                            ->options(fn (Get $get) => self::religionScopedOptions(
+                                \App\Models\Community::getCasteList($get('rel_religion')),
+                                $get('rel_caste'),
+                            ))
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
-                            ->options(fn () => self::optionsPlusExisting(\App\Models\Community::getSubCasteList(), 'religious_info', 'sub_caste'))
+                            ->options(fn (Get $get) => self::religionScopedOptions(
+                                \App\Models\Community::getSubCasteList($get('rel_religion')),
+                                $get('rel_sub_caste'),
+                            ))
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_gotra')->label('Gotra / Gothram')
@@ -1592,5 +1596,28 @@ class UserResource extends Resource
         $values = array_values(array_unique(array_filter($values, fn ($v) => $v !== null && $v !== '')));
 
         return array_combine($values, $values) ?: [];
+    }
+
+    /**
+     * Options for the religion-scoped Caste / Sub-Caste selects on the admin
+     * form. The list is already filtered to the selected religion by the
+     * caller (Community::getCasteList($religion)); this shapes it as
+     * [value => value] and guarantees the record's currently-stored value
+     * stays selectable even if it falls outside the filtered list (e.g. a
+     * legacy value, or after the admin changes religion) — so a closed Select
+     * can never hide and then wipe it on save.
+     *
+     * @param  array  $list     Religion-filtered option values.
+     * @param  mixed  $current  The field's current stored value.
+     */
+    private static function religionScopedOptions(array $list, $current): array
+    {
+        $opts = array_combine($list, $list) ?: [];
+
+        if (is_string($current) && $current !== '' && ! array_key_exists($current, $opts)) {
+            $opts[$current] = $current;
+        }
+
+        return $opts;
     }
 }
