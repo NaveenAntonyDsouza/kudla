@@ -94,12 +94,28 @@ class CascadeController extends Controller
     }
 
     /**
-     * Get countries.
-     * GET /api/cascade/countries
+     * Two modes, by whether a country is given:
+     *  - No ?country=  → flat list of countries (legacy behaviour).
+     *  - ?country=USA  → that country's states/provinces, wrapped as
+     *    {"locations": [...]} — the shape the registration forms consume
+     *    (this.states = data.locations || []).
+     *
+     * An EMPTY locations array signals the caller to fall back to a free-text
+     * state input — used for India (handled via the dedicated /states route),
+     * city/micro-states (Singapore, Malta), and every unmapped country, so a
+     * member can always enter their state. Keys in country_state_map match the
+     * country VALUE strings in reference_data.country_list exactly.
+     * GET /api/cascade/countries[?country=USA]
      */
-    public function countries(): JsonResponse
+    public function countries(Request $request): JsonResponse
     {
-        $countries = config('locations.countries', []);
-        return response()->json($countries);
+        $country = $request->query('country');
+
+        if (!$country) {
+            return response()->json(config('locations.countries', []));
+        }
+
+        $map = config('locations.country_state_map', []);
+        return response()->json(['locations' => $map[$country] ?? []]);
     }
 }

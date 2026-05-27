@@ -67,6 +67,133 @@ return [
             'Wanaparthy', 'Warangal', 'Yadadri Bhuvanagiri',
         ],
     ],
+
+    // First-level subdivisions (states / provinces / emirates / governorates /
+    // regions) for the foreign countries our diaspora members come from most.
+    // Drives the "Working State" / "Native State" dropdown on the registration
+    // forms for non-India countries (India uses 'indian_states' above).
+    //
+    // IMPORTANT: the keys MUST match the country VALUE strings in
+    // config('reference_data.country_list') exactly — e.g. 'United Kingdom'
+    // (not 'UK'), 'USA', 'UAE'. A mismatch silently returns no states.
+    //
+    // Any country NOT listed here (incl. the city/micro-states Singapore &
+    // Malta, and the long tail of "Other Countries") falls back to a free-text
+    // state input — so a member can always enter their state. Member profile
+    // edit uses free text throughout, so this only shapes the registration flow.
+    'country_state_map' => [
+        // USA — 50 states + DC.
+        'USA' => [
+            'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
+            'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
+            'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+            'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
+            'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
+            'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
+            'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
+            'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+            'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
+            'Washington D.C.', 'West Virginia', 'Wisconsin', 'Wyoming',
+        ],
+        // UAE — 7 emirates.
+        'UAE' => [
+            'Abu Dhabi', 'Ajman', 'Dubai', 'Fujairah', 'Ras Al Khaimah',
+            'Sharjah', 'Umm Al Quwain',
+        ],
+        // United Kingdom — 4 constituent nations.
+        'United Kingdom' => [
+            'England', 'Northern Ireland', 'Scotland', 'Wales',
+        ],
+        // Canada — 10 provinces + 3 territories.
+        'Canada' => [
+            'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
+            'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia',
+            'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec',
+            'Saskatchewan', 'Yukon',
+        ],
+        // Australia — 6 states + 2 territories.
+        'Australia' => [
+            'Australian Capital Territory', 'New South Wales', 'Northern Territory',
+            'Queensland', 'South Australia', 'Tasmania', 'Victoria',
+            'Western Australia',
+        ],
+        // Saudi Arabia — 13 regions.
+        'Saudi Arabia' => [
+            'Al Bahah', 'Al Jawf', 'Al Madinah', 'Al Qassim', 'Asir',
+            'Eastern Province', 'Hail', 'Jazan', 'Makkah', 'Najran',
+            'Northern Borders', 'Riyadh', 'Tabuk',
+        ],
+        // Qatar — 8 municipalities.
+        'Qatar' => [
+            'Al Daayen', 'Al Khor', 'Al Rayyan', 'Al Shahaniya', 'Al Shamal',
+            'Al Wakrah', 'Doha', 'Umm Salal',
+        ],
+        // Oman — 11 governorates.
+        'Oman' => [
+            'Ad Dakhiliyah', 'Adh Dhahirah', 'Al Batinah North', 'Al Batinah South',
+            'Al Buraimi', 'Al Wusta', 'Ash Sharqiyah North', 'Ash Sharqiyah South',
+            'Dhofar', 'Muscat', 'Musandam',
+        ],
+        // Kuwait — 6 governorates.
+        'Kuwait' => [
+            'Al Ahmadi', 'Al Asimah', 'Al Farwaniyah', 'Al Jahra', 'Hawalli',
+            'Mubarak Al-Kabeer',
+        ],
+        // Bahrain — 4 governorates (Central was dissolved in 2014).
+        'Bahrain' => [
+            'Capital', 'Muharraq', 'Northern', 'Southern',
+        ],
+        // New Zealand — 16 regions.
+        'New Zealand' => [
+            'Auckland', 'Bay of Plenty', 'Canterbury', 'Gisborne', 'Hawke\'s Bay',
+            'Manawatu-Whanganui', 'Marlborough', 'Nelson', 'Northland', 'Otago',
+            'Southland', 'Taranaki', 'Tasman', 'Waikato', 'Wellington',
+            'West Coast',
+        ],
+        // Switzerland — 26 cantons.
+        'Switzerland' => [
+            'Aargau', 'Appenzell Ausserrhoden', 'Appenzell Innerrhoden',
+            'Basel-Landschaft', 'Basel-Stadt', 'Bern', 'Fribourg', 'Geneva',
+            'Glarus', 'Graubunden', 'Jura', 'Lucerne', 'Neuchatel', 'Nidwalden',
+            'Obwalden', 'Schaffhausen', 'Schwyz', 'Solothurn', 'St. Gallen',
+            'Thurgau', 'Ticino', 'Uri', 'Valais', 'Vaud', 'Zug', 'Zurich',
+        ],
+        // Germany — 16 states (Bundesländer).
+        'Germany' => [
+            'Baden-Wurttemberg', 'Bavaria', 'Berlin', 'Brandenburg', 'Bremen',
+            'Hamburg', 'Hesse', 'Lower Saxony', 'Mecklenburg-Vorpommern',
+            'North Rhine-Westphalia', 'Rhineland-Palatinate', 'Saarland',
+            'Saxony', 'Saxony-Anhalt', 'Schleswig-Holstein', 'Thuringia',
+        ],
+        // France — 13 metropolitan regions.
+        'France' => [
+            'Auvergne-Rhone-Alpes', 'Bourgogne-Franche-Comte', 'Brittany',
+            'Centre-Val de Loire', 'Corsica', 'Grand Est', 'Hauts-de-France',
+            'Ile-de-France', 'Normandy', 'Nouvelle-Aquitaine', 'Occitanie',
+            'Pays de la Loire', 'Provence-Alpes-Cote d\'Azur',
+        ],
+        // Ireland — 26 counties (Republic of Ireland).
+        'Ireland' => [
+            'Carlow', 'Cavan', 'Clare', 'Cork', 'Donegal', 'Dublin', 'Galway',
+            'Kerry', 'Kildare', 'Kilkenny', 'Laois', 'Leitrim', 'Limerick',
+            'Longford', 'Louth', 'Mayo', 'Meath', 'Monaghan', 'Offaly',
+            'Roscommon', 'Sligo', 'Tipperary', 'Waterford', 'Westmeath',
+            'Wexford', 'Wicklow',
+        ],
+        // Italy — 20 regions.
+        'Italy' => [
+            'Abruzzo', 'Aosta Valley', 'Apulia', 'Basilicata', 'Calabria',
+            'Campania', 'Emilia-Romagna', 'Friuli-Venezia Giulia', 'Lazio',
+            'Liguria', 'Lombardy', 'Marche', 'Molise', 'Piedmont', 'Sardinia',
+            'Sicily', 'Trentino-Alto Adige', 'Tuscany', 'Umbria', 'Veneto',
+        ],
+        // Malaysia — 13 states + 3 federal territories.
+        'Malaysia' => [
+            'Johor', 'Kedah', 'Kelantan', 'Kuala Lumpur', 'Labuan', 'Malacca',
+            'Negeri Sembilan', 'Pahang', 'Penang', 'Perak', 'Perlis', 'Putrajaya',
+            'Sabah', 'Sarawak', 'Selangor', 'Terengganu',
+        ],
+    ],
     'countries' => [
         'India', 'UAE', 'Oman', 'Qatar', 'Kuwait', 'Saudi Arabia', 'Bahrain',
         'USA', 'UK', 'Canada', 'Australia', 'Singapore', 'Germany', 'New Zealand',
