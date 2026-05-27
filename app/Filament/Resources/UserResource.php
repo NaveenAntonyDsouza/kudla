@@ -1655,6 +1655,12 @@ class UserResource extends Resource
             }
         }
 
-        return self::optionsWithCurrent($list, $current);
+        $opts = self::optionsWithCurrent($list, $current);
+        // Always offer an "Other" choice. The member forms add this client-side,
+        // but the admin Select doesn't — so add it here for every denomination
+        // (incl. Non-Catholic). Pairs with the "Diocese Name (Other)" text field.
+        $opts['Other'] = 'Other (not listed)';
+
+        return $opts;
     }
 }

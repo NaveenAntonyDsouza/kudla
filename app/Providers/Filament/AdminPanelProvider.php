@@ -42,6 +42,16 @@ class AdminPanelProvider extends PanelProvider
         \Filament\Support\Facades\FilamentTimezone::set(
             config('app.display_timezone', 'Asia/Kolkata')
         );
+
+        // Raise the searchable-Select option cap (Filament's default is 50) so
+        // long reference lists scroll fully instead of cutting off — e.g.
+        // countries (195), occupations (203), education (192), dioceses (132),
+        // weight (103), height (80). Applies to every admin dropdown; a per-field
+        // ->optionsLimit() still overrides this. (Only affects searchable
+        // selects; non-searchable ones already render all options.)
+        \Filament\Forms\Components\Select::configureUsing(
+            fn (\Filament\Forms\Components\Select $select) => $select->optionsLimit(300)
+        );
     }
 
     public function panel(Panel $panel): Panel
