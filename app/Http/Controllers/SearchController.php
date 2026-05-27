@@ -166,6 +166,12 @@ class SearchController extends Controller
         $query->when($request->working_country, fn($q, $v) =>
             $q->whereHas('educationDetail', fn($q2) => $q2->where('working_country', $v))
         );
+        $query->when($request->working_state, fn($q, $v) =>
+            $q->whereHas('educationDetail', fn($q2) => $q2->where('working_state', $v))
+        );
+        $query->when($request->working_district, fn($q, $v) =>
+            $q->whereHas('educationDetail', fn($q2) => $q2->where('working_district', $v))
+        );
         $query->when($request->native_country, fn($q, $v) =>
             $q->whereHas('locationInfo', fn($q2) => $q2->where('native_country', $v))
         );
@@ -350,6 +356,12 @@ class SearchController extends Controller
         }
         if ($workingCountry = request('working_country')) {
             $query->whereHas('educationDetail', fn($q) => $q->where('working_country', $workingCountry));
+        }
+        if ($workingState = request('working_state')) {
+            $query->whereHas('educationDetail', fn($q) => $q->where('working_state', $workingState));
+        }
+        if ($workingDistrict = request('working_district')) {
+            $query->whereHas('educationDetail', fn($q) => $q->where('working_district', $workingDistrict));
         }
         if ($heightFrom = request('height_from')) {
             $query->whereRaw('CAST(height AS UNSIGNED) >= ?', [(int) $heightFrom]);

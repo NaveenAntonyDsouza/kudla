@@ -140,20 +140,64 @@
                                     :selected="(array) request('occupation', [])" :grouped="true" :searchable="true" />
                             </div>
 
-                            {{-- Location --}}
-                            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {{-- Location. Working country → state → district cascade,
+                                 loaded from the same /api/cascade endpoints as the
+                                 registration forms. Working location is the useful
+                                 filter here — for this community native state is
+                                 nearly uniform, so only Native Country is offered. --}}
+                            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5"
+                                x-data="{
+                                    wCountry: '{{ request('working_country', '') }}',
+                                    wState: '{{ request('working_state', '') }}',
+                                    wDistrict: '{{ request('working_district', '') }}',
+                                    wStates: [],
+                                    wDistricts: [],
+                                    async fetchWStates() {
+                                        if (!this.wCountry) { this.wStates = []; this.wDistricts = []; return; }
+                                        if (this.wCountry === 'India') {
+                                            this.wStates = await (await fetch('/api/cascade/states')).json();
+                                        } else {
+                                            const data = await (await fetch(`/api/cascade/countries?country=${encodeURIComponent(this.wCountry)}`)).json();
+                                            this.wStates = data.locations || [];
+                                        }
+                                        if (this.wState) this.fetchWDistricts();
+                                    },
+                                    async fetchWDistricts() {
+                                        if (!this.wState || this.wCountry !== 'India') { this.wDistricts = []; return; }
+                                        this.wDistricts = await (await fetch(`/api/cascade/districts?state=${encodeURIComponent(this.wState)}`)).json();
+                                    },
+                                    init() { if (this.wCountry) this.fetchWStates(); }
+                                }">
                                 <div class="float-field">
-                                    <select name="working_country">
+                                    <select name="working_country" x-model="wCountry" @change="wState=''; wDistrict=''; wDistricts=[]; fetchWStates();">
                                         <option value="">Any</option>
                                         @foreach(config('reference_data.country_list') as $group => $countries)
                                             <optgroup label="{{ $group }}">
                                                 @foreach($countries as $c)
-                                                    <option value="{{ $c }}" {{ request('working_country') === $c ? 'selected' : '' }}>{{ $c }}</option>
+                                                    <option value="{{ $c }}">{{ $c }}</option>
                                                 @endforeach
                                             </optgroup>
                                         @endforeach
                                     </select>
                                     <label>Working Country</label>
+                                </div>
+                                <div class="float-field" x-show="wStates.length > 0" x-cloak>
+                                    <select name="working_state" x-model="wState" @change="wDistrict=''; fetchWDistricts();">
+                                        <option value="">Any</option>
+                                        <template x-for="st in wStates" :key="st">
+                                            <option :value="st" x-text="st" :selected="st === wState"></option>
+                                        </template>
+                                    </select>
+                                    <label>Working State</label>
+                                </div>
+                                <div class="float-field" x-show="wCountry === 'India' && wState && wDistricts.length > 0" x-cloak>
+                                    <select name="working_district" x-model="wDistrict">
+                                        <option value="">Any</option>
+                                        <template x-for="d in wDistricts" :key="d">
+                                            <option :value="d" x-text="d" :selected="d === wDistrict"></option>
+                                        </template>
+                                    </select>
+                                    <label>Working District</label>
                                 </div>
                                 <div class="float-field">
                                     <select name="native_country">
