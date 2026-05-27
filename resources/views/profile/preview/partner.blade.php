@@ -42,6 +42,7 @@
     <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Location Requirements</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
         <div><p class="text-xs text-gray-500">Native Country</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->native_countries) }}</p></div>
+        <div><p class="text-xs text-gray-500">Native District</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->native_districts) }}</p></div>
         <div><p class="text-xs text-gray-500">Mother Tongue</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->mother_tongues) }}</p></div>
     </div>
 </div>

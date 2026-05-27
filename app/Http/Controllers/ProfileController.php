@@ -369,6 +369,7 @@ class ProfileController extends Controller
             'occupations' => 'nullable|array',
             'working_countries' => 'nullable|array',
             'native_countries' => 'nullable|array',
+            'native_districts' => 'nullable|array',
             'about_partner' => 'nullable|string|max:5000',
         ]);
 

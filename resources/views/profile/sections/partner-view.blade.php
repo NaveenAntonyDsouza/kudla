@@ -26,6 +26,7 @@
     <div><p class="text-xs text-gray-500">Occupation</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->occupations) }}</p></div>
     <div><p class="text-xs text-gray-500">Working Country</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->working_countries) }}</p></div>
     <div><p class="text-xs text-gray-500">Native Country</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->native_countries) }}</p></div>
+    <div><p class="text-xs text-gray-500">Native District</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->native_districts) }}</p></div>
 </div>
 @if($pp->about_partner)
     <div class="mt-4 pt-3 border-t border-gray-100">

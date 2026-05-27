@@ -52,6 +52,10 @@
         <x-multi-select name="mother_tongues" label="Mother Tongue" :options="$mergeWithSelected(config('reference_data.language_list', []), $pp?->mother_tongues)" :selected="$pp?->mother_tongues ?? []" :searchable="true" />
         <x-multi-select name="education_levels" label="Education Level" :options="config('reference_data.educational_qualifications_list', [])" :selected="$pp?->education_levels ?? []" :searchable="true" :grouped="true" />
         <x-multi-select name="occupations" label="Occupation" :options="config('reference_data.occupation_category_list', [])" :selected="$pp?->occupations ?? []" :searchable="true" :grouped="true" />
+        {{-- Preferred native districts — grouped by state (from the same data
+             that drives the registration district fields). Picking districts
+             boosts candidates from those districts in match scoring. --}}
+        <x-multi-select name="native_districts" label="Preferred Native District(s)" :options="config('locations.state_district_map', [])" :selected="$pp?->native_districts ?? []" :searchable="true" :grouped="true" />
     </div>
 
     <div class="mt-5 float-field">

@@ -247,7 +247,7 @@ class MatchingService
             'education'        => $this->hasArrayValues($prefs->education_levels),
             'occupation'       => $this->hasArrayValues($prefs->occupations),
             'height'           => (int) $prefs->height_from_cm > 0 && (int) $prefs->height_to_cm > 0,
-            'native_location'  => $this->hasArrayValues($prefs->native_states) || $this->hasArrayValues($prefs->native_countries),
+            'native_location'  => $this->hasArrayValues($prefs->native_districts) || $this->hasArrayValues($prefs->native_states) || $this->hasArrayValues($prefs->native_countries),
             'working_location' => $this->hasArrayValues($prefs->working_countries),
             'marital_status'   => $this->hasArrayValues($prefs->marital_status),
             'diet'             => $this->hasArrayValues($prefs->diet),
@@ -296,7 +296,8 @@ class MatchingService
             'height' => (int) $candidate->height >= (int) $prefs->height_from_cm
                       && (int) $candidate->height <= (int) $prefs->height_to_cm,
 
-            'native_location' => in_array($candidate->locationInfo?->native_state, $prefs->native_states ?? [], true)
+            'native_location' => in_array($candidate->locationInfo?->native_district, $prefs->native_districts ?? [], true)
+                              || in_array($candidate->locationInfo?->native_state, $prefs->native_states ?? [], true)
                               || in_array($candidate->locationInfo?->native_country, $prefs->native_countries ?? [], true),
 
             'working_location' => in_array(

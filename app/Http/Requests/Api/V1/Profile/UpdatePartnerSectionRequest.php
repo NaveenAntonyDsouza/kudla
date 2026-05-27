@@ -58,6 +58,8 @@ class UpdatePartnerSectionRequest extends ApiFormRequest
             'working_countries.*' => 'string|max:100',
             'native_countries' => 'nullable|array',
             'native_countries.*' => 'string|max:100',
+            'native_districts' => 'nullable|array',
+            'native_districts.*' => 'string|max:100',
             'about_partner' => 'nullable|string|max:5000',
         ];
     }
