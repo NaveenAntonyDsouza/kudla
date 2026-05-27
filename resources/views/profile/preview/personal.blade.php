@@ -77,6 +77,9 @@
         @if($e->working_district)
             <div><p class="text-xs text-gray-500">Working District</p><p class="text-sm font-semibold text-gray-900">{{ $e->working_district }}</p></div>
         @endif
+        @if($e->working_city)
+            <div><p class="text-xs text-gray-500">Working City</p><p class="text-sm font-semibold text-gray-900">{{ $e->working_city }}</p></div>
+        @endif
         <div><p class="text-xs text-gray-500">Annual Income</p><p class="text-sm font-semibold text-gray-900">{{ $nm($e->annual_income) }}</p></div>
     </div>
 </div>
@@ -90,6 +93,7 @@
         <div><p class="text-xs text-gray-500">Native Country</p><p class="text-sm font-semibold text-gray-900">{{ $nm($l->native_country) }}</p></div>
         <div><p class="text-xs text-gray-500">Native State</p><p class="text-sm font-semibold text-gray-900">{{ $nm($l->native_state) }}</p></div>
         <div><p class="text-xs text-gray-500">Native District</p><p class="text-sm font-semibold text-gray-900">{{ $nm($l->native_district) }}</p></div>
+        <div><p class="text-xs text-gray-500">Native Place</p><p class="text-sm font-semibold text-gray-900">{{ $nm($l->native_place) }}</p></div>
         <div><p class="text-xs text-gray-500">Residing Country</p><p class="text-sm font-semibold text-gray-900">{{ $nm($l->residing_country) }}</p></div>
     </div>
     @if($l->residing_country && $l->residing_country !== 'India')

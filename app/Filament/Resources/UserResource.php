@@ -939,6 +939,7 @@ class UserResource extends Resource
                                     Infolists\Components\TextEntry::make('educationDetail.working_country')->label('Working Country')->default('-'),
                                     Infolists\Components\TextEntry::make('educationDetail.working_state')->label('Working State')->default('-'),
                                     Infolists\Components\TextEntry::make('educationDetail.working_district')->label('Working District')->default('-'),
+                                    Infolists\Components\TextEntry::make('educationDetail.working_city')->label('Working City')->default('-'),
                                 ]),
                             ]),
 
@@ -975,6 +976,7 @@ class UserResource extends Resource
                                     Infolists\Components\TextEntry::make('locationInfo.native_country')->label('Native Country')->default('-'),
                                     Infolists\Components\TextEntry::make('locationInfo.native_state')->label('Native State')->default('-'),
                                     Infolists\Components\TextEntry::make('locationInfo.native_district')->label('Native District')->default('-'),
+                                    Infolists\Components\TextEntry::make('locationInfo.native_place')->label('Native Place')->default('-'),
                                     Infolists\Components\TextEntry::make('locationInfo.residing_country')->label('Residing Country')->default('-'),
                                     Infolists\Components\TextEntry::make('locationInfo.residency_status')->label('Residency Status')->default('-'),
                                     Infolists\Components\TextEntry::make('locationInfo.pin_zip_code')->label('PIN/ZIP Code')->default('-'),
@@ -1428,6 +1430,7 @@ class UserResource extends Resource
                         // Free-text: state/district have no canonical list.
                         Forms\Components\TextInput::make('edu_working_state')->label('Working State')->maxLength(100),
                         Forms\Components\TextInput::make('edu_working_district')->label('Working District')->maxLength(100),
+                        Forms\Components\TextInput::make('edu_working_city')->label('Working City / Town')->maxLength(100),
                     ]),
 
                 // ── Section 5: Family Details ──
@@ -1466,6 +1469,7 @@ class UserResource extends Resource
                         // Free-text: state/district have no canonical list.
                         Forms\Components\TextInput::make('loc_native_state')->label('Native State')->maxLength(100),
                         Forms\Components\TextInput::make('loc_native_district')->label('Native District')->maxLength(100),
+                        Forms\Components\TextInput::make('loc_native_place')->label('Native Place / Town / Village')->maxLength(100),
                         Forms\Components\Select::make('loc_residing_country')->label('Residing Country')
                             ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
                             ->searchable(),

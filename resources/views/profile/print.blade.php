@@ -175,6 +175,7 @@
             'Native Country' => $profile->locationInfo->native_country,
             'Native State' => $profile->locationInfo->native_state,
             'Native District' => $profile->locationInfo->native_district,
+            'Native Place' => $profile->locationInfo->native_place,
             'Residency Status' => $profile->locationInfo->residency_status,
         ] as $label => $value)
             @if($value)

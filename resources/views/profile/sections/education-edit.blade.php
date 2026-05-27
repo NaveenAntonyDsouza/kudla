@@ -38,6 +38,7 @@
         <div class="float-field"><input type="text" name="working_country" value="{{ $e?->working_country ?? '' }}" maxlength="100" placeholder=" "><label>Working Country</label></div>
         <div class="float-field"><input type="text" name="working_state" value="{{ $e?->working_state ?? '' }}" maxlength="100" placeholder=" "><label>Working State</label></div>
         <div class="float-field"><input type="text" name="working_district" value="{{ $e?->working_district ?? '' }}" maxlength="100" placeholder=" "><label>Working District</label></div>
+        <div class="float-field"><input type="text" name="working_city" value="{{ $e?->working_city ?? '' }}" maxlength="100" placeholder=" "><label>Working City / Town</label></div>
     </div>
     <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
         <button type="button" @click="editing = false" class="px-6 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>

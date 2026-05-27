@@ -109,6 +109,8 @@ Route::prefix('api/cascade')->group(function () {
     Route::get('/states', [CascadeController::class, 'states']);
     Route::get('/districts', [CascadeController::class, 'districts']);
     Route::get('/countries', [CascadeController::class, 'countries']);
+    Route::get('/native-places', [CascadeController::class, 'nativePlaces']);
+    Route::get('/working-cities', [CascadeController::class, 'workingCities']);
 });
 
 // Guest-only routes (logged-in users redirected to /dashboard)

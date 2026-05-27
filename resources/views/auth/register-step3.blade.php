@@ -17,8 +17,10 @@
         workingCountry: '{{ old('working_country', $educationDetail?->working_country ?? '') }}',
         workingState: '{{ old('working_state', $educationDetail?->working_state ?? '') }}',
         workingDistrict: '{{ old('working_district', $educationDetail?->working_district ?? '') }}',
+        workingCity: '{{ old('working_city', $educationDetail?->working_city ?? '') }}',
         states: [],
         districts: [],
+        workingCities: [],
 
         async fetchStates() {
             if (!this.workingCountry) {
@@ -43,7 +45,16 @@
             this.districts = await response.json();
         },
 
-        init() { if (this.workingCountry) this.fetchStates(); }
+        async fetchWorkingCities() {
+            const params = this.workingDistrict
+                ? `district=${encodeURIComponent(this.workingDistrict)}`
+                : (this.workingState ? `state=${encodeURIComponent(this.workingState)}` : '');
+            if (!params) { this.workingCities = []; return; }
+            const response = await fetch(`/api/cascade/working-cities?${params}`);
+            this.workingCities = await response.json();
+        },
+
+        init() { if (this.workingCountry) this.fetchStates(); if (this.workingState) this.fetchWorkingCities(); }
     }">
         @csrf
 
@@ -152,7 +163,7 @@
             <div x-show="workingCountry" x-transition class="float-field">
                 <template x-if="states.length > 0">
                     <div>
-                        <select name="working_state" id="working_state" x-model="workingState" @change="fetchDistricts(); workingDistrict='';">
+                        <select name="working_state" id="working_state" x-model="workingState" @change="fetchDistricts(); workingDistrict=''; fetchWorkingCities();">
                             <option value="">Select</option>
                             <template x-for="state in states" :key="state">
                                 <option :value="state" x-text="state" :selected="state === workingState"></option>
@@ -163,7 +174,7 @@
                 </template>
                 <template x-if="states.length === 0">
                     <div>
-                        <input type="text" name="working_state" x-model="workingState" value="{{ old('working_state') }}" placeholder=" ">
+                        <input type="text" name="working_state" x-model="workingState" value="{{ old('working_state') }}" @change="fetchWorkingCities()" placeholder=" ">
                         <label for="working_state">Working State</label>
                     </div>
                 </template>
@@ -175,7 +186,7 @@
                  get suggestions; states without one let the member type freely —
                  so a district is always enterable, never a dead-end. --}}
             <div x-show="workingCountry === 'India' && workingState" x-transition class="float-field">
-                <input type="text" name="working_district" id="working_district" x-model="workingDistrict" list="working-district-list" autocomplete="off" placeholder=" ">
+                <input type="text" name="working_district" id="working_district" x-model="workingDistrict" @change="fetchWorkingCities()" list="working-district-list" autocomplete="off" placeholder=" ">
                 <datalist id="working-district-list">
                     <template x-for="district in districts" :key="district">
                         <option :value="district"></option>
@@ -183,6 +194,20 @@
                 </datalist>
                 <label for="working_district">Working District</label>
                 @error('working_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Working City / Town (optional). Free-text with autocomplete from
+                 cities other members in the same district/state have entered —
+                 suggestions build up over time; always free to type. --}}
+            <div x-show="workingState" x-transition class="float-field">
+                <input type="text" name="working_city" id="working_city" x-model="workingCity" list="working-city-list" autocomplete="off" placeholder=" ">
+                <datalist id="working-city-list">
+                    <template x-for="city in workingCities" :key="city">
+                        <option :value="city"></option>
+                    </template>
+                </datalist>
+                <label for="working_city">Working City / Town</label>
+                @error('working_city') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
             {{-- Annual Income --}}

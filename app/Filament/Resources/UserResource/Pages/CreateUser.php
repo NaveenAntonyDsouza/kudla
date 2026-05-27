@@ -102,6 +102,7 @@ class CreateUser extends CreateRecord
             'working_country' => $data['edu_working_country'] ?? null,
             'working_state' => $data['edu_working_state'] ?? null,
             'working_district' => $data['edu_working_district'] ?? null,
+            'working_city' => $data['edu_working_city'] ?? null,
         ]);
 
         // 6. Create Family Detail
@@ -133,6 +134,7 @@ class CreateUser extends CreateRecord
             'native_country' => $data['loc_native_country'] ?? null,
             'native_state' => $data['loc_native_state'] ?? null,
             'native_district' => $data['loc_native_district'] ?? null,
+            'native_place' => $data['loc_native_place'] ?? null,
             'residency_status' => $data['loc_residency_status'] ?? 'citizen',
             'pin_zip_code' => $data['loc_pin_zip_code'] ?? null,
         ]);

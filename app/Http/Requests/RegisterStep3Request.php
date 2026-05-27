@@ -26,6 +26,7 @@ class RegisterStep3Request extends FormRequest
             'working_country' => 'required|string|max:100',
             'working_state' => 'nullable|string|max:100',
             'working_district' => 'nullable|string|max:100',
+            'working_city' => 'nullable|string|max:100',
         ];
     }
 }

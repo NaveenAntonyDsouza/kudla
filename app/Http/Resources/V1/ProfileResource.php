@@ -177,6 +177,7 @@ class ProfileResource extends JsonResource
             'working_country'              => $e->working_country ?? null,
             'working_state'                => $e->working_state ?? null,
             'working_district'             => $e->working_district ?? null,
+            'working_city'                 => $e->working_city ?? null,
         ];
     }
 
@@ -208,6 +209,7 @@ class ProfileResource extends JsonResource
             'native_country'         => $l->native_country ?? null,
             'native_state'           => $l->native_state ?? null,
             'native_district'        => $l->native_district ?? null,
+            'native_place'           => $l->native_place ?? null,
             'pin_zip_code'           => $l->pin_zip_code ?? null,
             'residing_country'       => $l->residing_country ?? null,
             'residing_state'         => $l->residing_state ?? null,

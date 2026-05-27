@@ -18,6 +18,7 @@ class RegisterStep4Request extends FormRequest
             'native_country' => 'required|string|max:100',
             'native_state' => 'nullable|required_if:native_country,India|string|max:100',
             'native_district' => 'nullable|required_if:native_country,India|string|max:100',
+            'native_place' => 'nullable|string|max:100',
             // Contact
             'whatsapp_number' => 'nullable|string|max:15',
             'mobile_number' => 'required|string|max:15',

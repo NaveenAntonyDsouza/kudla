@@ -17,5 +17,8 @@
     @if($e->working_district)
         <div><p class="text-xs text-gray-500">Working District</p><p class="text-sm font-medium text-gray-900">{{ $e->working_district }}</p></div>
     @endif
+    @if($e->working_city)
+        <div><p class="text-xs text-gray-500">Working City</p><p class="text-sm font-medium text-gray-900">{{ $e->working_city }}</p></div>
+    @endif
 </div>
 @endif

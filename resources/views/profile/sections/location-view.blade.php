@@ -6,6 +6,7 @@
     <div><p class="text-xs text-gray-500">Native Country</p><p class="text-sm font-medium text-gray-900">{{ $l->native_country ?? 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">Native State</p><p class="text-sm font-medium text-gray-900">{{ $l->native_state ?? 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">Native District</p><p class="text-sm font-medium text-gray-900">{{ $l->native_district ?? 'Not Mentioned' }}</p></div>
+    <div><p class="text-xs text-gray-500">Native Place</p><p class="text-sm font-medium text-gray-900">{{ $l->native_place ?? 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">PIN / ZIP Code</p><p class="text-sm font-medium text-gray-900">{{ $l->pin_zip_code ?? 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">Residing Country</p><p class="text-sm font-medium text-gray-900">{{ $l->residing_country ?? 'Not Mentioned' }}</p></div>
     @if($l->residing_country && $l->residing_country !== 'India')

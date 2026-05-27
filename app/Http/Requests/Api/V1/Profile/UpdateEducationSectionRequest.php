@@ -26,6 +26,7 @@ class UpdateEducationSectionRequest extends ApiFormRequest
             'working_country' => 'nullable|string|max:100',
             'working_state' => 'nullable|string|max:100',
             'working_district' => 'nullable|string|max:100',
+            'working_city' => 'nullable|string|max:100',
         ];
     }
 }

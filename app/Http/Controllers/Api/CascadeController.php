@@ -118,4 +118,61 @@ class CascadeController extends Controller
         $map = config('locations.country_state_map', []);
         return response()->json(['locations' => $map[$country] ?? []]);
     }
+
+    /**
+     * Autocomplete suggestions for "Native Place / Town / Village", drawn from
+     * what other members in the same district (or state, if no district given)
+     * have already entered — a self-building list, no master data to maintain.
+     * GET /api/cascade/native-places?district=Udupi  (or ?state=Karnataka)
+     *
+     * Free-text field, so this only powers a <datalist>; an empty result just
+     * means no suggestions yet, never a blocked input.
+     */
+    public function nativePlaces(Request $request): JsonResponse
+    {
+        return response()->json($this->placeSuggestions(
+            \App\Models\LocationInfo::query(),
+            'native_place', 'native_district', 'native_state', $request
+        ));
+    }
+
+    /**
+     * Autocomplete suggestions for "Working City / Town", drawn from cities
+     * other members in the same working district/state have entered.
+     * GET /api/cascade/working-cities?district=Bangalore Urban
+     */
+    public function workingCities(Request $request): JsonResponse
+    {
+        return response()->json($this->placeSuggestions(
+            \App\Models\EducationDetail::query(),
+            'working_city', 'working_district', 'working_state', $request
+        ));
+    }
+
+    /**
+     * Shared query for the two place autocompletes: distinct, non-empty values
+     * of $col scoped to a district (preferred) or state. Needs at least one
+     * scope so we never return the entire table; capped + alphabetised.
+     */
+    private function placeSuggestions($query, string $col, string $districtCol, string $stateCol, Request $request): array
+    {
+        $district = trim((string) $request->query('district', ''));
+        $state = trim((string) $request->query('state', ''));
+
+        if ($district !== '') {
+            $query->where($districtCol, $district);
+        } elseif ($state !== '') {
+            $query->where($stateCol, $state);
+        } else {
+            return [];
+        }
+
+        return $query->whereNotNull($col)
+            ->where($col, '!=', '')
+            ->distinct()
+            ->orderBy($col)
+            ->limit(50)
+            ->pluck($col)
+            ->all();
+    }
 }

@@ -235,6 +235,7 @@ class RegisterController extends Controller
                 'native_country' => $validated['native_country'] ?? null,
                 'native_state' => $validated['native_state'] ?? null,
                 'native_district' => $validated['native_district'] ?? null,
+                'native_place' => $validated['native_place'] ?? null,
                 'pin_zip_code' => $validated['pin_zip_code'] ?? null,
             ]
         );

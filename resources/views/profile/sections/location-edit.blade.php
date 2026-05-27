@@ -5,6 +5,7 @@
         <div class="float-field"><input type="text" name="native_country" value="{{ $l?->native_country ?? '' }}" maxlength="100" placeholder=" "><label>Native Country</label></div>
         <div class="float-field"><input type="text" name="native_state" value="{{ $l?->native_state ?? '' }}" maxlength="100" placeholder=" "><label>Native State</label></div>
         <div class="float-field"><input type="text" name="native_district" value="{{ $l?->native_district ?? '' }}" maxlength="100" placeholder=" "><label>Native District</label></div>
+        <div class="float-field"><input type="text" name="native_place" value="{{ $l?->native_place ?? '' }}" maxlength="100" placeholder=" "><label>Native Place / Town / Village</label></div>
         <div class="float-field"><input type="text" name="pin_zip_code" value="{{ $l?->pin_zip_code ?? '' }}" maxlength="10" placeholder=" "><label>PIN / ZIP Code</label></div>
         <div class="float-field">
             <select name="residing_country" x-model="residingCountry">

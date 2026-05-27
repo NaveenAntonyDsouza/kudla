@@ -80,6 +80,7 @@ class EditUser extends EditRecord
         $data['edu_working_country'] = $edu?->working_country;
         $data['edu_working_state'] = $edu?->working_state;
         $data['edu_working_district'] = $edu?->working_district;
+        $data['edu_working_city'] = $edu?->working_city;
 
         // Family
         $fam = $profile->familyDetail;
@@ -107,6 +108,7 @@ class EditUser extends EditRecord
         $data['loc_native_country'] = $loc?->native_country;
         $data['loc_native_state'] = $loc?->native_state;
         $data['loc_native_district'] = $loc?->native_district;
+        $data['loc_native_place'] = $loc?->native_place;
         $data['loc_residency_status'] = $loc?->residency_status;
         $data['loc_pin_zip_code'] = $loc?->pin_zip_code;
 
@@ -196,6 +198,7 @@ class EditUser extends EditRecord
                 'working_country' => $data['edu_working_country'] ?? null,
                 'working_state' => $data['edu_working_state'] ?? null,
                 'working_district' => $data['edu_working_district'] ?? null,
+                'working_city' => $data['edu_working_city'] ?? null,
             ]
         );
 
@@ -231,6 +234,7 @@ class EditUser extends EditRecord
                 'native_country' => $data['loc_native_country'] ?? null,
                 'native_state' => $data['loc_native_state'] ?? null,
                 'native_district' => $data['loc_native_district'] ?? null,
+                'native_place' => $data['loc_native_place'] ?? null,
                 'residency_status' => $data['loc_residency_status'] ?? null,
                 'pin_zip_code' => $data['loc_pin_zip_code'] ?? null,
             ]

@@ -17,8 +17,10 @@
         nativeCountry: '{{ old('native_country', $locationInfo?->native_country ?? '') }}',
         nativeState: '{{ old('native_state', $locationInfo?->native_state ?? '') }}',
         nativeDistrict: '{{ old('native_district', $locationInfo?->native_district ?? '') }}',
+        nativePlace: '{{ old('native_place', $locationInfo?->native_place ?? '') }}',
         nativeStates: [],
         nativeDistricts: [],
+        nativePlaces: [],
 
         // Profile Creation Details (merged from former Step 5)
         createdBy: '{{ old('created_by', $profile?->created_by ?? '') }}',
@@ -50,6 +52,15 @@
             this.nativeDistricts = await response.json();
         },
 
+        async fetchNativePlaces() {
+            const params = this.nativeDistrict
+                ? `district=${encodeURIComponent(this.nativeDistrict)}`
+                : (this.nativeState ? `state=${encodeURIComponent(this.nativeState)}` : '');
+            if (!params) { this.nativePlaces = []; return; }
+            const response = await fetch(`/api/cascade/native-places?${params}`);
+            this.nativePlaces = await response.json();
+        },
+
         onCreatedByChange() {
             // 'Self / Candidate' auto-fills creator with user's own details
             // so the validator (creator_name / creator_contact_number required)
@@ -65,6 +76,7 @@
 
         init() {
             if (this.nativeCountry) this.fetchNativeStates();
+            if (this.nativeState) this.fetchNativePlaces();
             // If the user is returning to an already-filled step (after
             // hitting Back from the photo step), keep their selection intact.
             this.onCreatedByChange();
@@ -75,7 +87,7 @@
         <div class="space-y-5">
             {{-- Native Country --}}
             <div class="float-field">
-                <select name="native_country" id="native_country" x-model="nativeCountry" @change="fetchNativeStates(); nativeState=''; nativeDistrict=''; nativeDistricts=[];" required>
+                <select name="native_country" id="native_country" x-model="nativeCountry" @change="fetchNativeStates(); nativeState=''; nativeDistrict=''; nativeDistricts=[]; nativePlaces=[];" required>
                     <option value="">Select</option>
                     @foreach(config('reference_data.country_list') as $group => $countries)
                         <optgroup label="{{ $group }}">
@@ -93,7 +105,7 @@
             <div x-show="nativeCountry" x-transition class="float-field">
                 <template x-if="nativeStates.length > 0">
                     <div>
-                        <select name="native_state" id="native_state" x-model="nativeState" @change="fetchNativeDistricts(); nativeDistrict='';">
+                        <select name="native_state" id="native_state" x-model="nativeState" @change="fetchNativeDistricts(); nativeDistrict=''; fetchNativePlaces();">
                             <option value="">Select</option>
                             <template x-for="st in nativeStates" :key="st">
                                 <option :value="st" x-text="st" :selected="st === nativeState"></option>
@@ -104,7 +116,7 @@
                 </template>
                 <template x-if="nativeStates.length === 0">
                     <div>
-                        <input type="text" name="native_state" id="native_state" x-model="nativeState" placeholder=" ">
+                        <input type="text" name="native_state" id="native_state" x-model="nativeState" @change="fetchNativePlaces()" placeholder=" ">
                         <label for="native_state">Native State <span class="text-red-500">*</span></label>
                     </div>
                 </template>
@@ -115,7 +127,7 @@
                  the state's district list — suggestions when the state has a
                  list, free entry otherwise, so any district is always enterable. --}}
             <div x-show="nativeCountry === 'India' && nativeState" x-transition class="float-field">
-                <input type="text" name="native_district" id="native_district" x-model="nativeDistrict" list="native-district-list" autocomplete="off" placeholder=" ">
+                <input type="text" name="native_district" id="native_district" x-model="nativeDistrict" @change="fetchNativePlaces()" list="native-district-list" autocomplete="off" placeholder=" ">
                 <datalist id="native-district-list">
                     <template x-for="district in nativeDistricts" :key="district">
                         <option :value="district"></option>
@@ -123,6 +135,21 @@
                 </datalist>
                 <label for="native_district">Native District <span class="text-red-500">*</span></label>
                 @error('native_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Native Place / Town / Village (optional). Free-text with
+                 autocomplete from places other members in the same district/
+                 state have entered — suggestions build up over time; always
+                 free to type. Shown for any country once a state is set. --}}
+            <div x-show="nativeState" x-transition class="float-field">
+                <input type="text" name="native_place" id="native_place" x-model="nativePlace" list="native-place-list" autocomplete="off" placeholder=" ">
+                <datalist id="native-place-list">
+                    <template x-for="place in nativePlaces" :key="place">
+                        <option :value="place"></option>
+                    </template>
+                </datalist>
+                <label for="native_place">Native Place / Town / Village</label>
+                @error('native_place') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
             {{-- WhatsApp Number --}}

@@ -18,6 +18,7 @@ class UpdateLocationSectionRequest extends ApiFormRequest
             'native_country' => 'nullable|string|max:100',
             'native_state' => 'nullable|string|max:100',
             'native_district' => 'nullable|string|max:100',
+            'native_place' => 'nullable|string|max:100',
             'residing_country' => 'nullable|string|max:100',
             'residency_status' => 'nullable|string|max:50',
             'pin_zip_code' => 'nullable|string|max:10',
