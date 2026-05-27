@@ -111,25 +111,17 @@
                 @error('native_state') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Native District (India only) --}}
+            {{-- Native District (India only). Free-text with autocomplete from
+                 the state's district list — suggestions when the state has a
+                 list, free entry otherwise, so any district is always enterable. --}}
             <div x-show="nativeCountry === 'India' && nativeState" x-transition class="float-field">
-                <template x-if="nativeDistricts.length > 0">
-                    <div>
-                        <select name="native_district" id="native_district" x-model="nativeDistrict">
-                            <option value="">Select</option>
-                            <template x-for="district in nativeDistricts" :key="district">
-                                <option :value="district" x-text="district" :selected="district === nativeDistrict"></option>
-                            </template>
-                        </select>
-                        <label for="native_district">Native District <span class="text-red-500">*</span></label>
-                    </div>
-                </template>
-                <template x-if="nativeDistricts.length === 0">
-                    <div>
-                        <input type="text" name="native_district" id="native_district" placeholder=" ">
-                        <label for="native_district">Native District <span class="text-red-500">*</span></label>
-                    </div>
-                </template>
+                <input type="text" name="native_district" id="native_district" x-model="nativeDistrict" list="native-district-list" autocomplete="off" placeholder=" ">
+                <datalist id="native-district-list">
+                    <template x-for="district in nativeDistricts" :key="district">
+                        <option :value="district"></option>
+                    </template>
+                </datalist>
+                <label for="native_district">Native District <span class="text-red-500">*</span></label>
                 @error('native_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 

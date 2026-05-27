@@ -170,14 +170,17 @@
                 @error('working_state') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Working District (India only) --}}
-            <div x-show="workingCountry === 'India' && workingState && districts.length > 0" x-transition class="float-field">
-                <select name="working_district" id="working_district" x-model="workingDistrict">
-                    <option value="">Select</option>
+            {{-- Working District (India only). Free-text with autocomplete from
+                 the state's district list: states with a (full or partial) list
+                 get suggestions; states without one let the member type freely —
+                 so a district is always enterable, never a dead-end. --}}
+            <div x-show="workingCountry === 'India' && workingState" x-transition class="float-field">
+                <input type="text" name="working_district" id="working_district" x-model="workingDistrict" list="working-district-list" autocomplete="off" placeholder=" ">
+                <datalist id="working-district-list">
                     <template x-for="district in districts" :key="district">
-                        <option :value="district" x-text="district" :selected="district === workingDistrict"></option>
+                        <option :value="district"></option>
                     </template>
-                </select>
+                </datalist>
                 <label for="working_district">Working District</label>
                 @error('working_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
