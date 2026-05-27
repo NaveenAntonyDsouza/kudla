@@ -1328,6 +1328,10 @@ class UserResource extends Resource
                         Forms\Components\Select::make('rel_diocese')->label('Diocese')
                             ->options(fn (Get $get) => self::dioceseOptionsFor($get('rel_denomination'), $get('rel_diocese')))
                             ->searchable()
+                            // Roman Catholic has 132 Latin dioceses; lift the
+                            // default 50-option cap so the full list scrolls
+                            // (otherwise it cuts off ~Hyderabad and you'd have to type).
+                            ->optionsLimit(200)
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         // Free-text: only relevant when Diocese = "Other".
                         Forms\Components\TextInput::make('rel_diocese_name')->label('Diocese Name (Other)')->maxLength(100)
