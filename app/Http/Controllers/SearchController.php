@@ -58,8 +58,9 @@ class SearchController extends Controller
                     $q->where('full_name', 'LIKE', "%{$keyword}%")
                       ->orWhere('about_me', 'LIKE', "%{$keyword}%")
                       ->orWhere('matri_id', 'LIKE', "%{$keyword}%")
-                      ->orWhereHas('educationDetail', fn($q2) => $q2->where('occupation_detail', 'LIKE', "%{$keyword}%")->orWhere('employer_name', 'LIKE', "%{$keyword}%"))
-                      ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'LIKE', "%{$keyword}%")->orWhere('denomination', 'LIKE', "%{$keyword}%"));
+                      ->orWhereHas('educationDetail', fn($q2) => $q2->where('occupation_detail', 'LIKE', "%{$keyword}%")->orWhere('employer_name', 'LIKE', "%{$keyword}%")->orWhere('working_city', 'LIKE', "%{$keyword}%")->orWhere('working_district', 'LIKE', "%{$keyword}%"))
+                      ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'LIKE', "%{$keyword}%")->orWhere('denomination', 'LIKE', "%{$keyword}%"))
+                      ->orWhereHas('locationInfo', fn($q2) => $q2->where('native_place', 'LIKE', "%{$keyword}%")->orWhere('native_district', 'LIKE', "%{$keyword}%")->orWhere('native_state', 'LIKE', "%{$keyword}%"));
                 });
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
@@ -338,8 +339,8 @@ class SearchController extends Controller
                 $q->where('full_name', 'like', "%{$keyword}%")
                   ->orWhere('about_me', 'like', "%{$keyword}%")
                   ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'like', "%{$keyword}%")->orWhere('caste', 'like', "%{$keyword}%")->orWhere('denomination', 'like', "%{$keyword}%"))
-                  ->orWhereHas('educationDetail', fn($q2) => $q2->where('highest_qualification', 'like', "%{$keyword}%")->orWhere('occupation', 'like', "%{$keyword}%"))
-                  ->orWhereHas('locationInfo', fn($q2) => $q2->where('residing_city', 'like', "%{$keyword}%")->orWhere('residing_state', 'like', "%{$keyword}%"));
+                  ->orWhereHas('educationDetail', fn($q2) => $q2->where('highest_education', 'like', "%{$keyword}%")->orWhere('occupation', 'like', "%{$keyword}%")->orWhere('working_city', 'like', "%{$keyword}%")->orWhere('working_district', 'like', "%{$keyword}%"))
+                  ->orWhereHas('locationInfo', fn($q2) => $q2->where('native_place', 'like', "%{$keyword}%")->orWhere('native_district', 'like', "%{$keyword}%")->orWhere('native_state', 'like', "%{$keyword}%"));
             });
         }
         if ($matriId = request('matri_id')) {
