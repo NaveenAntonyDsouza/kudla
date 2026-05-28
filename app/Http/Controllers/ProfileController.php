@@ -368,6 +368,8 @@ class ProfileController extends Controller
             'education_levels' => 'nullable|array',
             'occupations' => 'nullable|array',
             'working_countries' => 'nullable|array',
+            'working_states' => 'nullable|array',
+            'working_districts' => 'nullable|array',
             'native_countries' => 'nullable|array',
             'native_districts' => 'nullable|array',
             'about_partner' => 'nullable|string|max:5000',

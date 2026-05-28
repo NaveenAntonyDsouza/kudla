@@ -23,8 +23,8 @@ class MatchingService
         'education'        => 10,
         'occupation'       => 10,
         'height'           => 8,
-        'native_location'  => 8,
-        'working_location' => 5,
+        'native_location'  => 5,
+        'working_location' => 10,
         'marital_status'   => 5,
         'diet'             => 2,
         'family_status'    => 2,
@@ -248,7 +248,7 @@ class MatchingService
             'occupation'       => $this->hasArrayValues($prefs->occupations),
             'height'           => (int) $prefs->height_from_cm > 0 && (int) $prefs->height_to_cm > 0,
             'native_location'  => $this->hasArrayValues($prefs->native_districts) || $this->hasArrayValues($prefs->native_states) || $this->hasArrayValues($prefs->native_countries),
-            'working_location' => $this->hasArrayValues($prefs->working_countries),
+            'working_location' => $this->hasArrayValues($prefs->working_countries) || $this->hasArrayValues($prefs->working_states) || $this->hasArrayValues($prefs->working_districts),
             'marital_status'   => $this->hasArrayValues($prefs->marital_status),
             'diet'             => $this->hasArrayValues($prefs->diet),
             'family_status'    => $this->hasArrayValues($prefs->family_status),
@@ -300,11 +300,9 @@ class MatchingService
                               || in_array($candidate->locationInfo?->native_state, $prefs->native_states ?? [], true)
                               || in_array($candidate->locationInfo?->native_country, $prefs->native_countries ?? [], true),
 
-            'working_location' => in_array(
-                $candidate->educationDetail?->working_country,
-                $prefs->working_countries ?? [],
-                true
-            ),
+            'working_location' => in_array($candidate->educationDetail?->working_country, $prefs->working_countries ?? [], true)
+                               || in_array($candidate->educationDetail?->working_state, $prefs->working_states ?? [], true)
+                               || in_array($candidate->educationDetail?->working_district, $prefs->working_districts ?? [], true),
 
             'marital_status' => in_array(
                 $candidate->marital_status,

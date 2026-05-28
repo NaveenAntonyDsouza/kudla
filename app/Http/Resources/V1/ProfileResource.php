@@ -295,6 +295,8 @@ class ProfileResource extends JsonResource
             'occupations'         => $this->arrayField($p->occupations ?? null),
             'income_range'        => $p->income_range ?? null,
             'working_countries'   => $this->arrayField($p->working_countries ?? null),
+            'working_states'      => $this->arrayField($p->working_states ?? null),
+            'working_districts'   => $this->arrayField($p->working_districts ?? null),
             'native_states'       => $this->arrayField($p->native_states ?? null),
             'native_districts'    => $this->arrayField($p->native_districts ?? null),
             'family_status'       => $this->arrayField($p->family_status ?? null),

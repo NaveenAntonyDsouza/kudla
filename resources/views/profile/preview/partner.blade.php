@@ -34,6 +34,8 @@
         <div><p class="text-xs text-gray-500">Employment Category</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->employment_status) }}</p></div>
         <div><p class="text-xs text-gray-500">Annual Income</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->income_range) }}</p></div>
         <div><p class="text-xs text-gray-500">Working Country</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->working_countries) }}</p></div>
+        <div><p class="text-xs text-gray-500">Working State</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->working_states) }}</p></div>
+        <div><p class="text-xs text-gray-500">Working District</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->working_districts) }}</p></div>
     </div>
 </div>
 

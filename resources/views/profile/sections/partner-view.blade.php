@@ -25,6 +25,8 @@
     <div><p class="text-xs text-gray-500">Education</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->education_levels) }}</p></div>
     <div><p class="text-xs text-gray-500">Occupation</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->occupations) }}</p></div>
     <div><p class="text-xs text-gray-500">Working Country</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->working_countries) }}</p></div>
+    <div><p class="text-xs text-gray-500">Working State</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->working_states) }}</p></div>
+    <div><p class="text-xs text-gray-500">Working District</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->working_districts) }}</p></div>
     <div><p class="text-xs text-gray-500">Native Country</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->native_countries) }}</p></div>
     <div><p class="text-xs text-gray-500">Native District</p><p class="text-sm font-medium text-gray-900">{{ $arrDisplay($pp->native_districts) }}</p></div>
 </div>

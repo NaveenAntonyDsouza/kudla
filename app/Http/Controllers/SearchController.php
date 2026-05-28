@@ -269,6 +269,12 @@ class SearchController extends Controller
         if ($prefs->working_countries) {
             $params['working_country'] = $prefs->working_countries[0] ?? null;
         }
+        if ($prefs->working_states) {
+            $params['working_state'] = $prefs->working_states[0] ?? null;
+        }
+        if ($prefs->working_districts) {
+            $params['working_district'] = $prefs->working_districts[0] ?? null;
+        }
         if ($prefs->native_countries) {
             $params['native_country'] = $prefs->native_countries[0] ?? null;
         }
