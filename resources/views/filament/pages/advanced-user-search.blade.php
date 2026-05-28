@@ -67,7 +67,7 @@
                                         <span>{{ $profile->date_of_birth ? \Carbon\Carbon::parse($profile->date_of_birth)->age . ' yrs' : '-' }}</span>
                                         <span>{{ $profile->user?->phone ?? '-' }}</span>
                                         <span>{{ $profile->user?->email ?? '-' }}</span>
-                                        <span>{{ $profile->religiousInfo?->religion ?? '-' }}{{ $profile->religiousInfo?->denomination ? ' / ' . $profile->religiousInfo->denomination : '' }}{{ $profile->religiousInfo?->caste ? ' / ' . $profile->religiousInfo->caste : '' }}</span>
+                                        <span>{{ $profile->religiousInfo?->religion ?? '-' }}{{ $profile->religiousInfo?->display_denomination ? ' / ' . $profile->religiousInfo->display_denomination : '' }}{{ $profile->religiousInfo?->display_caste ? ' / ' . $profile->religiousInfo->display_caste : '' }}</span>
                                         <span>{{ $profile->locationInfo?->native_district ?? '' }}{{ $profile->locationInfo?->native_state ? ', ' . $profile->locationInfo->native_state : '' }}</span>
                                     </div>
 

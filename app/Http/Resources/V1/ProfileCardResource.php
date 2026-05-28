@@ -60,7 +60,10 @@ class ProfileCardResource extends JsonResource
             'height_cm'         => $this->computeHeightCm($profile),
             'height_label'      => $profile->height ?: null,
             'religion'          => $profile->religiousInfo?->religion,
-            'caste'             => $profile->religiousInfo?->caste,
+            // Resolves "Other (not listed)" / "Other" to the typed specify
+            // value so the mobile card shows e.g. "Mogaveera" instead of
+            // a bare "Other (not listed)".
+            'caste'             => $profile->religiousInfo?->display_caste,
             'native_state'      => $profile->locationInfo?->native_state,
             'occupation'        => $profile->educationDetail?->occupation,
             'education_short'   => $profile->educationDetail?->educational_qualification,

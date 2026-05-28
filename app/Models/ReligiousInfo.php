@@ -40,6 +40,35 @@ class ReligiousInfo extends Model
     }
 
     /**
+     * Display-friendly denomination: returns the typed specify text when the
+     * member picked "Other", else the canonical denomination. Use this in
+     * compact contexts (cards, list rows, summary lines) where you want
+     * "Coptic Catholic" instead of a bare "Other". Detailed views (full
+     * profile, edit) keep showing both rows so the categorical distinction
+     * remains visible.
+     */
+    public function getDisplayDenominationAttribute(): ?string
+    {
+        if ($this->denomination === 'Other' && $this->other_denomination_name) {
+            return $this->other_denomination_name;
+        }
+        return $this->denomination;
+    }
+
+    /**
+     * Display-friendly caste: same rule as display_denomination, covering both
+     * the cascade endpoint's 'Other (not listed)' marker and the plain 'Other'
+     * fallback in the config caste_list.
+     */
+    public function getDisplayCasteAttribute(): ?string
+    {
+        if (in_array($this->caste, ['Other (not listed)', 'Other'], true) && $this->other_caste_name) {
+            return $this->other_caste_name;
+        }
+        return $this->caste;
+    }
+
+    /**
      * Map of religion-specific columns to the religion(s) they belong to.
      * Columns NOT listed here (religion, time_of_birth, place_of_birth,
      * jathakam_upload_url) are religion-agnostic and never cleared.

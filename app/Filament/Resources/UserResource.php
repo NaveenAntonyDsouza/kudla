@@ -175,8 +175,11 @@ class UserResource extends Resource
                                 ->label('Religion')
                                 ->icon('heroicon-o-globe-alt')
                                 ->formatStateUsing(function ($state, Profile $record) {
-                                    $denom = $record->religiousInfo?->denomination;
-                                    $caste = $record->religiousInfo?->caste;
+                                    // display_denomination / display_caste resolve "Other" to the
+                                    // typed specify value, so the list row shows e.g.
+                                    // "Christian / Coptic Catholic" instead of "Christian / Other".
+                                    $denom = $record->religiousInfo?->display_denomination;
+                                    $caste = $record->religiousInfo?->display_caste;
                                     if ($denom) return ($state ?? '-') . ' / ' . $denom;
                                     if ($caste) return ($state ?? '-') . ' / ' . $caste;
                                     return $state ?? '-';

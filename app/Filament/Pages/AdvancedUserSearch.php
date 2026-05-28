@@ -264,8 +264,22 @@ class AdvancedUserSearch extends Page implements HasForms
 
         // Religion
         if ($this->religion) $query->whereHas('religiousInfo', fn ($q) => $q->where('religion', $this->religion));
-        if ($this->denomination) $query->whereHas('religiousInfo', fn ($q) => $q->where('denomination', $this->denomination));
-        if ($this->caste) $query->whereHas('religiousInfo', fn ($q) => $q->where('caste', $this->caste));
+        // Parity with public SearchController: a typed value stored via the
+        // Other → Specify pattern (other_denomination_name / other_caste_name)
+        // counts as a match, so admins don't miss those members when filtering
+        // by e.g. "denomination = Coptic Catholic".
+        if ($this->denomination) {
+            $denom = $this->denomination;
+            $query->whereHas('religiousInfo', fn ($q) => $q->where(function ($sq) use ($denom) {
+                $sq->where('denomination', $denom)->orWhere('other_denomination_name', $denom);
+            }));
+        }
+        if ($this->caste) {
+            $caste = $this->caste;
+            $query->whereHas('religiousInfo', fn ($q) => $q->where(function ($sq) use ($caste) {
+                $sq->where('caste', $caste)->orWhere('other_caste_name', $caste);
+            }));
+        }
 
         // Location
         if ($this->native_country) $query->whereHas('locationInfo', fn ($q) => $q->where('native_country', $this->native_country));

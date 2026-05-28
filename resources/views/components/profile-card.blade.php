@@ -9,7 +9,7 @@
         $p->complexion,
         $p->marital_status,
         $p->religiousInfo?->religion,
-        $p->religiousInfo?->denomination ?? $p->religiousInfo?->caste,
+        $p->religiousInfo?->display_denomination ?? $p->religiousInfo?->display_caste,
         $p->educationDetail?->highest_education,
         $p->educationDetail?->occupation,
         $p->locationInfo?->native_district ?? $p->locationInfo?->native_state ?? $p->locationInfo?->native_country,

@@ -27,7 +27,7 @@
                             <div class="text-sm text-gray-600 mt-1 space-y-1">
                                 <p>Phone: {{ $foundProfile->user?->phone ?? '-' }} | Email: {{ $foundProfile->user?->email ?? '-' }}</p>
                                 <p>Gender: {{ ucfirst($foundProfile->gender) }} | Age: {{ $foundProfile->date_of_birth ? \Carbon\Carbon::parse($foundProfile->date_of_birth)->age . ' yrs' : '-' }}</p>
-                                <p>Religion: {{ $foundProfile->religiousInfo?->religion ?? '-' }}{{ $foundProfile->religiousInfo?->denomination ? ' / ' . $foundProfile->religiousInfo->denomination : '' }}</p>
+                                <p>Religion: {{ $foundProfile->religiousInfo?->religion ?? '-' }}{{ $foundProfile->religiousInfo?->display_denomination ? ' / ' . $foundProfile->religiousInfo->display_denomination : '' }}</p>
 
                                 @php $currentMembership = $foundProfile->user?->activeMembership(); @endphp
                                 <div class="mt-3 p-3 rounded-lg {{ $currentMembership ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200' }}">

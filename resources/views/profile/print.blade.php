@@ -77,7 +77,7 @@
             @if($profile->date_of_birth)<div class="info-item"><span class="label">Date of Birth:</span><span class="value">{{ $profile->date_of_birth->format('d M Y') }}</span></div>@endif
             @if($profile->marital_status)<div class="info-item"><span class="label">Marital Status:</span><span class="value">{{ $profile->marital_status }}</span></div>@endif
             @if($profile->religiousInfo?->religion)<div class="info-item"><span class="label">Religion:</span><span class="value">{{ $profile->religiousInfo->religion }}</span></div>@endif
-            @if($profile->religiousInfo?->denomination ?? $profile->religiousInfo?->caste)<div class="info-item"><span class="label">Denomination:</span><span class="value">{{ $profile->religiousInfo->denomination ?? $profile->religiousInfo->caste }}</span></div>@endif
+            @if($profile->religiousInfo?->display_denomination ?? $profile->religiousInfo?->display_caste)<div class="info-item"><span class="label">Denomination:</span><span class="value">{{ $profile->religiousInfo->display_denomination ?? $profile->religiousInfo->display_caste }}</span></div>@endif
             @if($profile->mother_tongue)<div class="info-item"><span class="label">Mother Tongue:</span><span class="value">{{ $profile->mother_tongue }}</span></div>@endif
             @if($profile->complexion)<div class="info-item"><span class="label">Complexion:</span><span class="value">{{ $profile->complexion }}</span></div>@endif
         </div>

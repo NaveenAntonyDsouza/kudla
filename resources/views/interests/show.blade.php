@@ -71,7 +71,7 @@
                         $desc = collect([
                             $otherProfile->age ? $otherProfile->age . 'Yrs' : null,
                             $otherProfile->height, $otherProfile->complexion, $otherProfile->marital_status,
-                            $otherProfile->religiousInfo?->religion, $otherProfile->religiousInfo?->denomination,
+                            $otherProfile->religiousInfo?->religion, $otherProfile->religiousInfo?->display_denomination,
                             $otherProfile->educationDetail?->highest_education,
                             $otherProfile->educationDetail?->occupation,
                             $otherProfile->locationInfo?->native_state,

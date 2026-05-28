@@ -42,10 +42,12 @@ class RegisterStep2Request extends WebRegisterStep2Request
             // Religion
             'religion' => ['description' => 'Religion (Hindu/Christian/Muslim/Jain/Other). Drives downstream conditional fields.', 'example' => 'Hindu'],
             'denomination' => ['description' => 'Christian denomination. Required when religion="Christian".', 'required' => false],
+            'other_denomination_name' => ['description' => 'Typed denomination when denomination="Other" (covers rare Eastern Catholic rites and breakaway groups in either Catholic or Non-Catholic).', 'required' => false],
             'diocese' => ['description' => 'Diocese (Christian).', 'required' => false],
             'diocese_name' => ['description' => 'Diocese name (Christian, free-text).', 'required' => false],
             'parish_name_place' => ['description' => 'Parish name + place (Christian, free-text).', 'required' => false],
             'caste' => ['description' => 'Caste. Required when religion="Hindu" or "Jain".', 'required' => false, 'example' => 'Brahmin'],
+            'other_caste_name' => ['description' => 'Typed caste when caste="Other (not listed)" or "Other".', 'required' => false],
             'sub_caste' => ['description' => 'Sub-caste (Hindu/Jain).', 'required' => false],
             'time_of_birth' => ['description' => 'Time of birth (HH:MM, optional, used for jathakam matching).', 'required' => false, 'example' => '06:30'],
             'place_of_birth' => ['description' => 'Place of birth (free-text).', 'required' => false],
