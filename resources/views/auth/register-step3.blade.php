@@ -181,18 +181,28 @@
                 @error('working_state') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Working District (India only). Free-text with autocomplete from
-                 the state's district list: states with a (full or partial) list
-                 get suggestions; states without one let the member type freely —
-                 so a district is always enterable, never a dead-end. --}}
+            {{-- Working District (India only). Hybrid: states with a district
+                 list (Karnataka, Kerala, etc.) get a proper dropdown; states
+                 without one fall back to free-text — so a district is always
+                 enterable, never a dead-end. Mirrors the working-state pattern. --}}
             <div x-show="workingCountry === 'India' && workingState" x-transition class="float-field">
-                <input type="text" name="working_district" id="working_district" x-model="workingDistrict" @change="fetchWorkingCities()" list="working-district-list" autocomplete="off" placeholder=" ">
-                <datalist id="working-district-list">
-                    <template x-for="district in districts" :key="district">
-                        <option :value="district"></option>
-                    </template>
-                </datalist>
-                <label for="working_district">Working District</label>
+                <template x-if="districts.length > 0">
+                    <div>
+                        <select name="working_district" id="working_district" x-model="workingDistrict" @change="fetchWorkingCities()">
+                            <option value="">Select</option>
+                            <template x-for="district in districts" :key="district">
+                                <option :value="district" x-text="district" :selected="district === workingDistrict"></option>
+                            </template>
+                        </select>
+                        <label for="working_district">Working District</label>
+                    </div>
+                </template>
+                <template x-if="districts.length === 0">
+                    <div>
+                        <input type="text" name="working_district" id="working_district" x-model="workingDistrict" @change="fetchWorkingCities()" placeholder=" ">
+                        <label for="working_district">Working District</label>
+                    </div>
+                </template>
                 @error('working_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 

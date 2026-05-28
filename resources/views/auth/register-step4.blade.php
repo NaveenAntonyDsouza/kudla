@@ -123,17 +123,28 @@
                 @error('native_state') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Native District (India only). Free-text with autocomplete from
-                 the state's district list — suggestions when the state has a
-                 list, free entry otherwise, so any district is always enterable. --}}
+            {{-- Native District (India only). Hybrid: states with a district
+                 list (Karnataka, Kerala, etc.) get a proper dropdown; states
+                 without one fall back to free-text — so a district is always
+                 enterable, never a dead-end. Mirrors the native-state pattern. --}}
             <div x-show="nativeCountry === 'India' && nativeState" x-transition class="float-field">
-                <input type="text" name="native_district" id="native_district" x-model="nativeDistrict" @change="fetchNativePlaces()" list="native-district-list" autocomplete="off" placeholder=" ">
-                <datalist id="native-district-list">
-                    <template x-for="district in nativeDistricts" :key="district">
-                        <option :value="district"></option>
-                    </template>
-                </datalist>
-                <label for="native_district">Native District <span class="text-red-500">*</span></label>
+                <template x-if="nativeDistricts.length > 0">
+                    <div>
+                        <select name="native_district" id="native_district" x-model="nativeDistrict" @change="fetchNativePlaces()">
+                            <option value="">Select</option>
+                            <template x-for="district in nativeDistricts" :key="district">
+                                <option :value="district" x-text="district" :selected="district === nativeDistrict"></option>
+                            </template>
+                        </select>
+                        <label for="native_district">Native District <span class="text-red-500">*</span></label>
+                    </div>
+                </template>
+                <template x-if="nativeDistricts.length === 0">
+                    <div>
+                        <input type="text" name="native_district" id="native_district" x-model="nativeDistrict" @change="fetchNativePlaces()" placeholder=" ">
+                        <label for="native_district">Native District <span class="text-red-500">*</span></label>
+                    </div>
+                </template>
                 @error('native_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
