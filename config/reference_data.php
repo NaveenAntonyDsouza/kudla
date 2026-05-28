@@ -279,9 +279,28 @@ return [
         'TV Ads' => ['24news', 'Asianet', 'Asianet Movies', 'Asianet News', 'Flowers'],
     ],
 
+    // Mother tongue / Languages known. Flat list so all existing consumers
+    // (search forms, partner-edit multi-select, admin, member-edit, onboarding,
+    // BulkImportSchema, ReferenceDataController) keep working unchanged. Top
+    // tier are the languages this community speaks first (Mangalore region +
+    // national + Gulf-diaspora Arabic); then Other Indian alphabetical; then
+    // International alphabetical. DB-overridden via reference_data_options
+    // (category=mother_tongue), so adding/removing values long-term is
+    // admin-editable; this config is the seed + fallback.
     'language_list' => [
-        'English', 'Hindi', 'Kannada', 'Konkani', 'Malayalam', 'Marathi', 'Tamil', 'Telugu', 'Tulu',
-        'Bengali', 'Gujarati', 'Punjabi', 'Urdu', 'French', 'German', 'Spanish', 'Arabic',
+        // ── Top tier (Mangalore region, national, Gulf diaspora) ──
+        'Tulu', 'Konkani', 'Kannada', 'Beary', 'Kodava', 'Malayalam',
+        'English', 'Hindi', 'Tamil', 'Telugu', 'Marathi', 'Urdu', 'Arabic',
+        // ── Other Indian languages (alphabetical) ──
+        'Assamese', 'Awadhi', 'Bengali', 'Bhojpuri', 'Bodo', 'Chhattisgarhi',
+        'Dogri', 'Garhwali', 'Gujarati', 'Haryanvi', 'Kashmiri', 'Khasi',
+        'Kumaoni', 'Magahi', 'Maithili', 'Manipuri', 'Marwari', 'Mizo',
+        'Nepali', 'Odia', 'Punjabi', 'Rajasthani', 'Sanskrit', 'Santali', 'Sindhi',
+        // ── International languages (alphabetical) ──
+        'Chinese', 'Dutch', 'Filipino', 'French', 'German', 'Greek', 'Hebrew',
+        'Indonesian', 'Italian', 'Japanese', 'Korean', 'Malay', 'Norwegian',
+        'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Sinhala',
+        'Spanish', 'Swahili', 'Swedish', 'Thai', 'Turkish', 'Vietnamese',
     ],
 
     'eating_habits' => ['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan'],
