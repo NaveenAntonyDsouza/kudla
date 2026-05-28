@@ -272,8 +272,14 @@ class MatchingService
             'age' => $candidate->age >= $prefs->age_from
                    && $candidate->age <= $prefs->age_to,
 
+            // Denomination + caste both match either the canonical column
+            // OR the "Other → Specify" companion (other_denomination_name /
+            // other_caste_name), so a candidate who typed "Bunt" via Other
+            // still matches a preference of "Bunt" from the dropdown.
             'denomination' => in_array($candidate->religiousInfo?->denomination, $prefs->denomination ?? [], true)
-                           || in_array($candidate->religiousInfo?->caste, $prefs->caste ?? [], true),
+                           || in_array($candidate->religiousInfo?->other_denomination_name, $prefs->denomination ?? [], true)
+                           || in_array($candidate->religiousInfo?->caste, $prefs->caste ?? [], true)
+                           || in_array($candidate->religiousInfo?->other_caste_name, $prefs->caste ?? [], true),
 
             'mother_tongue' => in_array(
                 $candidate->mother_tongue,
