@@ -68,7 +68,7 @@ return [
     'denomination_list' => [
         'Catholic' => [
             'Syrian Catholic', 'Roman Catholic', 'Malankara Catholic', 'Anglo Indian',
-            'Knanaya Catholic', 'Nadar Christian', 'Cheramar Christian',
+            'Knanaya Catholic', 'Nadar Christian', 'Cheramar Christian', 'Other',
         ],
         'Non-Catholic' => [
             'Jacobite', 'Orthodox', 'Marthomite', 'CSI Christian', 'Knanaya Jacobite',
