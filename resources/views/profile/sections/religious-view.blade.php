@@ -9,12 +9,18 @@
     @endif
     @if($r->religion === 'Christian')
         <div><p class="text-xs text-gray-500">Denomination</p><p class="text-sm font-medium text-gray-900">{{ $r->denomination ?? 'Not Mentioned' }}</p></div>
+        @if($r->denomination === 'Other' && $r->other_denomination_name)
+            <div><p class="text-xs text-gray-500">Denomination (specified)</p><p class="text-sm font-medium text-gray-900">{{ $r->other_denomination_name }}</p></div>
+        @endif
         @php $dioceseDisplay = $r->diocese === 'Other' ? ($r->diocese_name ?: 'Other') : ($r->diocese ?: ''); @endphp
         <div><p class="text-xs text-gray-500">Diocese</p><p class="text-sm font-medium text-gray-900">{{ $dioceseDisplay ?: 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Parish Name & Place</p><p class="text-sm font-medium text-gray-900">{{ $r->parish_name_place ?? 'Not Mentioned' }}</p></div>
     @endif
     @if(in_array($r->religion, ['Hindu', 'Jain']))
         <div><p class="text-xs text-gray-500">Caste</p><p class="text-sm font-medium text-gray-900">{{ $r->caste ?? 'Not Mentioned' }}</p></div>
+        @if(in_array($r->caste, ['Other (not listed)', 'Other'], true) && $r->other_caste_name)
+            <div><p class="text-xs text-gray-500">Caste (specified)</p><p class="text-sm font-medium text-gray-900">{{ $r->other_caste_name }}</p></div>
+        @endif
         <div><p class="text-xs text-gray-500">Sub Caste</p><p class="text-sm font-medium text-gray-900">{{ $r->sub_caste ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Gotra</p><p class="text-sm font-medium text-gray-900">{{ $r->gotra ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Nakshatra</p><p class="text-sm font-medium text-gray-900">{{ $r->nakshatra ?? 'Not Mentioned' }}</p></div>

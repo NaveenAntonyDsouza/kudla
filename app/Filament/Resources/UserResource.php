@@ -907,9 +907,11 @@ class UserResource extends Resource
                                 \Filament\Schemas\Components\Grid::make(3)->schema([
                                     Infolists\Components\TextEntry::make('religiousInfo.religion')->label('Religion')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.denomination')->label('Denomination')->default('-'),
+                                    Infolists\Components\TextEntry::make('religiousInfo.other_denomination_name')->label('Denomination (specified)')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.diocese')->label('Diocese')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.parish_name_place')->label('Parish / Place')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.caste')->label('Caste / Community')->default('-'),
+                                    Infolists\Components\TextEntry::make('religiousInfo.other_caste_name')->label('Caste (specified)')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.sub_caste')->label('Sub-Caste')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.gotra')->label('Gotra / Gothram')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.nakshatra')->label('Nakshatra (Star)')->default('-'),
@@ -1327,6 +1329,9 @@ class UserResource extends Resource
                             ->searchable()
                             ->live()
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
+                        // Free-text: only relevant when Denomination = "Other".
+                        Forms\Components\TextInput::make('rel_other_denomination_name')->label('Denomination (specified)')->maxLength(100)
+                            ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
                         Forms\Components\Select::make('rel_diocese')->label('Diocese')
                             ->options(fn (Get $get) => self::dioceseOptionsFor($get('rel_denomination'), $get('rel_diocese')))
                             ->searchable()
@@ -1355,6 +1360,9 @@ class UserResource extends Resource
                                 $get('rel_caste'),
                             ))
                             ->searchable()
+                            ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
+                        // Free-text: only relevant when Caste = "Other (not listed)" / "Other".
+                        Forms\Components\TextInput::make('rel_other_caste_name')->label('Caste (specified)')->maxLength(100)
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
                             ->options(fn (Get $get) => self::optionsWithCurrent(

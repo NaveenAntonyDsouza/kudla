@@ -30,11 +30,13 @@ class RegisterStep2Request extends FormRequest
             'religion' => 'required|string',
             // Christian conditional
             'denomination' => 'nullable|required_if:religion,Christian|string',
+            'other_denomination_name' => 'nullable|required_if:denomination,Other|string|max:100',
             'diocese' => 'nullable|string',
             'diocese_name' => 'nullable|string',
             'parish_name_place' => 'nullable|string',
             // Hindu/Jain conditional
             'caste' => 'nullable|required_if:religion,Hindu|required_if:religion,Jain|string',
+            'other_caste_name' => 'nullable|string|max:100',
             'sub_caste' => 'nullable|string',
             'time_of_birth' => 'nullable|string',
             'place_of_birth' => 'nullable|string',
@@ -58,6 +60,7 @@ class RegisterStep2Request extends FormRequest
     {
         return [
             'denomination.required_if' => 'Denomination is required for Christian profiles.',
+            'other_denomination_name.required_if' => 'Please specify the denomination.',
             'caste.required_if' => 'Caste/Community is required for Hindu and Jain profiles.',
             'muslim_sect.required_if' => 'Sect is required for Muslim profiles.',
             'da_category.required_if' => 'Please select a category for Differently Abled.',

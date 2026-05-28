@@ -5,6 +5,7 @@
     communities: [],
     subCommunities: [],
     selectedCaste: '{{ $r?->caste ?? '' }}',
+    otherCasteName: '{{ $r?->other_caste_name ?? '' }}',
     subCasteChoice: '',
     subCasteOther: '',
     savedSubCaste: '{{ $r?->sub_caste ?? '' }}',
@@ -87,6 +88,7 @@
         <template x-if="religion === 'Christian'">
             <div class="contents" x-data="{
                 selectedDenomination: '{{ $r?->denomination ?? '' }}',
+                otherDenominationName: '{{ $r?->other_denomination_name ?? '' }}',
                 dioceses: [],
                 dioceseChoice: '',
                 dioceseOther: '',
@@ -135,6 +137,11 @@
                         @endif
                     </select><label>Denomination</label>
                 </div>
+                {{-- Specify when "Other" picked (Catholic or Non-Catholic Other). --}}
+                <div class="float-field" x-show="selectedDenomination === 'Other'" x-transition>
+                    <input type="text" name="other_denomination_name" x-model="otherDenominationName" maxlength="100" placeholder=" ">
+                    <label>Specify Denomination</label>
+                </div>
                 {{-- Diocese cascade (shown once a denomination is picked) --}}
                 <template x-if="selectedDenomination">
                     <div class="contents">
@@ -174,6 +181,11 @@
                         </template>
                     </select>
                     <label>Caste / Community</label>
+                </div>
+                {{-- Specify when "Other (not listed)" / "Other" picked. --}}
+                <div class="float-field" x-show="selectedCaste === 'Other (not listed)' || selectedCaste === 'Other'" x-transition>
+                    <input type="text" name="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
+                    <label>Specify Caste / Community</label>
                 </div>
                 {{-- Sub-Caste: options come from the chosen community's
                      sub-communities, plus an "Other (not listed)" escape hatch

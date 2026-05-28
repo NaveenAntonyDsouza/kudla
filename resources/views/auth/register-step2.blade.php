@@ -20,6 +20,7 @@
         communities: [],
         subCommunities: [],
         selectedCaste: '{{ old('caste', $religiousInfo->caste ?? '') }}',
+        otherCasteName: '{{ old('other_caste_name', $religiousInfo->other_caste_name ?? '') }}',
         subCasteChoice: '',
         subCasteOther: '',
         savedSubCaste: '{{ old('sub_caste', $religiousInfo->sub_caste ?? '') }}',
@@ -203,6 +204,7 @@
             <template x-if="religion === 'Christian'">
                 <div class="space-y-5" x-data="{
                     selectedDenomination: '{{ old('denomination', $religiousInfo->denomination ?? '') }}',
+                    otherDenominationName: '{{ old('other_denomination_name', $religiousInfo->other_denomination_name ?? '') }}',
                     dioceses: [],
                     dioceseChoice: '',
                     dioceseOther: '',
@@ -250,6 +252,14 @@
                         </select>
                         <label for="denomination">Denomination <span class="text-red-500">*</span></label>
                         @error('denomination') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    {{-- Specify the denomination when "Other" is picked (covers
+                         rare Eastern Catholic rites or breakaway groups under
+                         either Catholic or Non-Catholic). --}}
+                    <div class="float-field" x-show="selectedDenomination === 'Other'" x-transition>
+                        <input type="text" name="other_denomination_name" id="other_denomination_name" x-model="otherDenominationName" maxlength="100" placeholder=" ">
+                        <label for="other_denomination_name">Specify Denomination <span class="text-red-500">*</span></label>
+                        @error('other_denomination_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     {{-- Diocese: filtered to the denomination's rite via
                          /api/cascade/dioceses. "Other (not listed)" reveals a
@@ -299,6 +309,14 @@
                         </select>
                         <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
                         @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    {{-- Specify the caste when "Other (not listed)" / "Other"
+                         is picked, so we capture the actual community rather
+                         than just "they didn't fit the list". --}}
+                    <div class="float-field" x-show="selectedCaste === 'Other (not listed)' || selectedCaste === 'Other'" x-transition>
+                        <input type="text" name="other_caste_name" id="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
+                        <label for="other_caste_name">Specify Caste / Community</label>
+                        @error('other_caste_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
                     {{-- Sub-Caste: from the chosen community's sub-communities,
                          plus an "Other (not listed)" escape hatch. The <select>

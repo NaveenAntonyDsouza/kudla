@@ -123,12 +123,14 @@ class ProfileResource extends JsonResource
         return [
             'religion'              => $r->religion,
             'caste'                 => $r->caste,
+            'other_caste_name'      => $r->other_caste_name,
             'sub_caste'             => $r->sub_caste,
             'gotra'                 => $r->gotra,
             'nakshatra'             => $r->nakshatra,
             'rashi'                 => $r->rashi,
             'manglik'               => $r->dosh,
             'denomination'          => $r->denomination,
+            'other_denomination_name' => $r->other_denomination_name,
             'diocese'               => $r->diocese,
             'diocese_name'          => $r->diocese_name,
             'parish_name_place'     => $r->parish_name_place,
@@ -149,9 +151,12 @@ class ProfileResource extends JsonResource
     {
         // Stable shape even when no religious_info row exists.
         return [
-            'religion' => null, 'caste' => null, 'sub_caste' => null,
+            'religion' => null, 'caste' => null, 'other_caste_name' => null,
+            'sub_caste' => null,
             'gotra' => null, 'nakshatra' => null, 'rashi' => null,
-            'manglik' => null, 'denomination' => null, 'diocese' => null,
+            'manglik' => null, 'denomination' => null,
+            'other_denomination_name' => null,
+            'diocese' => null,
             'diocese_name' => null, 'parish_name_place' => null,
             'time_of_birth' => null, 'place_of_birth' => null,
             'muslim_sect' => null, 'muslim_community' => null,

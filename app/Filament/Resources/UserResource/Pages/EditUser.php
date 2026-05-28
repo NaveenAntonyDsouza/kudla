@@ -49,10 +49,12 @@ class EditUser extends EditRecord
         $rel = $profile->religiousInfo;
         $data['rel_religion'] = $rel?->religion;
         $data['rel_denomination'] = $rel?->denomination;
+        $data['rel_other_denomination_name'] = $rel?->other_denomination_name;
         $data['rel_diocese'] = $rel?->diocese;
         $data['rel_diocese_name'] = $rel?->diocese_name;
         $data['rel_parish'] = $rel?->parish_name_place;
         $data['rel_caste'] = $rel?->caste;
+        $data['rel_other_caste_name'] = $rel?->other_caste_name;
         $data['rel_sub_caste'] = $rel?->sub_caste;
         $data['rel_gotra'] = $rel?->gotra;
         $data['rel_nakshatra'] = $rel?->nakshatra;
@@ -159,10 +161,12 @@ class EditUser extends EditRecord
         $relData = [
             'religion' => $data['rel_religion'] ?? null,
             'denomination' => $data['rel_denomination'] ?? null,
+            'other_denomination_name' => $data['rel_other_denomination_name'] ?? null,
             'diocese' => $data['rel_diocese'] ?? null,
             'diocese_name' => $data['rel_diocese_name'] ?? null,
             'parish_name_place' => $data['rel_parish'] ?? null,
             'caste' => $data['rel_caste'] ?? null,
+            'other_caste_name' => $data['rel_other_caste_name'] ?? null,
             'sub_caste' => $data['rel_sub_caste'] ?? null,
             'gotra' => $data['rel_gotra'] ?? null,
             'nakshatra' => $data['rel_nakshatra'] ?? null,
