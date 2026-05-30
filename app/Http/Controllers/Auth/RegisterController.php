@@ -11,9 +11,7 @@ use App\Http\Requests\RegisterStep4Request;
 use App\Http\Requests\RegisterStep5Request;
 use App\Models\Community;
 use App\Models\ContactInfo;
-use App\Models\DifferentlyAbledInfo;
 use App\Models\EducationDetail;
-use App\Models\FamilyDetail;
 use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\Profile;
@@ -121,12 +119,11 @@ class RegisterController extends Controller
         $profile = auth()->user()->profile;
         $validated = $request->validated();
 
-        // Update profile with physical details
+        // Update profile. complexion / body_type / physical_status and
+        // family_status are now collected in onboarding step 1 (deferred to
+        // slim registration), so they're no longer set here.
         $profile->update([
             'height' => $validated['height'],
-            'complexion' => $validated['complexion'],
-            'body_type' => $validated['body_type'],
-            'physical_status' => $validated['physical_status'] ?? null,
             'marital_status' => $validated['marital_status'],
             'children_with_me' => $validated['children_with_me'] ?? 0,
             'children_not_with_me' => $validated['children_not_with_me'] ?? 0,
@@ -138,12 +135,6 @@ class RegisterController extends Controller
         LifestyleInfo::updateOrCreate(
             ['profile_id' => $profile->id],
             ['languages_known' => $validated['languages_known'] ?? []]
-        );
-
-        // Create family detail with family_status
-        FamilyDetail::updateOrCreate(
-            ['profile_id' => $profile->id],
-            ['family_status' => $validated['family_status'] ?? null]
         );
 
         // Create religious info. Clear fields that don't belong to the chosen
@@ -176,18 +167,6 @@ class RegisterController extends Controller
             ['profile_id' => $profile->id],
             $relData
         );
-
-        // Save differently abled info
-        if (($validated['physical_status'] ?? '') === 'Differently Abled') {
-            DifferentlyAbledInfo::updateOrCreate(
-                ['profile_id' => $profile->id],
-                [
-                    'category' => $validated['da_category'] ?? null,
-                    'specify' => $validated['da_category_other'] ?? null,
-                    'description' => $validated['da_description'] ?? null,
-                ]
-            );
-        }
 
         // Handle jathakam file upload
         if ($request->hasFile('jathakam')) {

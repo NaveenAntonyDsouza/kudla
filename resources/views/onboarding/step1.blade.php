@@ -19,7 +19,8 @@
 
     <form method="POST" action="{{ route('onboarding.store1') }}" @submit="submitting = true" x-data="{
         submitting: false,
-        languagesKnown: {{ Js::from(old('languages_known', $lifestyleInfo?->languages_known ?? [])) }}
+        languagesKnown: {{ Js::from(old('languages_known', $lifestyleInfo?->languages_known ?? [])) }},
+        physicalStatus: '{{ old('physical_status', $profile?->physical_status ?? '') }}'
     }">
         @csrf
 
@@ -57,6 +58,67 @@
                 </select>
                 <label for="blood_group">Blood Group</label>
                 @error('blood_group') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Complexion --}}
+            <div class="float-field">
+                <select name="complexion" id="complexion">
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.complexion_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('complexion', $profile?->complexion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="complexion">Complexion</label>
+                @error('complexion') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Body Type --}}
+            <div class="float-field">
+                <select name="body_type" id="body_type">
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.body_type_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('body_type', $profile?->body_type ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="body_type">Body Type</label>
+                @error('body_type') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Physical Status --}}
+            <div class="float-field">
+                <select name="physical_status" id="physical_status" x-model="physicalStatus">
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.physical_status_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('physical_status', $profile?->physical_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="physical_status">Physical Status</label>
+                @error('physical_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Differently Abled Details (when applicable) --}}
+            <div x-show="physicalStatus === 'Differently Abled'" x-transition class="space-y-5 pl-4 border-l-2 border-(--color-primary)/30" x-data="{ daCategory: '{{ old('da_category', $differentlyAbledInfo?->category ?? '') }}' }">
+                <div class="float-field">
+                    <select name="da_category" id="da_category" x-model="daCategory">
+                        <option value="">Select</option>
+                        @foreach(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'] as $opt)
+                            <option value="{{ $opt }}" {{ old('da_category', $differentlyAbledInfo?->category ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                    </select>
+                    <label for="da_category">Category of Differently Abled</label>
+                    @error('da_category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div x-show="daCategory === 'Other'" x-transition class="float-field">
+                    <input type="text" name="da_category_other" id="da_category_other" value="{{ old('da_category_other', $differentlyAbledInfo?->specify ?? '') }}" maxlength="50" placeholder=" ">
+                    <label for="da_category_other">Specify Differently Abled</label>
+                    @error('da_category_other') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="float-field">
+                    <textarea name="da_description" id="da_description" rows="3" maxlength="500" placeholder=" "
+                        class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ old('da_description', $differentlyAbledInfo?->description ?? '') }}</textarea>
+                    <label for="da_description">Describe Differently Abled</label>
+                    @error('da_description') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
             </div>
 
             {{-- Mother Tongue --}}
@@ -134,6 +196,18 @@
         <h2 class="text-lg font-semibold text-gray-900 mb-6">Additional Family Information</h2>
 
         <div class="space-y-5 mb-10">
+            {{-- Family Status --}}
+            <div class="float-field">
+                <select name="family_status" id="family_status">
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.family_status_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('family_status', $familyDetail?->family_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="family_status">Family Status</label>
+                @error('family_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
             <div class="float-field">
                 <input type="text" name="father_name" id="father_name" value="{{ old('father_name', $familyDetail?->father_name ?? '') }}" placeholder=" ">
                 <label for="father_name">Father's Name</label>

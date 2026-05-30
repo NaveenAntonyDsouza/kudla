@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContactInfo;
+use App\Models\DifferentlyAbledInfo;
 use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
 use App\Models\LifestyleInfo;
@@ -22,9 +23,10 @@ class OnboardingController extends Controller
         $educationDetail = $profile?->educationDetail;
         $familyDetail = $profile?->familyDetail;
         $lifestyleInfo = $profile?->lifestyleInfo;
+        $differentlyAbledInfo = $profile?->differentlyAbledInfo;
         $completionPct = $profile?->calculateCompletion() ?? 0;
 
-        return view('onboarding.step1', compact('profile', 'educationDetail', 'familyDetail', 'lifestyleInfo', 'completionPct'));
+        return view('onboarding.step1', compact('profile', 'educationDetail', 'familyDetail', 'lifestyleInfo', 'differentlyAbledInfo', 'completionPct'));
     }
 
     public function storeStep1(Request $request)
@@ -39,6 +41,15 @@ class OnboardingController extends Controller
             'languages_known' => 'nullable|array',
             'languages_known.*' => 'string|max:50',
             'about_me' => 'nullable|string|max:5000',
+            // Physical (deferred from registration step 2 — all optional here)
+            'complexion' => 'nullable|string|max:50',
+            'body_type' => 'nullable|string|max:50',
+            'physical_status' => 'nullable|string|max:50',
+            'da_category' => 'nullable|required_if:physical_status,Differently Abled|string|max:50',
+            'da_category_other' => 'nullable|required_if:da_category,Other|string|max:50',
+            'da_description' => 'nullable|string|max:500',
+            // Family economic status (deferred from registration step 2)
+            'family_status' => 'nullable|string|max:50',
             // Professional (update existing)
             'education_detail' => 'nullable|string|max:200',
             'occupation_detail' => 'nullable|string|max:200',
@@ -63,13 +74,30 @@ class OnboardingController extends Controller
             'sisters_nun' => 'nullable|integer|min:0',
         ]);
 
-        // Update profile (personal details)
+        // Update profile (personal details). complexion/body_type/physical_status
+        // are deferred from registration; use ?? existing so re-saving onboarding
+        // without re-entering them never wipes a value set earlier.
         $profile->update([
             'weight_kg' => $validated['weight_kg'] ?? null,
             'blood_group' => $validated['blood_group'] ?? null,
             'mother_tongue' => $validated['mother_tongue'] ?? null,
             'about_me' => $validated['about_me'] ?? null,
+            'complexion' => $validated['complexion'] ?? $profile->complexion,
+            'body_type' => $validated['body_type'] ?? $profile->body_type,
+            'physical_status' => $validated['physical_status'] ?? $profile->physical_status,
         ]);
+
+        // Differently-abled details (only when physical_status says so).
+        if (($validated['physical_status'] ?? '') === 'Differently Abled') {
+            DifferentlyAbledInfo::updateOrCreate(
+                ['profile_id' => $profile->id],
+                [
+                    'category' => $validated['da_category'] ?? null,
+                    'specify' => $validated['da_category_other'] ?? null,
+                    'description' => $validated['da_description'] ?? null,
+                ]
+            );
+        }
 
         // Save languages known to lifestyle_info
         LifestyleInfo::updateOrCreate(
@@ -91,6 +119,7 @@ class OnboardingController extends Controller
         FamilyDetail::updateOrCreate(
             ['profile_id' => $profile->id],
             [
+                'family_status' => $validated['family_status'] ?? $profile->familyDetail?->family_status,
                 'father_name' => $validated['father_name'] ?? null,
                 'father_house_name' => $validated['father_house_name'] ?? null,
                 'father_native_place' => $validated['father_native_place'] ?? null,

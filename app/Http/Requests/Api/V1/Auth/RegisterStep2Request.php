@@ -26,19 +26,20 @@ class RegisterStep2Request extends WebRegisterStep2Request
     public function bodyParameters(): array
     {
         return [
-            // Physical
+            // Physical. complexion / body_type / physical_status (+DA) and
+            // family_status are deferred to onboarding step 1 — optional here.
             'height' => ['description' => 'Free-form height label (e.g. "170 cm - 5 ft 07 inch"). Stored as written.', 'example' => '170 cm - 5 ft 07 inch'],
-            'complexion' => ['description' => 'Self-described complexion. Reference list at GET /reference/complexions.', 'example' => 'Wheatish'],
-            'body_type' => ['description' => 'Body type. Reference list at GET /reference/body-types.', 'example' => 'Average'],
-            'physical_status' => ['description' => 'Physical status. "Differently Abled" requires da_category + da_description.', 'example' => 'Normal'],
-            'da_category' => ['description' => 'Differently-abled category. Required when physical_status="Differently Abled". "Other" requires da_category_other.', 'required' => false],
+            'complexion' => ['description' => 'Self-described complexion. Optional — collected in onboarding step 1. Reference list at GET /reference/complexions.', 'required' => false],
+            'body_type' => ['description' => 'Body type. Optional — collected in onboarding step 1. Reference list at GET /reference/body-types.', 'required' => false],
+            'physical_status' => ['description' => 'Physical status. Optional — collected in onboarding step 1.', 'required' => false],
+            'da_category' => ['description' => 'Differently-abled category. Collected in onboarding step 1.', 'required' => false],
             'da_category_other' => ['description' => 'Free-text DA category when da_category="Other". Max 50.', 'required' => false],
-            'da_description' => ['description' => 'Free-text DA description. Required when physical_status="Differently Abled". Max 500.', 'required' => false],
+            'da_description' => ['description' => 'Free-text DA description. Max 500.', 'required' => false],
             // Marital
             'marital_status' => ['description' => 'Marital status. Reference list at GET /reference/marital-statuses.', 'example' => 'Never Married'],
             'children_with_me' => ['description' => 'Children currently living with the user. 0+.', 'required' => false, 'example' => 0],
             'children_not_with_me' => ['description' => 'Children not currently living with the user. 0+.', 'required' => false, 'example' => 0],
-            'family_status' => ['description' => 'Family status. Reference list at GET /reference/family-statuses.', 'example' => 'Middle Class'],
+            'family_status' => ['description' => 'Family status. Optional — collected in onboarding step 1. Reference list at GET /reference/family-statuses.', 'required' => false],
             // Languages
             'mother_tongue' => ['description' => 'Mother tongue (required). Core match field. Reference list at GET /reference/languages.', 'example' => 'Tulu'],
             'languages_known' => ['description' => 'Other languages known (optional, array). Stored on lifestyle info.', 'required' => false, 'example' => ['English', 'Hindi']],

@@ -16,7 +16,6 @@
     <form method="POST" action="{{ route('register.store2') }}" enctype="multipart/form-data" x-data="{
         religion: '{{ old('religion', $religiousInfo->religion ?? '') }}',
         maritalStatus: '{{ old('marital_status', $profile->marital_status ?? '') }}',
-        physicalStatus: '{{ old('physical_status', $profile->physical_status ?? '') }}',
         communities: [],
         subCommunities: [],
         selectedCaste: '{{ old('caste', $religiousInfo->caste ?? '') }}',
@@ -81,68 +80,6 @@
                 @error('height') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Complexion --}}
-            <div class="float-field">
-                <select name="complexion" id="complexion" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.complexion_list', []) as $opt)
-                        <option value="{{ $opt }}" {{ old('complexion', $profile->complexion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                    @endforeach
-                </select>
-                <label for="complexion">Complexion <span class="text-red-500">*</span></label>
-                @error('complexion') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Body Type --}}
-            <div class="float-field">
-                <select name="body_type" id="body_type" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.body_type_list', []) as $opt)
-                        <option value="{{ $opt }}" {{ old('body_type', $profile->body_type ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                    @endforeach
-                </select>
-                <label for="body_type">Body Type <span class="text-red-500">*</span></label>
-                @error('body_type') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Physical Status --}}
-            <div class="float-field">
-                <select name="physical_status" id="physical_status" x-model="physicalStatus" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.physical_status_list', []) as $opt)
-                        <option value="{{ $opt }}" {{ old('physical_status', $profile->physical_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                    @endforeach
-                </select>
-                <label for="physical_status">Physical Status <span class="text-red-500">*</span></label>
-                @error('physical_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Differently Abled Details --}}
-            <div x-show="physicalStatus === 'Differently Abled'" x-transition class="space-y-5 pl-4 border-l-2 border-(--color-primary)/30" x-data="{ daCategory: '{{ old('da_category', '') }}' }"
-                 x-effect="if (physicalStatus !== 'Differently Abled') { daCategory = ''; $el.querySelectorAll('input, textarea').forEach(el => el.value = ''); }">
-                <div class="float-field">
-                    <select name="da_category" id="da_category" x-model="daCategory">
-                        <option value="">Select</option>
-                        @foreach(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'] as $opt)
-                            <option value="{{ $opt }}" {{ old('da_category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </select>
-                    <label for="da_category">Category of Differently Abled <span class="text-red-500">*</span></label>
-                    @error('da_category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div x-show="daCategory === 'Other'" x-transition class="float-field">
-                    <input type="text" name="da_category_other" id="da_category_other" value="{{ old('da_category_other') }}" maxlength="50" placeholder=" ">
-                    <label for="da_category_other">Specify Differently Abled <span class="text-red-500">*</span></label>
-                    @error('da_category_other') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-                <div class="float-field">
-                    <textarea name="da_description" id="da_description" rows="3" maxlength="500" placeholder=" "
-                        class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ old('da_description') }}</textarea>
-                    <label for="da_description">Describe Differently Abled <span class="text-red-500">*</span></label>
-                    @error('da_description') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                </div>
-            </div>
-
             {{-- Marital Status --}}
             <div class="float-field">
                 <select name="marital_status" id="marital_status" x-model="maritalStatus" required>
@@ -192,17 +129,6 @@
                 @error('languages_known') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Family Status --}}
-            <div class="float-field">
-                <select name="family_status" id="family_status" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.family_status_list', []) as $opt)
-                        <option value="{{ $opt }}" {{ old('family_status', $familyDetail?->family_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                    @endforeach
-                </select>
-                <label for="family_status">Family Status <span class="text-red-500">*</span></label>
-                @error('family_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
         </div>
 
         {{-- ── Religious Information ──────────────────── --}}
