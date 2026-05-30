@@ -376,9 +376,14 @@ return [
 
     // Highest academic credential bucket. Used by register-step3
     // alongside the more detailed educational_qualifications_list.
-    // Six bands, matrimony convention.
+    // Ordered by progression (low → high). Added "Below High School" and
+    // "Higher Secondary (12th / PUC)" — the latter was a real gap between
+    // 10th and Diploma/Degree; PG Diploma now sits between Bachelor's and
+    // Master's instead of after PhD. DB-overridden (category=education_level),
+    // so the live order comes from reference_data_options.sort_order.
     'education_level_list' => [
-        'High School', 'Diploma', "Bachelor's", "Master's", 'PhD', 'PG Diploma',
+        'Below High School', 'High School', 'Higher Secondary (12th / PUC)',
+        'Diploma', "Bachelor's", 'PG Diploma', "Master's", 'PhD',
     ],
 
     // Employer type for the candidate's current job. Used by

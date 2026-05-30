@@ -59,6 +59,19 @@
         @csrf
 
         <div class="space-y-5">
+            {{-- Education Level — broad band first, then the specific
+                 qualification below (general → specific flow). --}}
+            <div class="float-field">
+                <select name="education_level" id="education_level" required>
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.education_level_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('education_level', $educationDetail?->education_level ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="education_level">Education Level <span class="text-red-500">*</span></label>
+                @error('education_level') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Educational Qualifications (grouped) --}}
             <div class="float-field">
                 <select name="highest_education" id="highest_education" required>
@@ -73,18 +86,6 @@
                 </select>
                 <label for="highest_education">Educational Qualifications <span class="text-red-500">*</span></label>
                 @error('highest_education') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Education Level --}}
-            <div class="float-field">
-                <select name="education_level" id="education_level" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.education_level_list', []) as $opt)
-                        <option value="{{ $opt }}" {{ old('education_level', $educationDetail?->education_level ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                    @endforeach
-                </select>
-                <label for="education_level">Education Level <span class="text-red-500">*</span></label>
-                @error('education_level') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
             {{-- Education Detail --}}
