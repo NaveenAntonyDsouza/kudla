@@ -14,6 +14,7 @@ use App\Models\ContactInfo;
 use App\Models\DifferentlyAbledInfo;
 use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
+use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\Profile;
 use App\Models\ProfilePhoto;
@@ -129,8 +130,15 @@ class RegisterController extends Controller
             'marital_status' => $validated['marital_status'],
             'children_with_me' => $validated['children_with_me'] ?? 0,
             'children_not_with_me' => $validated['children_not_with_me'] ?? 0,
+            'mother_tongue' => $validated['mother_tongue'],
             'onboarding_step_completed' => 2,
         ]);
+
+        // Other languages known → lifestyle_info (where languages_known lives).
+        LifestyleInfo::updateOrCreate(
+            ['profile_id' => $profile->id],
+            ['languages_known' => $validated['languages_known'] ?? []]
+        );
 
         // Create family detail with family_status
         FamilyDetail::updateOrCreate(

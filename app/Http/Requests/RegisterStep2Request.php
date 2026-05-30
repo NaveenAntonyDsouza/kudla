@@ -26,6 +26,11 @@ class RegisterStep2Request extends FormRequest
             'children_with_me' => 'nullable|integer|min:0',
             'children_not_with_me' => 'nullable|integer|min:0',
             'family_status' => 'required|string',
+            // Languages — mother tongue is a core match field (required);
+            // other languages known is an optional multi-select.
+            'mother_tongue' => 'required|string|max:50',
+            'languages_known' => 'nullable|array',
+            'languages_known.*' => 'string|max:50',
             // Religion
             'religion' => 'required|string',
             // Christian conditional
@@ -59,6 +64,7 @@ class RegisterStep2Request extends FormRequest
     public function messages(): array
     {
         return [
+            'mother_tongue.required' => 'Please select your mother tongue.',
             'denomination.required_if' => 'Denomination is required for Christian profiles.',
             'other_denomination_name.required_if' => 'Please specify the denomination.',
             'caste.required_if' => 'Caste/Community is required for Hindu and Jain profiles.',

@@ -171,6 +171,27 @@
                 </div>
             </template>
 
+            {{-- Mother Tongue — core match field, so required at signup. --}}
+            <div class="float-field">
+                <select name="mother_tongue" id="mother_tongue" required>
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.language_list', []) as $opt)
+                        <option value="{{ $opt }}" {{ old('mother_tongue', $profile->mother_tongue ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @endforeach
+                </select>
+                <label for="mother_tongue">Mother Tongue <span class="text-red-500">*</span></label>
+                @error('mother_tongue') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Other languages known — optional, multi-select. --}}
+            <div>
+                <x-multi-select name="languages_known" label="Other Languages Known (optional)"
+                    :options="config('reference_data.language_list', [])"
+                    :selected="$profile?->lifestyleInfo?->languages_known ?? []"
+                    :searchable="true" :showAny="false" />
+                @error('languages_known') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Family Status --}}
             <div class="float-field">
                 <select name="family_status" id="family_status" required>

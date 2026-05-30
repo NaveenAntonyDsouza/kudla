@@ -39,6 +39,9 @@ class RegisterStep2Request extends WebRegisterStep2Request
             'children_with_me' => ['description' => 'Children currently living with the user. 0+.', 'required' => false, 'example' => 0],
             'children_not_with_me' => ['description' => 'Children not currently living with the user. 0+.', 'required' => false, 'example' => 0],
             'family_status' => ['description' => 'Family status. Reference list at GET /reference/family-statuses.', 'example' => 'Middle Class'],
+            // Languages
+            'mother_tongue' => ['description' => 'Mother tongue (required). Core match field. Reference list at GET /reference/languages.', 'example' => 'Tulu'],
+            'languages_known' => ['description' => 'Other languages known (optional, array). Stored on lifestyle info.', 'required' => false, 'example' => ['English', 'Hindi']],
             // Religion
             'religion' => ['description' => 'Religion (Hindu/Christian/Muslim/Jain/Other). Drives downstream conditional fields.', 'example' => 'Hindu'],
             'denomination' => ['description' => 'Christian denomination. Required when religion="Christian".', 'required' => false],
