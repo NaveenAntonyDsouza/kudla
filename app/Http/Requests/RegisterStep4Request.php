@@ -19,14 +19,10 @@ class RegisterStep4Request extends FormRequest
             'native_state' => 'nullable|required_if:native_country,India|string|max:100',
             'native_district' => 'nullable|required_if:native_country,India|string|max:100',
             'native_place' => 'nullable|string|max:100',
-            // Contact
+            // Contact. Custodian name/relation, communication_address and
+            // pin_zip_code moved to onboarding step 2 to slim registration.
             'whatsapp_number' => 'nullable|string|max:15',
             'mobile_number' => 'required|string|max:15',
-            'custodian_name' => 'nullable|string|max:100',
-            'custodian_relation' => 'nullable|string|max:100',
-            // Address
-            'communication_address' => 'required|string|max:200',
-            'pin_zip_code' => 'required|string|max:10',
             // Profile creation details (merged from the former Step 5).
             // When the user picks "Self / Candidate" the view fills creator_name +
             // creator_contact_number with their own user data via hidden inputs,

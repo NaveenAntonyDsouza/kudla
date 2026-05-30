@@ -208,7 +208,8 @@ class RegisterController extends Controller
         $profile = auth()->user()->profile;
         $validated = $request->validated();
 
-        // Location fields
+        // Location fields. pin_zip_code (+ communication address & custodian
+        // below) deferred to onboarding step 2.
         LocationInfo::updateOrCreate(
             ['profile_id' => $profile->id],
             [
@@ -216,20 +217,16 @@ class RegisterController extends Controller
                 'native_state' => $validated['native_state'] ?? null,
                 'native_district' => $validated['native_district'] ?? null,
                 'native_place' => $validated['native_place'] ?? null,
-                'pin_zip_code' => $validated['pin_zip_code'] ?? null,
             ]
         );
 
-        // Contact fields (custodian = contact_person in DB)
+        // Contact fields — only phone numbers stay in registration; custodian,
+        // communication address and pincode are collected in onboarding step 2.
         ContactInfo::updateOrCreate(
             ['profile_id' => $profile->id],
             [
                 'whatsapp_number' => $validated['whatsapp_number'] ?? null,
                 'primary_phone' => $validated['mobile_number'] ?? null,
-                'contact_person' => $validated['custodian_name'] ?? null,
-                'contact_relationship' => $validated['custodian_relation'] ?? null,
-                'communication_address' => $validated['communication_address'] ?? null,
-                'pincode' => $validated['pin_zip_code'] ?? null,
             ]
         );
 

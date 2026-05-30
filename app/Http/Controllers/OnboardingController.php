@@ -208,6 +208,11 @@ class OnboardingController extends Controller
             'reference_name' => 'nullable|string|max:100',
             'reference_relationship' => 'nullable|string|max:50',
             'reference_mobile' => 'nullable|string|max:15',
+            // Communication address + custodian (deferred from registration step 4)
+            'communication_address' => 'nullable|string|max:200',
+            'pin_zip_code' => 'nullable|string|max:10',
+            'custodian_name' => 'nullable|string|max:100',
+            'custodian_relation' => 'nullable|string|max:100',
             // Present address
             'present_address_same_as_comm' => 'nullable|boolean',
             'present_address' => 'nullable|string|max:200',
@@ -228,6 +233,9 @@ class OnboardingController extends Controller
                 'residency_status' => $isIndia ? null : ($validated['residency_status'] ?? null),
                 'outstation_leave_date_from' => $isIndia ? null : ($validated['outstation_leave_date_from'] ?? null),
                 'outstation_leave_date_to' => $isIndia ? null : ($validated['outstation_leave_date_to'] ?? null),
+                // pin_zip_code deferred from registration step 4 (mirrors the
+                // dual write to contact_info.pincode below).
+                'pin_zip_code' => $validated['pin_zip_code'] ?? $profile->locationInfo?->pin_zip_code,
             ]
         );
 
@@ -246,6 +254,11 @@ class OnboardingController extends Controller
                 'reference_name' => $validated['reference_name'] ?? null,
                 'reference_relationship' => $validated['reference_relationship'] ?? null,
                 'reference_mobile' => $validated['reference_mobile'] ?? null,
+                // Communication address + custodian (deferred from registration step 4).
+                'communication_address' => $validated['communication_address'] ?? null,
+                'pincode' => $validated['pin_zip_code'] ?? null,
+                'contact_person' => $validated['custodian_name'] ?? null,
+                'contact_relationship' => $validated['custodian_relation'] ?? null,
                 'present_address_same_as_comm' => $presentSameAsComm,
                 'present_address' => $presentSameAsComm ? null : ($validated['present_address'] ?? null),
                 'present_pin_zip_code' => $presentSameAsComm ? null : ($validated['present_pin_zip_code'] ?? null),

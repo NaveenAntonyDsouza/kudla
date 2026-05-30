@@ -85,6 +85,39 @@
         <h2 class="text-lg font-semibold text-gray-900 mb-6">Additional Contact Information</h2>
 
         <div class="space-y-5 mb-10">
+            {{-- Communication Address + PIN + Custodian (deferred from
+                 registration step 4). Placed first so the "Same as
+                 Communication Address" options below reference a filled value. --}}
+            <div class="float-field" x-data="{ count: {{ mb_strlen(old('communication_address', $contactInfo?->communication_address ?? '')) }} }">
+                <textarea name="communication_address" id="communication_address" rows="3" maxlength="200" placeholder=" "
+                    @input="count = $el.value.length"
+                    class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ old('communication_address', $contactInfo?->communication_address ?? '') }}</textarea>
+                <label for="communication_address">Communication Address</label>
+                <p class="mt-1 text-xs text-gray-400"><span x-text="count">0</span> Characters Typed (Max 200 Chars.)</p>
+                @error('communication_address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- PIN/ZIP Code --}}
+            <div class="float-field">
+                <input type="text" name="pin_zip_code" id="pin_zip_code" value="{{ old('pin_zip_code', $locationInfo?->pin_zip_code ?? $contactInfo?->pincode ?? '') }}" maxlength="10" placeholder=" ">
+                <label for="pin_zip_code">PIN/ZIP Code</label>
+                @error('pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Custodian Name --}}
+            <div class="float-field">
+                <input type="text" name="custodian_name" id="custodian_name" value="{{ old('custodian_name', $contactInfo?->contact_person ?? '') }}" maxlength="100" placeholder=" ">
+                <label for="custodian_name">Custodian Name</label>
+                @error('custodian_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Custodian Relation --}}
+            <div class="float-field">
+                <input type="text" name="custodian_relation" id="custodian_relation" value="{{ old('custodian_relation', $contactInfo?->contact_relationship ?? '') }}" maxlength="100" placeholder=" ">
+                <label for="custodian_relation">Custodian Relation</label>
+                @error('custodian_relation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Residential Phone Number --}}
             <x-phone-input name="residential_phone_number" label="Residential Phone Number" :value="$contactInfo?->residential_phone_number ?? ''" maxlength="20" />
 

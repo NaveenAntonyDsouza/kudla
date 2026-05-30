@@ -180,36 +180,9 @@
                 We will send OTP to this mobile number for verification
             </p>
 
-            {{-- Custodian Name --}}
-            <div class="float-field">
-                <input type="text" name="custodian_name" id="custodian_name" value="{{ old('custodian_name', $contactInfo?->contact_person ?? '') }}" placeholder=" ">
-                <label for="custodian_name">Custodian Name</label>
-                @error('custodian_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Custodian Relation --}}
-            <div class="float-field">
-                <input type="text" name="custodian_relation" id="custodian_relation" value="{{ old('custodian_relation', $contactInfo?->contact_relationship ?? '') }}" placeholder=" ">
-                <label for="custodian_relation">Custodian Relation</label>
-                @error('custodian_relation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- Communication Address --}}
-            <div class="float-field" x-data="{ count: {{ mb_strlen(old('communication_address', $contactInfo?->communication_address ?? '')) }} }">
-                <textarea name="communication_address" id="communication_address" rows="3" required maxlength="200" placeholder=" "
-                    @input="count = $el.value.length"
-                    class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ old('communication_address', $contactInfo?->communication_address ?? '') }}</textarea>
-                <label for="communication_address">Communication Address <span class="text-red-500">*</span></label>
-                <p class="mt-1 text-xs text-gray-400"><span x-text="count">0</span> Characters Typed (Max 200 Chars.)</p>
-                @error('communication_address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            {{-- PIN/ZIP Code --}}
-            <div class="float-field">
-                <input type="text" name="pin_zip_code" id="pin_zip_code" value="{{ old('pin_zip_code', $locationInfo?->pin_zip_code ?? $contactInfo?->pincode ?? '') }}" maxlength="10" required placeholder=" ">
-                <label for="pin_zip_code">PIN/ZIP Code <span class="text-red-500">*</span></label>
-                @error('pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            {{-- Custodian name/relation, communication address and PIN/ZIP
+                 moved to onboarding step 2 (which already collects present /
+                 permanent addresses) to slim registration. --}}
         </div>
 
         {{-- ─ Profile Creation Details (merged from the former Step 5) ─ --}}
