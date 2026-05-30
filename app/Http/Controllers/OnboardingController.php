@@ -10,6 +10,7 @@ use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\PartnerPreference;
 use App\Models\Profile;
+use App\Models\ReligiousInfo;
 use App\Models\SocialMediaLink;
 use Illuminate\Http\Request;
 
@@ -24,9 +25,10 @@ class OnboardingController extends Controller
         $familyDetail = $profile?->familyDetail;
         $lifestyleInfo = $profile?->lifestyleInfo;
         $differentlyAbledInfo = $profile?->differentlyAbledInfo;
+        $religiousInfo = $profile?->religiousInfo;
         $completionPct = $profile?->calculateCompletion() ?? 0;
 
-        return view('onboarding.step1', compact('profile', 'educationDetail', 'familyDetail', 'lifestyleInfo', 'differentlyAbledInfo', 'completionPct'));
+        return view('onboarding.step1', compact('profile', 'educationDetail', 'familyDetail', 'lifestyleInfo', 'differentlyAbledInfo', 'religiousInfo', 'completionPct'));
     }
 
     public function storeStep1(Request $request)
@@ -50,6 +52,14 @@ class OnboardingController extends Controller
             'da_description' => 'nullable|string|max:500',
             // Family economic status (deferred from registration step 2)
             'family_status' => 'nullable|string|max:50',
+            // Horoscope / astrology (deferred from registration step 2 — Hindu/Jain)
+            'time_of_birth' => 'nullable|string|max:20',
+            'place_of_birth' => 'nullable|string|max:100',
+            'rashi' => 'nullable|string|max:50',
+            'nakshatra' => 'nullable|string|max:50',
+            'gotra' => 'nullable|string|max:50',
+            'manglik' => 'nullable|string|max:20',
+            'jathakam' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
             // Professional (update existing)
             'education_detail' => 'nullable|string|max:200',
             'occupation_detail' => 'nullable|string|max:200',
@@ -138,6 +148,25 @@ class OnboardingController extends Controller
                 'sisters_nun' => $validated['sisters_nun'] ?? 0,
             ]
         );
+
+        // Horoscope / astrology (deferred from registration step 2). Only the
+        // astrology columns are written, so the religion/caste/denomination set
+        // at registration is never touched. manglik maps to the dosh column.
+        $horoscope = array_filter([
+            'time_of_birth' => $validated['time_of_birth'] ?? null,
+            'place_of_birth' => $validated['place_of_birth'] ?? null,
+            'rashi' => $validated['rashi'] ?? null,
+            'nakshatra' => $validated['nakshatra'] ?? null,
+            'gotra' => $validated['gotra'] ?? null,
+            'dosh' => $validated['manglik'] ?? null,
+        ], fn ($v) => $v !== null);
+
+        if (! empty($horoscope) || $request->hasFile('jathakam')) {
+            if ($request->hasFile('jathakam')) {
+                $horoscope['jathakam_upload_url'] = $request->file('jathakam')->store('jathakam', 'public');
+            }
+            ReligiousInfo::updateOrCreate(['profile_id' => $profile->id], $horoscope);
+        }
 
         // Recalculate completion
         $profile->refresh();

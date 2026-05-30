@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('onboarding.store1') }}" @submit="submitting = true" x-data="{
+    <form method="POST" action="{{ route('onboarding.store1') }}" enctype="multipart/form-data" @submit="submitting = true" x-data="{
         submitting: false,
         languagesKnown: {{ Js::from(old('languages_known', $lifestyleInfo?->languages_known ?? [])) }},
         physicalStatus: '{{ old('physical_status', $profile?->physical_status ?? '') }}'
@@ -148,6 +148,85 @@
                 @error('about_me') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
         </div>
+
+        {{-- ── Horoscope / Astrology Details (Hindu & Jain) ─────── --}}
+        {{-- Deferred from registration step 2. Religion is fixed by the time a
+             member reaches onboarding (set at registration), so a server-side
+             @if is sufficient — no Alpine reactivity needed. --}}
+        @php $religion = $religiousInfo?->religion; @endphp
+        @if(in_array($religion, ['Hindu', 'Jain'], true))
+            <h2 class="text-lg font-semibold text-gray-900 mb-6">Horoscope & Astrology Details</h2>
+
+            <div class="space-y-5 mb-10">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="float-field">
+                        <input type="time" name="time_of_birth" id="time_of_birth" value="{{ old('time_of_birth', $religiousInfo?->time_of_birth ?? '') }}" placeholder=" ">
+                        <label for="time_of_birth">Time of Birth</label>
+                        @error('time_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="float-field">
+                        <input type="text" name="place_of_birth" id="place_of_birth" value="{{ old('place_of_birth', $religiousInfo?->place_of_birth ?? '') }}" placeholder=" ">
+                        <label for="place_of_birth">Place of Birth</label>
+                        @error('place_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+                <div class="float-field">
+                    <select name="rashi" id="rashi">
+                        <option value="">Select</option>
+                        @foreach(config('reference_data.rasi_list') as $sign)
+                            <option value="{{ $sign }}" {{ old('rashi', $religiousInfo?->rashi ?? '') === $sign ? 'selected' : '' }}>{{ $sign }}</option>
+                        @endforeach
+                    </select>
+                    <label for="rashi">Rasi (Zodiac)</label>
+                    @error('rashi') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="float-field">
+                    <select name="nakshatra" id="nakshatra">
+                        <option value="">Select</option>
+                        @foreach(config('reference_data.nakshatra_list') as $star)
+                            <option value="{{ $star }}" {{ old('nakshatra', $religiousInfo?->nakshatra ?? '') === $star ? 'selected' : '' }}>{{ $star }}</option>
+                        @endforeach
+                    </select>
+                    <label for="nakshatra">Nakshatra (Star)</label>
+                    @error('nakshatra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="float-field">
+                    <select name="gotra" id="gotra">
+                        <option value="">Select</option>
+                        @foreach(config('reference_data.gothram_list') as $opt)
+                            <option value="{{ $opt }}" {{ old('gotra', $religiousInfo?->gotra ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                    </select>
+                    <label for="gotra">Gothram</label>
+                    @error('gotra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div class="float-field">
+                    <select name="manglik" id="manglik">
+                        <option value="">Select</option>
+                        @foreach(['Yes', 'No', "Don't Know"] as $opt)
+                            <option value="{{ $opt }}" {{ old('manglik', $religiousInfo?->dosh ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                        @endforeach
+                    </select>
+                    <label for="manglik">Manglik / Chovva Dosham</label>
+                    @error('manglik') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jathakam / Horoscope</label>
+                    @if($religiousInfo?->jathakam_upload_url)
+                        <div class="mb-2 flex items-center gap-3 p-2 bg-green-50 border border-green-200 rounded-lg">
+                            <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span class="text-sm text-green-700">Horoscope uploaded</span>
+                            <a href="{{ Storage::disk('public')->url($religiousInfo->jathakam_upload_url) }}" target="_blank" class="text-sm text-(--color-primary) hover:underline font-medium ml-auto">View</a>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-1">Upload a new file to replace the existing one:</p>
+                    @endif
+                    <input type="file" name="jathakam" id="jathakam" accept=".jpg,.jpeg,.png,.pdf"
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-(--color-primary)/10 file:text-(--color-primary)">
+                    <p class="mt-1 text-xs text-gray-500">JPG, PNG or PDF (max 2MB)</p>
+                    @error('jathakam') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        @endif
 
         {{-- ── Additional Education & Professional Information ──── --}}
         <h2 class="text-lg font-semibold text-gray-900 mb-6">Additional Education & Professional Information</h2>

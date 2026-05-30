@@ -140,22 +140,19 @@ class RegisterController extends Controller
         // Create religious info. Clear fields that don't belong to the chosen
         // religion, so changing religion (e.g. back-and-edit during onboarding)
         // leaves no stale data behind.
+        // Horoscope cluster (gotra, nakshatra, rashi, dosh/manglik,
+        // time_of_birth, place_of_birth, jathakam) is now collected in
+        // onboarding step 1, so it's no longer set here.
         $relData = [
             'religion' => $validated['religion'],
             'caste' => $validated['caste'] ?? null,
             'other_caste_name' => $validated['other_caste_name'] ?? null,
             'sub_caste' => $validated['sub_caste'] ?? null,
-            'gotra' => $validated['gotra'] ?? null,
-            'nakshatra' => $validated['nakshatra'] ?? null,
-            'rashi' => $validated['rashi'] ?? null,
-            'dosh' => $validated['manglik'] ?? null,
             'denomination' => $validated['denomination'] ?? null,
             'other_denomination_name' => $validated['other_denomination_name'] ?? null,
             'diocese' => $validated['diocese'] ?? null,
             'diocese_name' => $validated['diocese_name'] ?? null,
             'parish_name_place' => $validated['parish_name_place'] ?? null,
-            'time_of_birth' => $validated['time_of_birth'] ?? null,
-            'place_of_birth' => $validated['place_of_birth'] ?? null,
             'muslim_sect' => $validated['muslim_sect'] ?? null,
             'muslim_community' => $validated['muslim_community'] ?? null,
             'religious_observance' => $validated['religious_observance'] ?? null,
@@ -167,12 +164,6 @@ class RegisterController extends Controller
             ['profile_id' => $profile->id],
             $relData
         );
-
-        // Handle jathakam file upload
-        if ($request->hasFile('jathakam')) {
-            $path = $request->file('jathakam')->store('jathakam', 'public');
-            $profile->religiousInfo->update(['jathakam_upload_url' => $path]);
-        }
 
         return redirect()->route('register.step3');
     }

@@ -33,17 +33,11 @@ class RegisterStep2Request extends FormRequest
             'diocese' => 'nullable|string',
             'diocese_name' => 'nullable|string',
             'parish_name_place' => 'nullable|string',
-            // Hindu/Jain conditional
+            // Hindu/Jain conditional. Horoscope cluster (time/place of birth,
+            // rashi, nakshatra, gotra, manglik, jathakam) moved to onboarding.
             'caste' => 'nullable|required_if:religion,Hindu|required_if:religion,Jain|string',
             'other_caste_name' => 'nullable|string|max:100',
             'sub_caste' => 'nullable|string',
-            'time_of_birth' => 'nullable|string',
-            'place_of_birth' => 'nullable|string',
-            'rashi' => 'nullable|string',
-            'nakshatra' => 'nullable|string',
-            'gotra' => 'nullable|string',
-            'manglik' => 'nullable|string',
-            'jathakam' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
             // Muslim conditional
             'muslim_sect' => 'nullable|required_if:religion,Muslim|string',
             'muslim_community' => 'nullable|string',
@@ -64,8 +58,6 @@ class RegisterStep2Request extends FormRequest
             'caste.required_if' => 'Caste/Community is required for Hindu and Jain profiles.',
             'muslim_sect.required_if' => 'Sect is required for Muslim profiles.',
             'other_religion_name.required_if' => 'Please specify your religion.',
-            'jathakam.max' => 'Horoscope file must be less than 2MB.',
-            'jathakam.mimes' => 'Horoscope must be JPG, PNG or PDF.',
         ];
     }
 }
