@@ -149,56 +149,92 @@ class ProfileCompletionService
     }
 
     /**
-     * Detect which sections are missing. Returns array ordered by impact (highest first).
-     * Each entry: ['key' => 'photo', 'weight' => 15, 'label' => 'Primary Photo', ...]
+     * The single source of truth for "is this section filled in?".
+     *
+     * Returns [sectionKey => bool] for all 9 sections. The field-level checks
+     * here mirror Profile::calculateCompletion() exactly, so the % and the
+     * section flags can never disagree. Both detectMissingSections() (nudges,
+     * mobile app) and getSectionStatuses() (web dashboard checklist) derive
+     * from this — no duplicated logic, no drift.
      */
-    public function detectMissingSections(Profile $profile): array
+    public function sectionDoneMap(Profile $profile): array
     {
-        $missing = [];
-
         // Ensure relations are loaded for accurate checks
         $profile->loadMissing([
             'religiousInfo', 'educationDetail', 'familyDetail',
             'locationInfo', 'contactInfo', 'lifestyleInfo', 'partnerPreference',
         ]);
 
-        if (!$profile->profilePhotos()->visible()->exists()) {
-            $missing['photo'] = self::SECTIONS['photo'];
-        }
+        return [
+            'photo' => $this->hasVisiblePhoto($profile),
+            'partner_preferences' => (bool) ($profile->partnerPreference?->age_from || $profile->partnerPreference?->religions),
+            'family_details' => (bool) $profile->familyDetail?->father_name,
+            'education' => (bool) ($profile->educationDetail?->highest_education || $profile->educationDetail?->occupation),
+            'location' => (bool) ($profile->locationInfo?->residing_country || $profile->locationInfo?->native_country),
+            'contact' => (bool) ($profile->contactInfo?->contact_person || $profile->contactInfo?->whatsapp_number),
+            'lifestyle' => (bool) ($profile->lifestyleInfo?->diet || $profile->lifestyleInfo?->hobbies),
+            'religious' => (bool) $profile->religiousInfo?->religion,
+            'basic_info' => (bool) ($profile->full_name && $profile->gender && $profile->date_of_birth),
+        ];
+    }
 
-        if (!$profile->partnerPreference?->age_from && !$profile->partnerPreference?->religions) {
-            $missing['partner_preferences'] = self::SECTIONS['partner_preferences'];
+    /**
+     * Whether the profile has at least one visible photo. Prefers the cheap
+     * query, but falls back to a loaded relation when the photos table isn't
+     * available (test env on unmigrated SQLite) — matching the DB-tolerant
+     * pattern used by recalculate() and DashboardService.
+     */
+    private function hasVisiblePhoto(Profile $profile): bool
+    {
+        try {
+            return $profile->profilePhotos()->visible()->exists();
+        } catch (\Throwable $e) {
+            $loaded = $profile->relationLoaded('profilePhotos') ? $profile->getRelation('profilePhotos') : null;
+            return $loaded ? $loaded->where('is_visible', true)->isNotEmpty() : false;
         }
+    }
 
-        if (!$profile->familyDetail?->father_name) {
-            $missing['family_details'] = self::SECTIONS['family_details'];
-        }
+    /**
+     * Detect which sections are missing. Returns array ordered by impact (highest first).
+     * Each entry: ['key' => 'photo', 'weight' => 15, 'label' => 'Primary Photo', ...]
+     */
+    public function detectMissingSections(Profile $profile): array
+    {
+        $done = $this->sectionDoneMap($profile);
 
-        if (!$profile->educationDetail?->highest_education && !$profile->educationDetail?->occupation) {
-            $missing['education'] = self::SECTIONS['education'];
-        }
-
-        if (!$profile->locationInfo?->residing_country && !$profile->locationInfo?->native_country) {
-            $missing['location'] = self::SECTIONS['location'];
-        }
-
-        if (!$profile->contactInfo?->contact_person && !$profile->contactInfo?->whatsapp_number) {
-            $missing['contact'] = self::SECTIONS['contact'];
-        }
-
-        if (!$profile->lifestyleInfo?->diet && !$profile->lifestyleInfo?->hobbies) {
-            $missing['lifestyle'] = self::SECTIONS['lifestyle'];
-        }
-
-        if (!$profile->religiousInfo?->religion) {
-            $missing['religious'] = self::SECTIONS['religious'];
-        }
-
-        if (!$profile->full_name || !$profile->gender || !$profile->date_of_birth) {
-            $missing['basic_info'] = self::SECTIONS['basic_info'];
+        $missing = [];
+        foreach (self::SECTIONS as $key => $meta) {
+            if (! ($done[$key] ?? false)) {
+                $missing[$key] = $meta;
+            }
         }
 
         return $missing;
+    }
+
+    /**
+     * Full per-section status for the web dashboard checklist — every section,
+     * with its done flag, ordered by impact (highest weight first). Pure data:
+     * no framework routing here, so the caller (web vs mobile) maps each key to
+     * its own edit URL.
+     *
+     * Each entry: ['key' => 'photo', 'label' => 'Primary Photo', 'weight' => 15, 'done' => false]
+     */
+    public function getSectionStatuses(Profile $profile): array
+    {
+        $done = $this->sectionDoneMap($profile);
+
+        $statuses = [];
+        foreach (self::SECTIONS as $key => $meta) {
+            $statuses[] = [
+                'key' => $key,
+                'label' => $meta['label'],
+                'weight' => $meta['weight'],
+                'done' => $done[$key] ?? false,
+            ];
+        }
+
+        return $statuses;
     }
 
     /**

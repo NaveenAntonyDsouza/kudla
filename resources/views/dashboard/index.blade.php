@@ -121,11 +121,15 @@
                     </div>
 
                     {{-- Profile Sections Checklist --}}
+                    @php $doneCount = collect($sections)->where('done', true)->count(); @endphp
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile Sections</h2>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Profile Sections</h2>
+                            <span class="text-sm font-medium text-gray-500">{{ $doneCount }} of {{ count($sections) }} complete</span>
+                        </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             @foreach($sections as $section)
-                                <a href="{{ route($section['route']) }}"
+                                <a href="{{ $section['url'] }}"
                                     class="flex items-center justify-between p-3 rounded-lg border {{ $section['done'] ? 'border-green-200 bg-green-50' : 'border-gray-200 hover:border-gray-300' }} transition-colors">
                                     <div class="flex items-center gap-3">
                                         @if($section['done'])

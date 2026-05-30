@@ -4,14 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Models\Profile;
 use App\Services\MatchingService;
+use App\Services\ProfileCompletionService;
 use App\Traits\ProfileQueryFilters;
 
 class DashboardController extends Controller
 {
     use ProfileQueryFilters;
 
+    /**
+     * Maps ProfileCompletionService section keys to the web edit URL that opens
+     * that section. The profile-edit page (profile.show) accepts ?section=KEY to
+     * auto-open the matching accordion; photos have their own manage page.
+     */
+    private const SECTION_WEB_KEY = [
+        'basic_info' => 'primary',
+        'religious' => 'religious',
+        'education' => 'education',
+        'family_details' => 'family',
+        'location' => 'location',
+        'contact' => 'contact',
+        'lifestyle' => 'hobbies',
+        'partner_preferences' => 'partner',
+    ];
+
     public function __construct(
         private MatchingService $matchingService,
+        private ProfileCompletionService $completion,
     ) {}
 
     public function index()
@@ -31,18 +49,22 @@ class DashboardController extends Controller
             $profile->update(['profile_completion_pct' => $completionPct]);
         }
 
-        // Sections status for quick actions
-        $sections = [
-            ['label' => 'Primary Information', 'done' => (bool) ($profile->full_name && $profile->gender), 'route' => 'onboarding.step1'],
-            ['label' => 'Religious Information', 'done' => $profile->religiousInfo()->exists(), 'route' => 'register.step2'],
-            ['label' => 'Education & Profession', 'done' => $profile->educationDetail()->exists(), 'route' => 'onboarding.step1'],
-            ['label' => 'Family Information', 'done' => $profile->familyDetail()->exists(), 'route' => 'onboarding.step1'],
-            ['label' => 'Location & Contact', 'done' => $profile->locationInfo?->residing_country || $profile->locationInfo?->native_country, 'route' => 'onboarding.step2'],
-            ['label' => 'Additional Contact', 'done' => $profile->contactInfo()->exists(), 'route' => 'onboarding.step2'],
-            ['label' => 'Partner Preferences', 'done' => $profile->partnerPreference()->exists(), 'route' => 'onboarding.preferences'],
-            ['label' => 'Lifestyle & Interests', 'done' => $profile->lifestyleInfo()->exists(), 'route' => 'onboarding.lifestyle'],
-            ['label' => 'Photo Uploaded', 'done' => $profile->profilePhotos()->visible()->exists(), 'route' => 'photos.manage'],
-        ];
+        // Section checklist — driven by ProfileCompletionService so the web
+        // dashboard uses the same accurate field-level "done" detection as the
+        // % bar and the mobile app (no more shallow row-exists checks). Each
+        // section deep-links straight to its edit form, and incomplete sections
+        // bubble to the top so the most valuable gap is the first thing seen.
+        $sections = collect($this->completion->getSectionStatuses($profile))
+            ->map(fn (array $s) => [
+                'label' => $s['label'],
+                'done' => $s['done'],
+                'url' => $s['key'] === 'photo'
+                    ? route('photos.manage')
+                    : route('profile.show', ['section' => self::SECTION_WEB_KEY[$s['key']]]),
+            ])
+            ->sortBy('done') // incomplete (false) first, complete (true) last
+            ->values()
+            ->all();
 
         // Recommended matches (top 6 by score)
         $recommendedMatches = collect();
