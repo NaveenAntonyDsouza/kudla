@@ -133,33 +133,41 @@ class ChangeMembershipPlan extends Page implements HasForms
         $durationMonths = $this->duration_override ? (int) $this->duration_override : $plan->duration_months;
         $user = $this->foundProfile->user;
 
-        // Deactivate existing active memberships
-        $user->userMemberships()->where('is_active', true)->update(['is_active' => false]);
+        // Do the membership swap + admin note + member notification atomically.
+        // Without a transaction a failure on a later step (e.g. the previously
+        // missing notification user_id) committed the new membership but threw
+        // afterwards — leaving orphaned membership rows and a 500 in the UI.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $plan, $durationMonths) {
+            // Deactivate existing active memberships
+            $user->userMemberships()->where('is_active', true)->update(['is_active' => false]);
 
-        // Create new membership
-        UserMembership::create([
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'starts_at' => now(),
-            'ends_at' => now()->addMonths($durationMonths),
-            'is_active' => true,
-        ]);
+            // Create new membership
+            UserMembership::create([
+                'user_id' => $user->id,
+                'plan_id' => $plan->id,
+                'starts_at' => now(),
+                'ends_at' => now()->addMonths($durationMonths),
+                'is_active' => true,
+            ]);
 
-        // Add admin note
-        \App\Models\ProfileNote::create([
-            'profile_id' => $this->foundProfile->id,
-            'admin_user_id' => auth()->id(),
-            'note' => 'Plan changed to ' . $plan->plan_name . ' (' . $durationMonths . ' months)' . ($this->reason ? '. Reason: ' . $this->reason : ''),
-        ]);
+            // Add admin note
+            \App\Models\ProfileNote::create([
+                'profile_id' => $this->foundProfile->id,
+                'admin_user_id' => auth()->id(),
+                'note' => 'Plan changed to ' . $plan->plan_name . ' (' . $durationMonths . ' months)' . ($this->reason ? '. Reason: ' . $this->reason : ''),
+            ]);
 
-        // Send notification to user
-        \App\Models\Notification::create([
-            'profile_id' => $this->foundProfile->id,
-            'type' => 'plan_changed',
-            'title' => 'Membership Plan Updated',
-            'message' => 'Your membership has been upgraded to ' . $plan->plan_name . ' for ' . $durationMonths . ' months.',
-            'is_read' => false,
-        ]);
+            // Notify the member. user_id is a NOT NULL FK on notifications —
+            // omitting it is what made this action fail.
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'profile_id' => $this->foundProfile->id,
+                'type' => 'plan_changed',
+                'title' => 'Membership Plan Updated',
+                'message' => 'Your membership has been upgraded to ' . $plan->plan_name . ' for ' . $durationMonths . ' months.',
+                'is_read' => false,
+            ]);
+        });
 
         Notification::make()
             ->title($this->foundProfile->full_name . ' upgraded to ' . $plan->plan_name)
