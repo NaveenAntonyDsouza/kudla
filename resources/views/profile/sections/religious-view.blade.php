@@ -18,7 +18,7 @@
     @endif
     @if(in_array($r->religion, ['Hindu', 'Jain']))
         <div><p class="text-xs text-gray-500">Caste</p><p class="text-sm font-medium text-gray-900">{{ $r->caste ?? 'Not Mentioned' }}</p></div>
-        @if(in_array($r->caste, ['Other (not listed)', 'Other'], true) && $r->other_caste_name)
+        @if(\App\Models\ReligiousInfo::isOtherCaste($r->caste) && $r->other_caste_name)
             <div><p class="text-xs text-gray-500">Caste (specified)</p><p class="text-sm font-medium text-gray-900">{{ $r->other_caste_name }}</p></div>
         @endif
         <div><p class="text-xs text-gray-500">Sub Caste</p><p class="text-sm font-medium text-gray-900">{{ $r->sub_caste ?? 'Not Mentioned' }}</p></div>

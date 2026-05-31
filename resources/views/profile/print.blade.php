@@ -102,7 +102,7 @@
             'Denomination' => $profile->religiousInfo->denomination,
             'Denomination (specified)' => $profile->religiousInfo->denomination === 'Other' ? $profile->religiousInfo->other_denomination_name : null,
             'Caste' => $profile->religiousInfo->caste,
-            'Caste (specified)' => in_array($profile->religiousInfo->caste, ['Other (not listed)', 'Other'], true) ? $profile->religiousInfo->other_caste_name : null,
+            'Caste (specified)' => \App\Models\ReligiousInfo::isOtherCaste($profile->religiousInfo->caste) ? $profile->religiousInfo->other_caste_name : null,
             'Sub Caste' => $profile->religiousInfo->sub_caste,
             'Diocese' => $profile->religiousInfo->diocese_name ?? $profile->religiousInfo->diocese,
             'Parish' => $profile->religiousInfo->parish_name_place,

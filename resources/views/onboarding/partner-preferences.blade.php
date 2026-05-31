@@ -41,10 +41,17 @@
     ">
         @csrf
 
-        {{-- ── Primary Requirements ──────────────────────────── --}}
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold text-gray-900">Primary Requirements</h2>
+        {{-- Page heading — the partner-preference step had no top-level title
+             (it jumped straight to "Primary Requirements"). --}}
+        <div class="flex items-center justify-between mb-2">
+            <h1 class="text-xl font-bold text-gray-900">Partner Preferences</h1>
             <a href="{{ route('onboarding.lifestyle') }}" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">Tell us what you're looking for in a partner — these guide your match suggestions.</p>
+
+        {{-- ── Primary Requirements ──────────────────────────── --}}
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">Primary Requirements</h2>
         </div>
 
         <div class="space-y-5 mb-10">

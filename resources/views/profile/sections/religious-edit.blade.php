@@ -183,7 +183,7 @@
                     <label>Caste / Community</label>
                 </div>
                 {{-- Specify when "Other (not listed)" / "Other" picked. --}}
-                <div class="float-field" x-show="selectedCaste === 'Other (not listed)' || selectedCaste === 'Other'" x-transition>
+                <div class="float-field" x-show="['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)" x-transition>
                     <input type="text" name="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
                     <label>Specify Caste / Community</label>
                 </div>

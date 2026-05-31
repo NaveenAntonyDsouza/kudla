@@ -56,13 +56,27 @@ class ReligiousInfo extends Model
     }
 
     /**
-     * Display-friendly caste: same rule as display_denomination, covering both
-     * the cascade endpoint's 'Other (not listed)' marker and the plain 'Other'
-     * fallback in the config caste_list.
+     * Every spelling of the "Other" caste sentinel across the app's data
+     * sources: the Communities table seeds it as "Other / Not Listed", the
+     * config caste_list uses "Other", and earlier UI used "Other (not listed)".
+     * Match all so the Specify box + display work regardless of source.
+     */
+    public const OTHER_CASTE_VALUES = ['Other / Not Listed', 'Other (not listed)', 'Other'];
+
+    /** True when $value is any "Other" caste sentinel. */
+    public static function isOtherCaste(?string $value): bool
+    {
+        return in_array($value, self::OTHER_CASTE_VALUES, true);
+    }
+
+    /**
+     * Display-friendly caste: returns the typed specify text when the member
+     * picked an "Other" sentinel, else the canonical caste. Use in compact
+     * contexts (cards, list rows) where you want "Mogaveera" not "Other".
      */
     public function getDisplayCasteAttribute(): ?string
     {
-        if (in_array($this->caste, ['Other (not listed)', 'Other'], true) && $this->other_caste_name) {
+        if (self::isOtherCaste($this->caste) && $this->other_caste_name) {
             return $this->other_caste_name;
         }
         return $this->caste;

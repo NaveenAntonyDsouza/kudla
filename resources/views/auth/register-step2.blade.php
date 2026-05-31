@@ -122,7 +122,7 @@
 
             {{-- Other languages known — optional, multi-select. --}}
             <div>
-                <x-multi-select name="languages_known" label="Other Languages Known (optional)"
+                <x-multi-select name="languages_known" label="Other Languages Known"
                     :options="config('reference_data.language_list', [])"
                     :selected="$profile?->lifestyleInfo?->languages_known ?? []"
                     :searchable="true" :showAny="false" />
@@ -257,10 +257,11 @@
                         <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
                         @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                     </div>
-                    {{-- Specify the caste when "Other (not listed)" / "Other"
-                         is picked, so we capture the actual community rather
-                         than just "they didn't fit the list". --}}
-                    <div class="float-field" x-show="selectedCaste === 'Other (not listed)' || selectedCaste === 'Other'" x-transition>
+                    {{-- Specify the caste when an "Other" sentinel is picked
+                         (Communities table seeds it as "Other / Not Listed"),
+                         so we capture the actual community rather than just
+                         "they didn't fit the list". --}}
+                    <div class="float-field" x-show="['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)" x-transition>
                         <input type="text" name="other_caste_name" id="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
                         <label for="other_caste_name">Specify Caste / Community</label>
                         @error('other_caste_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

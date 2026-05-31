@@ -164,14 +164,14 @@
                     <textarea name="present_address" id="present_address" rows="3" maxlength="200" placeholder=" "
                         @input="count = $el.value.length"
                         class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ old('present_address', $contactInfo?->present_address ?? '') }}</textarea>
-                    <label for="present_address">Present Address <span class="text-red-500">*</span></label>
+                    <label for="present_address">Present Address</label>
                     <p class="mt-1 text-xs text-gray-400"><span x-text="count">0</span> Characters Typed (Max. 200 Chars.)</p>
                     @error('present_address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div class="float-field">
                     <input type="text" name="present_pin_zip_code" id="present_pin_zip_code"
                         value="{{ old('present_pin_zip_code', $contactInfo?->present_pin_zip_code ?? '') }}" maxlength="10" placeholder=" ">
-                    <label for="present_pin_zip_code">PIN/ZIP Code <span class="text-red-500">*</span></label>
+                    <label for="present_pin_zip_code">PIN/ZIP Code</label>
                     @error('present_pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
             </div>
