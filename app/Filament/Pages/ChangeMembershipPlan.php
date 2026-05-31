@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 
 class ChangeMembershipPlan extends Page implements HasForms
 {
@@ -39,39 +40,46 @@ class ChangeMembershipPlan extends Page implements HasForms
         return \App\Support\Permissions::can('edit_plan');
     }
 
-    public ?string $matri_id = null;
+    // Search term (Matri ID / phone / name / email) and its results.
+    public ?string $search = null;
+    public Collection $matches;
+    public ?Profile $foundProfile = null;
+    public bool $searched = false;
+
+    // Plan-assignment form state. The fields stay hidden until the staff member
+    // clicks "Assign / Change Plan" on the found member (or arrives via a
+    // deep-link), keeping the page to just a search box until then.
+    public bool $showAssignForm = false;
     public ?string $plan_id = null;
     public ?string $duration_override = null;
     public ?string $reason = null;
 
-    public ?Profile $foundProfile = null;
-    public bool $searched = false;
-
     /**
      * Allow deep-linking from other admin pages (e.g. the Active-to-Paid list's
-     * "Assign Plan" button) via ?matri_id=… so the member is pre-loaded and the
-     * admin can assign a plan in a single step without re-searching.
+     * "Assign Plan" button) via ?matri_id=… — pre-load that member and open the
+     * assignment form so a plan can be assigned in one step.
      */
     public function mount(): void
     {
+        $this->matches = collect();
+
         $prefill = request()->query('matri_id');
         if (filled($prefill)) {
-            $this->matri_id = (string) $prefill;
+            $this->search = (string) $prefill;
             $this->lookupUser();
+            if ($this->foundProfile) {
+                $this->showAssignForm = true;
+            }
         }
     }
 
     public function form(Schema $form): Schema
     {
         return $form->schema([
-            Section::make('Assign / Change Membership Plan')
+            Section::make('Plan Details')
+                ->description('Choose the plan to assign. Leave duration empty to use the plan default.')
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('matri_id')
-                        ->label('Matri ID or Phone Number')
-                        ->required()
-                        ->placeholder('e.g., AM100001 or 9876543210'),
-
                     Forms\Components\Select::make('plan_id')
                         ->label('Select Plan')
                         ->required()
@@ -88,39 +96,78 @@ class ChangeMembershipPlan extends Page implements HasForms
                         ->numeric()
                         ->minValue(1)
                         ->maxValue(24)
-                        ->placeholder('Leave empty to use plan default')
-                        ->helperText('Override the plan\'s default duration if needed'),
+                        ->placeholder('Leave empty to use plan default'),
 
                     Forms\Components\Textarea::make('reason')
                         ->label('Reason / Notes')
-                        ->placeholder('Why is the plan being changed? (e.g., offline payment, complimentary, etc.)')
-                        ->rows(2),
+                        ->placeholder('e.g., offline UPI payment, complimentary, correction, etc.')
+                        ->rows(2)
+                        ->columnSpanFull(),
                 ]),
         ]);
     }
 
+    /**
+     * Search members by Matri ID, phone, name, or email. A single match loads
+     * straight into the found-member card; several matches show a pick-list.
+     */
     public function lookupUser(): void
     {
-        if (!$this->matri_id) return;
+        $term = trim((string) $this->search);
 
-        $search = trim($this->matri_id);
+        $this->reset(['foundProfile', 'showAssignForm']);
+        $this->matches = collect();
 
-        $this->foundProfile = Profile::query()
+        if ($term === '') {
+            $this->searched = false;
+            return;
+        }
+
+        $matches = Profile::query()
             ->whereNotNull('full_name')
-            ->where(function ($q) use ($search) {
-                $q->where('matri_id', $search)
-                    ->orWhereHas('user', fn ($u) => $u->where('phone', $search));
+            ->where(function ($q) use ($term) {
+                $q->where('matri_id', $term)
+                    ->orWhere('full_name', 'like', "%{$term}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('phone', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%"));
             })
             ->with(['user', 'religiousInfo', 'primaryPhoto'])
-            ->first();
+            ->orderBy('full_name')
+            ->limit(20)
+            ->get();
 
         $this->searched = true;
+
+        if ($matches->count() === 1) {
+            $this->foundProfile = $matches->first();
+        } else {
+            $this->matches = $matches;
+        }
+    }
+
+    /** Pick one member from the multi-result list. */
+    public function selectProfile(int $id): void
+    {
+        $this->foundProfile = Profile::with(['user', 'religiousInfo', 'primaryPhoto'])->find($id);
+        $this->matches = collect();
+        $this->showAssignForm = false;
+    }
+
+    public function startAssign(): void
+    {
+        $this->showAssignForm = true;
+    }
+
+    public function cancelAssign(): void
+    {
+        $this->showAssignForm = false;
+        $this->reset(['plan_id', 'duration_override', 'reason']);
     }
 
     public function assignPlan(): void
     {
         if (!$this->foundProfile || !$this->plan_id) {
-            Notification::make()->title('Please search for a user and select a plan first.')->danger()->send();
+            Notification::make()->title('Please select a member and a plan first.')->danger()->send();
             return;
         }
 
@@ -174,7 +221,8 @@ class ChangeMembershipPlan extends Page implements HasForms
             ->success()
             ->send();
 
-        // Reset form
-        $this->reset(['matri_id', 'plan_id', 'duration_override', 'reason', 'foundProfile', 'searched']);
+        // Reset back to a clean search box.
+        $this->reset(['search', 'plan_id', 'duration_override', 'reason', 'foundProfile', 'searched', 'showAssignForm']);
+        $this->matches = collect();
     }
 }
