@@ -34,7 +34,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           command_timeout: 10m
-          script_stop: true
           script: |
             set -e
             cd /home/u246181826/domains/kudlamatrimony.com/public_html
