@@ -80,6 +80,18 @@
                 @error('height') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Weight (optional) — paired with Height. --}}
+            <div class="float-field">
+                <select name="weight_kg" id="weight_kg">
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.weight_list') as $w)
+                        <option value="{{ $w }}" {{ old('weight_kg', $profile->weight_kg ?? '') === $w ? 'selected' : '' }}>{{ $w }}</option>
+                    @endforeach
+                </select>
+                <label for="weight_kg">Weight</label>
+                @error('weight_kg') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Marital Status --}}
             <div class="float-field">
                 <select name="marital_status" id="marital_status" x-model="maritalStatus" required>

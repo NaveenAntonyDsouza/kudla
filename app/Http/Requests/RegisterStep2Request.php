@@ -17,6 +17,7 @@ class RegisterStep2Request extends FormRequest
             // Physical. complexion / body_type / physical_status (+DA) and
             // family_status moved to onboarding step 1 to slim registration.
             'height' => 'required|string',
+            'weight_kg' => 'nullable|string|max:20',
             'marital_status' => 'required|string',
             'children_with_me' => 'nullable|integer|min:0',
             'children_not_with_me' => 'nullable|integer|min:0',

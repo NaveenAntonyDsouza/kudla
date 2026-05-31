@@ -124,6 +124,7 @@ class RegisterController extends Controller
         // slim registration), so they're no longer set here.
         $profile->update([
             'height' => $validated['height'],
+            'weight_kg' => $validated['weight_kg'] ?? null,
             'marital_status' => $validated['marital_status'],
             'children_with_me' => $validated['children_with_me'] ?? 0,
             'children_not_with_me' => $validated['children_not_with_me'] ?? 0,
