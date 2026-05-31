@@ -1,110 +1,92 @@
 <x-filament-panels::page>
-    {{-- Overdue --}}
-    @php $overdue = $this->getOverdueFollowUps(); @endphp
-    <h3 class="text-lg font-semibold text-red-600 mb-3">Overdue ({{ $overdue->count() }})</h3>
+    @php
+        $overdue = $this->getOverdueFollowUps();
+        $today = $this->getTodayFollowUps();
+        $upcoming = $this->getUpcomingFollowUps();
+    @endphp
 
-    @if($overdue->isEmpty())
-        <p class="text-sm text-gray-500 mb-6">No overdue follow-ups.</p>
-    @else
-        <div class="space-y-2 mb-6">
-            @foreach($overdue as $note)
-                <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700 p-4 flex items-center gap-4">
-                    <div class="shrink-0">
-                        @if($note->profile?->primaryPhoto?->photo_url)
-                            <img src="{{ asset('storage/' . $note->profile->primaryPhoto->photo_url) }}" class="w-10 h-10 rounded-full object-cover">
-                        @else
-                            <img src="{{ url('/images/default-avatar.svg') }}" class="w-10 h-10 rounded-full">
-                        @endif
-                    </div>
-                    <div class="flex-1">
-                        <a href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}" class="font-bold text-primary-600 hover:underline">
-                            {{ $note->profile?->full_name }} ({{ $note->profile?->matri_id }})
-                        </a>
-                        <div class="text-sm text-gray-700 mt-1">{{ $note->note }}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            <span class="text-red-600 font-medium">Follow-up: {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
-                            <span class="ml-3">By: {{ $note->adminUser?->name ?? 'Admin' }}</span>
-                            <span class="ml-3">Phone: {{ $note->profile?->user?->phone ?? '-' }}</span>
-                        </div>
-                    </div>
-                    @if($note->profile?->user?->phone)
+    {{-- ───────────── Overdue ───────────── --}}
+    <x-filament::section icon="heroicon-o-exclamation-triangle" icon-color="danger">
+        <x-slot name="heading">Overdue ({{ $overdue->count() }})</x-slot>
+        <x-slot name="description">Follow-ups whose date has passed.</x-slot>
+
+        @forelse ($overdue as $note)
+            <x-admin.member-row
+                :photo="$note->profile?->primaryPhoto?->photo_url"
+                :name="$note->profile?->full_name ?? '—'"
+                :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
+                :href="route('filament.admin.resources.users.view', $note->profile_id)"
+                :first="$loop->first">
+                <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
+                <span style="color:#dc2626;font-weight:500;">Follow-up {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
+                <span>By {{ $note->adminUser?->name ?? 'Admin' }}</span>
+                <span>{{ $note->profile?->user?->phone ?? '—' }}</span>
+
+                <x-slot name="actions">
+                    @if ($note->profile?->user?->phone)
                         @php $phone = preg_replace('/[^0-9]/', '', $note->profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
-                        <a href="https://wa.me/{{ $phone }}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200">WhatsApp</a>
+                        <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
-                    <a href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-primary-50 text-primary-700 hover:bg-primary-100">View</a>
-                </div>
-            @endforeach
-        </div>
-    @endif
+                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                </x-slot>
+            </x-admin.member-row>
+        @empty
+            <p style="opacity:.6;font-size:.875rem;">No overdue follow-ups.</p>
+        @endforelse
+    </x-filament::section>
 
-    {{-- Today --}}
-    @php $today = $this->getTodayFollowUps(); @endphp
-    <h3 class="text-lg font-semibold text-orange-600 mb-3">Today ({{ $today->count() }})</h3>
+    {{-- ───────────── Today ───────────── --}}
+    <x-filament::section icon="heroicon-o-calendar-days" icon-color="warning">
+        <x-slot name="heading">Today ({{ $today->count() }})</x-slot>
+        <x-slot name="description">Follow-ups scheduled for today.</x-slot>
 
-    @if($today->isEmpty())
-        <p class="text-sm text-gray-500 mb-6">No follow-ups scheduled for today.</p>
-    @else
-        <div class="space-y-2 mb-6">
-            @foreach($today as $note)
-                <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-700 p-4 flex items-center gap-4">
-                    <div class="shrink-0">
-                        @if($note->profile?->primaryPhoto?->photo_url)
-                            <img src="{{ asset('storage/' . $note->profile->primaryPhoto->photo_url) }}" class="w-10 h-10 rounded-full object-cover">
-                        @else
-                            <img src="{{ url('/images/default-avatar.svg') }}" class="w-10 h-10 rounded-full">
-                        @endif
-                    </div>
-                    <div class="flex-1">
-                        <a href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}" class="font-bold text-primary-600 hover:underline">
-                            {{ $note->profile?->full_name }} ({{ $note->profile?->matri_id }})
-                        </a>
-                        <div class="text-sm text-gray-700 mt-1">{{ $note->note }}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            <span class="font-medium">Follow-up: Today</span>
-                            <span class="ml-3">By: {{ $note->adminUser?->name ?? 'Admin' }}</span>
-                            <span class="ml-3">Phone: {{ $note->profile?->user?->phone ?? '-' }}</span>
-                        </div>
-                    </div>
-                    @if($note->profile?->user?->phone)
+        @forelse ($today as $note)
+            <x-admin.member-row
+                :photo="$note->profile?->primaryPhoto?->photo_url"
+                :name="$note->profile?->full_name ?? '—'"
+                :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
+                :href="route('filament.admin.resources.users.view', $note->profile_id)"
+                :first="$loop->first">
+                <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
+                <span style="font-weight:500;">Follow-up: Today</span>
+                <span>By {{ $note->adminUser?->name ?? 'Admin' }}</span>
+                <span>{{ $note->profile?->user?->phone ?? '—' }}</span>
+
+                <x-slot name="actions">
+                    @if ($note->profile?->user?->phone)
                         @php $phone = preg_replace('/[^0-9]/', '', $note->profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
-                        <a href="https://wa.me/{{ $phone }}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-green-100 text-green-700 hover:bg-green-200">WhatsApp</a>
+                        <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
-                    <a href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-primary-50 text-primary-700 hover:bg-primary-100">View</a>
-                </div>
-            @endforeach
-        </div>
-    @endif
+                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                </x-slot>
+            </x-admin.member-row>
+        @empty
+            <p style="opacity:.6;font-size:.875rem;">No follow-ups scheduled for today.</p>
+        @endforelse
+    </x-filament::section>
 
-    {{-- Upcoming --}}
-    @php $upcoming = $this->getUpcomingFollowUps(); @endphp
-    <h3 class="text-lg font-semibold text-blue-600 mb-3">Upcoming 7 Days ({{ $upcoming->count() }})</h3>
+    {{-- ───────────── Upcoming 7 days ───────────── --}}
+    <x-filament::section icon="heroicon-o-clock" icon-color="info">
+        <x-slot name="heading">Upcoming 7 Days ({{ $upcoming->count() }})</x-slot>
+        <x-slot name="description">Follow-ups scheduled within the next week.</x-slot>
 
-    @if($upcoming->isEmpty())
-        <p class="text-sm text-gray-500">No follow-ups scheduled for the next 7 days.</p>
-    @else
-        <div class="space-y-2">
-            @foreach($upcoming as $note)
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
-                    <div class="shrink-0">
-                        @if($note->profile?->primaryPhoto?->photo_url)
-                            <img src="{{ asset('storage/' . $note->profile->primaryPhoto->photo_url) }}" class="w-10 h-10 rounded-full object-cover">
-                        @else
-                            <img src="{{ url('/images/default-avatar.svg') }}" class="w-10 h-10 rounded-full">
-                        @endif
-                    </div>
-                    <div class="flex-1">
-                        <a href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}" class="font-bold text-primary-600 hover:underline">
-                            {{ $note->profile?->full_name }} ({{ $note->profile?->matri_id }})
-                        </a>
-                        <div class="text-sm text-gray-700 mt-1">{{ $note->note }}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            <span>Follow-up: {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
-                            <span class="ml-3">By: {{ $note->adminUser?->name ?? 'Admin' }}</span>
-                        </div>
-                    </div>
-                    <a href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-primary-50 text-primary-700 hover:bg-primary-100">View</a>
-                </div>
-            @endforeach
-        </div>
-    @endif
+        @forelse ($upcoming as $note)
+            <x-admin.member-row
+                :photo="$note->profile?->primaryPhoto?->photo_url"
+                :name="$note->profile?->full_name ?? '—'"
+                :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
+                :href="route('filament.admin.resources.users.view', $note->profile_id)"
+                :first="$loop->first">
+                <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
+                <span>Follow-up {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
+                <span>By {{ $note->adminUser?->name ?? 'Admin' }}</span>
+
+                <x-slot name="actions">
+                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                </x-slot>
+            </x-admin.member-row>
+        @empty
+            <p style="opacity:.6;font-size:.875rem;">No follow-ups scheduled for the next 7 days.</p>
+        @endforelse
+    </x-filament::section>
 </x-filament-panels::page>
