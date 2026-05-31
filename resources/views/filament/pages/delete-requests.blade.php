@@ -1,55 +1,74 @@
 <x-filament-panels::page>
-    {{-- Deleted Users (soft-deleted) --}}
-    <h3 class="text-lg font-semibold text-red-600 mb-3">Deleted Users (Can be restored)</h3>
-    @php $deleted = $this->getDeletedProfiles(); @endphp
+    @php
+        $deleted = $this->getDeletedProfiles();
+        $deactivated = $this->getDeactivatedProfiles();
+    @endphp
 
-    @if($deleted->isEmpty())
-        <p class="text-sm text-gray-500 mb-6">No deleted users.</p>
-    @else
-        <div class="space-y-2 mb-6">
-            @foreach($deleted as $profile)
-                <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700 p-4 flex items-center gap-4">
-                    <div class="flex-1">
-                        <span class="font-bold">{{ $profile->full_name }} ({{ $profile->matri_id }})</span>
-                        <div class="text-sm text-gray-600">
-                            <span>{{ $profile->user?->phone ?? '-' }}</span>
-                            <span class="ml-3">{{ $profile->user?->email ?? '-' }}</span>
-                            <span class="ml-3 text-red-600">Deleted: {{ $profile->deleted_at?->displayTz()->format('d M Y, h:i A') }} ({{ $profile->deleted_at?->diffForHumans() }})</span>
-                            @if($profile->deletion_reason)
-                                <span class="ml-3">Reason: {{ $profile->deletion_reason }}</span>
-                            @endif
-                        </div>
+    {{-- ───────────── Deleted users (soft-deleted, restorable) ───────────── --}}
+    <x-filament::section icon="heroicon-o-trash" icon-color="danger">
+        <x-slot name="heading">Deleted Users ({{ $deleted->count() }})</x-slot>
+        <x-slot name="description">Soft-deleted accounts — these can be restored from the Users list.</x-slot>
+
+        @forelse ($deleted as $profile)
+            <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;{{ $loop->first ? '' : 'border-top:1px solid rgba(128,128,128,0.18);' }}">
+                <img src="{{ $profile->primaryPhoto?->photo_url ? asset('storage/' . $profile->primaryPhoto->photo_url) : url('/images/default-avatar.svg') }}"
+                    alt="" style="width:2.5rem;height:2.5rem;border-radius:9999px;object-fit:cover;flex-shrink:0;">
+
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;">
+                        {{ $profile->full_name }}
+                        <span style="opacity:.55;font-weight:400;">({{ $profile->matri_id }})</span>
                     </div>
-                    <a href="{{ route('filament.admin.resources.users.index', ['activeTab' => 'deleted']) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-primary-50 text-primary-700 hover:bg-primary-100">
-                        Manage in Users
-                    </a>
-                </div>
-            @endforeach
-        </div>
-    @endif
-
-    {{-- Deactivated Users --}}
-    <h3 class="text-lg font-semibold text-orange-600 mb-3">Deactivated Users</h3>
-    @php $deactivated = $this->getDeactivatedProfiles(); @endphp
-
-    @if($deactivated->isEmpty())
-        <p class="text-sm text-gray-500">No deactivated users.</p>
-    @else
-        <div class="space-y-2">
-            @foreach($deactivated as $profile)
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
-                    <div class="flex-1">
-                        <a href="{{ route('filament.admin.resources.users.view', $profile->id) }}" class="font-bold text-primary-600 hover:underline">{{ $profile->full_name }} ({{ $profile->matri_id }})</a>
-                        <div class="text-sm text-gray-600">
-                            <span>{{ $profile->user?->phone ?? '-' }}</span>
-                            <span class="ml-3">{{ $profile->user?->email ?? '-' }}</span>
-                            <span class="ml-3">{{ $profile->religiousInfo?->religion ?? '-' }}</span>
-                            <span class="ml-3">Registered: {{ $profile->created_at?->format('d M Y') }}</span>
-                        </div>
+                    <div style="opacity:.7;font-size:.8125rem;margin-top:.125rem;">
+                        {{ $profile->user?->phone ?? '—' }} ·
+                        {{ $profile->user?->email ?? '—' }} ·
+                        <span style="color:#dc2626;">Deleted {{ $profile->deleted_at?->displayTz()->format('d M Y, h:i A') }} ({{ $profile->deleted_at?->diffForHumans() }})</span>
+                        @if ($profile->deletion_reason)
+                            · Reason: {{ $profile->deletion_reason }}
+                        @endif
                     </div>
-                    <a href="{{ route('filament.admin.resources.users.view', $profile->id) }}" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded bg-primary-50 text-primary-700 hover:bg-primary-100">View</a>
                 </div>
-            @endforeach
-        </div>
-    @endif
+
+                <x-filament::button tag="a" size="sm" color="gray" icon="heroicon-o-arrow-uturn-left"
+                    href="{{ route('filament.admin.resources.users.index', ['activeTab' => 'deleted']) }}">
+                    Manage in Users
+                </x-filament::button>
+            </div>
+        @empty
+            <p style="opacity:.6;font-size:.875rem;">No deleted users.</p>
+        @endforelse
+    </x-filament::section>
+
+    {{-- ───────────── Deactivated users ───────────── --}}
+    <x-filament::section icon="heroicon-o-pause-circle" icon-color="warning">
+        <x-slot name="heading">Deactivated Users ({{ $deactivated->count() }})</x-slot>
+        <x-slot name="description">Accounts hidden from members and search. Reactivate or manage them from the Users list.</x-slot>
+
+        @forelse ($deactivated as $profile)
+            <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 0;{{ $loop->first ? '' : 'border-top:1px solid rgba(128,128,128,0.18);' }}">
+                <img src="{{ $profile->primaryPhoto?->photo_url ? asset('storage/' . $profile->primaryPhoto->photo_url) : url('/images/default-avatar.svg') }}"
+                    alt="" style="width:2.5rem;height:2.5rem;border-radius:9999px;object-fit:cover;flex-shrink:0;">
+
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;">
+                        {{ $profile->full_name }}
+                        <span style="opacity:.55;font-weight:400;">({{ $profile->matri_id }})</span>
+                    </div>
+                    <div style="opacity:.7;font-size:.8125rem;margin-top:.125rem;">
+                        {{ $profile->user?->phone ?? '—' }} ·
+                        {{ $profile->user?->email ?? '—' }} ·
+                        {{ $profile->religiousInfo?->religion ?? '—' }} ·
+                        Registered {{ $profile->created_at?->format('d M Y') }}
+                    </div>
+                </div>
+
+                <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye"
+                    href="{{ route('filament.admin.resources.users.view', $profile->id) }}">
+                    View
+                </x-filament::button>
+            </div>
+        @empty
+            <p style="opacity:.6;font-size:.875rem;">No deactivated users.</p>
+        @endforelse
+    </x-filament::section>
 </x-filament-panels::page>
