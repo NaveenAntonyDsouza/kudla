@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Profile;
+use App\Models\User;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Pages\Page;
@@ -41,7 +42,12 @@ class ActiveToPaid extends Page
                     ->where(fn ($q2) => $q2->whereNull('ends_at')->orWhere('ends_at', '>', now()));
             })
             ->with(['user', 'religiousInfo', 'locationInfo', 'primaryPhoto'])
-            ->orderByDesc('user.last_login_at')
+            // Order by the related user's last login via a correlated subquery
+            // (a bare 'user.last_login_at' string is not a real column and
+            // throws SQLSTATE 42S22 — the relation isn't joined here).
+            ->orderByDesc(
+                User::select('last_login_at')->whereColumn('users.id', 'profiles.user_id')
+            )
             ->orderByDesc('created_at')
             ->limit(50)
             ->get()
