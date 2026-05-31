@@ -21,6 +21,12 @@
                 <span>Profile {{ $profile->profile_completion_pct ?? 0 }}%</span>
 
                 <x-slot name="actions">
+                    @if (\App\Support\Permissions::can('edit_plan'))
+                        <x-filament::button tag="a" size="sm" color="warning" icon="heroicon-o-credit-card"
+                            href="{{ \App\Filament\Pages\ChangeMembershipPlan::getUrl(['matri_id' => $profile->matri_id]) }}">
+                            Assign Plan
+                        </x-filament::button>
+                    @endif
                     @if ($profile->user?->phone)
                         @php $phone = preg_replace('/[^0-9]/', '', $profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
                         <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>

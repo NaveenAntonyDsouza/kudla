@@ -47,6 +47,20 @@ class ChangeMembershipPlan extends Page implements HasForms
     public ?Profile $foundProfile = null;
     public bool $searched = false;
 
+    /**
+     * Allow deep-linking from other admin pages (e.g. the Active-to-Paid list's
+     * "Assign Plan" button) via ?matri_id=… so the member is pre-loaded and the
+     * admin can assign a plan in a single step without re-searching.
+     */
+    public function mount(): void
+    {
+        $prefill = request()->query('matri_id');
+        if (filled($prefill)) {
+            $this->matri_id = (string) $prefill;
+            $this->lookupUser();
+        }
+    }
+
     public function form(Schema $form): Schema
     {
         return $form->schema([
