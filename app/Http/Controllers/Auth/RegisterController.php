@@ -200,8 +200,12 @@ class RegisterController extends Controller
         $profile = auth()->user()->profile;
         $locationInfo = $profile?->locationInfo;
         $contactInfo = $profile?->contactInfo;
+        // Working-location fields (working_country/state/district/city) live on
+        // EducationDetail and are now collected here in step 4 alongside native
+        // location, so we need the row to prefill them.
+        $educationDetail = $profile?->educationDetail;
 
-        return view('auth.register-step4', compact('profile', 'locationInfo', 'contactInfo'));
+        return view('auth.register-step4', compact('profile', 'locationInfo', 'contactInfo', 'educationDetail'));
     }
 
     public function storeStep4(RegisterStep4Request $request)
@@ -218,6 +222,20 @@ class RegisterController extends Controller
                 'native_state' => $validated['native_state'] ?? null,
                 'native_district' => $validated['native_district'] ?? null,
                 'native_place' => $validated['native_place'] ?? null,
+            ]
+        );
+
+        // Working location — moved here from step 3 so all geography is
+        // collected on one step. These are EducationDetail columns; the row
+        // already exists from step 3, so this updates it with the working
+        // location without disturbing the education/career fields.
+        EducationDetail::updateOrCreate(
+            ['profile_id' => $profile->id],
+            [
+                'working_country' => $validated['working_country'] ?? null,
+                'working_state' => $validated['working_state'] ?? null,
+                'working_district' => $validated['working_district'] ?? null,
+                'working_city' => $validated['working_city'] ?? null,
             ]
         );
 

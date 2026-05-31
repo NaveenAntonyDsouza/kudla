@@ -23,10 +23,9 @@ class RegisterStep3Request extends FormRequest
             'employment_category' => 'required|string|max:100',
             'employer_name' => 'nullable|string|max:200',
             'annual_income' => 'required|string|max:50',
-            'working_country' => 'required|string|max:100',
-            'working_state' => 'nullable|string|max:100',
-            'working_district' => 'nullable|string|max:100',
-            'working_city' => 'nullable|string|max:100',
+            // Working location (country/state/district/city) moved to step 4
+            // so all geography lives on one step; step 3 is now purely
+            // education + career.
         ];
     }
 }

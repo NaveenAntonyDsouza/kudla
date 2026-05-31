@@ -19,6 +19,13 @@ class RegisterStep4Request extends FormRequest
             'native_state' => 'nullable|required_if:native_country,India|string|max:100',
             'native_district' => 'nullable|required_if:native_country,India|string|max:100',
             'native_place' => 'nullable|string|max:100',
+            // Working location — moved here from step 3 so all geography is
+            // grouped on one step. Working location is the primary location
+            // used in partner-preference matching.
+            'working_country' => 'required|string|max:100',
+            'working_state' => 'nullable|string|max:100',
+            'working_district' => 'nullable|string|max:100',
+            'working_city' => 'nullable|string|max:100',
             // Contact. Custodian name/relation, communication_address and
             // pin_zip_code moved to onboarding step 2 to slim registration.
             'whatsapp_number' => 'nullable|string|max:15',

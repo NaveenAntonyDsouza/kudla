@@ -22,6 +22,17 @@
         nativeDistricts: [],
         nativePlaces: [],
 
+        // Working location cascade — moved here from step 3 so all geography
+        // (working + native) is collected on one step. Working location is the
+        // primary location used in partner-preference matching.
+        workingCountry: '{{ old('working_country', $educationDetail?->working_country ?? '') }}',
+        workingState: '{{ old('working_state', $educationDetail?->working_state ?? '') }}',
+        workingDistrict: '{{ old('working_district', $educationDetail?->working_district ?? '') }}',
+        workingCity: '{{ old('working_city', $educationDetail?->working_city ?? '') }}',
+        workingStates: [],
+        workingDistricts: [],
+        workingCities: [],
+
         // Profile Creation Details (merged from former Step 5)
         createdBy: '{{ old('created_by', $profile?->created_by ?? '') }}',
         userName: '{{ auth()->user()->name ?? '' }}',
@@ -61,6 +72,38 @@
             this.nativePlaces = await response.json();
         },
 
+        async fetchWorkingStates() {
+            if (!this.workingCountry) {
+                this.workingStates = []; this.workingDistricts = []; this.workingState = ''; this.workingDistrict = ''; return;
+            }
+            if (this.workingCountry === 'India') {
+                const response = await fetch('/api/cascade/states');
+                this.workingStates = await response.json();
+            } else {
+                const response = await fetch(`/api/cascade/countries?country=${encodeURIComponent(this.workingCountry)}`);
+                const data = await response.json();
+                this.workingStates = data.locations || [];
+            }
+            if (this.workingState) this.fetchWorkingDistricts();
+        },
+
+        async fetchWorkingDistricts() {
+            if (!this.workingState || this.workingCountry !== 'India') {
+                this.workingDistricts = []; this.workingDistrict = ''; return;
+            }
+            const response = await fetch(`/api/cascade/districts?state=${encodeURIComponent(this.workingState)}`);
+            this.workingDistricts = await response.json();
+        },
+
+        async fetchWorkingCities() {
+            const params = this.workingDistrict
+                ? `district=${encodeURIComponent(this.workingDistrict)}`
+                : (this.workingState ? `state=${encodeURIComponent(this.workingState)}` : '');
+            if (!params) { this.workingCities = []; return; }
+            const response = await fetch(`/api/cascade/working-cities?${params}`);
+            this.workingCities = await response.json();
+        },
+
         onCreatedByChange() {
             // 'Self / Candidate' auto-fills creator with user's own details
             // so the validator (creator_name / creator_contact_number required)
@@ -77,6 +120,8 @@
         init() {
             if (this.nativeCountry) this.fetchNativeStates();
             if (this.nativeState) this.fetchNativePlaces();
+            if (this.workingCountry) this.fetchWorkingStates();
+            if (this.workingState) this.fetchWorkingCities();
             // If the user is returning to an already-filled step (after
             // hitting Back from the photo step), keep their selection intact.
             this.onCreatedByChange();
@@ -85,6 +130,85 @@
         @csrf
 
         <div class="space-y-5">
+            {{-- ── Working location (moved here from step 3) ── --}}
+            {{-- Working Country (grouped) --}}
+            <div class="float-field">
+                <select name="working_country" id="working_country" x-model="workingCountry" @change="fetchWorkingStates(); workingDistricts=[]; workingState=''; workingDistrict='';" required>
+                    <option value="">Select</option>
+                    @foreach(config('reference_data.country_list') as $group => $countries)
+                        <optgroup label="{{ $group }}">
+                            @foreach($countries as $country)
+                                <option value="{{ $country }}" {{ old('working_country', $educationDetail?->working_country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
+                <label for="working_country">Working Country <span class="text-red-500">*</span></label>
+                @error('working_country') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Working State --}}
+            <div x-show="workingCountry" x-transition class="float-field">
+                <template x-if="workingStates.length > 0">
+                    <div>
+                        <select name="working_state" id="working_state" x-model="workingState" @change="fetchWorkingDistricts(); workingDistrict=''; fetchWorkingCities();">
+                            <option value="">Select</option>
+                            <template x-for="state in workingStates" :key="state">
+                                <option :value="state" x-text="state" :selected="state === workingState"></option>
+                            </template>
+                        </select>
+                        <label for="working_state">Working State</label>
+                    </div>
+                </template>
+                <template x-if="workingStates.length === 0">
+                    <div>
+                        <input type="text" name="working_state" id="working_state" x-model="workingState" @change="fetchWorkingCities()" placeholder=" ">
+                        <label for="working_state">Working State</label>
+                    </div>
+                </template>
+                @error('working_state') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Working District (India only). Hybrid: states with a district
+                 list (Karnataka, Kerala, etc.) get a proper dropdown; states
+                 without one fall back to free-text — so a district is always
+                 enterable, never a dead-end. Mirrors the working-state pattern. --}}
+            <div x-show="workingCountry === 'India' && workingState" x-transition class="float-field">
+                <template x-if="workingDistricts.length > 0">
+                    <div>
+                        <select name="working_district" id="working_district" x-model="workingDistrict" @change="fetchWorkingCities()">
+                            <option value="">Select</option>
+                            <template x-for="district in workingDistricts" :key="district">
+                                <option :value="district" x-text="district" :selected="district === workingDistrict"></option>
+                            </template>
+                        </select>
+                        <label for="working_district">Working District</label>
+                    </div>
+                </template>
+                <template x-if="workingDistricts.length === 0">
+                    <div>
+                        <input type="text" name="working_district" id="working_district" x-model="workingDistrict" @change="fetchWorkingCities()" placeholder=" ">
+                        <label for="working_district">Working District</label>
+                    </div>
+                </template>
+                @error('working_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Working City / Town (optional). Free-text with autocomplete from
+                 cities other members in the same district/state have entered —
+                 suggestions build up over time; always free to type. --}}
+            <div x-show="workingState" x-transition class="float-field">
+                <input type="text" name="working_city" id="working_city" x-model="workingCity" list="working-city-list" autocomplete="off" placeholder=" ">
+                <datalist id="working-city-list">
+                    <template x-for="city in workingCities" :key="city">
+                        <option :value="city"></option>
+                    </template>
+                </datalist>
+                <label for="working_city">Working City / Town</label>
+                @error('working_city') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- ── Native location ── --}}
             {{-- Native Country --}}
             <div class="float-field">
                 <select name="native_country" id="native_country" x-model="nativeCountry" @change="fetchNativeStates(); nativeState=''; nativeDistrict=''; nativeDistricts=[]; nativePlaces=[];" required>
