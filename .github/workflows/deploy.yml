@@ -1,0 +1,66 @@
+name: Deploy to Business hosting
+
+# Auto-deploys kudlamatrimony.com on every push to main — runs from GitHub's
+# network (clean route to the origin), so deploys no longer depend on the
+# local SSH route. Also triggerable manually from the Actions tab.
+#
+# Covers backend / blade / config / migration changes (the vast majority).
+# NOT covered: front-end asset changes — public/build is gitignored and there
+# is no Node on the server, so CSS/JS source changes still need a local
+# `npm run build` + manual upload of public/build/.
+#
+# Secrets (set via `gh secret set`): SSH_HOST, SSH_PORT, SSH_USER, SSH_KEY.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once; let an in-flight deploy finish.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: SSH deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 10m
+          script_stop: true
+          script: |
+            set -e
+            cd /home/u246181826/domains/kudlamatrimony.com/public_html
+
+            BEFORE=$(git rev-parse HEAD)
+            git pull origin main
+            AFTER=$(git rev-parse HEAD)
+
+            if [ "$BEFORE" = "$AFTER" ]; then
+              echo "Already up to date at $AFTER — nothing to deploy."
+            fi
+
+            # composer install only when dependencies actually changed — keeps
+            # deploys fast and avoids the shared-host platform-req fragility on
+            # every push (ext-redis / ext-sodium need bypass flags here).
+            if git diff --name-only "$BEFORE" "$AFTER" | grep -q '^composer.lock$'; then
+              echo "composer.lock changed — installing dependencies"
+              composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
+                --ignore-platform-req=ext-redis --ignore-platform-req=ext-sodium
+            fi
+
+            php artisan migrate --force
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan view:clear
+            php artisan filament:cache-components
+            touch .htaccess
+
+            echo "Deployed $(git rev-parse --short HEAD)"
