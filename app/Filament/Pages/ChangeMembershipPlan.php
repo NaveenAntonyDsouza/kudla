@@ -235,8 +235,6 @@ class ChangeMembershipPlan extends Page implements HasForms
                 'plan_id' => $plan->id,
                 'plan_name' => $plan->plan_name,
                 'amount' => $amountPaise,
-                'original_amount' => $amountPaise,
-                'discount_amount' => 0,
                 'gateway' => $paymentMethod,
                 'gateway_metadata' => [
                     'manual' => true,
