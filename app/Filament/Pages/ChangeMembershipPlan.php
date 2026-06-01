@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\MembershipPlan;
 use App\Models\Profile;
+use App\Models\Subscription;
 use App\Models\UserMembership;
 use BackedEnum;
 use Filament\Forms;
@@ -52,7 +53,24 @@ class ChangeMembershipPlan extends Page implements HasForms
     public bool $showAssignForm = false;
     public ?string $plan_id = null;
     public ?string $duration_override = null;
+    public ?string $payment_method = null;
     public ?string $reason = null;
+
+    /**
+     * How an offline / manually-recorded payment was received. Stored on the
+     * Subscription's `gateway` column so manual sales show up in Payment History
+     * alongside the online gateways (razorpay/phonepe/…).
+     */
+    public const PAYMENT_METHODS = [
+        'gpay' => 'GPay / Google Pay',
+        'cash' => 'Cash (branch)',
+        'neft' => 'NEFT / Bank Transfer',
+        'razorpay_manual' => 'Razorpay (manual)',
+        'phonepe_manual' => 'PhonePe (manual)',
+        'cheque' => 'Cheque',
+        'complimentary' => 'Complimentary (₹0)',
+        'other' => 'Other',
+    ];
 
     /**
      * Allow deep-linking from other admin pages (e.g. the Active-to-Paid list's
@@ -97,6 +115,13 @@ class ChangeMembershipPlan extends Page implements HasForms
                         ->minValue(1)
                         ->maxValue(24)
                         ->placeholder('Leave empty to use plan default'),
+
+                    Forms\Components\Select::make('payment_method')
+                        ->label('Payment Method')
+                        ->required()
+                        ->options(self::PAYMENT_METHODS)
+                        ->placeholder('How was payment received?')
+                        ->helperText('Recorded as a paid transaction so it appears in Payment History.'),
 
                     Forms\Components\Textarea::make('reason')
                         ->label('Reason / Notes')
@@ -161,13 +186,13 @@ class ChangeMembershipPlan extends Page implements HasForms
     public function cancelAssign(): void
     {
         $this->showAssignForm = false;
-        $this->reset(['plan_id', 'duration_override', 'reason']);
+        $this->reset(['plan_id', 'duration_override', 'payment_method', 'reason']);
     }
 
     public function assignPlan(): void
     {
-        if (!$this->foundProfile || !$this->plan_id) {
-            Notification::make()->title('Please select a member and a plan first.')->danger()->send();
+        if (!$this->foundProfile || !$this->plan_id || !$this->payment_method) {
+            Notification::make()->title('Please select a member, a plan, and a payment method first.')->danger()->send();
             return;
         }
 
@@ -179,16 +204,20 @@ class ChangeMembershipPlan extends Page implements HasForms
 
         $durationMonths = $this->duration_override ? (int) $this->duration_override : $plan->duration_months;
         $user = $this->foundProfile->user;
+        $paymentMethod = $this->payment_method;
+        // Subscription.amount is stored in paise. Complimentary assignments
+        // record ₹0; everything else records the plan's list price.
+        $amountPaise = $paymentMethod === 'complimentary' ? 0 : (int) round(((float) ($plan->price_inr ?? 0)) * 100);
 
-        // Do the membership swap + admin note + member notification atomically.
-        // Without a transaction a failure on a later step (e.g. the previously
-        // missing notification user_id) committed the new membership but threw
-        // afterwards — leaving orphaned membership rows and a 500 in the UI.
-        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $plan, $durationMonths) {
+        // Do the membership swap + paid sales record + admin note + member
+        // notification atomically. Without a transaction a failure on a later
+        // step (e.g. the previously missing notification user_id) committed the
+        // new membership but threw afterwards — leaving orphaned rows + a 500.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $plan, $durationMonths, $paymentMethod, $amountPaise) {
             // Deactivate existing active memberships
             $user->userMemberships()->where('is_active', true)->update(['is_active' => false]);
 
-            // Create new membership
+            // Create new membership (the access grant)
             UserMembership::create([
                 'user_id' => $user->id,
                 'plan_id' => $plan->id,
@@ -197,11 +226,36 @@ class ChangeMembershipPlan extends Page implements HasForms
                 'is_active' => true,
             ]);
 
+            // Record the payment as a paid Subscription so this manual/offline
+            // sale appears in Payment History and revenue reports with its
+            // payment mode (gateway). Attributed to the member's branch.
+            Subscription::create([
+                'user_id' => $user->id,
+                'branch_id' => $user->branch_id,
+                'plan_id' => $plan->id,
+                'plan_name' => $plan->plan_name,
+                'amount' => $amountPaise,
+                'original_amount' => $amountPaise,
+                'discount_amount' => 0,
+                'gateway' => $paymentMethod,
+                'gateway_metadata' => [
+                    'manual' => true,
+                    'assigned_by_admin_id' => auth()->id(),
+                    'assigned_by_admin_name' => auth()->user()?->name,
+                    'duration_months' => $durationMonths,
+                    'note' => $this->reason,
+                ],
+                'payment_status' => 'paid',
+                'starts_at' => now(),
+                'expires_at' => now()->addMonths($durationMonths),
+                'is_active' => true,
+            ]);
+
             // Add admin note
             \App\Models\ProfileNote::create([
                 'profile_id' => $this->foundProfile->id,
                 'admin_user_id' => auth()->id(),
-                'note' => 'Plan changed to ' . $plan->plan_name . ' (' . $durationMonths . ' months)' . ($this->reason ? '. Reason: ' . $this->reason : ''),
+                'note' => 'Plan set to ' . $plan->plan_name . ' (' . $durationMonths . ' months) via ' . (self::PAYMENT_METHODS[$paymentMethod] ?? $paymentMethod) . ($this->reason ? '. Note: ' . $this->reason : ''),
             ]);
 
             // Notify the member. user_id is a NOT NULL FK on notifications —
@@ -222,7 +276,7 @@ class ChangeMembershipPlan extends Page implements HasForms
             ->send();
 
         // Reset back to a clean search box.
-        $this->reset(['search', 'plan_id', 'duration_override', 'reason', 'foundProfile', 'searched', 'showAssignForm']);
+        $this->reset(['search', 'plan_id', 'duration_override', 'payment_method', 'reason', 'foundProfile', 'searched', 'showAssignForm']);
         $this->matches = collect();
     }
 }
