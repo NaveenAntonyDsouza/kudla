@@ -146,6 +146,9 @@ class PaymentHistoryResource extends Resource
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Amount')
                     ->formatStateUsing(fn (int $state) => '₹' . number_format($state / 100, 2))
+                    ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()
+                        ->label('Total')
+                        ->formatStateUsing(fn ($state): string => '₹' . number_format(((float) $state) / 100, 2)))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('payment_status')
