@@ -220,6 +220,25 @@ class PaymentHistoryResource extends Resource
                         'complimentary' => 'Complimentary',
                         'other' => 'Other',
                     ]),
+
+                Tables\Filters\Filter::make('payment_date')
+                    ->schema([
+                        \Filament\Forms\Components\DatePicker::make('paid_from')->label('Paid from'),
+                        \Filament\Forms\Components\DatePicker::make('paid_until')->label('Paid until'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when($data['paid_from'] ?? null, fn (Builder $q, $date): Builder => $q->whereDate('created_at', '>=', $date))
+                        ->when($data['paid_until'] ?? null, fn (Builder $q, $date): Builder => $q->whereDate('created_at', '<=', $date)))
+                    ->indicateUsing(function (array $data): array {
+                        $out = [];
+                        if (! empty($data['paid_from'])) {
+                            $out[] = 'Paid from ' . $data['paid_from'];
+                        }
+                        if (! empty($data['paid_until'])) {
+                            $out[] = 'Paid until ' . $data['paid_until'];
+                        }
+                        return $out;
+                    }),
             ])
             ->actions([
                 \Filament\Actions\Action::make('viewDetails')
