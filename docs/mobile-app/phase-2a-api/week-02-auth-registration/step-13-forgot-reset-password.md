@@ -40,8 +40,8 @@ public function forgotPassword(Request $request): JsonResponse
  */
 public function resetPassword(Request $request): JsonResponse
 {
-    $minPwd = config('matrimony.password_min_length', 6);
-    $maxPwd = config('matrimony.password_max_length', 14);
+    $minPwd = config('matrimony.password_min_length', 8);
+    $maxPwd = config('matrimony.password_max_length', 64);
 
     $data = $request->validate([
         'token' => 'required|string',

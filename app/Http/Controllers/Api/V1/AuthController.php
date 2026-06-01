@@ -333,17 +333,17 @@ class AuthController extends BaseApiController
      *
      * @bodyParam email string required Email the reset link was sent to.
      * @bodyParam token string required Reset token from the URL Laravel emailed.
-     * @bodyParam password string required New password (6-14 chars).
+     * @bodyParam password string required New password (8-64 chars).
      * @bodyParam password_confirmation string required Must match password.
      *
      * @response 200 scenario="success" {"success": true, "data": {"reset": true, "message": "Password updated. Please sign in again."}}
      * @response 422 scenario="invalid-token" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"token": ["This reset token is invalid or has expired."]}}}
-     * @response 422 scenario="weak-password" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"password": ["The password must be at least 6 characters."]}}}
+     * @response 422 scenario="weak-password" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"password": ["The password must be at least 8 characters."]}}}
      */
     public function resetPassword(Request $request): JsonResponse
     {
-        $minPwd = config('matrimony.password_min_length', 6);
-        $maxPwd = config('matrimony.password_max_length', 14);
+        $minPwd = config('matrimony.password_min_length', 8);
+        $maxPwd = config('matrimony.password_max_length', 64);
 
         $data = $request->validate([
             'token' => 'required|string',

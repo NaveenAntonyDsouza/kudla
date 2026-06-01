@@ -204,7 +204,7 @@
                                     @error('current_password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="float-field">
-                                    <input type="password" name="new_password" required minlength="6" maxlength="14" placeholder=" ">
+                                    <input type="password" name="new_password" required minlength="8" maxlength="64" placeholder=" ">
                                     <label>Create new password</label>
                                 </div>
                                 <div class="float-field">

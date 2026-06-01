@@ -71,7 +71,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:6|max:14|confirmed',
+            'new_password' => 'required|min:8|max:64|confirmed',
         ]);
 
         $user = auth()->user();

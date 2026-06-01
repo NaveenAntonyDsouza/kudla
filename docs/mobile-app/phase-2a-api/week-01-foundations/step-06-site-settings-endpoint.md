@@ -92,8 +92,8 @@ class SiteSettingsController extends BaseApiController
                 ],
                 'registration' => [
                     'min_age' => (int) config('matrimony.registration_min_age', 18),
-                    'password_min_length' => (int) config('matrimony.password_min_length', 6),
-                    'password_max_length' => (int) config('matrimony.password_max_length', 14),
+                    'password_min_length' => (int) config('matrimony.password_min_length', 8),
+                    'password_max_length' => (int) config('matrimony.password_max_length', 64),
                     'id_prefix' => config('matrimony.id_prefix', 'AM'),
                 ],
                 'membership' => [
