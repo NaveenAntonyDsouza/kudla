@@ -544,7 +544,7 @@ class UserResource extends Resource
                 // Assign / Change membership plan — deep-links to the Change Plan
                 // page pre-loaded with this member (one-step assignment).
                 \Filament\Actions\Action::make('assignPlan')
-                    ->label('Assign / Change Plan')
+                    ->label('Assign Plan')
                     ->icon('heroicon-o-credit-card')
                     ->color('warning')
                     ->button()
@@ -568,6 +568,11 @@ class UserResource extends Resource
                     })
                     ->openUrlInNewTab()
                     ->visible(fn (Profile $record): bool => (bool) $record->user?->phone),
+
+                // Secondary / less-frequent actions grouped into a "More" dropdown
+                // so the row stays compact. The common actions (View, Edit, Assign
+                // Plan, WhatsApp) remain as direct buttons above.
+                \Filament\Actions\ActionGroup::make([
 
                 // Quick Approve
                 \Filament\Actions\Action::make('quickApprove')
@@ -809,6 +814,11 @@ class UserResource extends Resource
                     })
                     ->visible(fn (Profile $record): bool => $record->trashed())
                     ->successNotificationTitle('Profile permanently deleted'),
+                ])
+                    ->label('More')
+                    ->icon('heroicon-m-ellipsis-horizontal')
+                    ->button()
+                    ->size('sm'),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkAction::make('approveSelected')
