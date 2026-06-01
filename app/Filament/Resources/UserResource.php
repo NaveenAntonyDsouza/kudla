@@ -1210,7 +1210,12 @@ class UserResource extends Resource
                                 Infolists\Components\RepeatableEntry::make('profileNotes')
                                     ->label('')
                                     ->schema([
-                                        \Filament\Schemas\Components\Grid::make(4)->schema([
+                                        \Filament\Schemas\Components\Grid::make(5)->schema([
+                                            Infolists\Components\TextEntry::make('note_type')
+                                                ->label('Type')
+                                                ->badge()
+                                                ->formatStateUsing(fn (?string $state): string => \App\Models\ProfileNote::NOTE_TYPES[$state] ?? \Illuminate\Support\Str::headline($state ?? 'General'))
+                                                ->color(fn (?string $state): string => \App\Models\ProfileNote::NOTE_TYPE_COLORS[$state] ?? 'gray'),
                                             Infolists\Components\TextEntry::make('note')->label('Note')->columnSpan(2),
                                             Infolists\Components\TextEntry::make('adminUser.name')->label('Added By'),
                                             Infolists\Components\TextEntry::make('follow_up_date')->label('Follow-up')
@@ -1220,7 +1225,7 @@ class UserResource extends Resource
                                         ]),
                                     ])
                                     ->contained(false)
-                                    ->placeholder('No admin notes yet. Use "Add Note" action from the list page.'),
+                                    ->placeholder('No notes yet. Use the "Notes" action from the members list to log a call/WhatsApp.'),
                             ]),
 
                         // Tab 11: Login History

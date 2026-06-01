@@ -32,13 +32,17 @@ class ProfileNote extends Model
         'general' => 'General',
     ];
 
-    /** Interaction type → <x-admin.pill> colour. */
+    /**
+     * Interaction type → colour. Uses only the semantic colours that BOTH the
+     * <x-admin.pill> component and Filament badges understand
+     * (gray|primary|success|warning|danger|info).
+     */
     public const NOTE_TYPE_COLORS = [
         'call' => 'info',
         'whatsapp' => 'success',
         'email' => 'warning',
         'meeting' => 'primary',
-        'walk_in' => 'pink',
+        'walk_in' => 'gray',
         'general' => 'gray',
     ];
 
