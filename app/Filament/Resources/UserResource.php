@@ -569,6 +569,46 @@ class UserResource extends Resource
                     ->openUrlInNewTab()
                     ->visible(fn (Profile $record): bool => (bool) $record->user?->phone),
 
+                // Notes — interaction log. Opens the full history (who logged
+                // it, when, and the interaction type) plus a form to add a new
+                // note. Used after every call / WhatsApp. Append-only.
+                \Filament\Actions\Action::make('notes')
+                    ->label(fn (Profile $record): string => 'Notes' . (($record->profile_notes_count ?? 0) > 0 ? ' · ' . $record->profile_notes_count : ''))
+                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                    ->color('warning')
+                    ->button()
+                    ->size('sm')
+                    ->modalHeading(fn (Profile $record): string => 'Notes — ' . $record->full_name)
+                    ->modalContent(fn (Profile $record) => view('filament.components.profile-notes-history', [
+                        'notes' => $record->profileNotes()->with('adminUser')->latest()->get(),
+                    ]))
+                    ->form([
+                        Forms\Components\Select::make('note_type')
+                            ->label('Type')
+                            ->options(ProfileNote::NOTE_TYPES)
+                            ->required()
+                            ->placeholder('Call / WhatsApp / …'),
+                        Forms\Components\Textarea::make('note')
+                            ->label('Note')
+                            ->required()
+                            ->rows(3)
+                            ->placeholder('What happened on the call / chat? Any commitments or next steps?'),
+                        Forms\Components\DatePicker::make('follow_up_date')
+                            ->label('Follow-up date (optional)')
+                            ->minDate(today()),
+                    ])
+                    ->modalSubmitActionLabel('Add Note')
+                    ->action(function (Profile $record, array $data): void {
+                        ProfileNote::create([
+                            'profile_id' => $record->id,
+                            'admin_user_id' => auth()->id(),
+                            'note_type' => $data['note_type'] ?? 'general',
+                            'note' => $data['note'],
+                            'follow_up_date' => $data['follow_up_date'] ?? null,
+                        ]);
+                    })
+                    ->successNotificationTitle('Note added'),
+
                 // Secondary / less-frequent actions grouped into a "More" dropdown
                 // so the row stays compact. The common actions (View, Edit, Assign
                 // Plan, WhatsApp) remain as direct buttons above.
@@ -590,34 +630,6 @@ class UserResource extends Resource
                     })
                     ->visible(fn (Profile $record): bool => !$record->is_approved && \App\Support\Permissions::can('approve_member'))
                     ->successNotificationTitle('Profile approved'),
-
-                // Add Note
-                \Filament\Actions\Action::make('addNote')
-                    ->label('Add Note')
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('warning')
-                    ->button()
-                    ->size('sm')
-                    ->form([
-                        Forms\Components\Textarea::make('note')
-                            ->label('Note')
-                            ->required()
-                            ->rows(3)
-                            ->placeholder('Enter note about this profile...'),
-                        Forms\Components\DatePicker::make('follow_up_date')
-                            ->label('Follow-up Date')
-                            ->placeholder('Optional — set a reminder date')
-                            ->minDate(today()),
-                    ])
-                    ->action(function (Profile $record, array $data): void {
-                        ProfileNote::create([
-                            'profile_id' => $record->id,
-                            'admin_user_id' => auth()->id(),
-                            'note' => $data['note'],
-                            'follow_up_date' => $data['follow_up_date'] ?? null,
-                        ]);
-                    })
-                    ->successNotificationTitle('Note added'),
 
                 // Toggle Active
                 \Filament\Actions\Action::make('toggleActive')

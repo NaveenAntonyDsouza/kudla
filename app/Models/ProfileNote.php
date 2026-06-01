@@ -10,6 +10,7 @@ class ProfileNote extends Model
     protected $fillable = [
         'profile_id',
         'admin_user_id',
+        'note_type',
         'note',
         'follow_up_date',
     ];
@@ -20,6 +21,26 @@ class ProfileNote extends Model
             'follow_up_date' => 'date',
         ];
     }
+
+    /** Interaction type → label (for the Notes log + add form). */
+    public const NOTE_TYPES = [
+        'call' => 'Call',
+        'whatsapp' => 'WhatsApp',
+        'email' => 'Email',
+        'meeting' => 'Meeting',
+        'walk_in' => 'Walk-in',
+        'general' => 'General',
+    ];
+
+    /** Interaction type → <x-admin.pill> colour. */
+    public const NOTE_TYPE_COLORS = [
+        'call' => 'info',
+        'whatsapp' => 'success',
+        'email' => 'warning',
+        'meeting' => 'primary',
+        'walk_in' => 'pink',
+        'general' => 'gray',
+    ];
 
     public function profile(): BelongsTo
     {
