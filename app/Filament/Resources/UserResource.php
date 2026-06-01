@@ -541,6 +541,17 @@ class UserResource extends Resource
                     ->button()
                     ->size('sm'),
 
+                // Assign / Change membership plan — deep-links to the Change Plan
+                // page pre-loaded with this member (one-step assignment).
+                \Filament\Actions\Action::make('assignPlan')
+                    ->label('Assign / Change Plan')
+                    ->icon('heroicon-o-credit-card')
+                    ->color('warning')
+                    ->button()
+                    ->size('sm')
+                    ->url(fn (Profile $record): string => \App\Filament\Pages\ChangeMembershipPlan::getUrl(['matri_id' => $record->matri_id]))
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('edit_plan')),
+
                 // WhatsApp link
                 \Filament\Actions\Action::make('whatsapp')
                     ->label('WhatsApp')
@@ -742,6 +753,23 @@ class UserResource extends Resource
                         self::logActivity($wasFeatured ? 'profile_unfeatured' : 'profile_featured', $record);
                     })
                     ->successNotificationTitle(fn(Profile $record): string => $record->is_featured ? 'Profile featured' : 'Featured status removed'),
+
+                // Soft delete — removes the profile from listings and moves it to
+                // "Deleted Users (Can be restored)", where Restore / Delete Forever
+                // take over. Reversible (not a permanent purge).
+                \Filament\Actions\Action::make('softDelete')
+                    ->label('Delete')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->button()
+                    ->size('sm')
+                    ->requiresConfirmation()
+                    ->modalHeading('Delete Profile')
+                    ->modalDescription(fn (Profile $record): string => "Delete {$record->full_name} ({$record->matri_id})? They'll be removed from listings and moved to \"Deleted Users\", where you can restore them or delete permanently.")
+                    ->modalSubmitActionLabel('Delete')
+                    ->action(fn (Profile $record) => $record->delete())
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('toggle_active'))
+                    ->successNotificationTitle('Profile deleted — restorable from "Deleted Users"'),
 
                 // Restore (for soft-deleted records)
                 \Filament\Actions\Action::make('restore')
