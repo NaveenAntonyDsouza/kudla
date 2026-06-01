@@ -771,6 +771,41 @@ class UserResource extends Resource
                     })
                     ->successNotificationTitle(fn(Profile $record): string => $record->is_featured ? 'Profile featured' : 'Featured status removed'),
 
+                // Reset Password — set a new login password for the member.
+                // Senior-gated (ban_member) since it enables account takeover;
+                // written via query update to bypass the model's 'hashed' cast
+                // (no double-hashing), and logged to the admin activity trail.
+                \Filament\Actions\Action::make('resetPassword')
+                    ->label('Reset Password')
+                    ->icon('heroicon-o-key')
+                    ->color('danger')
+                    ->button()
+                    ->size('sm')
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && $record->user && \App\Support\Permissions::can('ban_member'))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Profile $record): string => 'Reset password — ' . $record->full_name)
+                    ->modalDescription(fn (Profile $record): string => 'Set a new login password for ' . ($record->user?->email ?? $record->user?->phone ?? 'this member') . '. They can sign in with it immediately. Share it with them securely.')
+                    ->form([
+                        Forms\Components\TextInput::make('new_password')
+                            ->label('New password')
+                            ->password()
+                            ->revealable()
+                            ->required()
+                            ->minLength(8)
+                            ->maxLength(72)
+                            ->helperText('At least 8 characters.'),
+                    ])
+                    ->modalSubmitActionLabel('Set password')
+                    ->action(function (Profile $record, array $data): void {
+                        if (! $record->user) {
+                            return;
+                        }
+                        \App\Models\User::where('id', $record->user_id)
+                            ->update(['password' => \Illuminate\Support\Facades\Hash::make($data['new_password'])]);
+                        self::logActivity('member_password_reset', $record);
+                    })
+                    ->successNotificationTitle('Password reset'),
+
                 // Soft delete — removes the profile from listings and moves it to
                 // "Deleted Users (Can be restored)", where Restore / Delete Forever
                 // take over. Reversible (not a permanent purge).
