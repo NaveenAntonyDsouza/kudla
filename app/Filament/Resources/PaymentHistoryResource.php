@@ -89,14 +89,20 @@ class PaymentHistoryResource extends Resource
                 // the gateway picker cards on /membership-plans so admins
                 // build the same mental association across surfaces.
                 Tables\Columns\TextColumn::make('gateway')
-                    ->label('Gateway')
+                    ->label('Payment Mode')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
-                        'razorpay' => 'info',
-                        'phonepe' => 'success',
+                        'razorpay', 'razorpay_manual' => 'info',
+                        'phonepe', 'phonepe_manual' => 'success',
                         'stripe' => 'primary',
                         'paypal' => 'warning',
                         'paytm' => 'gray',
+                        'gpay' => 'info',
+                        'cash' => 'success',
+                        'neft' => 'warning',
+                        'cheque' => 'warning',
+                        'complimentary' => 'gray',
+                        'other' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
@@ -105,6 +111,14 @@ class PaymentHistoryResource extends Resource
                         'stripe' => 'Stripe',
                         'paypal' => 'PayPal',
                         'paytm' => 'Paytm',
+                        'gpay' => 'GPay',
+                        'cash' => 'Cash',
+                        'neft' => 'NEFT',
+                        'razorpay_manual' => 'Razorpay (manual)',
+                        'phonepe_manual' => 'PhonePe (manual)',
+                        'cheque' => 'Cheque',
+                        'complimentary' => 'Complimentary',
+                        'other' => 'Other',
                         null, '' => '—',
                         default => ucfirst((string) $state),
                     })
@@ -187,13 +201,21 @@ class PaymentHistoryResource extends Resource
                     ),
 
                 Tables\Filters\SelectFilter::make('gateway')
-                    ->label('Gateway')
+                    ->label('Payment Mode')
                     ->options([
                         'razorpay' => 'Razorpay',
                         'phonepe' => 'PhonePe',
                         'stripe' => 'Stripe',
                         'paypal' => 'PayPal',
                         'paytm' => 'Paytm',
+                        'gpay' => 'GPay',
+                        'cash' => 'Cash',
+                        'neft' => 'NEFT',
+                        'razorpay_manual' => 'Razorpay (manual)',
+                        'phonepe_manual' => 'PhonePe (manual)',
+                        'cheque' => 'Cheque',
+                        'complimentary' => 'Complimentary',
+                        'other' => 'Other',
                     ]),
             ])
             ->actions([
