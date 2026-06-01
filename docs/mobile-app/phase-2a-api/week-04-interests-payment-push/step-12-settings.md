@@ -99,7 +99,7 @@ class SettingsController extends BaseApiController
     {
         $data = $request->validate([
             'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|max:64|confirmed',
+            'new_password' => 'required|string|min:6|max:64|confirmed',
         ]);
 
         $user = $request->user();

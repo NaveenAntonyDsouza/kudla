@@ -168,7 +168,7 @@
                         {{-- Create Password --}}
                         <div class="float-field" x-data="{ show: false }">
                             <div class="relative">
-                                <input :type="show ? 'text' : 'password'" name="password" id="password" {{ auth()->check() ? '' : 'required' }} minlength="8" maxlength="64" placeholder=" "
+                                <input :type="show ? 'text' : 'password'" name="password" id="password" {{ auth()->check() ? '' : 'required' }} minlength="6" maxlength="64" placeholder=" "
                                     class="border border-gray-300 rounded-lg w-full pr-10 focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
                                 <label for="password">{{ auth()->check() ? 'Change Password (optional)' : 'Create Password' }} <span class="text-red-500">{{ auth()->check() ? '' : '*' }}</span></label>
                                 <button type="button" @click="show = !show" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -185,7 +185,7 @@
                                 <svg class="w-3.5 h-3.5 text-(--color-primary)" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
                                 </svg>
-                                Use 8-64 characters.
+                                Use 6-64 characters.
                             </p>
                             @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>

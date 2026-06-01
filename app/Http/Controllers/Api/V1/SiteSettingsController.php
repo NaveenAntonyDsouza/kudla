@@ -51,7 +51,7 @@ class SiteSettingsController extends BaseApiController
      *     },
      *     "theme": { "primary_color": "#dc2626", "heading_font": "Playfair Display" },
      *     "features": { "mobile_otp_login_enabled": true, "realtime_chat_enabled": false },
-     *     "registration": { "min_age": 18, "password_min_length": 8, "id_prefix": "AM" },
+     *     "registration": { "min_age": 18, "password_min_length": 6, "id_prefix": "AM" },
      *     "membership": { "razorpay_key": "rzp_live_abc", "currency": "INR" },
      *     "app": { "minimum_supported_version": "1.0.0" },
      *     "social_links": { "facebook": "..." },
@@ -93,7 +93,7 @@ class SiteSettingsController extends BaseApiController
 
                 'registration' => [
                     'min_age'             => (int) config('matrimony.registration_min_age', 18),
-                    'password_min_length' => (int) config('matrimony.password_min_length', 8),
+                    'password_min_length' => (int) config('matrimony.password_min_length', 6),
                     'password_max_length' => (int) config('matrimony.password_max_length', 64),
                     'id_prefix'           => config('matrimony.id_prefix', 'AM'),
                 ],

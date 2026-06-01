@@ -55,7 +55,7 @@ class RegisterStep1Request extends ApiFormRequest
 {
     public function rules(): array
     {
-        $minPwd = config('matrimony.password_min_length', 8);
+        $minPwd = config('matrimony.password_min_length', 6);
         $maxPwd = config('matrimony.password_max_length', 64);
         $minAge = config('matrimony.registration_min_age', 18);
         $maxDob = now()->subYears($minAge)->format('Y-m-d');

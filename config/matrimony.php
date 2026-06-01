@@ -16,7 +16,7 @@ return [
     'max_photo_size_mb' => 5,
     'cancel_interest_window_hours' => 24,
     'resend_interest_cooldown_days' => 30,
-    'password_min_length' => 8,
+    'password_min_length' => 6,
     'password_max_length' => 64,
     'registration_min_age' => 18,
 ];

@@ -24,7 +24,7 @@ class RegisterStep1Request extends FormRequest
                 'date_of_birth' => 'required|date|before:-18 years',
                 'phone' => 'required|digits:10|unique:users,phone,' . $userId,
                 'email' => 'required|email|unique:users,email,' . $userId,
-                'password' => ['nullable', 'min:8', 'max:64'],
+                'password' => ['nullable', 'min:6', 'max:64'],
             ];
         }
 
@@ -34,7 +34,7 @@ class RegisterStep1Request extends FormRequest
             'date_of_birth' => 'required|date|before:-18 years',
             'phone' => 'required|digits:10|unique:users,phone',
             'email' => 'required|email|unique:users,email',
-            'password' => ['required', 'min:8', 'max:64'],
+            'password' => ['required', 'min:6', 'max:64'],
         ];
     }
 
@@ -44,7 +44,7 @@ class RegisterStep1Request extends FormRequest
             'date_of_birth.before' => 'You must be at least 18 years old to register.',
             'phone.unique' => 'This phone number is already registered.',
             'email.unique' => 'This email is already registered.',
-            'password.min' => 'Password must be at least 8 characters.',
+            'password.min' => 'Password must be at least 6 characters.',
         ];
     }
 }

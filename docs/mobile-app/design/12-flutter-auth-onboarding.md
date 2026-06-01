@@ -375,7 +375,7 @@ Share across all forms:
 class Validators {
   static String? email(String? v) { ... }
   static String? phoneIN(String? v) { ... }           // 10 digits, no leading 0
-  static String? password(String? v) { ... }          // 8-64 chars
+  static String? password(String? v) { ... }          // 6-64 chars
   static String? age18Plus(DateTime? dob) { ... }
   static String? nonEmpty(String? v, String field) { ... }
   static String? pincodeIN(String? v) { ... }         // 6 digits

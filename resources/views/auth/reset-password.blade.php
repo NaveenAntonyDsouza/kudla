@@ -21,7 +21,7 @@
                             <label>Email Address</label>
                         </div>
                         <div class="float-field">
-                            <input type="password" name="password" required minlength="8" maxlength="64" placeholder=" ">
+                            <input type="password" name="password" required minlength="6" maxlength="64" placeholder=" ">
                             <label>New Password</label>
                         </div>
                         <div class="float-field">
