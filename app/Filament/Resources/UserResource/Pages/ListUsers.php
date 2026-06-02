@@ -142,7 +142,9 @@ class ListUsers extends ListRecords
     {
         return [
             'all' => Tab::make('All Members')
-                ->icon('heroicon-o-users'),
+                ->icon('heroicon-o-users')
+                ->badge(fn () => \App\Models\Profile::count())
+                ->badgeColor('primary'),
 
             'pending' => Tab::make('Pending Approval')
                 ->icon('heroicon-o-clock')
@@ -152,12 +154,14 @@ class ListUsers extends ListRecords
 
             'incomplete' => Tab::make('Incomplete')
                 ->icon('heroicon-o-exclamation-triangle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('profile_completion_pct', '<', 60)),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('profile_completion_pct', '<', 60))
+                ->badge(fn () => \App\Models\Profile::where('profile_completion_pct', '<', 60)->count())
+                ->badgeColor('warning'),
 
             'nophoto' => Tab::make('No Photo')
                 ->icon('heroicon-o-photo')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDoesntHave('primaryPhoto'))
-                ->badge(fn () => \App\Models\Profile::whereNotNull('full_name')->whereDoesntHave('primaryPhoto')->count() ?: null)
+                ->badge(fn () => \App\Models\Profile::whereNotNull('full_name')->whereDoesntHave('primaryPhoto')->count())
                 ->badgeColor('gray'),
 
             'premium' => Tab::make('Premium')
@@ -165,18 +169,23 @@ class ListUsers extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('user.userMemberships', function ($q) {
                     $q->where('is_active', true)
                         ->where(fn ($q2) => $q2->whereNull('ends_at')->orWhere('ends_at', '>', now()));
-                })),
+                }))
+                ->badge(fn () => \App\Models\Profile::whereHas('user.userMemberships', function ($q) {
+                    $q->where('is_active', true)
+                        ->where(fn ($q2) => $q2->whereNull('ends_at')->orWhere('ends_at', '>', now()));
+                })->count())
+                ->badgeColor('success'),
 
             'vip' => Tab::make('VIP')
                 ->icon('heroicon-o-trophy')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('is_vip', true))
-                ->badge(fn () => \App\Models\Profile::where('is_vip', true)->count() ?: null)
+                ->badge(fn () => \App\Models\Profile::where('is_vip', true)->count())
                 ->badgeColor('warning'),
 
             'featured' => Tab::make('Featured')
                 ->icon('heroicon-o-sparkles')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('is_featured', true))
-                ->badge(fn () => \App\Models\Profile::where('is_featured', true)->count() ?: null)
+                ->badge(fn () => \App\Models\Profile::where('is_featured', true)->count())
                 ->badgeColor('info'),
 
             'free' => Tab::make('Free Users')
@@ -184,7 +193,12 @@ class ListUsers extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDoesntHave('user.userMemberships', function ($q) {
                     $q->where('is_active', true)
                         ->where(fn ($q2) => $q2->whereNull('ends_at')->orWhere('ends_at', '>', now()));
-                })),
+                }))
+                ->badge(fn () => \App\Models\Profile::whereDoesntHave('user.userMemberships', function ($q) {
+                    $q->where('is_active', true)
+                        ->where(fn ($q2) => $q2->whereNull('ends_at')->orWhere('ends_at', '>', now()));
+                })->count())
+                ->badgeColor('gray'),
 
             'expiring' => Tab::make('Expiring Soon')
                 ->icon('heroicon-o-exclamation-circle')
@@ -195,12 +209,14 @@ class ListUsers extends ListRecords
                 ->badge(fn () => \App\Models\Profile::whereHas('user.userMemberships', function ($q) {
                     $q->where('is_active', true)
                         ->whereBetween('ends_at', [now(), now()->addDays(7)]);
-                })->count() ?: null)
+                })->count())
                 ->badgeColor('warning'),
 
             'recent' => Tab::make('Recent (7 days)')
                 ->icon('heroicon-o-sparkles')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('created_at', '>=', now()->subDays(7))),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('created_at', '>=', now()->subDays(7)))
+                ->badge(fn () => \App\Models\Profile::where('created_at', '>=', now()->subDays(7))->count())
+                ->badgeColor('success'),
 
             'inactive' => Tab::make('Inactive (30+ days)')
                 ->icon('heroicon-o-moon')
@@ -209,12 +225,19 @@ class ListUsers extends ListRecords
                         $q2->where('last_login_at', '<', now()->subDays(30))
                             ->orWhereNull('last_login_at');
                     });
-                })),
+                }))
+                ->badge(fn () => \App\Models\Profile::whereHas('user', function ($q) {
+                    $q->where(function ($q2) {
+                        $q2->where('last_login_at', '<', now()->subDays(30))
+                            ->orWhereNull('last_login_at');
+                    });
+                })->count())
+                ->badgeColor('gray'),
 
             'moderated' => Tab::make('Suspended / Banned')
                 ->icon('heroicon-o-shield-exclamation')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('suspension_status', ['suspended', 'banned']))
-                ->badge(fn () => \App\Models\Profile::whereIn('suspension_status', ['suspended', 'banned'])->count() ?: null)
+                ->badge(fn () => \App\Models\Profile::whereIn('suspension_status', ['suspended', 'banned'])->count())
                 ->badgeColor('danger'),
 
             'deactivated' => Tab::make('Blocked / Deactivated')
@@ -224,13 +247,13 @@ class ListUsers extends ListRecords
                 }))
                 ->badge(fn () => \App\Models\Profile::where(function ($q) {
                     $q->where('is_active', false)->orWhere('is_hidden', true);
-                })->count() ?: null)
+                })->count())
                 ->badgeColor('gray'),
 
             'deleted' => Tab::make('Deleted')
                 ->icon('heroicon-o-trash')
                 ->modifyQueryUsing(fn (Builder $query) => $query->withoutGlobalScopes()->withTrashed()->whereNotNull('deleted_at')->whereNotNull('full_name'))
-                ->badge(fn () => \App\Models\Profile::onlyTrashed()->whereNotNull('full_name')->count() ?: null)
+                ->badge(fn () => \App\Models\Profile::onlyTrashed()->whereNotNull('full_name')->count())
                 ->badgeColor('danger'),
         ];
     }
