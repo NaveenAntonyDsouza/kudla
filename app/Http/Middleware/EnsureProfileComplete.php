@@ -21,6 +21,16 @@ class EnsureProfileComplete
             return $next($request);
         }
 
+        // Account moderation gate — a member deactivated / suspended / banned /
+        // deleted (including mid-session by an admin) is signed out at once.
+        if ($blocked = $user->blockedStatus()) {
+            \Illuminate\Support\Facades\Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')
+                ->withErrors(['email' => \App\Models\User::blockedStatusMessage($blocked)]);
+        }
+
         $profile = $user->profile;
 
         // No profile at all — send to registration step 1

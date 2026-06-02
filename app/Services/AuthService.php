@@ -52,8 +52,8 @@ class AuthService
             return null;
         }
 
-        if (! $user->is_active) {
-            return null;  // suspended / deactivated
+        if (! $user->canAccessSite()) {
+            return null;  // deactivated / suspended / banned / deleted
         }
 
         return $user;
@@ -71,7 +71,7 @@ class AuthService
 
         $user = User::where('phone', $phone)->first();
 
-        return ($user && $user->is_active) ? $user : null;
+        return ($user && $user->canAccessSite()) ? $user : null;
     }
 
     /**
@@ -85,7 +85,7 @@ class AuthService
 
         $user = User::where('email', $email)->first();
 
-        return ($user && $user->is_active) ? $user : null;
+        return ($user && $user->canAccessSite()) ? $user : null;
     }
 
     /**

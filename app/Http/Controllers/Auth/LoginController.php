@@ -31,9 +31,19 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'These credentials do not match our records.'])->onlyInput('email');
         }
 
+        $user = Auth::user();
+
+        // Account moderation gate — deactivated / suspended / banned / deleted
+        // accounts may match credentials but cannot sign in.
+        if ($blocked = $user->blockedStatus()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors(['email' => User::blockedStatusMessage($blocked)])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
-        $user = Auth::user();
         // Update last login + reset re-engagement level (user is active again)
         $user->update([
             'last_login_at' => now(),
@@ -89,6 +99,12 @@ class LoginController extends Controller
         }
 
         $user = User::where('phone', $request->phone)->first();
+        if (! $user) {
+            return back()->withErrors(['otp' => 'No account found with this phone number.'])->withInput();
+        }
+        if ($blocked = $user->blockedStatus()) {
+            return back()->withErrors(['otp' => User::blockedStatusMessage($blocked)])->withInput();
+        }
         Auth::login($user, true);
         $request->session()->regenerate();
         // Update last login + reset re-engagement level (user is active again)
@@ -189,6 +205,10 @@ class LoginController extends Controller
 
         if (! $user) {
             return back()->withErrors(['otp' => 'Account not found.']);
+        }
+
+        if ($blocked = $user->blockedStatus()) {
+            return back()->withErrors(['otp' => User::blockedStatusMessage($blocked)]);
         }
 
         // Clear OTP session data

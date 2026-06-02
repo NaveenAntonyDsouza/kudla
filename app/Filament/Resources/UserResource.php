@@ -350,6 +350,13 @@ class UserResource extends Resource
                 // Branch (visible only to Super Admin / HO Manager)
                 \App\Filament\Tables\BranchTableComponents::filter(),
 
+                // Deleted records — surfaces soft-deleted profiles so they can be
+                // Restored or permanently removed. The Restore / Delete-Forever
+                // row + bulk actions self-reveal only when this is set to
+                // "With deleted" / "Only deleted", so active members are safe.
+                \Filament\Tables\Filters\TrashedFilter::make()
+                    ->label('Deleted records'),
+
                 // Gender
                 Tables\Filters\SelectFilter::make('gender')
                     ->options([
@@ -859,7 +866,7 @@ class UserResource extends Resource
                         }
                         $record->forceDelete();
                     })
-                    ->visible(fn (Profile $record): bool => $record->trashed())
+                    ->visible(fn (Profile $record): bool => $record->trashed() && \App\Support\Permissions::can('ban_member'))
                     ->successNotificationTitle('Profile permanently deleted'),
                 ])
                     ->label('More')
@@ -891,6 +898,15 @@ class UserResource extends Resource
                     ->requiresConfirmation()
                     ->action(fn($records) => $records->each->update(['is_active' => false]))
                     ->deselectRecordsAfterCompletion(),
+
+                // Soft-delete / restore / permanent-delete in bulk. Restore +
+                // Force-delete self-reveal only when the "Deleted records" filter
+                // is set to With/Only deleted, so they can never hit active members.
+                \Filament\Actions\DeleteBulkAction::make()
+                    ->visible(fn (): bool => \App\Support\Permissions::can('toggle_active')),
+                \Filament\Actions\RestoreBulkAction::make(),
+                \Filament\Actions\ForceDeleteBulkAction::make()
+                    ->visible(fn (): bool => \App\Support\Permissions::can('ban_member')),
 
                 \Filament\Actions\ExportBulkAction::make(),
             ])

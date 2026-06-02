@@ -365,6 +365,84 @@ class User extends Authenticatable implements FilamentUser
         }
     }
 
+    /* ------------------------------------------------------------------
+     |  Account moderation gate (login + member-area access)
+     | ------------------------------------------------------------------ */
+
+    /**
+     * The moderation state currently barring this account from logging in /
+     * accessing the member area — or null if the account is clear.
+     *
+     * SINGLE SOURCE OF TRUTH for the web LoginController, the API AuthService,
+     * and the EnsureProfileComplete middleware. The admin Deactivate / Suspend
+     * / Ban / Delete actions all write to the PROFILE (is_active,
+     * suspension_status, deleted_at), so we read those directly rather than
+     * duplicating the flag onto the user row (which previously drifted —
+     * login checked users.is_active while the admin only set profiles.*).
+     *
+     * Staff/admin accounts have no member profile; they are governed by the
+     * user-row is_active flag (toggled from StaffResource).
+     *
+     * @return 'deactivated'|'suspended'|'banned'|'deleted'|null
+     */
+    public function blockedStatus(): ?string
+    {
+        // Staff / admin: no member profile — the user row is authoritative.
+        if ($this->staff_role_id !== null || $this->role === 'admin') {
+            return $this->is_active ? null : 'deactivated';
+        }
+
+        // Master kill-switch on the user row (parity with API/staff tooling).
+        if (! $this->is_active) {
+            return 'deactivated';
+        }
+
+        // Member moderation lives on the profile.
+        $profile = $this->profile; // HasOne — excludes soft-deleted
+        if (! $profile) {
+            // No active profile: distinguish an admin-deleted account from a
+            // brand-new registrant who hasn't created their profile yet.
+            return Profile::onlyTrashed()->where('user_id', $this->id)->exists()
+                ? 'deleted'
+                : null;
+        }
+
+        $status = $profile->suspension_status ?? 'active';
+        if ($status === 'banned') {
+            return 'banned';
+        }
+        if ($status === 'suspended') {
+            return 'suspended';
+        }
+        if (! $profile->is_active) {
+            return 'deactivated';
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether this account may currently authenticate / use the site.
+     */
+    public function canAccessSite(): bool
+    {
+        return $this->blockedStatus() === null;
+    }
+
+    /**
+     * Human-facing explanation for a blocked-status code (login error / notice).
+     */
+    public static function blockedStatusMessage(?string $status): string
+    {
+        return match ($status) {
+            'banned'      => 'Your account has been permanently banned. If you believe this is a mistake, please contact support.',
+            'suspended'   => 'Your account is temporarily suspended. Please contact support for assistance.',
+            'deleted'     => 'This account has been removed. Please contact support if you need help.',
+            'deactivated' => 'Your account is currently deactivated. Please contact support to reactivate it.',
+            default       => 'Your account is not active. Please contact support.',
+        };
+    }
+
     /**
      * Users with any staff_role_id OR with role='admin' (legacy) can access the Filament admin panel.
      */
