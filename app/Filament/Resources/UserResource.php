@@ -350,13 +350,6 @@ class UserResource extends Resource
                 // Branch (visible only to Super Admin / HO Manager)
                 \App\Filament\Tables\BranchTableComponents::filter(),
 
-                // Deleted records — surfaces soft-deleted profiles so they can be
-                // Restored or permanently removed. The Restore / Delete-Forever
-                // row + bulk actions self-reveal only when this is set to
-                // "With deleted" / "Only deleted", so active members are safe.
-                \Filament\Tables\Filters\TrashedFilter::make()
-                    ->label('Deleted records'),
-
                 // Gender
                 Tables\Filters\SelectFilter::make('gender')
                     ->options([
@@ -866,7 +859,7 @@ class UserResource extends Resource
                         }
                         $record->forceDelete();
                     })
-                    ->visible(fn (Profile $record): bool => $record->trashed() && \App\Support\Permissions::can('ban_member'))
+                    ->visible(fn (Profile $record): bool => $record->trashed())
                     ->successNotificationTitle('Profile permanently deleted'),
                 ])
                     ->label('More')
@@ -899,14 +892,42 @@ class UserResource extends Resource
                     ->action(fn($records) => $records->each->update(['is_active' => false]))
                     ->deselectRecordsAfterCompletion(),
 
-                // Soft-delete / restore / permanent-delete in bulk. Restore +
-                // Force-delete self-reveal only when the "Deleted records" filter
-                // is set to With/Only deleted, so they can never hit active members.
-                \Filament\Actions\DeleteBulkAction::make()
-                    ->visible(fn (): bool => \App\Support\Permissions::can('toggle_active')),
-                \Filament\Actions\RestoreBulkAction::make(),
-                \Filament\Actions\ForceDeleteBulkAction::make()
-                    ->visible(fn (): bool => \App\Support\Permissions::can('ban_member')),
+                // Bulk Restore / Delete-Forever — gated to the "Deleted" tab, whose
+                // query is withTrashed()->whereNotNull('deleted_at'). So these can
+                // ONLY ever act on already-soft-deleted profiles, never live members
+                // (fails closed: hidden on every other tab).
+                \Filament\Actions\BulkAction::make('restoreSelected')
+                    ->label('Restore selected')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) === 'deleted')
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        $record->restore();
+                        $record->update(['is_active' => true]);
+                    }))
+                    ->deselectRecordsAfterCompletion()
+                    ->successNotificationTitle('Profiles restored'),
+
+                \Filament\Actions\BulkAction::make('forceDeleteSelected')
+                    ->label('Delete forever')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Permanently delete selected profiles')
+                    ->modalDescription('This permanently deletes the selected profiles and all their data, photos and interests. This cannot be undone.')
+                    ->modalSubmitActionLabel('Delete forever')
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) === 'deleted')
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        foreach ($record->profilePhotos as $photo) {
+                            if ($photo->photo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($photo->photo_url)) {
+                                \Illuminate\Support\Facades\Storage::disk('public')->delete($photo->photo_url);
+                            }
+                        }
+                        $record->forceDelete();
+                    }))
+                    ->deselectRecordsAfterCompletion()
+                    ->successNotificationTitle('Profiles permanently deleted'),
 
                 \Filament\Actions\ExportBulkAction::make(),
             ])
