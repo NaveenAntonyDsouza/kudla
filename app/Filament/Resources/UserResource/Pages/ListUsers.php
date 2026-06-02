@@ -154,6 +154,12 @@ class ListUsers extends ListRecords
                 ->icon('heroicon-o-exclamation-triangle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('profile_completion_pct', '<', 60)),
 
+            'nophoto' => Tab::make('No Photo')
+                ->icon('heroicon-o-photo')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereDoesntHave('primaryPhoto'))
+                ->badge(fn () => \App\Models\Profile::whereNotNull('full_name')->whereDoesntHave('primaryPhoto')->count() ?: null)
+                ->badgeColor('gray'),
+
             'premium' => Tab::make('Premium')
                 ->icon('heroicon-o-star')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('user.userMemberships', function ($q) {
@@ -185,7 +191,12 @@ class ListUsers extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('user.userMemberships', function ($q) {
                     $q->where('is_active', true)
                         ->whereBetween('ends_at', [now(), now()->addDays(7)]);
-                })),
+                }))
+                ->badge(fn () => \App\Models\Profile::whereHas('user.userMemberships', function ($q) {
+                    $q->where('is_active', true)
+                        ->whereBetween('ends_at', [now(), now()->addDays(7)]);
+                })->count() ?: null)
+                ->badgeColor('warning'),
 
             'recent' => Tab::make('Recent (7 days)')
                 ->icon('heroicon-o-sparkles')
@@ -200,11 +211,21 @@ class ListUsers extends ListRecords
                     });
                 })),
 
+            'moderated' => Tab::make('Suspended / Banned')
+                ->icon('heroicon-o-shield-exclamation')
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereIn('suspension_status', ['suspended', 'banned']))
+                ->badge(fn () => \App\Models\Profile::whereIn('suspension_status', ['suspended', 'banned'])->count() ?: null)
+                ->badgeColor('danger'),
+
             'deactivated' => Tab::make('Blocked / Deactivated')
                 ->icon('heroicon-o-no-symbol')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where(function ($q) {
                     $q->where('is_active', false)->orWhere('is_hidden', true);
-                })),
+                }))
+                ->badge(fn () => \App\Models\Profile::where(function ($q) {
+                    $q->where('is_active', false)->orWhere('is_hidden', true);
+                })->count() ?: null)
+                ->badgeColor('gray'),
 
             'deleted' => Tab::make('Deleted')
                 ->icon('heroicon-o-trash')
