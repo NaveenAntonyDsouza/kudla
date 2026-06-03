@@ -1416,9 +1416,9 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('user_email')->label('Email')->email()
                             ->required(fn (string $operation): bool => $operation === 'create')
-                            ->unique(table: 'users', column: 'email', ignoreRecord: true),
+                            ->unique(table: 'users', column: 'email', ignorable: fn (?Profile $record) => $record?->user),
                         Forms\Components\TextInput::make('user_phone')->label('Phone')->tel()
-                            ->unique(table: 'users', column: 'phone', ignoreRecord: true),
+                            ->unique(table: 'users', column: 'phone', ignorable: fn (?Profile $record) => $record?->user),
                         Forms\Components\TextInput::make('cont_whatsapp')->label('WhatsApp')->maxLength(15),
                         Forms\Components\TextInput::make('cont_custodian_name')->label('Custodian Name')->maxLength(100),
                         Forms\Components\Select::make('cont_custodian_relation')
