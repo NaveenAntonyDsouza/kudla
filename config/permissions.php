@@ -71,7 +71,8 @@ return [
         'manage_bulk_import' => ['label' => 'Bulk Import Members (CSV)', 'type' => 'simple', 'category' => 'register'],
 
         // ── Membership & Payments (5 mixed) ──
-        'edit_plan' => ['label' => 'Edit Membership Plans', 'type' => 'simple', 'category' => 'payments'],
+        'edit_plan' => ['label' => 'Edit Membership Plans (pricing & definitions)', 'type' => 'simple', 'category' => 'payments'],
+        'assign_member_plan' => ['label' => 'Assign / Change a Member\'s Plan (record offline payment)', 'type' => 'simple', 'category' => 'payments'],
         'renew_plan' => ['label' => 'Renew Member Plan', 'type' => 'scoped', 'category' => 'payments'],
         'view_payment_history' => ['label' => 'View Payment History', 'type' => 'scoped', 'category' => 'payments'],
         'refund_payment' => ['label' => 'Refund Payments', 'type' => 'simple', 'category' => 'payments'],

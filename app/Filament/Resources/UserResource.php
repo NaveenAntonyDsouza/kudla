@@ -550,7 +550,7 @@ class UserResource extends Resource
                     ->button()
                     ->size('sm')
                     ->url(fn (Profile $record): string => \App\Filament\Pages\ChangeMembershipPlan::getUrl(['matri_id' => $record->matri_id]))
-                    ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('edit_plan')),
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('assign_member_plan')),
 
                 // WhatsApp link
                 \Filament\Actions\Action::make('whatsapp')

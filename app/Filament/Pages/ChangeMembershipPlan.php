@@ -29,7 +29,7 @@ class ChangeMembershipPlan extends Page implements HasForms
 
     public static function shouldRegisterNavigation(): bool
     {
-        return \App\Support\Permissions::can('edit_plan');
+        return \App\Support\Permissions::can('assign_member_plan');
     }
 
     /**
@@ -38,7 +38,7 @@ class ChangeMembershipPlan extends Page implements HasForms
      */
     public static function canAccess(): bool
     {
-        return \App\Support\Permissions::can('edit_plan');
+        return \App\Support\Permissions::can('assign_member_plan');
     }
 
     // Search term (Matri ID / phone / name / email) and its results.
