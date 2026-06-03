@@ -1,10 +1,23 @@
 # Next Session Plan
-**Last Updated:** April 30, 2026 (Phase 2b Week 1 closed — Flutter scaffold + FCM round-trip proof)
-**Live:** kudlamatrimony.com — fully deployed with all April 17-23 work
+**Last Updated:** June 3, 2026 (web-platform hardening; admin moved to `/console`; 2FA next). **Mobile app (Phase 2) intentionally paused — see "Strategy" note below.**
+**Live:** kudlamatrimony.com on Hostinger **Business** (migrated off Premium 2026-05-29). Admin panel at **`/console`** (env `ADMIN_PATH`, defaults to `/admin` for white-label). Auto-deploys on push to `main` (GitHub Actions).
 **API surface:** 96 endpoints across `/api/v1/*` (Scribe-documented), 644+ tests
 **Mobile app:** [NaveenAntonyDsouza/kudla-mobile](https://github.com/NaveenAntonyDsouza/kudla-mobile) (private), tag `mobile-v0.1.0-week-01-scaffold`
 
 **Resuming Phase 2b Mobile in a fresh session?** → start at [`docs/mobile-app/SESSION_HANDOFF.md`](mobile-app/SESSION_HANDOFF.md). It has the full pickup script, working dirs, gotchas, and recipes.
+
+---
+
+## ▶ START HERE — Web platform (updated 2026-06-03)
+
+**Strategy:** The Flutter mobile app (Phase 2) is a ~5-month build, so the focus **deliberately shifted to making the live website as strong as possible first**, then resume mobile. Mobile is **paused, not abandoned** — its source of truth is the separate repo `kudla-mobile` (`D:\matrimony\platform\flutter-app\`) + [`docs/mobile-app/SESSION_HANDOFF.md`]. Do not edit mobile status from this web repo.
+
+**Immediate web queue:**
+1. **2FA for the admin panel** — Filament 5.4.3 native MFA (authenticator app + recovery codes). Ships **OFF** behind a super-admin "Require 2FA for all staff" master toggle (`isRequired` bound to a `site_settings` flag), so zero lock-out risk. User model needs `HasAppAuthentication`+`HasAppAuthenticationRecovery` traits + a migration for `app_authentication_secret` / `app_authentication_recovery_codes` columns + a reset action for locked-out staff. **Researched, not yet built.**
+2. **Phase 3 — CodeCanyon readiness** (see Phase 3 below): white-label audit (no hardcoded names/keys/paths — admin path already done via `ADMIN_PATH`), `docs/` curation (most are internal dev docs that must NOT ship), Install Wizard, Update system, Envato purchase-code verification.
+3. **High-impact growth lever:** 204 of 225 live members have **no photo** (never uploaded — not an approval backlog). A photo-upload re-engagement push would likely move conversions more than any single feature.
+
+**Shipped this session (2026-06-02 → 03):** see "May–June 2026" in Build History.
 
 ---
 
@@ -145,6 +158,21 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 - **Git hygiene cleanup**: untracked legacy `public/build/manifest.json` + `public/build/assets/app-BU6mFzGd.js` so they stop showing up as modified after every `npm run build`. Files remain on disk; `.gitignore` now fully consistent with tracking.
 - **Photo upload cropper bug + fix** (late-April-23 discovery): user reported `/manage-photos` Upload Profile Photo → file selected → no crop box, no rotate/flip/brightness tools. Diagnosed live via Claude-in-Chrome browser MCP. Root cause: the cropper editor was wrapped in `<template x-if="sourceImage">`. Alpine's x-if template mounts on a separate schedule from `$nextTick` and RAF — so `this.$refs.cropperImage` was `undefined` when `initCropper()` ran, and Cropper.js silently failed to initialize. Fix v1 (RAF polling, 15 attempts) worked 50% of the time. Fix v2 (real fix): switched `<template x-if>` to `<div x-show>` so the img stays in DOM and x-ref is registered from page load. Lesson added as item #15 in DEPLOY_CHECKLIST.md.
 - Final state: zero post-deploy errors, site working cleanly, 10 commits on `main`, working tree clean, tag `deploy-2026-04-23` preserved
+
+**May–June 2026 — Hosting migration + website hardening (web platform; mobile paused):**
+- **Premium → Business hosting migration** (2026-05-29): kudlamatrimony.com + sister site catholicconnectmatrimony.com moved to Hostinger **Business** (LiteSpeed). New SSH alias `kudla-business`, DB `u246181826_kudla`. **GitHub Actions auto-deploy** on push to `main` (`.github/workflows/deploy.yml`).
+- **Mid-May product work** (tags v3→v40): IST timezone (store UTC / display Asia-Kolkata; API stays UTC ISO), registration-source + last-login-device badges, religion/diocese (174 by rite)/community unification, district + foreign state-province cascades, Native Place + Working City + working-location partner-pref + matching, Catholic-"Other"/caste-"Other" Specify pattern, expanded languages, dashboard completion unification, several registration→onboarding field moves, hybrid district widget.
+- **June (this session, 06-02→03):**
+  - Password limit fixed **6→64** (was max 14, silently truncating pasted passwords → the `test13` login mystery).
+  - **Email** moved to Hostinger `info@kudlamatrimony.com` — SMTP + Cloudflare MX/SPF/DKIM/DMARC; verified real Gmail **inbox** delivery. (Mail/SMS/payment creds are DB-driven via `GatewaySettings` + `GatewayConfigProvider`, overriding `.env`.)
+  - Purged **25 test profiles** (soft-delete, reversible). ⚠️ **₹1 is the REAL launch-offer price, NOT test data** — don't wipe the ₹1 subscriptions.
+  - **Account-moderation login gate**: Ban/Suspend/Deactivate/Delete now genuinely **block login** (web + API + mid-session) via `User::blockedStatus()` — previously they only hid the profile, login was unguarded (admin wrote `profiles.*`, login checked `users.is_active`).
+  - Admin **Deleted tab** fix (a TrashedFilter collided with the tab) + bulk Restore / Delete-Forever gated to the Deleted tab.
+  - **14 member tabs**, each with a live count badge (added Suspended/Banned + No Photo).
+  - **`edit_plan` split** → new `assign_member_plan` permission: front-office Staff can record offline payments **without** plan-pricing access. Migration grants it to super_admin/admin/manager/finance/staff.
+  - **Staff quick-start guide** (`docs/staff/staff-quick-start-guide.md`) — for the first hire (joining 2026-06-03).
+  - **Admin panel renamed `/admin` → `/console`** via env `ADMIN_PATH` (white-label, default `/admin`). `/admin` now 404s.
+- **Pending:** ① 2FA (see START HERE), ② Phase 3 CodeCanyon readiness, ③ photo-upload push (204 photoless members), ④ Premium auto-renewal cancellation (owner action, ~2026-06-05). Durable internals live in the user's project-memory files.
 
 ---
 
