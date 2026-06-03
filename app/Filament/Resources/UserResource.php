@@ -1292,8 +1292,8 @@ class UserResource extends Resource
                                             Infolists\Components\TextEntry::make('adminUser.name')->label('Added By'),
                                             Infolists\Components\TextEntry::make('follow_up_date')->label('Follow-up')
                                                 ->date('d M Y')
-                                                ->color(fn ($state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'warning')
-                                                ->default('-'),
+                                                ->color(fn ($state) => filled($state) && Carbon::parse($state)->isPast() ? 'danger' : 'warning')
+                                                ->placeholder('—'),
                                         ]),
                                     ])
                                     ->contained(false)
