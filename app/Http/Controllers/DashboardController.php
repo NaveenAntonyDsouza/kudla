@@ -39,7 +39,7 @@ class DashboardController extends Controller
 
         // Admin users without profiles → redirect to admin panel
         if (!$profile) {
-            return redirect('/admin');
+            return redirect('/' . ltrim(config('app.admin_path', 'admin'), '/'));
         }
 
         $completionPct = $profile->calculateCompletion();

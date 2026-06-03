@@ -62,7 +62,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path(config('app.admin_path', 'admin'))
             ->login()
             ->brandName(($theme?->site_name ?? 'Matrimony') . ' Admin')
             ->colors([

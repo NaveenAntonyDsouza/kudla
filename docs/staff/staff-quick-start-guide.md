@@ -6,7 +6,7 @@ Keep it next to you for the first couple of weeks.
 ---
 
 ## 🔑 Logging in
-1. Open **https://kudlamatrimony.com/admin** in Chrome.
+1. Open **https://kudlamatrimony.com/console** in Chrome.
 2. Enter the **email** and **password** you were given. Change your password after the first login (top-right menu → Profile).
 3. You'll land on the **Dashboard**. Your main workspace is **User Management → All Members**.
 

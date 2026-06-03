@@ -91,6 +91,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin Panel Path
+    |--------------------------------------------------------------------------
+    |
+    | The URL segment the Filament admin panel is served from
+    | (https://your-site.com/{admin_path}). Defaults to "admin". Set ADMIN_PATH
+    | in .env to serve the panel from a less-guessable URL — choosing something
+    | other than "admin"/"login"/"wp-admin" cuts most automated bot probing.
+    | Kept env-driven so the script stays white-label (no hardcoded path).
+    |
+    */
+
+    'admin_path' => env('ADMIN_PATH', 'admin'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
