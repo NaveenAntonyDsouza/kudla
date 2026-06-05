@@ -86,7 +86,7 @@ class DocumentApprovalResource extends Resource
                     ->sortable()
                     ->color('primary')
                     ->weight('bold')
-                    ->url(fn (ReligiousInfo $record) => UserResource::getUrl('view', ['record' => $record->profile_id])),
+                    ->url(fn (ReligiousInfo $record) => UserResource::profileViewUrl($record->profile)),
 
                 Tables\Columns\TextColumn::make('profile.full_name')
                     ->label('Name')

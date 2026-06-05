@@ -1691,6 +1691,19 @@ class UserResource extends Resource
     }
 
     /**
+     * URL to a member's admin view page — or null when the member is missing or
+     * soft-deleted. The view route resolves through getEloquentQuery() (which
+     * excludes trashed), so linking to a deleted member 404s. List views pass the
+     * related Profile here so the link degrades to plain text instead of a dead
+     * link. Pass the relation (null for trashed), NOT the *_profile_id FK (always
+     * set, so it would not guard anything).
+     */
+    public static function profileViewUrl(?\App\Models\Profile $profile): ?string
+    {
+        return $profile ? static::getUrl('view', ['record' => $profile->getKey()]) : null;
+    }
+
+    /**
      * Convert a zero-indexed reference_data list into the [value => label]
      * shape Filament Select expects. Both halves point at the same
      * string — we store and display the option label, not a separate id.

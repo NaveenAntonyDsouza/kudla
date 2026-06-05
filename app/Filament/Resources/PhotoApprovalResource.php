@@ -84,7 +84,7 @@ class PhotoApprovalResource extends Resource
                     ->sortable()
                     ->color('primary')
                     ->weight('bold')
-                    ->url(fn (ProfilePhoto $record): string => UserResource::getUrl('view', ['record' => $record->profile_id])),
+                    ->url(fn (ProfilePhoto $record): ?string => UserResource::profileViewUrl($record->profile)),
 
                 Tables\Columns\TextColumn::make('profile.full_name')
                     ->label('Name')

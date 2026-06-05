@@ -68,17 +68,13 @@ class InterestResource extends Resource
                     ->label('Sender')
                     ->searchable()
                     ->description(fn (Interest $record) => $record->senderProfile?->full_name)
-                    ->url(fn (Interest $record) => $record->sender_profile_id
-                        ? UserResource::getUrl('view', ['record' => $record->sender_profile_id])
-                        : null),
+                    ->url(fn (Interest $record) => UserResource::profileViewUrl($record->senderProfile)),
 
                 Tables\Columns\TextColumn::make('receiverProfile.matri_id')
                     ->label('Receiver')
                     ->searchable()
                     ->description(fn (Interest $record) => $record->receiverProfile?->full_name)
-                    ->url(fn (Interest $record) => $record->receiver_profile_id
-                        ? UserResource::getUrl('view', ['record' => $record->receiver_profile_id])
-                        : null),
+                    ->url(fn (Interest $record) => UserResource::profileViewUrl($record->receiverProfile)),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()

@@ -64,17 +64,13 @@ class BlockedProfileResource extends Resource
                     ->label('Blocker')
                     ->searchable()
                     ->description(fn (BlockedProfile $record) => $record->profile?->full_name)
-                    ->url(fn (BlockedProfile $record) => $record->profile_id
-                        ? UserResource::getUrl('view', ['record' => $record->profile_id])
-                        : null),
+                    ->url(fn (BlockedProfile $record) => UserResource::profileViewUrl($record->profile)),
 
                 Tables\Columns\TextColumn::make('blockedProfile.matri_id')
                     ->label('Blocked User')
                     ->searchable()
                     ->description(fn (BlockedProfile $record) => $record->blockedProfile?->full_name)
-                    ->url(fn (BlockedProfile $record) => $record->blocked_profile_id
-                        ? UserResource::getUrl('view', ['record' => $record->blocked_profile_id])
-                        : null),
+                    ->url(fn (BlockedProfile $record) => UserResource::profileViewUrl($record->blockedProfile)),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Blocked On')

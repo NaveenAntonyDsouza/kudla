@@ -83,9 +83,7 @@ class ContactSubmissionResource extends Resource
                 Tables\Columns\TextColumn::make('user.profile.matri_id')
                     ->label('Matri ID')
                     ->placeholder('Guest')
-                    ->url(fn (ContactSubmission $record) => $record->user?->profile
-                        ? UserResource::getUrl('view', ['record' => $record->user->profile->id])
-                        : null),
+                    ->url(fn (ContactSubmission $record) => UserResource::profileViewUrl($record->user?->profile)),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()

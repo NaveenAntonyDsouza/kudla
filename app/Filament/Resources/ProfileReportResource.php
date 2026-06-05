@@ -66,17 +66,13 @@ class ProfileReportResource extends Resource
                     ->label('Reported By')
                     ->searchable()
                     ->description(fn (ProfileReport $record) => $record->reporterProfile?->full_name)
-                    ->url(fn (ProfileReport $record) => $record->reporter_profile_id
-                        ? UserResource::getUrl('view', ['record' => $record->reporter_profile_id])
-                        : null),
+                    ->url(fn (ProfileReport $record) => UserResource::profileViewUrl($record->reporterProfile)),
 
                 Tables\Columns\TextColumn::make('reportedProfile.matri_id')
                     ->label('Reported Profile')
                     ->searchable()
                     ->description(fn (ProfileReport $record) => $record->reportedProfile?->full_name)
-                    ->url(fn (ProfileReport $record) => $record->reported_profile_id
-                        ? UserResource::getUrl('view', ['record' => $record->reported_profile_id])
-                        : null),
+                    ->url(fn (ProfileReport $record) => UserResource::profileViewUrl($record->reportedProfile)),
 
                 Tables\Columns\TextColumn::make('reason')
                     ->badge()
