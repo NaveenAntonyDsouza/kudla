@@ -15,7 +15,7 @@
                 :photo="$note->profile?->primaryPhoto?->photo_url"
                 :name="$note->profile?->full_name ?? '—'"
                 :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                :href="route('filament.admin.resources.users.view', $note->profile_id)"
+                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
                 :first="$loop->first">
                 <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                 <span style="color:#dc2626;font-weight:500;">Follow-up {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
@@ -27,7 +27,11 @@
                         @php $phone = preg_replace('/[^0-9]/', '', $note->profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
                         <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
-                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                    @if ($note->profile)
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                    @else
+                        <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
+                    @endif
                 </x-slot>
             </x-admin.member-row>
         @empty
@@ -45,7 +49,7 @@
                 :photo="$note->profile?->primaryPhoto?->photo_url"
                 :name="$note->profile?->full_name ?? '—'"
                 :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                :href="route('filament.admin.resources.users.view', $note->profile_id)"
+                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
                 :first="$loop->first">
                 <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                 <span style="font-weight:500;">Follow-up: Today</span>
@@ -57,7 +61,11 @@
                         @php $phone = preg_replace('/[^0-9]/', '', $note->profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
                         <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
-                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                    @if ($note->profile)
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                    @else
+                        <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
+                    @endif
                 </x-slot>
             </x-admin.member-row>
         @empty
@@ -75,14 +83,18 @@
                 :photo="$note->profile?->primaryPhoto?->photo_url"
                 :name="$note->profile?->full_name ?? '—'"
                 :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                :href="route('filament.admin.resources.users.view', $note->profile_id)"
+                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
                 :first="$loop->first">
                 <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                 <span>Follow-up {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
                 <span>By {{ $note->adminUser?->name ?? 'Admin' }}</span>
 
                 <x-slot name="actions">
-                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                    @if ($note->profile)
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                    @else
+                        <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
+                    @endif
                 </x-slot>
             </x-admin.member-row>
         @empty
