@@ -1,6 +1,6 @@
 # Next Session Plan
-**Last Updated:** June 3, 2026 (web-platform hardening; admin moved to `/console`; 2FA next). **Mobile app (Phase 2) intentionally paused — see "Strategy" note below.**
-**Live:** kudlamatrimony.com on Hostinger **Business** (migrated off Premium 2026-05-29). Admin panel at **`/console`** (env `ADMIN_PATH`, defaults to `/admin` for white-label). Auto-deploys on push to `main` (GitHub Actions).
+**Last Updated:** June 5, 2026 (**DDoS escape — kudla migrated to Bluehost**; admin at `/console`; 2FA still the next feature). **Mobile app (Phase 2) intentionally paused — see "Strategy" note below.**
+**Live:** kudlamatrimony.com on **Bluehost (cPanel)** behind **Cloudflare** (proxied, SSL Full Strict) — moved off Hostinger Business after a sustained DDoS, 2026-06-04/05. SSH alias **`kudla-bluehost`** (`50.6.43.125:22`, user `vuydpnmy`), docroot `~/public_html/website_abe7d2b0`, DB `vuydpnmy_kudla`. Admin panel at **`/console`** (env `ADMIN_PATH`, defaults to `/admin` for white-label). ⚠️ **Auto-deploy is DISABLED** — Bluehost is deployed from a tar (not git); code changes go up by **manual upload** (`cat file | ssh kudla-bluehost 'cat > path'`). Full specifics in project-memory `project_kudla_bluehost_migration.md`.
 **API surface:** 96 endpoints across `/api/v1/*` (Scribe-documented), 644+ tests
 **Mobile app:** [NaveenAntonyDsouza/kudla-mobile](https://github.com/NaveenAntonyDsouza/kudla-mobile) (private), tag `mobile-v0.1.0-week-01-scaffold`
 
@@ -35,7 +35,7 @@
 | MySQL | 8.x | Hostinger shared hosting |
 | Spatie Roles | 6.x | Role-based access (Super Admin, Admin, User) |
 | Razorpay | via API | Payments, amount stored in paise |
-| Hosting | Hostinger | `exec()` disabled — use `ln -s` for symlinks, not `php artisan storage:link` |
+| Hosting | **Bluehost** (cPanel) | kudla moved here 2026-06-05 (DDoS escape off Hostinger), behind Cloudflare. `exec()` still disabled — use `ln -s`, not `php artisan storage:link`. **No composer/Node on server** → deploy by manual file upload, not git. PHP 8.3.31. |
 
 ### Tailwind CSS 4 Notes
 - No `tailwind.config.js` — config is in CSS file (`@theme` directive)
@@ -172,7 +172,15 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
   - **`edit_plan` split** → new `assign_member_plan` permission: front-office Staff can record offline payments **without** plan-pricing access. Migration grants it to super_admin/admin/manager/finance/staff.
   - **Staff quick-start guide** (`docs/staff/staff-quick-start-guide.md`) — for the first hire (joining 2026-06-03).
   - **Admin panel renamed `/admin` → `/console`** via env `ADMIN_PATH` (white-label, default `/admin`). `/admin` now 404s.
-- **Pending:** ① 2FA (see START HERE), ② Phase 3 CodeCanyon readiness, ③ photo-upload push (204 photoless members), ④ Premium auto-renewal cancellation (owner action, ~2026-06-05). Durable internals live in the user's project-memory files.
+- **Pending:** ① 2FA (see START HERE), ② Phase 3 CodeCanyon readiness, ③ photo-upload push (204 photoless members). Durable internals live in the user's project-memory files.
+
+**June 4–5, 2026 — DDoS escape: kudla migrated to Bluehost (cPanel):**
+- Hostinger Business (u246181826) hit a **sustained DDoS** — all sites 522/000 for hours, SSH port 65002 timing out. Owner bought a **Bluehost** shared plan for kudla; sister site catholicconnect went to a separate new Hostinger plan (see its own memory file).
+- kudla redeployed from a **tar** (full app incl. `vendor/` + `public/build/` + storage photos + `.env` + `.git`) into addon-domain docroot `~/public_html/website_abe7d2b0`; DB imported into **`vuydpnmy_kudla`** (kept the original APP_KEY so encrypted data stays valid). Storage via `ln -s` (exec disabled). SSH alias **`kudla-bluehost`**.
+- **Cloudflare** re-fronted: proxy ON, SSL **Full (Strict)**, **Always Use HTTPS**, www→non-www page rule — re-establishes the DDoS shield. ⚠️ **Do NOT grey-cloud** — it exposes the origin IP to the attackers (the whole reason for migrating).
+- Bug fixed during migration: **`FamilyDetail` NULL-sibling crash** (`b09b3a4`). Bluehost MySQL is STRICT; admin edit + registration saved the 8 sibling-count cols (NOT NULL DEFAULT 0) as explicit NULL → SQLSTATE 1048. Fix = a `FamilyDetail::booted()` `saving` hook coercing them NULL→0. **Lesson: an explicit NULL into a NOT NULL col errors regardless of strict mode** (strict only affects *omitted* cols/truncation).
+- Removed Force-HTTPS/www blocks from `public/.htaccess` (leaked `/public/` + risked a CF redirect loop — CF handles HTTPS at the edge). Added scheduler **cron** (`* * * * * cd …website_abe7d2b0 && php artisan schedule:run`, installed via `crontab -`; `uapi Cron add_line` silently no-op'd). **Auto-deploy workflow DISABLED** (`.github/workflows/deploy.yml` → `.disabled`, commit `0aea985`) — it targeted the now-dead Business box. Laravel config/route/view caching intentionally **left OFF** (opcache covers the real win; avoids the re-cache-after-every-settings-change foot-gun at this scale).
+- ⚠️ **globalmatri (the kudla fork) carries the same `FamilyDetail` NULL bug** — owner deferred the fix; apply the same hook when convenient.
 
 ---
 
@@ -433,9 +441,11 @@ Live deployment: configurable via SiteSettings (white-label, any domain)
 23. **Advertisements:** `advertisements` table with ad spaces (homepage_banner, sidebar, search_results, footer_banner, mobile_banner). Image + HTML/AdSense support. Click tracking via `/ad/click/{id}` route. `<x-ad-slot position="..." />` Blade component.
 
 ### Deployment Notes
+⚠️ **kudla now lives on Bluehost (cPanel) and deploys MANUALLY, not via git.** No composer/Node on the server. To ship a change: edit + commit locally, then **upload the changed file(s)** — `cat path/File.php | ssh kudla-bluehost 'cat > ~/public_html/website_abe7d2b0/path/File.php'` — and clear the relevant cache over SSH. **Pushing to `main` does nothing on the server** (the GitHub Actions workflow is disabled; it pointed at the dead Business box). A proper Bluehost git-deploy pipeline (clone + deploy key) is a future task if manual upload gets tedious. Notes 24–26 below describe the *old* Hostinger fresh-upload flow (kept for reference / other instances).
 24. **After fresh upload:** Run `composer install --no-dev --optimize-autoloader && php artisan migrate && ln -s ../storage/app/public public/storage && php artisan config:clear && php artisan view:clear && php artisan cache:clear`
 25. **Never upload:** `vendor/`, `node_modules/`, `storage/`, `.env`, `public/storage` (it's a symlink)
 26. **Logo/Favicon:** Stored in `storage/app/public/branding/` — if storage is cleared, re-upload from Theme & Branding admin page
+27. **Bluehost MySQL is STRICT** (`STRICT_TRANS_TABLES`), and an **explicit NULL into a NOT NULL column errors regardless of strict mode**. Forms submit blank numerics as NULL (via `ConvertEmptyStringsToNull`); any `NOT NULL DEFAULT 0` column then 1048-crashes on save. Fix pattern: a model `booted()` `saving` hook coercing those cols NULL→0 (see `app/Models/FamilyDetail.php`). Watch for this across other admin Edit forms while testing.
 
 ### Key File Paths
 - Admin panel: `app/Filament/Resources/`, `app/Filament/Pages/`, `app/Filament/Widgets/`
