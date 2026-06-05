@@ -13,6 +13,9 @@
 **Strategy:** The Flutter mobile app (Phase 2) is a ~5-month build, so the focus **deliberately shifted to making the live website as strong as possible first**, then resume mobile. Mobile is **paused, not abandoned** — its source of truth is the separate repo `kudla-mobile` (`D:\matrimony\platform\flutter-app\`) + [`docs/mobile-app/SESSION_HANDOFF.md`]. Do not edit mobile status from this web repo.
 
 **Immediate web queue:**
+
+> ▶ **DO FIRST (before 2FA): staff-reported bug fixes.** The owner's staff hit issues on the live Bluehost site; the owner will describe them at the start of the session. Triage into a todo list → reproduce on `kudla-bluehost` → fix → verify each (deploy is **manual**: `cat file | ssh kudla-bluehost 'cat > ~/public_html/website_abe7d2b0/<path>'`), *then* proceed to the numbered queue below.
+
 1. **2FA for the admin panel** — Filament 5.4.3 native MFA (authenticator app + recovery codes). Ships **OFF** behind a super-admin "Require 2FA for all staff" master toggle (`isRequired` bound to a `site_settings` flag), so zero lock-out risk. User model needs `HasAppAuthentication`+`HasAppAuthenticationRecovery` traits + a migration for `app_authentication_secret` / `app_authentication_recovery_codes` columns + a reset action for locked-out staff. **Researched, not yet built.**
 2. **Phase 3 — CodeCanyon readiness** (see Phase 3 below): white-label audit (no hardcoded names/keys/paths — admin path already done via `ADMIN_PATH`), `docs/` curation (most are internal dev docs that must NOT ship), Install Wizard, Update system, Envato purchase-code verification.
 3. **High-impact growth lever:** 204 of 225 live members have **no photo** (never uploaded — not an approval backlog). A photo-upload re-engagement push would likely move conversions more than any single feature.
