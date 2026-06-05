@@ -154,8 +154,11 @@ class PhotoApprovalResource extends Resource
                             'rejection_reason' => null,
                         ]);
 
-                        // If this is a profile photo and no primary exists, set as primary
-                        if ($record->photo_type === 'profile') {
+                        // If this is a profile photo and no primary exists, set as primary.
+                        // Guard on $record->profile — null when the member has since been
+                        // soft-deleted (a leftover pending photo); the profilePhotos() calls
+                        // below would otherwise fatal on null.
+                        if ($record->photo_type === 'profile' && $record->profile) {
                             $hasPrimary = $record->profile->profilePhotos()
                                 ->where('is_primary', true)->where('is_visible', true)->approved()->exists();
                             if (!$hasPrimary) {

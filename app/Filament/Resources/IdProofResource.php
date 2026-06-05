@@ -169,7 +169,7 @@ class IdProofResource extends Resource
                             'verified_at' => now(),
                             'rejection_reason' => null,
                         ]);
-                        $record->profile->update(['id_proof_verified' => true]);
+                        $record->profile?->update(['id_proof_verified' => true]);
 
                         Notification::create([
                             'profile_id' => $record->profile_id,
@@ -225,7 +225,7 @@ class IdProofResource extends Resource
                             'verified_by' => auth()->id(),
                             'verified_at' => now(),
                         ]);
-                        $record->profile->update(['id_proof_verified' => false]);
+                        $record->profile?->update(['id_proof_verified' => false]);
 
                         Notification::create([
                             'profile_id' => $record->profile_id,
@@ -251,7 +251,7 @@ class IdProofResource extends Resource
                                 'verified_by' => auth()->id(),
                                 'verified_at' => now(),
                             ]);
-                            $record->profile->update(['id_proof_verified' => true]);
+                            $record->profile?->update(['id_proof_verified' => true]);
                         });
                     })
                     ->deselectRecordsAfterCompletion()
