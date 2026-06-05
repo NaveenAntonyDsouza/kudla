@@ -56,25 +56,38 @@
         {{-- ── Profile Card ── --}}
         <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-5 mb-6">
             <div class="flex items-start gap-4">
-                <a href="{{ route('profile.view', $otherProfile) }}" class="shrink-0">
+                {{-- Photo — link to the member's profile only if they still exist (the other party may have deleted/closed their account) --}}
+                @if($otherProfile)
+                    <a href="{{ route('profile.view', $otherProfile) }}" class="shrink-0">
+                @else
+                    <div class="shrink-0">
+                @endif
                     <div class="w-16 h-16 rounded-full bg-gray-100 overflow-hidden">
-                        @if($otherProfile->primaryPhoto)
+                        @if($otherProfile?->primaryPhoto)
                             <img src="{{ $otherProfile->primaryPhoto->full_url }}" alt="" class="w-full h-full object-cover">
                         @else
                             <div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg></div>
                         @endif
                     </div>
-                </a>
+                @if($otherProfile)
+                    </a>
+                @else
+                    </div>
+                @endif
                 <div class="flex-1 min-w-0">
-                    <a href="{{ route('profile.view', $otherProfile) }}" class="text-base font-semibold text-(--color-primary) hover:underline">{{ $otherProfile->matri_id }}</a>
+                    @if($otherProfile)
+                        <a href="{{ route('profile.view', $otherProfile) }}" class="text-base font-semibold text-(--color-primary) hover:underline">{{ $otherProfile->matri_id }}</a>
+                    @else
+                        <span class="text-base font-semibold text-gray-400">Member no longer available</span>
+                    @endif
                     @php
                         $desc = collect([
-                            $otherProfile->age ? $otherProfile->age . 'Yrs' : null,
-                            $otherProfile->height, $otherProfile->complexion, $otherProfile->marital_status,
-                            $otherProfile->religiousInfo?->religion, $otherProfile->religiousInfo?->display_denomination,
-                            $otherProfile->educationDetail?->highest_education,
-                            $otherProfile->educationDetail?->occupation,
-                            $otherProfile->locationInfo?->native_state,
+                            $otherProfile?->age ? $otherProfile->age . 'Yrs' : null,
+                            $otherProfile?->height, $otherProfile?->complexion, $otherProfile?->marital_status,
+                            $otherProfile?->religiousInfo?->religion, $otherProfile?->religiousInfo?->display_denomination,
+                            $otherProfile?->educationDetail?->highest_education,
+                            $otherProfile?->educationDetail?->occupation,
+                            $otherProfile?->locationInfo?->native_state,
                         ])->filter()->implode(', ');
                     @endphp
                     <p class="text-xs text-gray-600 mt-1">{{ $desc }}</p>
@@ -153,7 +166,12 @@
         </div>
 
         {{-- ── Action Area ── --}}
-        @if($interest->status === 'pending' && !$isSender)
+        @if(!$otherProfile)
+            {{-- Other party deleted/closed their account — nothing actionable remains --}}
+            <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
+                <p class="text-sm text-gray-500">This member is no longer available. No further action can be taken on this interest.</p>
+            </div>
+        @elseif($interest->status === 'pending' && !$isSender)
             {{-- Receiver can Accept or Decline --}}
             <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-5" x-data="{
                 action: '',

@@ -158,18 +158,21 @@ class InterestService
                 'custom_message' => $customMessage,
             ]);
 
-            // Notify sender that interest was accepted (in-app + email)
+            // Notify sender that interest was accepted (in-app + email).
+            // Sender may have deleted their account after sending — skip the ghost.
             $receiver = $interest->receiverProfile;
             $sender = $interest->senderProfile;
-            $this->notificationService->send(
-                $sender->user,
-                'interest_accepted',
-                'Interest Accepted',
-                "{$receiver->matri_id} has accepted your interest.",
-                $receiver->id,
-                ['interest_id' => $interest->id]
-            );
-            Mail::to($sender->user->email)->queue(new InterestAcceptedMail($interest));
+            if ($sender?->user) {
+                $this->notificationService->send(
+                    $sender->user,
+                    'interest_accepted',
+                    'Interest Accepted',
+                    "{$receiver->matri_id} has accepted your interest.",
+                    $receiver->id,
+                    ['interest_id' => $interest->id]
+                );
+                Mail::to($sender->user->email)->queue(new InterestAcceptedMail($interest));
+            }
 
             return $reply;
         });
@@ -196,19 +199,22 @@ class InterestService
                 'is_silent_decline' => $silent,
             ]);
 
-            // Notify sender (skip for silent decline)
+            // Notify sender (skip for silent decline, and skip if the sender
+            // has since deleted their account).
             if (! $silent) {
                 $receiver = $interest->receiverProfile;
                 $sender = $interest->senderProfile;
-                $this->notificationService->send(
-                    $sender->user,
-                    'interest_declined',
-                    'Interest Declined',
-                    "{$receiver->matri_id} has declined your interest.",
-                    $receiver->id,
-                    ['interest_id' => $interest->id]
-                );
-                Mail::to($sender->user->email)->queue(new InterestDeclinedMail($interest));
+                if ($sender?->user) {
+                    $this->notificationService->send(
+                        $sender->user,
+                        'interest_declined',
+                        'Interest Declined',
+                        "{$receiver->matri_id} has declined your interest.",
+                        $receiver->id,
+                        ['interest_id' => $interest->id]
+                    );
+                    Mail::to($sender->user->email)->queue(new InterestDeclinedMail($interest));
+                }
             }
 
             return $reply;
@@ -266,19 +272,21 @@ class InterestService
             'custom_message' => $message,
         ]);
 
-        // Notify the other party
+        // Notify the other party (skip if they've deleted their account)
         $otherProfile = $interest->sender_profile_id === $sender->id
             ? $interest->receiverProfile
             : $interest->senderProfile;
 
-        $this->notificationService->send(
-            $otherProfile->user,
-            'interest_received',
-            'New Message',
-            "New message from {$sender->matri_id}.",
-            $sender->id,
-            ['interest_id' => $interest->id]
-        );
+        if ($otherProfile?->user) {
+            $this->notificationService->send(
+                $otherProfile->user,
+                'interest_received',
+                'New Message',
+                "New message from {$sender->matri_id}.",
+                $sender->id,
+                ['interest_id' => $interest->id]
+            );
+        }
 
         return $reply;
     }
