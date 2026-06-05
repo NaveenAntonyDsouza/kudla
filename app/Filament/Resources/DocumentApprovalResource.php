@@ -132,14 +132,9 @@ class DocumentApprovalResource extends Resource
             ])
             ->defaultSort('updated_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('jathakam_approval_status')
-                    ->label('Status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                    ]),
-
+                // Status is owned by the page tabs (Pending / All / Approved / Rejected).
+                // The duplicate jathakam_approval_status filter was removed so it can't
+                // fight the active tab (picking a contradicting status -> empty list).
                 Tables\Filters\SelectFilter::make('religion')
                     ->options(fn () => ReligiousInfo::whereNotNull('jathakam_upload_url')
                         ->whereNotNull('religion')

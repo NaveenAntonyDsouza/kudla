@@ -136,13 +136,9 @@ class IdProofResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('verification_status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                    ]),
-
+                // Status is owned by the page tabs (Pending / All / Approved / Rejected).
+                // The duplicate verification_status filter was removed so it can't fight
+                // the active tab (picking a contradicting status -> empty list).
                 Tables\Filters\SelectFilter::make('document_type')
                     ->options([
                         'aadhaar' => 'Aadhaar',

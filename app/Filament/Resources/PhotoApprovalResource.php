@@ -126,15 +126,11 @@ class PhotoApprovalResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('approval_status')
-                    ->label('Status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                    ])
-                    ->default('pending'),
-
+                // Status is owned by the page tabs (Pending / All Photos / Approved /
+                // Rejected). A SelectFilter('approval_status')->default('pending') used to
+                // live here too, but tab + filter WHERE-clauses are AND-ed, so the stuck
+                // "pending" default silently broke the other tabs (All Photos showed only
+                // pending; Approved/Rejected showed nothing). Removed — tabs handle status.
                 Tables\Filters\SelectFilter::make('photo_type')
                     ->label('Type')
                     ->options([
