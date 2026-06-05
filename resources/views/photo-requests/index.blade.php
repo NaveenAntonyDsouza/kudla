@@ -37,6 +37,7 @@
                 <div class="space-y-3">
                     @foreach($received as $req)
                         @php $p = $req->requesterProfile; @endphp
+                        @continue(!$p) {{-- skip rows whose requester deleted/closed their account --}}
                         <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center gap-4">
                             <a href="{{ route('profile.view', $p) }}" class="shrink-0">
                                 <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-100">
@@ -88,6 +89,7 @@
                 <div class="space-y-3">
                     @foreach($sent as $req)
                         @php $p = $req->targetProfile; @endphp
+                        @continue(!$p) {{-- skip rows whose target deleted/closed their account --}}
                         <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center gap-4">
                             <a href="{{ route('profile.view', $p) }}" class="shrink-0">
                                 <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-100">

@@ -1,5 +1,9 @@
 @props(['profile', 'matchScore' => null, 'matchBadge' => null])
 
+{{-- Defensive: a caller may pass a null relation (e.g. a shortlisted profile whose
+     owner has since deleted their account). Render nothing rather than crash on
+     route('profile.view', null). --}}
+@if($profile)
 @php
     $p = $profile;
     $isGuest = !auth()->check();
@@ -192,3 +196,4 @@
         </div>
     </a>
 </div>
+@endif
