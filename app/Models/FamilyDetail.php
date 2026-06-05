@@ -48,6 +48,26 @@ class FamilyDetail extends Model
         ];
     }
 
+    /**
+     * The sibling-count columns are NOT NULL DEFAULT 0 in the schema, but forms
+     * submit blank counts as NULL (via ConvertEmptyStringsToNull). An explicit
+     * NULL into a NOT NULL column errors regardless of SQL strict mode, so coerce
+     * these to 0 on every save (admin edit, registration, API).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $family): void {
+            foreach ([
+                'num_brothers', 'brothers_married', 'brothers_unmarried', 'brothers_priest',
+                'num_sisters', 'sisters_married', 'sisters_unmarried', 'sisters_nun',
+            ] as $column) {
+                if (is_null($family->{$column})) {
+                    $family->{$column} = 0;
+                }
+            }
+        });
+    }
+
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
