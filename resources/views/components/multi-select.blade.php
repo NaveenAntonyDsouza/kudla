@@ -1,4 +1,4 @@
-@props(['name', 'label', 'options' => [], 'selected' => [], 'searchable' => false, 'grouped' => false, 'emitTo' => null, 'showAny' => true])
+@props(['name', 'label', 'options' => [], 'selected' => [], 'searchable' => false, 'grouped' => false, 'emitTo' => null, 'showAny' => true, 'labelClass' => 'block text-xs font-medium text-gray-500 mb-1'])
 
 @php
     $selectedArr = is_array($selected) ? $selected : [];
@@ -90,7 +90,7 @@
 }" @click.away="open = false" @multiselect-clear.window="if ($event.detail.name === '{{ $name }}') { selected = []; }" class="relative">
 
     {{-- Label --}}
-    <label class="block text-xs font-medium text-gray-500 mb-1">{{ $label }}</label>
+    <label class="{{ $labelClass }}">{{ $label }}</label>
 
     {{-- Trigger --}}
     <button type="button" @click="open = !open"

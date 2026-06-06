@@ -142,8 +142,8 @@
                     <input type="text" name="other_denomination_name" x-model="otherDenominationName" maxlength="100" placeholder=" ">
                     <label>Specify Denomination</label>
                 </div>
-                {{-- Diocese cascade (shown once a denomination is picked) --}}
-                <template x-if="selectedDenomination">
+                {{-- Diocese cascade — shown once a real (non-"Other") denomination is picked --}}
+                <template x-if="selectedDenomination && selectedDenomination !== 'Other'">
                     <div class="contents">
                         <div class="float-field">
                             <select x-model="dioceseChoice"><option value="">Select</option>
@@ -173,44 +173,49 @@
                      (/api/cascade/communities), religion-filtered. preserve=true
                      on init keeps a member's saved value selectable even if it's
                      no longer in the managed list (no silent data-loss on save). --}}
-                <div class="float-field">
-                    <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
-                        <option value="">Select</option>
-                        <template x-for="community in communities" :key="community.id">
-                            <option :value="community.community_name" x-text="community.community_name" :selected="community.community_name === selectedCaste"></option>
-                        </template>
-                    </select>
-                    <label>Caste / Community</label>
-                </div>
-                {{-- Specify when "Other (not listed)" / "Other" picked. --}}
-                <div class="float-field" x-show="['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)" x-transition>
-                    <input type="text" name="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
-                    <label>Specify Caste / Community</label>
-                </div>
-                {{-- Sub-Caste: options come from the chosen community's
-                     sub-communities, plus an "Other (not listed)" escape hatch
-                     so a member whose sub-caste isn't in the managed list can
-                     still enter it. The <select> is UI-only; the hidden input
-                     carries the real submitted value (typed text when "Other",
-                     else the picked option). An existing saved sub-caste not in
-                     the list auto-routes to "Other" pre-filled — never lost. --}}
-                <template x-if="selectedCaste">
+                {{-- Caste / Community + Sub-Caste apply to Hindu only; Jains pick
+                     a Sect below. x-if removes the required <select> from the DOM
+                     for Jain so it can't block submission. --}}
+                <template x-if="religion === 'Hindu'">
                     <div class="contents">
                         <div class="float-field">
-                            <select x-model="subCasteChoice">
+                            <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
                                 <option value="">Select</option>
-                                <template x-for="sub in subCommunities" :key="sub">
-                                    <option :value="sub" x-text="sub"></option>
+                                <template x-for="community in communities" :key="community.id">
+                                    <option :value="community.community_name" x-text="community.community_name" :selected="community.community_name === selectedCaste"></option>
                                 </template>
-                                <option value="__other__">Other (not listed)</option>
                             </select>
-                            <label>Sub Caste</label>
+                            <label>Caste / Community</label>
                         </div>
-                        <div class="float-field" x-show="subCasteChoice === '__other__'" x-transition>
-                            <input type="text" x-model="subCasteOther" maxlength="50" placeholder=" ">
-                            <label>Enter Sub-Caste</label>
+                        {{-- "Other / Not Listed" → show ONLY this box (no sub-caste). --}}
+                        <div class="float-field" x-show="['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)" x-transition>
+                            <input type="text" name="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
+                            <label>Specify Caste / Community</label>
                         </div>
-                        <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
+                        {{-- Sub-Caste: only for a real (non-"Other") caste. Options
+                             from the chosen community's sub-communities + an "Other"
+                             escape hatch. The <select> is UI-only; the hidden input
+                             carries the real value (an unlisted saved value
+                             auto-routes to "Other" pre-filled — never lost). --}}
+                        <template x-if="selectedCaste && !['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)">
+                            <div class="contents">
+                                <div class="float-field">
+                                    <select x-model="subCasteChoice">
+                                        <option value="">Select</option>
+                                        <template x-for="sub in subCommunities" :key="sub">
+                                            <option :value="sub" x-text="sub"></option>
+                                        </template>
+                                        <option value="__other__">Other (not listed)</option>
+                                    </select>
+                                    <label>Sub Caste</label>
+                                </div>
+                                <div class="float-field" x-show="subCasteChoice === '__other__'" x-transition>
+                                    <input type="text" x-model="subCasteOther" maxlength="50" placeholder=" ">
+                                    <label>Enter Sub-Caste</label>
+                                </div>
+                                <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
+                            </div>
+                        </template>
                     </div>
                 </template>
                 <div class="float-field">

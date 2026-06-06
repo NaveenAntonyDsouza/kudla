@@ -137,7 +137,8 @@
                 <x-multi-select name="languages_known" label="Other Languages Known"
                     :options="config('reference_data.language_list', [])"
                     :selected="$profile?->lifestyleInfo?->languages_known ?? []"
-                    :searchable="true" :showAny="false" />
+                    :searchable="true" :showAny="false"
+                    labelClass="block text-xs font-medium text-(--color-primary) mb-1" />
                 @error('languages_known') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
@@ -226,7 +227,7 @@
                          denominations, whose dioceses aren't in this list. The
                          <select> is UI-only; hidden inputs submit diocese +
                          diocese_name. --}}
-                    <template x-if="selectedDenomination">
+                    <template x-if="selectedDenomination && selectedDenomination !== 'Other'">
                         <div class="contents">
                             <div class="float-field">
                                 <select id="diocese" x-model="dioceseChoice">
@@ -258,54 +259,57 @@
             {{-- ── Hindu / Jain Fields ──────────── --}}
             <template x-if="religion === 'Hindu' || religion === 'Jain'">
                 <div class="space-y-5">
-                    <div class="float-field">
-                        <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
-                            <option value="">Select</option>
-                            <template x-for="community in communities" :key="community.id">
-                                <option :value="community.community_name" x-text="community.community_name"
-                                    :selected="community.community_name === selectedCaste"></option>
-                            </template>
-                        </select>
-                        <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
-                        @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                    {{-- Specify the caste when an "Other" sentinel is picked
-                         (Communities table seeds it as "Other / Not Listed"),
-                         so we capture the actual community rather than just
-                         "they didn't fit the list". --}}
-                    <div class="float-field" x-show="['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)" x-transition>
-                        <input type="text" name="other_caste_name" id="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
-                        <label for="other_caste_name">Specify Caste / Community</label>
-                        @error('other_caste_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                    {{-- Sub-Caste: from the chosen community's sub-communities,
-                         plus an "Other (not listed)" escape hatch. The <select>
-                         is UI-only; the hidden input submits the real value
-                         (typed text when "Other", else the picked option). --}}
-                    <template x-if="selectedCaste">
+                    {{-- Caste / Community + Sub-Caste apply to Hindu only.
+                         Jains select a Sect below (no caste/community). Using
+                         x-if (not x-show) removes the required <select> from the
+                         DOM for Jain, so it can't block submission. --}}
+                    <template x-if="religion === 'Hindu'">
                         <div class="space-y-5">
                             <div class="float-field">
-                                <select id="sub_caste" x-model="subCasteChoice">
+                                <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
                                     <option value="">Select</option>
-                                    <template x-for="sub in subCommunities" :key="sub">
-                                        <option :value="sub" x-text="sub"></option>
+                                    <template x-for="community in communities" :key="community.id">
+                                        <option :value="community.community_name" x-text="community.community_name"
+                                            :selected="community.community_name === selectedCaste"></option>
                                     </template>
-                                    <option value="__other__">Other (not listed)</option>
                                 </select>
-                                <label for="sub_caste">Sub-Caste / Sub-Community</label>
+                                <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
+                                @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
-                            <div class="float-field" x-show="subCasteChoice === '__other__'" x-transition>
-                                <input type="text" id="sub_caste_other" x-model="subCasteOther" maxlength="50" placeholder=" ">
-                                <label for="sub_caste_other">Enter Sub-Caste / Sub-Community</label>
+                            {{-- "Other / Not Listed" → show ONLY this free-text box
+                                 (no sub-caste), mirroring the "Other religion" flow. --}}
+                            <div class="float-field" x-show="['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)" x-transition>
+                                <input type="text" name="other_caste_name" id="other_caste_name" x-model="otherCasteName" maxlength="100" placeholder=" ">
+                                <label for="other_caste_name">Specify Caste / Community</label>
+                                @error('other_caste_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
-                            <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
-                            @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                            {{-- Sub-Caste: only for a real (non-"Other") caste, from
+                                 the chosen community's sub-communities + an "Other"
+                                 escape hatch. The <select> is UI-only; the hidden
+                                 input submits the real value. --}}
+                            <template x-if="selectedCaste && !['Other / Not Listed', 'Other (not listed)', 'Other'].includes(selectedCaste)">
+                                <div class="space-y-5">
+                                    <div class="float-field">
+                                        <select id="sub_caste" x-model="subCasteChoice">
+                                            <option value="">Select</option>
+                                            <template x-for="sub in subCommunities" :key="sub">
+                                                <option :value="sub" x-text="sub"></option>
+                                            </template>
+                                            <option value="__other__">Other (not listed)</option>
+                                        </select>
+                                        <label for="sub_caste">Sub-Caste / Sub-Community</label>
+                                    </div>
+                                    <div class="float-field" x-show="subCasteChoice === '__other__'" x-transition>
+                                        <input type="text" id="sub_caste_other" x-model="subCasteOther" maxlength="50" placeholder=" ">
+                                        <label for="sub_caste_other">Enter Sub-Caste / Sub-Community</label>
+                                    </div>
+                                    <input type="hidden" name="sub_caste" :value="subCasteChoice === '__other__' ? subCasteOther : subCasteChoice">
+                                    @error('sub_caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            </template>
                         </div>
                     </template>
-                    {{-- Horoscope cluster (time/place of birth, rashi, nakshatra,
-                         gotra, manglik, jathakam) moved to onboarding step 1 to
-                         slim registration. Caste / sub-caste / jain-sect stay. --}}
-                    {{-- Jain-specific --}}
+                    {{-- Jain-specific: Sect only (no caste / community). --}}
                     <div x-show="religion === 'Jain'" x-transition class="float-field">
                         <select name="jain_sect" id="jain_sect">
                             <option value="">Select</option>
