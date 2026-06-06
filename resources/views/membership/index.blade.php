@@ -26,32 +26,34 @@
     // Plan-model convention: 0 = unlimited.
     $fmtLimit = fn ($v) => ((int) $v) === 0 ? 'Unlimited' : number_format((int) $v);
 
-    // Tick = brand colour, cross = red.
+    // Icons — tick = brand colour, cross = red.
     $checkIcon  = '<svg class="w-4 h-4 text-(--color-primary) shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>';
+    $cardCross  = '<svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>';
     $tableTick  = '<svg class="w-5 h-5 text-(--color-primary) mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/></svg>';
     $tableCross = '<svg class="w-5 h-5 text-red-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>';
 
-    // Compare-table rows: [label, value(plan), type 'text'|'bool', alwaysShow].
-    $rowDefs = [
-        ['Duration',              fn ($p) => $p->duration_months ? $p->duration_months . ' ' . Str::plural('Month', $p->duration_months) : 'Free', 'text', true],
-        ['Price',                 fn ($p) => $p->price_inr > 0 ? '&#8377;' . number_format($p->price_inr) : 'Free', 'text', true],
-        ['View Contact Details',  fn ($p) => (bool) $p->can_view_contact, 'bool', false],
-        ['Total Contact Views',   fn ($p) => $p->can_view_contact ? $fmtLimit($p->view_contacts_limit) : '&#8212;', 'text', false],
-        ['Daily Contact Views',   fn ($p) => $p->can_view_contact ? $fmtLimit($p->daily_contact_views) : '&#8212;', 'text', false],
-        ['Interests per Day',     fn ($p) => number_format((int) $p->daily_interest_limit), 'text', false],
-        ['Personalized Messages', fn ($p) => (bool) $p->personalized_messages, 'bool', false],
-        ['Featured Profile',      fn ($p) => (bool) $p->featured_profile, 'bool', false],
-        ['Priority Support',      fn ($p) => (bool) $p->priority_support, 'bool', false],
+    // ONE consistent feature set, shared by the cards and the compare table.
+    // [label, resolver(plan), type, showOnCard]
+    //   type 'value' -> a string (number / "Unlimited"); false renders as a red X
+    //   type 'bool'  -> tick / red X
+    $features = [
+        ['View Contacts',         fn ($p) => $p->can_view_contact ? $fmtLimit($p->view_contacts_limit) : false, 'value', true],
+        ['Daily Contact Views',   fn ($p) => $p->can_view_contact ? $fmtLimit($p->daily_contact_views) : false, 'value', true],
+        ['Interests per Day',     fn ($p) => number_format((int) $p->daily_interest_limit), 'value', true],
+        ['Personalized Messages', fn ($p) => (bool) $p->personalized_messages, 'bool', true],
+        ['Featured Profile',      fn ($p) => (bool) $p->featured_profile, 'bool', true],
+        ['Priority Support',      fn ($p) => (bool) $p->priority_support, 'bool', true],
+        ['See Who Viewed You',    fn ($p) => $p->price_inr > 0, 'bool', false],
     ];
-    // Auto-hide rows where every plan is identical/empty (keep the alwaysShow rows).
-    $visibleRows = collect($rowDefs)->filter(function ($r) use ($plans) {
-        if ($r[3]) return true;
-        $vals = $plans->map(function ($p) use ($r) {
-            $v = $r[1]($p);
-            return is_bool($v) ? ($v ? '1' : '0') : (string) $v;
+    // Auto-hide a feature when every plan renders it identically (no differentiation).
+    $visibleFeatures = collect($features)->filter(function ($f) use ($plans) {
+        $vals = $plans->map(function ($p) use ($f) {
+            $v = $f[1]($p);
+            return is_bool($v) ? ($v ? 'T' : 'F') : 'v:' . (string) $v;
         });
         return $vals->unique()->count() > 1;
     })->values();
+    $cardFeatures = $visibleFeatures->filter(fn ($f) => $f[3])->values();
 @endphp
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -171,16 +173,15 @@
                         @endif
                     </div>
 
-                    {{-- Highlights + feature labels (all from plan fields) --}}
+                    {{-- Consistent feature rows (same on every card), driven by plan fields --}}
                     <div class="px-6 pb-6 mt-auto">
                         <div class="border-t border-gray-100 pt-4 space-y-2.5 text-left">
-                            @if($plan->can_view_contact)
-                                <div class="flex items-center gap-2 text-sm">{!! $checkIcon !!}<span class="text-gray-700">View Contacts: <strong class="font-semibold">{{ $fmtLimit($plan->view_contacts_limit) }}</strong></span></div>
-                                <div class="flex items-center gap-2 text-sm">{!! $checkIcon !!}<span class="text-gray-700">Daily Contact Views: <strong class="font-semibold">{{ $fmtLimit($plan->daily_contact_views) }}</strong></span></div>
-                            @endif
-                            <div class="flex items-center gap-2 text-sm">{!! $checkIcon !!}<span class="text-gray-700">Interests: <strong class="font-semibold">{{ number_format($plan->daily_interest_limit) }}/day</strong></span></div>
-                            @foreach(is_array($plan->features) ? $plan->features : [] as $feature)
-                                <div class="flex items-center gap-2 text-sm">{!! $checkIcon !!}<span class="text-gray-700">{{ $feature }}</span></div>
+                            @foreach($cardFeatures as $f)
+                                @php $v = $f[1]($plan); $on = $f[2] === 'bool' ? $v : ($v !== false); @endphp
+                                <div class="flex items-center gap-2 text-sm">
+                                    {!! $on ? $checkIcon : $cardCross !!}
+                                    <span class="{{ $on ? 'text-gray-700' : 'text-gray-400' }}">{{ $f[0] }}@if($f[2] === 'value' && $v !== false): <strong class="font-semibold">{{ $v }}</strong>@endif</span>
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -210,16 +211,35 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @foreach($visibleRows as $row)
+                        {{-- Duration --}}
+                        <tr>
+                            <td class="px-5 py-3 text-gray-600" style="position:sticky;left:0;background:#fff;z-index:1;">Duration</td>
+                            @foreach($plans as $plan)
+                                <td class="text-center px-4 py-3 font-bold text-gray-900">{{ $plan->duration_months ? $plan->duration_months . ' ' . Str::plural('Month', $plan->duration_months) : 'Free' }}</td>
+                            @endforeach
+                        </tr>
+                        {{-- Price --}}
+                        <tr>
+                            <td class="px-5 py-3 text-gray-600" style="position:sticky;left:0;background:#fff;z-index:1;">Price</td>
+                            @foreach($plans as $plan)
+                                <td class="text-center px-4 py-3 font-bold text-gray-900">{!! $plan->price_inr > 0 ? '&#8377;' . number_format($plan->price_inr) : 'Free' !!}</td>
+                            @endforeach
+                        </tr>
+                        {{-- Feature rows (same set as the cards) --}}
+                        @foreach($visibleFeatures as $f)
                             <tr>
-                                <td class="px-5 py-3 text-gray-600" style="position:sticky;left:0;background:#fff;z-index:1;">{{ $row[0] }}</td>
+                                <td class="px-5 py-3 text-gray-600" style="position:sticky;left:0;background:#fff;z-index:1;">{{ $f[0] }}</td>
                                 @foreach($plans as $plan)
-                                    @php $val = $row[1]($plan); @endphp
+                                    @php $v = $f[1]($plan); @endphp
                                     <td class="text-center px-4 py-3">
-                                        @if($row[2] === 'bool')
-                                            {!! $val ? $tableTick : $tableCross !!}
+                                        @if($f[2] === 'bool')
+                                            {!! $v ? $tableTick : $tableCross !!}
                                         @else
-                                            <span class="{{ in_array($row[0], ['Duration', 'Price']) ? 'font-bold text-gray-900' : 'text-gray-800' }}">{!! $val !!}</span>
+                                            @if($v === false)
+                                                {!! $tableCross !!}
+                                            @else
+                                                <span class="text-gray-800">{{ $v }}</span>
+                                            @endif
                                         @endif
                                     </td>
                                 @endforeach
