@@ -90,6 +90,14 @@ class HomepageSettings extends Page implements HasForms
             // Announcement Banner
             'announcement_enabled' => $settings['announcement_enabled'] ?? '0',
             'announcement_text' => $settings['announcement_text'] ?? '',
+
+            // Offer / Promotion Banner (home + membership pages)
+            'offer_banner_enabled' => ($settings['offer_banner_enabled'] ?? '0') === '1',
+            'offer_banner_title' => $settings['offer_banner_title'] ?? '',
+            'offer_banner_text' => $settings['offer_banner_text'] ?? '',
+            'offer_banner_coupon_code' => $settings['offer_banner_coupon_code'] ?? '',
+            'offer_banner_discount_text' => $settings['offer_banner_discount_text'] ?? '',
+            'offer_banner_cta_text' => $settings['offer_banner_cta_text'] ?? 'View Plans',
         ]);
     }
 
@@ -297,6 +305,43 @@ class HomepageSettings extends Page implements HasForms
                             ->maxLength(300)
                             ->helperText('e.g., "We are now available in Mangalore! Register today."'),
                     ]),
+
+                \Filament\Schemas\Components\Section::make('Offer / Promotion Banner')
+                    ->description('A promotional banner shown at the top of the home page and the membership plans page — e.g. a Diwali / Christmas / New Year / Weekend offer. Edit it any time for the next festival.')
+                    ->schema([
+                        Forms\Components\Toggle::make('offer_banner_enabled')
+                            ->label('Show Offer Banner')
+                            ->helperText('Displays the offer banner on the home + membership pages.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('offer_banner_title')
+                            ->label('Offer Title')
+                            ->maxLength(60)
+                            ->helperText('e.g., "Diwali Special Offer" or "Weekend Offer".'),
+
+                        Forms\Components\TextInput::make('offer_banner_discount_text')
+                            ->label('Discount Text')
+                            ->maxLength(60)
+                            ->helperText('e.g., "Flat 20% OFF" or "₹500 off all plans".'),
+
+                        Forms\Components\TextInput::make('offer_banner_text')
+                            ->label('Message')
+                            ->maxLength(150)
+                            ->helperText('Short supporting line. e.g., "Celebrate the season with premium membership."')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('offer_banner_coupon_code')
+                            ->label('Coupon Code')
+                            ->maxLength(40)
+                            ->helperText('Shown for members to copy. IMPORTANT: also create a matching coupon under Membership & Payments → Discount Coupons so the code actually works at checkout. Leave blank for a message-only banner.'),
+
+                        Forms\Components\TextInput::make('offer_banner_cta_text')
+                            ->label('Button Text')
+                            ->maxLength(30)
+                            ->default('View Plans')
+                            ->helperText('The banner button label. e.g., "View Plans", "Upgrade Now".'),
+                    ])
+                    ->columns(2),
             ])
             ->statePath('data');
     }
@@ -311,7 +356,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
+        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,

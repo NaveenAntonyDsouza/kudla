@@ -491,6 +491,9 @@
 
     <!-- Main Content -->
     <main>
+        @if(request()->routeIs('home') || request()->routeIs('membership.index'))
+            <x-offer-banner />
+        @endif
         {{ $slot }}
     </main>
 
