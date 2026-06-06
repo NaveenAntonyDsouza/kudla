@@ -1490,13 +1490,15 @@ class UserResource extends Resource
                                 $get('rel_caste'),
                             ))
                             ->searchable()
+                            ->live() // so Sub-Caste re-cascades when the caste changes
+                            ->afterStateUpdated(fn (\Filament\Schemas\Components\Utilities\Set $set) => $set('rel_sub_caste', null))
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         // Free-text: only relevant when Caste = "Other (not listed)" / "Other".
                         Forms\Components\TextInput::make('rel_other_caste_name')->label('Caste (specified)')->maxLength(100)
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
                             ->options(fn (Get $get) => self::optionsWithCurrent(
-                                \App\Models\Community::getSubCasteList($get('rel_religion')),
+                                \App\Models\Community::getSubCommunitiesFor($get('rel_caste'), $get('rel_religion')),
                                 $get('rel_sub_caste'),
                             ))
                             ->searchable()

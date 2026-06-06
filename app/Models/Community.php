@@ -79,6 +79,26 @@ class Community extends Model
     }
 
     /**
+     * Sub-communities (sub-castes) for ONE community by name, optionally
+     * religion-scoped. Drives the cascading Sub-Caste dropdown so it only shows
+     * the selected caste's sub-castes (the flat getSubCasteList() is for
+     * filters/search where the caste isn't known).
+     * Returns e.g. ['Naik', 'Nayak'] for community_name 'Naik / Nayak'.
+     */
+    public static function getSubCommunitiesFor(?string $communityName, ?string $religion = null): array
+    {
+        if (! $communityName) {
+            return [];
+        }
+        $query = static::active()->where('community_name', $communityName);
+        if ($religion) {
+            $query->byReligion($religion);
+        }
+
+        return $query->first()?->sub_communities ?? [];
+    }
+
+    /**
      * Clear community list caches.
      */
     protected static function booted(): void
