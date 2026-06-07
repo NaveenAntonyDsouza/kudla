@@ -85,8 +85,13 @@ class PhotosRelationManager extends RelationManager
                             ->disk('public')
                             ->directory(fn () => 'photos/' . $this->getOwnerRecord()->id)
                             ->maxSize(5120)
-                            ->imageResizeMode('cover')
-                            ->imageCropAspectRatio(null),
+                            // Interactive crop / rotate / flip / zoom (Filament's built-in
+                            // image editor, Cropper.js) so staff can frame the photo before
+                            // saving — matches the member-side upload experience.
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([null, '3:4', '1:1', '4:5'])
+                            ->imageEditorMode(2)
+                            ->helperText('After choosing a photo, click the pencil icon to crop, rotate or flip it before saving.'),
                         Forms\Components\Select::make('photo_type')
                             ->label('Photo Type')
                             ->required()
