@@ -443,6 +443,20 @@ class UserResource extends Resource
                     ->query(fn (Builder $query) => $query->whereHas('primaryPhoto'))
                     ->toggle(),
 
+                // Members who typed an "Other" caste / religion / denomination —
+                // the queue of values to add to the managed dropdowns. The Religion
+                // column already shows the typed value (display_caste / _denomination).
+                Tables\Filters\Filter::make('unlisted_caste_religion')
+                    ->label('Unlisted caste/religion ("Other")')
+                    ->query(fn (Builder $query) => $query->whereHas('religiousInfo', function ($q) {
+                        $q->where(function ($w) {
+                            foreach (['other_caste_name', 'other_religion_name', 'other_denomination_name'] as $col) {
+                                $w->orWhere(fn ($o) => $o->whereNotNull($col)->where($col, '!=', ''));
+                            }
+                        });
+                    }))
+                    ->toggle(),
+
                 // Hidden
                 Tables\Filters\TernaryFilter::make('is_hidden')
                     ->label('Hidden'),
