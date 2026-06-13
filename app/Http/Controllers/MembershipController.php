@@ -131,6 +131,17 @@ class MembershipController extends Controller
         // ── Pick a gateway ────────────────────────────────────────────
         $available = $this->gateways->getConfigured();
 
+        // Hide PhonePe inside the Kudla Matrimony Android WebView app. PhonePe's
+        // hosted checkout only offers a cross-device UPI QR there (no on-device
+        // GPay/PhonePe/Paytm intent) and renders poorly in a WebView, so app
+        // users are steered to Razorpay, which supports full UPI intent in-app.
+        // Detected via the app's custom User-Agent token; web browsers and the
+        // API/SDK flow are unaffected. Remove this block (or move PhonePe to a
+        // Chrome Custom Tab) to bring PhonePe back into the app.
+        if (str_contains((string) $request->userAgent(), 'KudlaMatrimonyApp')) {
+            unset($available['phonepe']);
+        }
+
         if (empty($available)) {
             return back()->withErrors([
                 'payment' => 'No payment method is currently available. Please contact support.',
