@@ -24,7 +24,7 @@ class UpcomingFollowups extends TableWidget
         return $table
             ->query(
                 ProfileNote::query()
-                    ->whereNotNull('follow_up_date')
+                    ->pendingFollowUp()
                     ->where('follow_up_date', '<=', today())
                     ->with(['profile', 'adminUser'])
                     ->orderBy('follow_up_date')

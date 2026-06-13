@@ -3,10 +3,7 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use App\Models\Profile;
-use App\Models\ProfileNote;
 use Filament\Actions;
-use Filament\Forms;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewUser extends ViewRecord
@@ -43,29 +40,10 @@ class ViewUser extends ViewRecord
                 ->visible(fn (): bool => !$this->record->is_approved)
                 ->successNotificationTitle('Profile approved'),
 
-            // Add Note
-            Actions\Action::make('addNote')
-                ->label('Add Note')
-                ->icon('heroicon-o-pencil-square')
-                ->color('warning')
-                ->form([
-                    Forms\Components\Textarea::make('note')
-                        ->label('Note')
-                        ->required()
-                        ->rows(3),
-                    Forms\Components\DatePicker::make('follow_up_date')
-                        ->label('Follow-up Date')
-                        ->minDate(today()),
-                ])
-                ->action(function (array $data): void {
-                    ProfileNote::create([
-                        'profile_id' => $this->record->id,
-                        'admin_user_id' => auth()->id(),
-                        'note' => $data['note'],
-                        'follow_up_date' => $data['follow_up_date'] ?? null,
-                    ]);
-                })
-                ->successNotificationTitle('Note added'),
+            // Notes — the SAME shared popup as the members list (history + Type +
+            // Note + Follow-up). Replaces the old stripped-down "Add Note" that
+            // was missing the Type field and the history timeline.
+            \App\Filament\Actions\ProfileNotesAction::make('notes'),
 
             // Toggle Active
             Actions\Action::make('toggleActive')

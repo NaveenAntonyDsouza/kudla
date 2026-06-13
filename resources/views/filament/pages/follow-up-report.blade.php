@@ -3,6 +3,7 @@
         $overdue = $this->getOverdueFollowUps();
         $today = $this->getTodayFollowUps();
         $upcoming = $this->getUpcomingFollowUps();
+        $completedToday = $this->getCompletedTodayFollowUps();
     @endphp
 
     {{-- ───────────── Overdue ───────────── --}}
@@ -28,7 +29,9 @@
                         <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
                     @if ($note->profile)
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                        {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        {{ ($this->markDoneAction)(['note' => $note->id]) }}
                     @else
                         <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
                     @endif
@@ -62,7 +65,9 @@
                         <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
                     @if ($note->profile)
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                        {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        {{ ($this->markDoneAction)(['note' => $note->id]) }}
                     @else
                         <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
                     @endif
@@ -91,7 +96,9 @@
 
                 <x-slot name="actions">
                     @if ($note->profile)
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View</x-filament::button>
+                        {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        {{ ($this->markDoneAction)(['note' => $note->id]) }}
                     @else
                         <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
                     @endif
@@ -101,4 +108,33 @@
             <p style="opacity:.6;font-size:.875rem;">No follow-ups scheduled for the next 7 days.</p>
         @endforelse
     </x-filament::section>
+
+    {{-- ───────────── Completed today (collapsed) ───────────── --}}
+    @if ($completedToday->isNotEmpty())
+        <x-filament::section icon="heroicon-o-check-circle" icon-color="success" collapsible :collapsed="true">
+            <x-slot name="heading">Completed Today ({{ $completedToday->count() }})</x-slot>
+            <x-slot name="description">Follow-ups your team marked done today. Use Undo to reopen one.</x-slot>
+
+            @foreach ($completedToday as $note)
+                <x-admin.member-row
+                    :photo="$note->profile?->primaryPhoto?->photo_url"
+                    :name="$note->profile?->full_name ?? '—'"
+                    :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
+                    :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
+                    :first="$loop->first">
+                    <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
+                    <span style="color:#059669;font-weight:500;">✓ Done {{ $note->follow_up_completed_at?->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('g:i A') }}</span>
+                    <span>by {{ $note->completedBy?->name ?? 'Admin' }}</span>
+
+                    <x-slot name="actions">
+                        @if ($note->profile)
+                            {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
+                            <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        @endif
+                        {{ ($this->undoFollowUpAction)(['note' => $note->id]) }}
+                    </x-slot>
+                </x-admin.member-row>
+            @endforeach
+        </x-filament::section>
+    @endif
 </x-filament-panels::page>

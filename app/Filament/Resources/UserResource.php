@@ -585,43 +585,10 @@ class UserResource extends Resource
 
                 // Notes — interaction log. Opens the full history (who logged
                 // it, when, and the interaction type) plus a form to add a new
-                // note. Used after every call / WhatsApp. Append-only.
-                \Filament\Actions\Action::make('notes')
-                    ->label(fn (Profile $record): string => 'Notes' . (($record->profile_notes_count ?? 0) > 0 ? ' · ' . $record->profile_notes_count : ''))
-                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
-                    ->color('warning')
-                    ->button()
-                    ->size('sm')
-                    ->modalHeading(fn (Profile $record): string => 'Notes — ' . $record->full_name)
-                    ->modalContent(fn (Profile $record) => view('filament.components.profile-notes-history', [
-                        'notes' => $record->profileNotes()->with('adminUser')->latest()->get(),
-                    ]))
-                    ->form([
-                        Forms\Components\Select::make('note_type')
-                            ->label('Type')
-                            ->options(ProfileNote::NOTE_TYPES)
-                            ->required()
-                            ->placeholder('Call / WhatsApp / …'),
-                        Forms\Components\Textarea::make('note')
-                            ->label('Note')
-                            ->required()
-                            ->rows(3)
-                            ->placeholder('What happened on the call / chat? Any commitments or next steps?'),
-                        Forms\Components\DatePicker::make('follow_up_date')
-                            ->label('Follow-up date (optional)')
-                            ->minDate(today()),
-                    ])
-                    ->modalSubmitActionLabel('Add Note')
-                    ->action(function (Profile $record, array $data): void {
-                        ProfileNote::create([
-                            'profile_id' => $record->id,
-                            'admin_user_id' => auth()->id(),
-                            'note_type' => $data['note_type'] ?? 'general',
-                            'note' => $data['note'],
-                            'follow_up_date' => $data['follow_up_date'] ?? null,
-                        ]);
-                    })
-                    ->successNotificationTitle('Note added'),
+                // note. Used after every call / WhatsApp. Append-only. Defined
+                // once in ProfileNotesAction and reused on the View page header
+                // so the two popups stay identical.
+                \App\Filament\Actions\ProfileNotesAction::make('notes'),
 
                 // Secondary / less-frequent actions grouped into a "More" dropdown
                 // so the row stays compact. The common actions (View, Edit, Assign
