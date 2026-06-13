@@ -98,6 +98,15 @@ class GatewaySettings extends Page implements HasForms
             'phonepe_mode' => $settings['phonepe_mode'] ?? config('services.phonepe.mode', 'sandbox'),
             'phonepe_webhook_username' => $settings['phonepe_webhook_username'] ?? config('services.phonepe.webhook_username', ''),
             'phonepe_webhook_password' => $settings['phonepe_webhook_password'] ?? '',
+
+            // Per-gateway "Show in mobile app" visibility (default ON; PhonePe
+            // OFF because its hosted checkout only offers a cross-device UPI QR
+            // inside the Android WebView). See MembershipController::checkout().
+            'razorpay_show_in_app' => ($settings['razorpay_show_in_app'] ?? '1') === '1',
+            'stripe_show_in_app' => ($settings['stripe_show_in_app'] ?? '1') === '1',
+            'paypal_show_in_app' => ($settings['paypal_show_in_app'] ?? '1') === '1',
+            'paytm_show_in_app' => ($settings['paytm_show_in_app'] ?? '1') === '1',
+            'phonepe_show_in_app' => ($settings['phonepe_show_in_app'] ?? '0') === '1',
         ]);
     }
 
@@ -209,6 +218,12 @@ class GatewaySettings extends Page implements HasForms
                             ->inline(false)
                             ->columnSpanFull(),
 
+                        Forms\Components\Toggle::make('razorpay_show_in_app')
+                            ->label('Show in mobile app')
+                            ->helperText('When off, hidden inside the Android app (still shown on the website).')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('razorpay_mode')
                             ->label('Mode')
                             ->options([
@@ -243,6 +258,12 @@ class GatewaySettings extends Page implements HasForms
                         Forms\Components\Toggle::make('stripe_enabled')
                             ->label('Enable Stripe')
                             ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('stripe_show_in_app')
+                            ->label('Show in mobile app')
+                            ->helperText('When off, hidden inside the Android app (still shown on the website).')
                             ->inline(false)
                             ->columnSpanFull(),
 
@@ -283,6 +304,12 @@ class GatewaySettings extends Page implements HasForms
                             ->inline(false)
                             ->columnSpanFull(),
 
+                        Forms\Components\Toggle::make('paypal_show_in_app')
+                            ->label('Show in mobile app')
+                            ->helperText('When off, hidden inside the Android app (still shown on the website).')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
                         Forms\Components\Select::make('paypal_mode')
                             ->label('Mode')
                             ->options([
@@ -320,6 +347,12 @@ class GatewaySettings extends Page implements HasForms
                         Forms\Components\Toggle::make('paytm_enabled')
                             ->label('Enable Paytm')
                             ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('paytm_show_in_app')
+                            ->label('Show in mobile app')
+                            ->helperText('When off, hidden inside the Android app (still shown on the website).')
                             ->inline(false)
                             ->columnSpanFull(),
 
@@ -369,6 +402,12 @@ class GatewaySettings extends Page implements HasForms
                         Forms\Components\Toggle::make('phonepe_enabled')
                             ->label('Enable PhonePe')
                             ->helperText('When off, this gateway is hidden from checkout regardless of credentials.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('phonepe_show_in_app')
+                            ->label('Show in mobile app')
+                            ->helperText('When off, hidden inside the Android app (still shown on the website). PhonePe UPI does not work inside a WebView, so this is off by default.')
                             ->inline(false)
                             ->columnSpanFull(),
 
@@ -432,6 +471,8 @@ class GatewaySettings extends Page implements HasForms
         $booleanFields = [
             'razorpay_enabled', 'stripe_enabled', 'paypal_enabled',
             'paytm_enabled', 'phonepe_enabled',
+            'razorpay_show_in_app', 'stripe_show_in_app', 'paypal_show_in_app',
+            'paytm_show_in_app', 'phonepe_show_in_app',
         ];
 
         foreach ($data as $key => $value) {

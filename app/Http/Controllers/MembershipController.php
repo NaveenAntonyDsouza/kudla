@@ -131,15 +131,21 @@ class MembershipController extends Controller
         // ── Pick a gateway ────────────────────────────────────────────
         $available = $this->gateways->getConfigured();
 
-        // Hide PhonePe inside the Kudla Matrimony Android WebView app. PhonePe's
-        // hosted checkout only offers a cross-device UPI QR there (no on-device
-        // GPay/PhonePe/Paytm intent) and renders poorly in a WebView, so app
-        // users are steered to Razorpay, which supports full UPI intent in-app.
-        // Detected via the app's custom User-Agent token; web browsers and the
-        // API/SDK flow are unaffected. Remove this block (or move PhonePe to a
-        // Chrome Custom Tab) to bring PhonePe back into the app.
-        if (str_contains((string) $request->userAgent(), 'KudlaMatrimonyApp')) {
-            unset($available['phonepe']);
+        // Inside the Kudla Matrimony Android WebView app, drop any gateway an
+        // admin has switched off for the app via GatewaySettings → "Show in
+        // mobile app". PhonePe defaults off there because its hosted checkout
+        // only offers a cross-device UPI QR in a WebView (no on-device UPI
+        // intent). Web browsers and the API/SDK flow keep every gateway. The
+        // fallback guarantees app users are never stranded with zero options
+        // if an admin happens to hide them all.
+        if ($this->isWebViewApp($request)) {
+            $appVisible = array_filter(
+                $available,
+                fn (PaymentGatewayInterface $gateway) => config('services.'.$gateway->getSlug().'.show_in_app', true) !== false,
+            );
+            if (! empty($appVisible)) {
+                $available = $appVisible;
+            }
         }
 
         if (empty($available)) {
@@ -183,6 +189,16 @@ class MembershipController extends Controller
             amountInPaise: $amountInPaise,
             discountInPaise: $discountInPaise,
         );
+    }
+
+    /**
+     * True when the request comes from the Kudla Matrimony Android app's
+     * WebView, which appends "KudlaMatrimonyApp/<version>" to its User-Agent.
+     * Scopes app-only payment behaviour (see checkout()).
+     */
+    private function isWebViewApp(Request $request): bool
+    {
+        return str_contains((string) $request->userAgent(), 'KudlaMatrimonyApp');
     }
 
     /**

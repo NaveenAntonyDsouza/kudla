@@ -340,3 +340,92 @@ it('errors gracefully when no gateways are enabled at all', function () {
 
     $response->assertSessionHasErrors('payment');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Per-gateway "Show in mobile app" filter
+|--------------------------------------------------------------------------
+| Inside the Android WebView app (User-Agent carries "KudlaMatrimonyApp"),
+| checkout() drops any gateway whose services.{slug}.show_in_app is false.
+| PhonePe defaults off (GatewayConfigProvider). Web requests are untouched
+| (covered by the picker tests above). A safety net keeps app users from
+| ever being left with zero options.
+*/
+
+it('hides PhonePe inside the Android app and auto-picks Razorpay', function () {
+    $user = makeMembershipCheckoutUser(8005);
+    $plan = makeMembershipCheckoutPlan();
+
+    $mgr = app(PaymentGatewayManager::class);
+    $mgr->register(new FakeWebGateway(slug: 'razorpay', name: 'Razorpay'));
+    $mgr->register(new FakeWebGateway(slug: 'phonepe', name: 'PhonePe'));
+
+    // PhonePe is hidden in the app by default. In production
+    // GatewayConfigProvider sets this from site_settings; here we set it
+    // directly because that provider skips when the site_settings table is
+    // created after the app has already booted (as it is in these tests).
+    config(['services.phonepe.show_in_app' => false]);
+
+    $this->actingAs($user);
+
+    // The app's WebView appends "KudlaMatrimonyApp/<version>" to the UA.
+    $response = $this->withHeader('User-Agent', 'Mozilla/5.0 (Linux; Android 13; wv) Chrome/120 Mobile KudlaMatrimonyApp/1.0.4')
+        ->post(route('membership.checkout'), [
+            'plan_id' => $plan->id,
+        ]);
+
+    // Only Razorpay remains → auto-pick (renders the Razorpay flow), no picker.
+    $response->assertOk();
+    $response->assertDontSee('Choose a payment method');
+    $sub = \DB::table('subscriptions')->where('user_id', $user->id)->first();
+    expect($sub)->not->toBeNull();
+    expect($sub->gateway)->toBe('razorpay');
+});
+
+it('shows PhonePe in the app when the admin re-enables its app toggle', function () {
+    $user = makeMembershipCheckoutUser(8006);
+    $plan = makeMembershipCheckoutPlan();
+
+    $mgr = app(PaymentGatewayManager::class);
+    $mgr->register(new FakeWebGateway(slug: 'razorpay', name: 'Razorpay'));
+    $mgr->register(new FakeWebGateway(slug: 'phonepe', name: 'PhonePe'));
+
+    // Admin flipped "Show in mobile app" back on for PhonePe.
+    config(['services.phonepe.show_in_app' => true]);
+
+    $this->actingAs($user);
+
+    $response = $this->withHeader('User-Agent', 'Android wv KudlaMatrimonyApp/1.0.4')
+        ->post(route('membership.checkout'), [
+            'plan_id' => $plan->id,
+        ]);
+
+    // Both visible → the picker renders with PhonePe present.
+    $response->assertOk();
+    $response->assertSee('Pay with PhonePe');
+});
+
+it('never strands app users with zero gateways when all are app-hidden', function () {
+    $user = makeMembershipCheckoutUser(8007);
+    $plan = makeMembershipCheckoutPlan();
+
+    $mgr = app(PaymentGatewayManager::class);
+    $mgr->register(new FakeWebGateway(slug: 'razorpay', name: 'Razorpay'));
+
+    // Admin hid the only configured gateway in the app — the fallback must
+    // keep it rather than show "no payment method available".
+    config(['services.razorpay.show_in_app' => false]);
+
+    $this->actingAs($user);
+
+    $response = $this->withHeader('User-Agent', 'KudlaMatrimonyApp/1.0.4')
+        ->post(route('membership.checkout'), [
+            'plan_id' => $plan->id,
+        ]);
+
+    $response->assertOk();
+    $response->assertSessionHasNoErrors();
+    $sub = \DB::table('subscriptions')->where('user_id', $user->id)->first();
+    expect($sub)->not->toBeNull();
+    expect($sub->gateway)->toBe('razorpay');
+});

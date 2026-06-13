@@ -28,6 +28,7 @@ class GatewayConfigProvider extends ServiceProvider
         $this->overridePayPalConfig($settings);
         $this->overridePaytmConfig($settings);
         $this->overridePhonePeConfig($settings);
+        $this->overrideGatewayAppVisibility($settings);
         $this->overrideReferenceData($settings);
         $this->overrideReferenceDataFromOptionsTable();
     }
@@ -374,6 +375,28 @@ class GatewayConfigProvider extends ServiceProvider
 
         if (array_key_exists('phonepe_enabled', $settings)) {
             config(['services.phonepe.enabled' => $settings['phonepe_enabled'] === '1']);
+        }
+    }
+
+    /**
+     * Per-gateway "Show in mobile app" visibility, read by
+     * MembershipController::checkout() to hide a gateway inside the Kudla
+     * Matrimony Android WebView app while keeping it live on the website.
+     *
+     * Defaults: every gateway is shown in the app EXCEPT PhonePe, whose hosted
+     * checkout only offers a cross-device UPI QR inside a WebView (no on-device
+     * GPay/PhonePe/Paytm intent). Admins override any of these from the
+     * GatewaySettings page. The default lives here rather than a migration
+     * because deploy-build.ps1 ships files without running migrations.
+     */
+    protected function overrideGatewayAppVisibility(array $settings): void
+    {
+        $defaults = ['phonepe' => '0'];
+
+        foreach (['razorpay', 'stripe', 'paypal', 'paytm', 'phonepe'] as $slug) {
+            $default = $defaults[$slug] ?? '1';
+            $shown = ($settings[$slug.'_show_in_app'] ?? $default) === '1';
+            config(['services.'.$slug.'.show_in_app' => $shown]);
         }
     }
 }
