@@ -59,6 +59,16 @@
                 }
             };
 
+            // Enable Razorpay's UPI Intent flow when the checkout is opened
+            // inside the Kudla Matrimony Android app's WebView. The app appends
+            // "KudlaMatrimonyApp/<version>" to its WebView User-Agent. Regular
+            // browser visitors do not match, so their checkout is unchanged.
+            // The app's WebViewClient handles the resulting upi:// / intent://
+            // URLs to launch GPay / PhonePe / Paytm etc.
+            if (/KudlaMatrimonyApp/i.test(navigator.userAgent)) {
+                options.webview_intent = true;
+            }
+
             var rzp = new Razorpay(options);
             rzp.open();
         }
