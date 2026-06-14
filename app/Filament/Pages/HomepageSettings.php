@@ -98,6 +98,7 @@ class HomepageSettings extends Page implements HasForms
             'offer_banner_coupon_code' => $settings['offer_banner_coupon_code'] ?? '',
             'offer_banner_discount_text' => $settings['offer_banner_discount_text'] ?? '',
             'offer_banner_cta_text' => $settings['offer_banner_cta_text'] ?? 'View Plans',
+            'offer_banner_membership_only' => ($settings['offer_banner_membership_only'] ?? '0') === '1',
         ]);
     }
 
@@ -314,6 +315,11 @@ class HomepageSettings extends Page implements HasForms
                             ->helperText('Displays the offer banner on the home + membership pages.')
                             ->columnSpanFull(),
 
+                        Forms\Components\Toggle::make('offer_banner_membership_only')
+                            ->label('Show only on Membership Plans page')
+                            ->helperText('When on, the banner appears only on the Membership Plans page (hidden on the home page and elsewhere).')
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('offer_banner_title')
                             ->label('Offer Title')
                             ->maxLength(60)
@@ -356,7 +362,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
+        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,

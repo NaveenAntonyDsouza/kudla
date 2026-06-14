@@ -1,15 +1,19 @@
 @php
     // Admin-managed promotional banner (Settings → Homepage Content → Offer Banner).
-    // Shown on the home + membership pages. All fields edited in the admin panel.
+    // Shown on every app-layout page, or — when "membership only" is on — just the
+    // Membership Plans page. All fields edited in the admin panel.
     $offerEnabled  = \App\Models\SiteSetting::getValue('offer_banner_enabled', '0') === '1';
     $offerTitle    = \App\Models\SiteSetting::getValue('offer_banner_title', '');
     $offerText     = \App\Models\SiteSetting::getValue('offer_banner_text', '');
     $offerCode     = trim((string) \App\Models\SiteSetting::getValue('offer_banner_coupon_code', ''));
     $offerDiscount = \App\Models\SiteSetting::getValue('offer_banner_discount_text', '');
     $offerCta      = \App\Models\SiteSetting::getValue('offer_banner_cta_text', 'View Plans');
+    // When on, restrict the banner to the Membership Plans page only.
+    $offerMembershipOnly = \App\Models\SiteSetting::getValue('offer_banner_membership_only', '0') === '1';
+    $offerVisibleHere    = ! $offerMembershipOnly || request()->routeIs('membership.index');
 @endphp
 
-@if($offerEnabled && ($offerTitle || $offerText || $offerCode))
+@if($offerEnabled && $offerVisibleHere && ($offerTitle || $offerText || $offerCode))
     <div class="text-white" style="background: linear-gradient(90deg, var(--color-primary), var(--color-primary-hover));">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center">
             <div class="flex items-center gap-2">
