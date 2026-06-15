@@ -184,6 +184,12 @@ class SearchController extends Controller
         $query->when($request->native_country, fn($q, $v) =>
             $q->whereHas('locationInfo', fn($q2) => $q2->where('native_country', $v))
         );
+        $query->when($request->native_state, fn($q, $v) =>
+            $q->whereHas('locationInfo', fn($q2) => $q2->where('native_state', $v))
+        );
+        $query->when($request->native_district, fn($q, $v) =>
+            $q->whereHas('locationInfo', fn($q2) => $q2->where('native_district', $v))
+        );
 
         // Family status
         $familyStatus = array_filter((array) ($request->family_status ?? []), fn($i) => $i !== 'Any');
@@ -381,6 +387,15 @@ class SearchController extends Controller
         }
         if ($workingDistrict = request('working_district')) {
             $query->whereHas('educationDetail', fn($q) => $q->where('working_district', $workingDistrict));
+        }
+        if ($nativeCountry = request('native_country')) {
+            $query->whereHas('locationInfo', fn($q) => $q->where('native_country', $nativeCountry));
+        }
+        if ($nativeState = request('native_state')) {
+            $query->whereHas('locationInfo', fn($q) => $q->where('native_state', $nativeState));
+        }
+        if ($nativeDistrict = request('native_district')) {
+            $query->whereHas('locationInfo', fn($q) => $q->where('native_district', $nativeDistrict));
         }
         if ($heightFrom = request('height_from')) {
             $query->whereRaw('CAST(height AS UNSIGNED) >= ?', [(int) $heightFrom]);
