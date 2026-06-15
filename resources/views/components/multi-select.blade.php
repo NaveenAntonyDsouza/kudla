@@ -1,10 +1,23 @@
 @props(['name', 'label', 'options' => [], 'selected' => [], 'searchable' => false, 'grouped' => false, 'emitTo' => null, 'showAny' => true, 'labelClass' => 'block text-xs font-medium text-gray-500 mb-1'])
 
 @php
+    // Tolerate option data whose shape doesn't match the $grouped flag.
+    // Admin overrides (GatewayConfigProvider / reference_data_options) can
+    // store a flat list for a category the view marks as grouped; without
+    // this guard the nested foreach below fatals on a string group value.
+    $options = is_iterable($options) ? $options : [];
     $selectedArr = is_array($selected) ? $selected : [];
+
+    $isGrouped = $grouped;
+    if ($isGrouped) {
+        foreach ($options as $items) {
+            if (! is_iterable($items)) { $isGrouped = false; break; }
+        }
+    }
+
     $flatOptions = [];
     $groupMap = [];
-    if ($grouped) {
+    if ($isGrouped) {
         foreach ($options as $group => $items) {
             $groupMap[$group] = $items;
             foreach ($items as $item) {
@@ -12,7 +25,13 @@
             }
         }
     } else {
-        $flatOptions = $options;
+        foreach ($options as $opt) {
+            if (is_iterable($opt)) {
+                foreach ($opt as $o) { $flatOptions[] = $o; }
+            } else {
+                $flatOptions[] = $opt;
+            }
+        }
     }
 @endphp
 
@@ -137,7 +156,7 @@
                 <div class="border-b border-gray-100 my-1"></div>
             @endif
 
-            @if($grouped)
+            @if($isGrouped)
                 @foreach($options as $group => $items)
                     <label class="flex items-center gap-2 px-3 pt-2.5 pb-1 cursor-pointer hover:bg-gray-50 rounded">
                         <input type="checkbox" :checked="isGroupSelected('{{ addslashes($group) }}')" @change="toggleGroup('{{ addslashes($group) }}')"
@@ -153,7 +172,7 @@
                     @endforeach
                 @endforeach
             @else
-                @foreach($options as $option)
+                @foreach($flatOptions as $option)
                     <label x-show="matchesSearch('{{ addslashes($option) }}')" class="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
                         <input type="checkbox" :checked="selected.includes('{{ addslashes($option) }}')" @change="toggle('{{ addslashes($option) }}')"
                             class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">

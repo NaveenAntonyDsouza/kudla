@@ -171,6 +171,12 @@
                                 </div>
                             </div>
 
+                            {{-- Location (Working + Native) — all 6 fields. District populates for India only. --}}
+                            <div class="mt-5 space-y-5">
+                                <x-location-cascade prefix="working" label="Working" :district="true" />
+                                <x-location-cascade prefix="native" label="Native" :district="true" />
+                            </div>
+
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 pt-4 border-t border-gray-200">
                                 <a href="{{ route('search.quick') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">Clear</a>
                                 <button type="submit" class="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
@@ -343,6 +349,11 @@
                                     </select>
                                     <label>Mother Tongue</label>
                                 </div>
+                            </div>
+
+                            {{-- Native Country / State --}}
+                            <div class="mt-5">
+                                <x-location-cascade prefix="native" label="Native" :district="false" />
                             </div>
 
                             {{-- More Criteria --}}

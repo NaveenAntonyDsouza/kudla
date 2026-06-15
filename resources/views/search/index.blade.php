@@ -199,19 +199,11 @@
                                     </select>
                                     <label>Working District</label>
                                 </div>
-                                <div class="float-field">
-                                    <select name="native_country">
-                                        <option value="">Any</option>
-                                        @foreach(config('reference_data.country_list') as $group => $countries)
-                                            <optgroup label="{{ $group }}">
-                                                @foreach($countries as $c)
-                                                    <option value="{{ $c }}" {{ request('native_country') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
-                                    </select>
-                                    <label>Native Country</label>
-                                </div>
+                            </div>
+
+                            {{-- Native Country + State (cascade) --}}
+                            <div class="mt-5">
+                                <x-location-cascade prefix="native" label="Native" :district="false" />
                             </div>
 
                             {{-- Mother Tongue --}}
