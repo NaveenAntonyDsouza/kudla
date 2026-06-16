@@ -44,6 +44,7 @@ $itemsToInclude = @(
 
 # Folders to EXCLUDE inside public/ and storage/
 $excludeDirs = @(
+    'bootstrap\cache',
     'public\storage',
     'storage\app\public\photos',
     'storage\app\public\branding',
