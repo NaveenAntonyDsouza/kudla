@@ -22,6 +22,12 @@ class MembershipController extends Controller
 
     public function index()
     {
+        // Free-membership mode: no pricing/checkout — everyone already has full
+        // access, so show a simple notice instead of the plan tiers.
+        if (\App\Models\User::freeMembershipEnabled()) {
+            return view('membership.free-notice');
+        }
+
         $plans = MembershipPlan::where('is_active', true)
             ->orderBy('sort_order')
             ->get();

@@ -42,6 +42,9 @@ class GatewaySettings extends Page implements HasForms
         $settings = SiteSetting::pluck('value', 'key')->toArray();
 
         $this->form->fill([
+            // Membership Mode
+            'free_membership_enabled' => ($settings['free_membership_enabled'] ?? '0') === '1',
+
             // SMTP
             'mail_driver' => $settings['mail_driver'] ?? config('mail.default'),
             'mail_host' => $settings['mail_host'] ?? config('mail.mailers.smtp.host'),
@@ -114,6 +117,16 @@ class GatewaySettings extends Page implements HasForms
     {
         return $form
             ->schema([
+                \Filament\Schemas\Components\Section::make('Membership Mode')
+                    ->description('Control whether members pay for premium features on this site.')
+                    ->schema([
+                        Forms\Components\Toggle::make('free_membership_enabled')
+                            ->label('Free Membership — everyone gets full premium access, no payment')
+                            ->helperText('When ON, every member has full premium access for free, and the Membership Plans page shows an "all features are free" notice instead of pricing (ideal for launch / growth phase). When OFF, normal paid plans apply.')
+                            ->inline(false)
+                            ->columnSpanFull(),
+                    ]),
+
                 \Filament\Schemas\Components\Section::make('Email / SMTP Configuration')
                     ->description('Configure outgoing email settings. Falls back to .env values if left empty.')
                     ->schema([
@@ -469,6 +482,7 @@ class GatewaySettings extends Page implements HasForms
         // stores everything as text, and the gateway services + provider check
         // for the literal '1'.
         $booleanFields = [
+            'free_membership_enabled',
             'razorpay_enabled', 'stripe_enabled', 'paypal_enabled',
             'paytm_enabled', 'phonepe_enabled',
             'razorpay_show_in_app', 'stripe_show_in_app', 'paypal_show_in_app',

@@ -275,8 +275,25 @@ class User extends Authenticatable implements FilamentUser
         return $this->staffRole?->isSuperAdmin() ?? false;
     }
 
+    /**
+     * Free-membership mode: when the "Free Membership" admin toggle is ON
+     * (Settings → Email, SMS & Payment → Membership Mode), every member is
+     * treated as premium — full access, no paywall — and the membership page
+     * shows an "all features are free" notice instead of plans. Stored as a
+     * SiteSetting so each site flips it from its own admin panel.
+     */
+    public static function freeMembershipEnabled(): bool
+    {
+        return SiteSetting::getValue('free_membership_enabled', '0') === '1';
+    }
+
     public function isPremium(): bool
     {
+        // Free-membership mode → everyone has full premium access.
+        if (static::freeMembershipEnabled()) {
+            return true;
+        }
+
         return $this->userMemberships()
             ->where('is_active', true)
             ->where(function ($query) {
