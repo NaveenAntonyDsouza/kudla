@@ -1107,6 +1107,54 @@ class UserResource extends Resource
                                 ]),
                             ]),
 
+                        // Tab: Partner Preferences (read-only summary)
+                        \Filament\Schemas\Components\Tabs\Tab::make('Partner Preferences')
+                            ->icon('heroicon-o-sparkles')
+                            ->schema([
+                                \Filament\Schemas\Components\Grid::make(2)->schema([
+                                    Infolists\Components\TextEntry::make('pp_age')->label('Preferred Age')
+                                        ->getStateUsing(function (Profile $record) {
+                                            $pp = $record->partnerPreference;
+                                            if (!$pp || (!$pp->age_from && !$pp->age_to)) return 'Any';
+                                            return ($pp->age_from ?: '?') . ' – ' . ($pp->age_to ?: '?') . ' yrs';
+                                        }),
+                                    Infolists\Components\TextEntry::make('pp_height')->label('Preferred Height')
+                                        ->getStateUsing(function (Profile $record) {
+                                            $pp = $record->partnerPreference;
+                                            if (!$pp || (!$pp->height_from_cm && !$pp->height_to_cm)) return 'Any';
+                                            return ($pp->height_from_cm ?: '?') . ' – ' . ($pp->height_to_cm ?: '?');
+                                        }),
+                                    Infolists\Components\TextEntry::make('pp_marital_status')->label('Marital Status')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->marital_status)),
+                                    Infolists\Components\TextEntry::make('pp_complexion')->label('Complexion')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->complexion)),
+                                    Infolists\Components\TextEntry::make('pp_body_type')->label('Body Type')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->body_type)),
+                                    Infolists\Components\TextEntry::make('pp_physical_status')->label('Physical Status')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->physical_status)),
+                                    Infolists\Components\TextEntry::make('pp_family_status')->label('Family Status')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->family_status)),
+                                    Infolists\Components\TextEntry::make('pp_religions')->label('Religion')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->religions)),
+                                    Infolists\Components\TextEntry::make('pp_mother_tongues')->label('Mother Tongue')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->mother_tongues)),
+                                    Infolists\Components\TextEntry::make('pp_education_levels')->label('Education Level')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->education_levels)),
+                                    Infolists\Components\TextEntry::make('pp_occupations')->label('Occupation')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->occupations)),
+                                    Infolists\Components\TextEntry::make('pp_working_countries')->label('Preferred Working Country(ies)')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->working_countries)),
+                                    Infolists\Components\TextEntry::make('pp_working_states')->label('Preferred Working State(s)')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->working_states)),
+                                    Infolists\Components\TextEntry::make('pp_working_districts')->label('Preferred Working District(s)')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->working_districts)),
+                                    Infolists\Components\TextEntry::make('pp_native_districts')->label('Preferred Native District(s)')
+                                        ->getStateUsing(fn (Profile $record) => self::ppList($record->partnerPreference?->native_districts)),
+                                ]),
+                                Infolists\Components\TextEntry::make('partnerPreference.about_partner')
+                                    ->label('About Partner Expectations')->default('-')->columnSpanFull(),
+                            ]),
+
                         // Tab 8: Subscription & Membership
                         \Filament\Schemas\Components\Tabs\Tab::make('Subscription')
                             ->icon('heroicon-o-credit-card')
@@ -1778,6 +1826,16 @@ class UserResource extends Resource
 
                 return $options;
             });
+    }
+
+    /**
+     * Format a Partner Preference array value for the read-only View tab —
+     * comma-separated, or "Any" when empty.
+     */
+    private static function ppList($value): string
+    {
+        $arr = array_values(array_filter((array) ($value ?? []), fn ($v) => $v !== null && $v !== ''));
+        return $arr ? implode(', ', $arr) : 'Any';
     }
 
     /**
