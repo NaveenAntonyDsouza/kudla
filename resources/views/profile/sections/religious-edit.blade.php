@@ -126,11 +126,15 @@
                 <div class="float-field">
                     <select name="denomination" x-model="selectedDenomination" @change="fetchDioceses()"><option value="">Select</option>
                         @foreach(config('reference_data.denomination_list', []) as $group => $items)
-                            <optgroup label="{{ $group }}">
-                                @foreach($items as $opt)
-                                    <option value="{{ $opt }}">{{ $opt }}</option>
-                                @endforeach
-                            </optgroup>
+                            @if(is_array($items))
+                                <optgroup label="{{ $group }}">
+                                    @foreach($items as $opt)
+                                        <option value="{{ $opt }}">{{ $opt }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @else
+                                <option value="{{ $items }}">{{ $items }}</option>
+                            @endif
                         @endforeach
                         @if(($r?->denomination ?? '') !== '' && ! in_array($r?->denomination, $denomFlat, true))
                             <optgroup label="Current"><option value="{{ $r->denomination }}">{{ $r->denomination }}</option></optgroup>
@@ -142,7 +146,9 @@
                     <input type="text" name="other_denomination_name" x-model="otherDenominationName" maxlength="100" placeholder=" ">
                     <label>Specify Denomination</label>
                 </div>
-                {{-- Diocese cascade — shown once a real (non-"Other") denomination is picked --}}
+                {{-- Diocese cascade — shown once a real (non-"Other") denomination is picked.
+                     Admin-toggleable (General Settings → Registration & Approval → "Show Diocese field"). --}}
+                @if(\App\Models\SiteSetting::getValue('show_diocese', '1') === '1')
                 <template x-if="selectedDenomination && selectedDenomination !== 'Other'">
                     <div class="contents">
                         <div class="float-field">
@@ -161,6 +167,7 @@
                         <input type="hidden" name="diocese_name" :value="dioceseChoice === '__other__' ? dioceseOther : ''">
                     </div>
                 </template>
+                @endif
                 <div class="float-field"><input type="text" name="parish_name_place" value="{{ $r?->parish_name_place ?? '' }}" placeholder=" "><label>Parish Name & Place</label></div>
             </div>
         </template>

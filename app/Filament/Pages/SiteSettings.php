@@ -60,6 +60,8 @@ class SiteSettings extends Page implements HasForms
 
             // Registration Settings
             'profile_id_prefix' => $settings['profile_id_prefix'] ?? 'AM',
+            'show_diocese' => ($settings['show_diocese'] ?? '1') === '1',
+            'cascade_countries' => $settings['cascade_countries'] ?? '',
             'email_verification_enabled' => $settings['email_verification_enabled'] ?? '1',
             'phone_verification_enabled' => $settings['phone_verification_enabled'] ?? '0',
             'mobile_otp_login_enabled' => $settings['mobile_otp_login_enabled'] ?? '1',
@@ -169,6 +171,10 @@ class SiteSettings extends Page implements HasForms
                             ->maxLength(5)
                             ->helperText('e.g., "AM" generates AM100001, AM100002...'),
 
+                        Forms\Components\Toggle::make('show_diocese')
+                            ->label('Show Diocese field')
+                            ->helperText('Shows the Christian Diocese dropdown in registration & profile editing (it cascades from Denomination). Turn OFF for a global audience that has no single-country diocese list. Default: ON.'),
+
                         Forms\Components\Toggle::make('email_verification_enabled')
                             ->label('Email Verification Required')
                             ->helperText('Require email OTP during registration'),
@@ -203,6 +209,16 @@ class SiteSettings extends Page implements HasForms
                             ->helperText('Horoscope / Baptism Certificate'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Country List')
+                    ->description('Countries shown in the Native / Working country dropdowns during registration and profile editing, in this order.')
+                    ->schema([
+                        Forms\Components\Textarea::make('cascade_countries')
+                            ->label('Countries (one per line, in display order)')
+                            ->rows(8)
+                            ->helperText('Leave BLANK to use the built-in default (India & Gulf first). For a global audience, list countries in your preferred order (e.g. alphabetical). Keep "Other" last as the free-text fallback.')
+                            ->columnSpanFull(),
+                    ]),
 
                 \Filament\Schemas\Components\Section::make('Social Links')
                     ->description('Social media URLs shown in footer and contact page.')
@@ -285,6 +301,7 @@ class SiteSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         $toggleFields = [
+            'show_diocese',
             'email_verification_enabled', 'phone_verification_enabled',
             'mobile_otp_login_enabled', 'email_otp_login_enabled',
             'auto_approve_profiles', 'auto_approve_profile_photos',

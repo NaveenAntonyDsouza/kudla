@@ -202,12 +202,16 @@
                     <div class="float-field">
                         <select name="denomination" id="denomination" x-model="selectedDenomination" @change="fetchDioceses()" required>
                             <option value="">Select</option>
-                            @foreach(config('reference_data.denomination_list') as $group => $items)
-                                <optgroup label="{{ $group }}">
-                                    @foreach($items as $denom)
-                                        <option value="{{ $denom }}">{{ $denom }}</option>
-                                    @endforeach
-                                </optgroup>
+                            @foreach(config('reference_data.denomination_list', []) as $group => $items)
+                                @if(is_array($items))
+                                    <optgroup label="{{ $group }}">
+                                        @foreach($items as $denom)
+                                            <option value="{{ $denom }}">{{ $denom }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @else
+                                    <option value="{{ $items }}">{{ $items }}</option>
+                                @endif
                             @endforeach
                         </select>
                         <label for="denomination">Denomination <span class="text-red-500">*</span></label>
@@ -226,7 +230,10 @@
                          free-text box — also the path for Non-Catholic
                          denominations, whose dioceses aren't in this list. The
                          <select> is UI-only; hidden inputs submit diocese +
-                         diocese_name. --}}
+                         diocese_name. Admin-toggleable (General Settings →
+                         Registration & Approval → "Show Diocese field"); hidden
+                         for global audiences with no single-country diocese list. --}}
+                    @if(\App\Models\SiteSetting::getValue('show_diocese', '1') === '1')
                     <template x-if="selectedDenomination && selectedDenomination !== 'Other'">
                         <div class="contents">
                             <div class="float-field">
@@ -247,6 +254,7 @@
                             <input type="hidden" name="diocese_name" :value="dioceseChoice === '__other__' ? dioceseOther : ''">
                         </div>
                     </template>
+                    @endif
                     <div class="float-field">
                         <textarea name="parish_name_place" id="parish_name_place" rows="3" placeholder=" "
                             class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ old('parish_name_place', $religiousInfo->parish_name_place ?? '') }}</textarea>

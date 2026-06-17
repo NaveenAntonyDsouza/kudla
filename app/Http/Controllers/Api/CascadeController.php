@@ -112,7 +112,13 @@ class CascadeController extends Controller
         $country = $request->query('country');
 
         if (!$country) {
-            return response()->json(config('locations.countries', []));
+            // Admin-editable country list (General Settings → Country List).
+            // Blank setting → built-in default (India & Gulf first); a global
+            // audience can supply its own alphabetical list there.
+            $custom = collect(preg_split('/[\r\n,]+/', (string) \App\Models\SiteSetting::getValue('cascade_countries', '')))
+                ->map(fn ($c) => trim($c))->filter()->values()->all();
+
+            return response()->json($custom ?: config('locations.countries', []));
         }
 
         $map = config('locations.country_state_map', []);
