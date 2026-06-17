@@ -8,6 +8,7 @@ use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
 use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
+use App\Models\PartnerPreference;
 use App\Models\Profile;
 use App\Models\ReligiousInfo;
 use App\Models\SocialMediaLink;
@@ -169,6 +170,29 @@ class CreateUser extends CreateRecord
             'instagram_url' => $data['social_instagram'] ?? null,
             'facebook_url' => $data['social_facebook'] ?? null,
             'linkedin_url' => $data['social_linkedin'] ?? null,
+        ]);
+
+        // 11. Create Partner Preferences
+        PartnerPreference::create([
+            'profile_id' => $profile->id,
+            'age_from' => $data['pp_age_from'] ?? null,
+            'age_to' => $data['pp_age_to'] ?? null,
+            'height_from_cm' => $data['pp_height_from'] ?? null,
+            'height_to_cm' => $data['pp_height_to'] ?? null,
+            'marital_status' => $data['pp_marital_status'] ?? [],
+            'complexion' => $data['pp_complexion'] ?? [],
+            'body_type' => $data['pp_body_type'] ?? [],
+            'physical_status' => $data['pp_physical_status'] ?? [],
+            'family_status' => $data['pp_family_status'] ?? [],
+            'religions' => $data['pp_religions'] ?? [],
+            'mother_tongues' => $data['pp_mother_tongues'] ?? [],
+            'education_levels' => $data['pp_education_levels'] ?? [],
+            'occupations' => $data['pp_occupations'] ?? [],
+            'working_countries' => $data['pp_working_countries'] ?? [],
+            'working_states' => $data['pp_working_states'] ?? [],
+            'working_districts' => $data['pp_working_districts'] ?? [],
+            'native_districts' => $data['pp_native_districts'] ?? [],
+            'about_partner' => $data['pp_about_partner'] ?? null,
         ]);
 
         Notification::make()
