@@ -1626,6 +1626,35 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('social_linkedin')->label('LinkedIn URL')->url()->maxLength(300),
                     ]),
 
+                // ── Partner Preferences ──
+                Section::make('Partner Preferences')
+                    ->icon('heroicon-o-sparkles')
+                    ->description("What this member is looking for in a partner — the same fields as the member's own Partner Preferences page. Leave a field empty for \"Any\".")
+                    ->columns(2)
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\TextInput::make('pp_age_from')->label('Age From')->numeric()->minValue(18)->maxValue(80)->placeholder('Any'),
+                        Forms\Components\TextInput::make('pp_age_to')->label('Age To')->numeric()->minValue(18)->maxValue(80)->placeholder('Any'),
+                        Forms\Components\Select::make('pp_height_from')->label('Height From')->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.height_list', []))),
+                        Forms\Components\Select::make('pp_height_to')->label('Height To')->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.height_list', []))),
+                        self::ppMultiSelect('marital_status', 'Marital Status', 'reference_data.marital_status_list', false),
+                        self::ppMultiSelect('complexion', 'Complexion', 'reference_data.complexion_list', false),
+                        self::ppMultiSelect('body_type', 'Body Type', 'reference_data.body_type_list', false),
+                        self::ppMultiSelect('physical_status', 'Physical Status', 'reference_data.physical_status_list', false),
+                        self::ppMultiSelect('family_status', 'Family Status', 'reference_data.family_status_list', false),
+                        self::ppMultiSelect('religions', 'Religion', 'reference_data.religion_list', false),
+                        self::ppMultiSelect('mother_tongues', 'Mother Tongue', 'reference_data.language_list', false, true),
+                        self::ppMultiSelect('education_levels', 'Education Level', 'reference_data.educational_qualifications_list', true, true),
+                        self::ppMultiSelect('occupations', 'Occupation', 'reference_data.occupation_category_list', true, true),
+                        self::ppMultiSelect('working_countries', 'Preferred Working Country(ies)', 'reference_data.country_list', true, true),
+                        self::ppMultiSelect('working_states', 'Preferred Working State(s)', 'locations.indian_states', false, true),
+                        self::ppMultiSelect('working_districts', 'Preferred Working District(s)', 'locations.state_district_map', true, true),
+                        self::ppMultiSelect('native_districts', 'Preferred Native District(s)', 'locations.state_district_map', true, true),
+                        Forms\Components\Textarea::make('pp_about_partner')->label('About Partner Expectations')->rows(3)->maxLength(5000)->columnSpanFull(),
+                    ]),
+
                 // ── Section 9: Status & Admin Controls ──
                 Section::make('Status & Admin Controls')
                     ->icon('heroicon-o-cog-6-tooth')
@@ -1714,6 +1743,41 @@ class UserResource extends Resource
             }
         }
         return $out;
+    }
+
+    /**
+     * A multi-select for a Partner Preference array field (admin member-edit
+     * "Partner Preferences" section), mirroring the member's own page. Merges
+     * any already-selected values into the options — even ones since
+     * deactivated in reference data — so opening + saving a member in admin
+     * never silently drops a stored preference (same protection as the
+     * member-facing form's mergeWithSelected).
+     *
+     * @param  string  $field      PartnerPreference column + pp_ form-key suffix.
+     * @param  string  $configKey  Dotted config path, e.g. 'reference_data.religion_list'.
+     * @param  bool    $grouped    True for grouped lists (education/occupation/country/districts).
+     */
+    private static function ppMultiSelect(string $field, string $label, string $configKey, bool $grouped, bool $searchable = false): Forms\Components\Select
+    {
+        return Forms\Components\Select::make('pp_' . $field)
+            ->label($label)
+            ->multiple()
+            ->searchable($searchable)
+            ->options(function (?\App\Models\Profile $record) use ($field, $configKey, $grouped) {
+                $list = config($configKey, []);
+                $options = $grouped ? self::listToGroupedOptions($list) : self::listToOptions($list);
+
+                // Keep already-chosen-but-now-deactivated values visible & saveable.
+                $stored = array_map('strval', (array) ($record?->partnerPreference?->{$field} ?? []));
+                $present = [];
+                array_walk_recursive($options, function ($v, $k) use (&$present) { $present[] = (string) $k; });
+                $missing = array_values(array_diff($stored, $present));
+                if ($missing) {
+                    $options['Currently selected'] = array_combine($missing, $missing);
+                }
+
+                return $options;
+            });
     }
 
     /**
