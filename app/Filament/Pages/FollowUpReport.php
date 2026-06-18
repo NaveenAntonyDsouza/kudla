@@ -38,6 +38,7 @@ class FollowUpReport extends Page
     public static function getNavigationBadge(): ?string
     {
         $count = ProfileNote::pendingFollowUp()
+            ->whereHas('profile') // exclude follow-ups whose member was deleted
             ->where('follow_up_date', '<=', today())
             ->count();
         return $count > 0 ? (string) $count : null;
@@ -52,6 +53,7 @@ class FollowUpReport extends Page
     {
         return ProfileNote::query()
             ->pendingFollowUp()
+            ->whereHas('profile') // exclude follow-ups whose member was deleted
             ->where('follow_up_date', '<', today())
             ->with(['profile.primaryPhoto', 'profile.user', 'adminUser'])
             ->orderBy('follow_up_date')
@@ -62,6 +64,7 @@ class FollowUpReport extends Page
     {
         return ProfileNote::query()
             ->pendingFollowUp()
+            ->whereHas('profile') // exclude follow-ups whose member was deleted
             ->whereDate('follow_up_date', today())
             ->with(['profile.primaryPhoto', 'profile.user', 'adminUser'])
             ->orderBy('follow_up_date')
@@ -72,6 +75,7 @@ class FollowUpReport extends Page
     {
         return ProfileNote::query()
             ->pendingFollowUp()
+            ->whereHas('profile') // exclude follow-ups whose member was deleted
             ->where('follow_up_date', '>', today())
             ->where('follow_up_date', '<=', today()->addDays(7))
             ->with(['profile.primaryPhoto', 'profile.user', 'adminUser'])
@@ -88,6 +92,7 @@ class FollowUpReport extends Page
         return ProfileNote::query()
             ->whereNotNull('follow_up_completed_at')
             ->whereDate('follow_up_completed_at', today())
+            ->whereHas('profile') // exclude follow-ups whose member was deleted
             ->with(['profile.primaryPhoto', 'profile.user', 'adminUser', 'completedBy'])
             ->orderByDesc('follow_up_completed_at')
             ->get();
