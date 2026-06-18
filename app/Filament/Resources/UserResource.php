@@ -136,8 +136,8 @@ class UserResource extends Resource
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('date_of_birth')
-                                ->label('Age')
-                                ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->age . ' yrs' : '-')
+                                ->label('Date of Birth')
+                                ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('d M Y') . ' · ' . Carbon::parse($state)->age . ' yrs' : '-')
                                 ->icon('heroicon-o-cake')
                                 ->grow(false),
 
@@ -145,6 +145,8 @@ class UserResource extends Resource
                                 ->label('Phone')
                                 ->searchable()
                                 ->icon('heroicon-o-phone')
+                                ->copyable()
+                                ->copyMessage('Phone number copied')
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('user.email')
@@ -152,6 +154,8 @@ class UserResource extends Resource
                                 ->searchable()
                                 ->icon('heroicon-o-envelope')
                                 ->limit(25)
+                                ->copyable()
+                                ->copyMessage('Email copied')
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('educationDetail.highest_education')
