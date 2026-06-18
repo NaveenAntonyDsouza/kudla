@@ -84,7 +84,7 @@ class UserResource extends Resource
                             Tables\Columns\TextColumn::make('full_name')
                                 ->weight('bold')
                                 ->size('lg')
-                                ->searchable()
+                                ->searchable(['full_name', 'matri_id'])
                                 ->sortable()
                                 ->formatStateUsing(function ($state, Profile $record) {
                                     return $state . ' ( ' . $record->matri_id . ' )';
