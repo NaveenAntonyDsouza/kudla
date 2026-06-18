@@ -225,7 +225,7 @@ class ContactSubmissionResource extends Resource
             \Filament\Schemas\Components\Section::make('Admin Response')
                 ->schema([
                     Infolists\Components\TextEntry::make('admin_reply')->label('Reply Sent')->default('Not yet replied')->columnSpanFull(),
-                    Infolists\Components\TextEntry::make('replied_at')->label('Replied At')->dateTime('d M Y, h:i A')->default('-'),
+                    Infolists\Components\TextEntry::make('replied_at')->label('Replied At')->dateTime('d M Y, h:i A')->placeholder('-'),
                     Infolists\Components\TextEntry::make('admin_notes')->label('Internal Notes')->default('-')->columnSpanFull(),
                 ])
                 ->collapsed(),

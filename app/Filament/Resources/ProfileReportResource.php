@@ -180,7 +180,7 @@ class ProfileReportResource extends Resource
                     Infolists\Components\TextEntry::make('description')->label('Description')->columnSpanFull()->default('-'),
                     Infolists\Components\TextEntry::make('admin_notes')->label('Admin Notes')->columnSpanFull()->default('-'),
                     Infolists\Components\TextEntry::make('created_at')->label('Reported At')->dateTime('d M Y, h:i A'),
-                    Infolists\Components\TextEntry::make('reviewed_at')->label('Reviewed At')->dateTime('d M Y, h:i A')->default('Not yet reviewed'),
+                    Infolists\Components\TextEntry::make('reviewed_at')->label('Reviewed At')->dateTime('d M Y, h:i A')->placeholder('Not yet reviewed'),
                 ])
                 ->columns(3),
         ]);

@@ -86,9 +86,15 @@ class UserResource extends Resource
                                 ->size('lg')
                                 ->searchable(['full_name', 'matri_id'])
                                 ->sortable()
-                                ->formatStateUsing(function ($state, Profile $record) {
-                                    return $state . ' ( ' . $record->matri_id . ' )';
-                                }),
+                                ->copyable()
+                                ->copyMessage('Name copied'),
+
+                            Tables\Columns\TextColumn::make('matri_id')
+                                ->label('Matri ID')
+                                ->color('gray')
+                                ->copyable()
+                                ->copyMessage('Matri ID copied')
+                                ->grow(false),
 
                             Tables\Columns\TextColumn::make('plan_badge')
                                 ->label('Plan')
@@ -155,6 +161,7 @@ class UserResource extends Resource
                                 ->icon('heroicon-o-envelope')
                                 ->limit(25)
                                 ->copyable()
+                                ->copyableState(fn (Profile $record): ?string => $record->user?->email)
                                 ->copyMessage('Email copied')
                                 ->grow(false),
 
