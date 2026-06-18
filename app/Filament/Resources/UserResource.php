@@ -86,15 +86,11 @@ class UserResource extends Resource
                                 ->size('lg')
                                 ->searchable(['full_name', 'matri_id'])
                                 ->sortable()
+                                ->formatStateUsing(fn ($state, Profile $record) => $state . ' ( ' . $record->matri_id . ' )')
                                 ->copyable()
-                                ->copyMessage('Name copied'),
-
-                            Tables\Columns\TextColumn::make('matri_id')
-                                ->label('Matri ID')
-                                ->color('gray')
-                                ->copyable()
+                                ->copyableState(fn (Profile $record): string => (string) $record->matri_id)
                                 ->copyMessage('Matri ID copied')
-                                ->grow(false),
+                                ->tooltip('Click to copy Matri ID'),
 
                             Tables\Columns\TextColumn::make('plan_badge')
                                 ->label('Plan')
