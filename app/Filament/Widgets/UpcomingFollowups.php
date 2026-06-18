@@ -25,6 +25,7 @@ class UpcomingFollowups extends TableWidget
             ->query(
                 ProfileNote::query()
                     ->pendingFollowUp()
+                    ->whereHas('profile') // exclude follow-ups whose member was deleted
                     ->where('follow_up_date', '<=', today())
                     ->with(['profile', 'adminUser'])
                     ->orderBy('follow_up_date')
