@@ -86,11 +86,15 @@ class UserResource extends Resource
                                 ->size('lg')
                                 ->searchable(['full_name', 'matri_id'])
                                 ->sortable()
-                                ->formatStateUsing(fn ($state, Profile $record) => $state . ' ( ' . $record->matri_id . ' )')
                                 ->copyable()
-                                ->copyableState(fn (Profile $record): string => (string) $record->matri_id)
+                                ->copyMessage('Name copied'),
+
+                            Tables\Columns\TextColumn::make('matri_id')
+                                ->label('Matri ID')
+                                ->color('gray')
+                                ->copyable()
                                 ->copyMessage('Matri ID copied')
-                                ->tooltip('Click to copy Matri ID'),
+                                ->grow(false),
 
                             Tables\Columns\TextColumn::make('plan_badge')
                                 ->label('Plan')
@@ -148,7 +152,7 @@ class UserResource extends Resource
                                 ->searchable()
                                 ->icon('heroicon-o-phone')
                                 ->copyable()
-                                ->copyMessage('Phone number copied')
+                                ->copyMessage('Phone copied')
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('user.email')
