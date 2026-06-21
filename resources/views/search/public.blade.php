@@ -1,9 +1,9 @@
 <x-layouts.app title="Search Profiles">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
         activeTab: '{{ $activeTab }}',
-        religions: [],
+        advReligion: '{{ is_array(request('religion')) ? '' : request('religion', '') }}',
         moreOpen: false,
-        hasReligion(r) { return this.religions.includes(r); }
+        hasReligion(r) { return this.advReligion === r; }
     }">
 
         <p class="text-sm text-gray-500 mb-6">
@@ -18,47 +18,47 @@
             <div class="hidden lg:block lg:w-48 shrink-0">
                 <div class="sticky top-24 space-y-1">
                     <h2 class="text-base font-semibold text-gray-900 mb-3">Search</h2>
-                    <button @click="activeTab = 'partner'"
+                    <a href="{{ route('search.quick') }}"
                         :class="activeTab === 'partner' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                         Quick Search
-                    </button>
-                    <button @click="activeTab = 'advance'"
+                    </a>
+                    <a href="{{ route('search.advance') }}"
                         :class="activeTab === 'advance' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                         Advance Search
-                    </button>
-                    <button @click="activeTab = 'keyword'"
+                    </a>
+                    <a href="{{ route('search.keyword') }}"
                         :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
                         Keyword Search
-                    </button>
-                    <button @click="activeTab = 'byid'"
+                    </a>
+                    <a href="{{ route('search.byid') }}"
                         :class="activeTab === 'byid' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/></svg>
                         Search by ID
-                    </button>
+                    </a>
                 </div>
             </div>
 
             {{-- ══ Mobile tabs ══ --}}
             <div class="lg:hidden flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-                <button @click="activeTab = 'partner'"
+                <a href="{{ route('search.quick') }}"
                     :class="activeTab === 'partner' ? 'bg-(--color-primary) text-white' : 'bg-gray-100 text-gray-700'"
-                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Quick Search</button>
-                <button @click="activeTab = 'advance'"
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Quick Search</a>
+                <a href="{{ route('search.advance') }}"
                     :class="activeTab === 'advance' ? 'bg-(--color-primary) text-white' : 'bg-gray-100 text-gray-700'"
-                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Advance Search</button>
-                <button @click="activeTab = 'keyword'"
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Advance Search</a>
+                <a href="{{ route('search.keyword') }}"
                     :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'bg-gray-100 text-gray-700'"
-                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Keyword</button>
-                <button @click="activeTab = 'byid'"
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Keyword</a>
+                <a href="{{ route('search.byid') }}"
                     :class="activeTab === 'byid' ? 'bg-(--color-primary) text-white' : 'bg-gray-100 text-gray-700'"
-                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">By ID</button>
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">By ID</a>
             </div>
 
             {{-- ══ RIGHT: CONTENT ══ --}}
@@ -274,7 +274,7 @@
 
                             {{-- Location (Working + Native) — all 6 fields. District populates for India only. --}}
                             <div class="mt-5 space-y-5">
-                                <x-location-cascade prefix="working" label="Working" :district="true" />
+                                <x-location-multi prefix="working" label="Working" :district="true" />
                                 <x-location-cascade prefix="native" label="Native" :district="true" />
                             </div>
 
@@ -352,12 +352,18 @@
                                     :selected="(array) request('marital_status', [])" />
                             </div>
 
-                            {{-- Religion --}}
+                            {{-- Religion (single select; reveals Denomination / Caste below) --}}
                             <div class="mt-5">
-                                <x-multi-select name="religion" label="Religion"
-                                    :options="['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other']"
-                                    :selected="(array) request('religion', [])"
-                                    emitTo="religions" />
+                                <div class="float-field">
+                                    <select name="religion" x-model="advReligion"
+                                        @change="$dispatch('multiselect-clear', { name: 'denomination' }); $dispatch('multiselect-clear', { name: 'caste' })">
+                                        <option value="">Any Religion</option>
+                                        @foreach(['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other'] as $r)
+                                            <option value="{{ $r }}">{{ $r }}</option>
+                                        @endforeach
+                                    </select>
+                                    <label>Religion</label>
+                                </div>
                             </div>
 
                             {{-- Denomination (Christian) --}}
@@ -385,62 +391,14 @@
                                     :selected="(array) request('occupation', [])" :grouped="true" :searchable="true" />
                             </div>
 
-                            {{-- Location. Working country → state → district cascade
-                                 (states/districts from /api/cascade endpoints). --}}
-                            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5"
-                                x-data="{
-                                    wCountry: '{{ request('working_country', '') }}',
-                                    wState: '{{ request('working_state', '') }}',
-                                    wDistrict: '{{ request('working_district', '') }}',
-                                    wStates: [],
-                                    wDistricts: [],
-                                    async fetchWStates() {
-                                        if (!this.wCountry) { this.wStates = []; this.wDistricts = []; return; }
-                                        if (this.wCountry === 'India') {
-                                            this.wStates = await (await fetch('/api/cascade/states')).json();
-                                        } else {
-                                            const data = await (await fetch(`/api/cascade/countries?country=${encodeURIComponent(this.wCountry)}`)).json();
-                                            this.wStates = data.locations || [];
-                                        }
-                                        if (this.wState) this.fetchWDistricts();
-                                    },
-                                    async fetchWDistricts() {
-                                        if (!this.wState || this.wCountry !== 'India') { this.wDistricts = []; return; }
-                                        this.wDistricts = await (await fetch(`/api/cascade/districts?state=${encodeURIComponent(this.wState)}`)).json();
-                                    },
-                                    init() { if (this.wCountry) this.fetchWStates(); }
-                                }">
-                                <div class="float-field">
-                                    <select name="working_country" x-model="wCountry" @change="wState=''; wDistrict=''; wDistricts=[]; fetchWStates();">
-                                        <option value="">Any</option>
-                                        @foreach(config('reference_data.country_list') as $group => $countries)
-                                            <optgroup label="{{ $group }}">
-                                                @foreach($countries as $c)
-                                                    <option value="{{ $c }}">{{ $c }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endforeach
-                                    </select>
-                                    <label>Working Country</label>
-                                </div>
-                                <div class="float-field" x-show="wStates.length > 0" x-cloak>
-                                    <select name="working_state" x-model="wState" @change="wDistrict=''; fetchWDistricts();">
-                                        <option value="">Any</option>
-                                        <template x-for="st in wStates" :key="st">
-                                            <option :value="st" x-text="st" :selected="st === wState"></option>
-                                        </template>
-                                    </select>
-                                    <label>Working State</label>
-                                </div>
-                                <div class="float-field" x-show="wCountry === 'India' && wState && wDistricts.length > 0" x-cloak>
-                                    <select name="working_district" x-model="wDistrict">
-                                        <option value="">Any</option>
-                                        <template x-for="d in wDistricts" :key="d">
-                                            <option :value="d" x-text="d" :selected="d === wDistrict"></option>
-                                        </template>
-                                    </select>
-                                    <label>Working District</label>
-                                </div>
+                            {{-- Location — Working country (multi-select). State/District
+                                 drill-down appears only when a single country is chosen. --}}
+                            <div class="mt-5">
+                                <x-location-multi prefix="working" label="Working" :district="true" />
+                            </div>
+
+                            {{-- Mother Tongue --}}
+                            <div class="mt-5">
                                 <div class="float-field">
                                     <select name="mother_tongue">
                                         <option value="">Any Language</option>

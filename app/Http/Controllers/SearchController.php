@@ -314,6 +314,23 @@ class SearchController extends Controller
     }
 
     /**
+     * Read a possibly-multi (array) public-search filter value.
+     * Returns the cleaned list of chosen values, or null when the filter
+     * should be skipped entirely — i.e. "Any" was picked, or nothing was.
+     * Tolerates legacy single-string params (?caste=Brahmin) via the cast.
+     */
+    private function multiParam(string $key): ?array
+    {
+        $raw = (array) request($key, []);
+        if (in_array('Any', $raw, true)) {
+            return null;
+        }
+        $vals = array_values(array_filter($raw, fn($v) => $v !== ''));
+
+        return empty($vals) ? null : $vals;
+    }
+
+    /**
      * Public search results page (separate from form).
      */
     public function publicResults()
@@ -328,21 +345,18 @@ class SearchController extends Controller
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
 
-        // Apply filters from query params
-        // Caste — multi-select aware. 'Any' (or no value) means no caste filter.
-        $casteRaw = (array) request('caste', []);
-        if (! in_array('Any', $casteRaw, true)) {
-            $castes = array_values(array_filter($casteRaw, fn($c) => $c !== ''));
-            if (! empty($castes)) {
-                $query->whereHas('religiousInfo', fn($q) => $q->where(function ($sq) use ($castes) {
-                    $sq->whereIn('caste', $castes)->orWhereIn('other_caste_name', $castes);
-                }));
-            }
+        // Apply filters from query params. Caste/denomination are multi-select
+        // aware ("Any"/empty = no filter) and also match the "Other → Specify"
+        // typed value stored in the other_*_name columns.
+        if ($castes = $this->multiParam('caste')) {
+            $query->whereHas('religiousInfo', fn($q) => $q->where(fn($sq) =>
+                $sq->whereIn('caste', $castes)->orWhereIn('other_caste_name', $castes)
+            ));
         }
-        if ($denomination = request('denomination')) {
-            $query->whereHas('religiousInfo', fn($q) => $q->where(function ($sq) use ($denomination) {
-                $sq->where('denomination', $denomination)->orWhere('other_denomination_name', $denomination);
-            }));
+        if ($denoms = $this->multiParam('denomination')) {
+            $query->whereHas('religiousInfo', fn($q) => $q->where(fn($sq) =>
+                $sq->whereIn('denomination', $denoms)->orWhereIn('other_denomination_name', $denoms)
+            ));
         }
         if ($religion = request('religion')) {
             if (is_array($religion)) {
@@ -360,15 +374,10 @@ class SearchController extends Controller
         if ($ageTo = request('age_to')) {
             $query->whereDate('date_of_birth', '>=', now()->subYears((int) $ageTo + 1));
         }
-        // Mother tongue — multi-select aware. 'Any' (or no value) = no filter.
-        // mother_tongue lives on the profiles table (cf. logged-in buildSearchQuery);
-        // the previous whereHas('lifestyleInfo', ...) targeted a non-existent column.
-        $tongueRaw = (array) request('mother_tongue', []);
-        if (! in_array('Any', $tongueRaw, true)) {
-            $tongues = array_values(array_filter($tongueRaw, fn($t) => $t !== ''));
-            if (! empty($tongues)) {
-                $query->whereIn('mother_tongue', $tongues);
-            }
+        // Mother tongue lives on the profiles table (cf. buildSearchQuery), not
+        // lifestyle_info — the old whereHas('lifestyleInfo', ...) hit a missing column.
+        if ($tongues = $this->multiParam('mother_tongue')) {
+            $query->whereIn('mother_tongue', $tongues);
         }
         if ($keyword = request('keyword')) {
             $query->where(function ($q) use ($keyword) {
@@ -382,17 +391,17 @@ class SearchController extends Controller
         if ($matriId = request('matri_id')) {
             $query->where('matri_id', strtoupper($matriId));
         }
-        if ($maritalStatus = request('marital_status')) {
-            $query->where('marital_status', $maritalStatus);
+        if ($maritals = $this->multiParam('marital_status')) {
+            $query->whereIn('marital_status', $maritals);
         }
-        if ($education = request('education')) {
-            $query->whereHas('educationDetail', fn($q) => $q->where('highest_education', $education));
+        if ($education = $this->multiParam('education')) {
+            $query->whereHas('educationDetail', fn($q) => $q->whereIn('highest_education', $education));
         }
-        if ($occupation = request('occupation')) {
-            $query->whereHas('educationDetail', fn($q) => $q->where('occupation', $occupation));
+        if ($occupation = $this->multiParam('occupation')) {
+            $query->whereHas('educationDetail', fn($q) => $q->whereIn('occupation', $occupation));
         }
-        if ($workingCountry = request('working_country')) {
-            $query->whereHas('educationDetail', fn($q) => $q->where('working_country', $workingCountry));
+        if ($workingCountries = $this->multiParam('working_country')) {
+            $query->whereHas('educationDetail', fn($q) => $q->whereIn('working_country', $workingCountries));
         }
         if ($workingState = request('working_state')) {
             $query->whereHas('educationDetail', fn($q) => $q->where('working_state', $workingState));
