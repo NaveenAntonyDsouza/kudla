@@ -329,10 +329,15 @@ class SearchController extends Controller
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
 
         // Apply filters from query params
-        if ($caste = request('caste')) {
-            $query->whereHas('religiousInfo', fn($q) => $q->where(function ($sq) use ($caste) {
-                $sq->where('caste', $caste)->orWhere('other_caste_name', $caste);
-            }));
+        // Caste — multi-select aware. 'Any' (or no value) means no caste filter.
+        $casteRaw = (array) request('caste', []);
+        if (! in_array('Any', $casteRaw, true)) {
+            $castes = array_values(array_filter($casteRaw, fn($c) => $c !== ''));
+            if (! empty($castes)) {
+                $query->whereHas('religiousInfo', fn($q) => $q->where(function ($sq) use ($castes) {
+                    $sq->whereIn('caste', $castes)->orWhereIn('other_caste_name', $castes);
+                }));
+            }
         }
         if ($denomination = request('denomination')) {
             $query->whereHas('religiousInfo', fn($q) => $q->where(function ($sq) use ($denomination) {
@@ -355,8 +360,15 @@ class SearchController extends Controller
         if ($ageTo = request('age_to')) {
             $query->whereDate('date_of_birth', '>=', now()->subYears((int) $ageTo + 1));
         }
-        if ($motherTongue = request('mother_tongue')) {
-            $query->whereHas('lifestyleInfo', fn($q) => $q->where('mother_tongue', $motherTongue));
+        // Mother tongue — multi-select aware. 'Any' (or no value) = no filter.
+        // mother_tongue lives on the profiles table (cf. logged-in buildSearchQuery);
+        // the previous whereHas('lifestyleInfo', ...) targeted a non-existent column.
+        $tongueRaw = (array) request('mother_tongue', []);
+        if (! in_array('Any', $tongueRaw, true)) {
+            $tongues = array_values(array_filter($tongueRaw, fn($t) => $t !== ''));
+            if (! empty($tongues)) {
+                $query->whereIn('mother_tongue', $tongues);
+            }
         }
         if ($keyword = request('keyword')) {
             $query->where(function ($q) use ($keyword) {
@@ -406,7 +418,17 @@ class SearchController extends Controller
 
         $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
-        $filterLabel = request('caste') ?? request('denomination') ?? (is_string(request('religion')) ? request('religion') : null) ?? null;
+        // Pick a single human label for the results header, tolerating
+        // array (multi-select) values for caste/denomination/religion.
+        $firstVal = function ($v) {
+            foreach ((array) $v as $item) {
+                if ($item !== '' && $item !== 'Any') {
+                    return $item;
+                }
+            }
+            return null;
+        };
+        $filterLabel = $firstVal(request('caste')) ?? $firstVal(request('denomination')) ?? $firstVal(request('religion')) ?? null;
 
         // Determine which search form to link back to
         $searchType = request('search_type', 'quick');

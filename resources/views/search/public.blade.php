@@ -71,16 +71,27 @@
 
                 {{-- ── QUICK SEARCH TAB ── --}}
                 <div x-show="activeTab === 'partner'" x-cloak>
+                    @php
+                        // Caste can arrive as an array (multi-select) or a legacy
+                        // single string. 'Any' is the explicit "no caste filter".
+                        $quickCasteRaw = (array) request('caste', []);
+                        $quickCasteAny = in_array('Any', $quickCasteRaw, true);
+                        $quickCasteSelected = array_values(array_filter($quickCasteRaw, fn($c) => $c !== '' && $c !== 'Any'));
+                    @endphp
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6"
                          x-data="{
                             selectedReligion: '{{ request('religion', '') }}',
                             communities: [],
-                            selectedCaste: '{{ request('caste', '') }}',
+                            selectedCastes: {{ Js::from($quickCasteSelected) }},
+                            casteAny: {{ $quickCasteAny ? 'true' : 'false' }},
+                            casteOpen: false,
+                            casteSearch: '',
                             loading: false,
                             async fetchCommunities() {
                                 if (!this.selectedReligion) {
                                     this.communities = [];
-                                    this.selectedCaste = '';
+                                    this.selectedCastes = [];
+                                    this.casteAny = false;
                                     return;
                                 }
                                 this.loading = true;
@@ -88,13 +99,37 @@
                                     const res = await fetch('/api/cascade/communities?religion=' + encodeURIComponent(this.selectedReligion));
                                     const data = await res.json();
                                     this.communities = data.map(c => c.community_name);
-                                    if (!this.communities.includes(this.selectedCaste)) {
-                                        this.selectedCaste = '';
-                                    }
+                                    // Drop any previously-picked communities that
+                                    // don't belong to the newly chosen religion.
+                                    this.selectedCastes = this.selectedCastes.filter(c => this.communities.includes(c));
                                 } catch(e) {
                                     this.communities = [];
                                 }
                                 this.loading = false;
+                            },
+                            toggleCaste(val) {
+                                if (this.selectedCastes.includes(val)) {
+                                    this.selectedCastes = this.selectedCastes.filter(c => c !== val);
+                                } else {
+                                    this.casteAny = false;
+                                    this.selectedCastes.push(val);
+                                }
+                            },
+                            toggleCasteAny() {
+                                this.casteAny = !this.casteAny;
+                                if (this.casteAny) this.selectedCastes = [];
+                            },
+                            removeCaste(val) {
+                                this.selectedCastes = this.selectedCastes.filter(c => c !== val);
+                            },
+                            casteMatches(item) {
+                                if (!this.casteSearch) return true;
+                                return item.toLowerCase().includes(this.casteSearch.toLowerCase());
+                            },
+                            get casteDisplay() {
+                                if (this.casteAny) return 'Any';
+                                if (this.selectedCastes.length === 0) return '';
+                                return this.selectedCastes.length + ' selected';
                             },
                             init() {
                                 if (this.selectedReligion) this.fetchCommunities();
@@ -133,6 +168,26 @@
                                     <label>Age To</label>
                                 </div>
 
+                                {{-- Height Range --}}
+                                <div class="float-field">
+                                    <select name="height_from">
+                                        <option value="">Any</option>
+                                        @foreach(config('reference_data.height_list', []) as $h)
+                                            <option value="{{ $h }}" {{ request('height_from') === $h ? 'selected' : '' }}>{{ $h }}</option>
+                                        @endforeach
+                                    </select>
+                                    <label>Height From</label>
+                                </div>
+                                <div class="float-field">
+                                    <select name="height_to">
+                                        <option value="">Any</option>
+                                        @foreach(config('reference_data.height_list', []) as $h)
+                                            <option value="{{ $h }}" {{ request('height_to') === $h ? 'selected' : '' }}>{{ $h }}</option>
+                                        @endforeach
+                                    </select>
+                                    <label>Height To</label>
+                                </div>
+
                                 {{-- Religion --}}
                                 <div class="float-field">
                                     <select name="religion" x-model="selectedReligion" @change="fetchCommunities()">
@@ -145,30 +200,76 @@
                                 </div>
                             </div>
 
-                            {{-- Caste/Community (cascaded from Religion) --}}
+                            {{-- Caste/Community (multi-select, cascaded from Religion) --}}
                             <div class="mt-5" x-show="selectedReligion" x-transition>
-                                <div class="float-field">
-                                    <select name="caste" x-model="selectedCaste" :disabled="loading">
-                                        <option value="">Any Caste / Community</option>
-                                        <template x-for="c in communities" :key="c">
-                                            <option :value="c" x-text="c"></option>
+                                <div class="relative" @click.away="casteOpen = false">
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">Caste / Community</label>
+
+                                    {{-- Trigger --}}
+                                    <button type="button" @click="casteOpen = !casteOpen"
+                                        class="w-full flex items-center justify-between border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-left bg-white hover:border-gray-400 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) transition-colors">
+                                        <span :class="(casteAny || selectedCastes.length) ? 'text-gray-900' : 'text-gray-400'" x-text="casteDisplay || 'Select'"></span>
+                                        <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform" :class="casteOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </button>
+
+                                    {{-- Selected Tags --}}
+                                    <div x-show="selectedCastes.length > 0 && !casteAny" class="flex flex-wrap gap-1.5 mt-2">
+                                        <template x-for="val in selectedCastes" :key="val">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-(--color-primary-light) text-(--color-primary)">
+                                                <span x-text="val" class="max-w-[120px] truncate"></span>
+                                                <button type="button" @click.stop="removeCaste(val)" class="hover:text-red-600">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </span>
                                         </template>
-                                    </select>
-                                    <label>Caste / Community</label>
+                                    </div>
+                                    <div x-show="casteAny" class="mt-2">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Any (All communities)</span>
+                                    </div>
+
+                                    {{-- Dropdown Panel --}}
+                                    <div x-show="casteOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                                        <div class="p-2 border-b border-gray-100">
+                                            <input type="text" x-model="casteSearch" placeholder="Search..." class="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:border-(--color-primary)">
+                                        </div>
+                                        <div class="overflow-y-auto max-h-52 p-1">
+                                            {{-- Any Option --}}
+                                            <label class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50 cursor-pointer text-sm font-medium text-(--color-primary)">
+                                                <input type="checkbox" :checked="casteAny" @change="toggleCasteAny()"
+                                                    class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
+                                                Any
+                                            </label>
+                                            <div class="border-b border-gray-100 my-1"></div>
+                                            <template x-for="c in communities" :key="c">
+                                                <label x-show="casteMatches(c)" class="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                                    <input type="checkbox" :checked="selectedCastes.includes(c)" @change="toggleCaste(c)"
+                                                        class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
+                                                    <span x-text="c"></span>
+                                                </label>
+                                            </template>
+                                            <p x-show="communities.length === 0 && !loading" class="px-3 py-2 text-sm text-gray-400">No communities found</p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Hidden inputs for form submission --}}
+                                    <template x-if="casteAny">
+                                        <input type="hidden" name="caste[]" value="Any">
+                                    </template>
+                                    <template x-for="val in selectedCastes" :key="val">
+                                        <input type="hidden" name="caste[]" :value="val">
+                                    </template>
                                 </div>
                             </div>
 
-                            {{-- Mother Tongue --}}
+                            {{-- Mother Tongue (multi-select) --}}
                             <div class="mt-5">
-                                <div class="float-field">
-                                    <select name="mother_tongue">
-                                        <option value="">Any Language</option>
-                                        @foreach(config('reference_data.language_list', []) as $lang)
-                                            <option value="{{ $lang }}" {{ request('mother_tongue') === $lang ? 'selected' : '' }}>{{ $lang }}</option>
-                                        @endforeach
-                                    </select>
-                                    <label>Mother Tongue</label>
-                                </div>
+                                <x-multi-select name="mother_tongue" label="Mother Tongue"
+                                    :options="config('reference_data.language_list', [])"
+                                    :selected="(array) request('mother_tongue', [])"
+                                    :searchable="true" />
                             </div>
 
                             {{-- Location (Working + Native) — all 6 fields. District populates for India only. --}}
