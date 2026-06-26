@@ -425,6 +425,31 @@ class SearchController extends Controller
             $query->whereRaw('CAST(height AS UNSIGNED) <= ?', [(int) $heightTo]);
         }
 
+        // "Add More Criteria" filters (Advance Search) — all multi-select.
+        // Mirrors the logged-in buildSearchQuery: body_type/physical_status are
+        // columns on profiles; the rest live on related tables.
+        if ($bodyType = $this->multiParam('body_type')) {
+            $query->whereIn('body_type', $bodyType);
+        }
+        if ($physicalStatus = $this->multiParam('physical_status')) {
+            $query->whereIn('physical_status', $physicalStatus);
+        }
+        if ($familyStatus = $this->multiParam('family_status')) {
+            $query->whereHas('familyDetail', fn($q) => $q->whereIn('family_status', $familyStatus));
+        }
+        if ($income = $this->multiParam('annual_income')) {
+            $query->whereHas('educationDetail', fn($q) => $q->whereIn('annual_income', $income));
+        }
+        if ($diet = $this->multiParam('diet')) {
+            $query->whereHas('lifestyleInfo', fn($q) => $q->whereIn('diet', $diet));
+        }
+        if ($smoking = $this->multiParam('smoking')) {
+            $query->whereHas('lifestyleInfo', fn($q) => $q->whereIn('smoking', $smoking));
+        }
+        if ($drinking = $this->multiParam('drinking')) {
+            $query->whereHas('lifestyleInfo', fn($q) => $q->whereIn('drinking', $drinking));
+        }
+
         $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // Pick a single human label for the results header, tolerating
