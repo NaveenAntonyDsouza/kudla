@@ -67,6 +67,9 @@ class SiteSettings extends Page implements HasForms
             'phone_verification_enabled' => $settings['phone_verification_enabled'] ?? '0',
             'mobile_otp_login_enabled' => $settings['mobile_otp_login_enabled'] ?? '1',
             'email_otp_login_enabled' => $settings['email_otp_login_enabled'] ?? '0',
+            'login_method_order' => collect(
+                json_decode($settings['login_method_order'] ?? '', true) ?: ['mobile_otp', 'email_otp', 'password']
+            )->map(fn ($m) => ['method' => $m])->all(),
             'auto_approve_profiles' => $settings['auto_approve_profiles'] ?? '1',
             'auto_approve_profile_photos' => $settings['auto_approve_profile_photos'] ?? '1',
             'auto_approve_album_photos' => $settings['auto_approve_album_photos'] ?? '1',
@@ -198,6 +201,23 @@ class SiteSettings extends Page implements HasForms
                             ->label('Email OTP Login')
                             ->helperText('Allow login via email + OTP'),
 
+                        Forms\Components\Repeater::make('login_method_order')
+                            ->label('Login Page — order of login methods')
+                            ->helperText('Drag to reorder the tabs on the login page. The FIRST enabled method is what members see selected by default. Methods switched off above are skipped automatically.')
+                            ->schema([
+                                Forms\Components\Select::make('method')
+                                    ->label('Method')
+                                    ->options([
+                                        'mobile_otp' => 'Mobile OTP',
+                                        'email_otp' => 'Email OTP',
+                                        'password' => 'Email & Password',
+                                    ])
+                                    ->required(),
+                            ])
+                            ->maxItems(3)
+                            ->reorderable()
+                            ->columnSpanFull(),
+
                         Forms\Components\Toggle::make('auto_approve_profiles')
                             ->label('Auto-Approve Profiles')
                             ->helperText('Profiles go live immediately'),
@@ -317,6 +337,17 @@ class SiteSettings extends Page implements HasForms
         ];
 
         $jsonFields = ['canned_responses'];
+
+        // Login tab order: store the Repeater rows as a flat, de-duplicated
+        // JSON list of method names, in the order the admin arranged them.
+        $loginOrder = collect($data['login_method_order'] ?? [])
+            ->pluck('method')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        SiteSetting::setValue('login_method_order', json_encode($loginOrder));
+        unset($data['login_method_order']);
 
         foreach ($data as $key => $value) {
             if (in_array($key, $toggleFields)) {

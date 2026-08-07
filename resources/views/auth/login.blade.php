@@ -4,11 +4,34 @@
         $mobileOtpEnabled = \App\Models\SiteSetting::getValue('mobile_otp_login_enabled', '1') === '1';
         $emailOtpEnabled = \App\Models\SiteSetting::getValue('email_otp_login_enabled', '0') === '1';
 
-        // Determine default tab
-        $defaultTab = $mobileOtpEnabled ? 'mobile' : ($emailOtpEnabled ? 'email_otp' : 'email');
+        // Tab order is admin-controlled (General Settings → Login Page). The
+        // first *enabled* method in the list becomes the default tab, so the
+        // order setting alone decides what members see first.
+        $allLoginTabs = [
+            'mobile_otp' => ['key' => 'mobile',    'label' => 'Mobile OTP',      'enabled' => $mobileOtpEnabled],
+            'email_otp'  => ['key' => 'email_otp', 'label' => 'Email OTP',       'enabled' => $emailOtpEnabled],
+            'password'   => ['key' => 'email',     'label' => 'Email & Password', 'enabled' => true],
+        ];
 
-        // Count enabled tabs for layout
-        $enabledTabs = ($mobileOtpEnabled ? 1 : 0) + ($emailOtpEnabled ? 1 : 0) + 1; // email+password always enabled
+        $loginOrder = json_decode(\App\Models\SiteSetting::getValue('login_method_order', ''), true);
+        $loginOrder = is_array($loginOrder) && $loginOrder ? array_unique($loginOrder) : ['mobile_otp', 'email_otp', 'password'];
+
+        $loginTabs = [];
+        foreach ($loginOrder as $m) {
+            if (isset($allLoginTabs[$m]) && $allLoginTabs[$m]['enabled']) {
+                $loginTabs[] = $allLoginTabs[$m];
+            }
+        }
+        // Safety net: never drop an enabled method just because it is missing
+        // from a hand-edited order list.
+        foreach ($allLoginTabs as $m => $t) {
+            if ($t['enabled'] && ! in_array($m, $loginOrder, true)) {
+                $loginTabs[] = $t;
+            }
+        }
+
+        $defaultTab = $loginTabs[0]['key'] ?? 'email';
+        $enabledTabs = count($loginTabs);
     @endphp
 
     <h2 class="text-xl font-serif font-bold text-gray-900 text-center mb-6">Login to {{ $siteName }}</h2>
@@ -28,33 +51,15 @@
     ">
         {{-- Tabs (hide when only 1 option) --}}
         <div class="flex border-b border-gray-200 mb-6" @if($enabledTabs <= 1) style="display:none" @endif>
-            @if($mobileOtpEnabled)
+            @foreach($loginTabs as $t)
             <button
-                x-on:click="tab = 'mobile'"
-                :class="tab === 'mobile' ? 'border-b-2 border-(--color-primary) text-(--color-primary)' : 'text-gray-500 hover:text-gray-700'"
+                x-on:click="tab = '{{ $t['key'] }}'"
+                :class="tab === '{{ $t['key'] }}' ? 'border-b-2 border-(--color-primary) text-(--color-primary)' : 'text-gray-500 hover:text-gray-700'"
                 class="flex-1 pb-3 text-sm font-semibold text-center transition-colors"
             >
-                Mobile OTP
+                {{ $t['label'] }}
             </button>
-            @endif
-
-            @if($emailOtpEnabled)
-            <button
-                x-on:click="tab = 'email_otp'"
-                :class="tab === 'email_otp' ? 'border-b-2 border-(--color-primary) text-(--color-primary)' : 'text-gray-500 hover:text-gray-700'"
-                class="flex-1 pb-3 text-sm font-semibold text-center transition-colors"
-            >
-                Email OTP
-            </button>
-            @endif
-
-            <button
-                x-on:click="tab = 'email'"
-                :class="tab === 'email' ? 'border-b-2 border-(--color-primary) text-(--color-primary)' : 'text-gray-500 hover:text-gray-700'"
-                class="flex-1 pb-3 text-sm font-semibold text-center transition-colors"
-            >
-                Email & Password
-            </button>
+            @endforeach
         </div>
 
         {{-- ========== Mobile OTP Tab ========== --}}
