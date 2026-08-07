@@ -56,6 +56,20 @@ class HomepageSettings extends Page implements HasForms
             'successful_marriages' => $settings['successful_marriages'] ?? '0',
             'years_of_service' => $settings['years_of_service'] ?? '1',
             'stats_auto_compute' => ($settings['stats_auto_compute'] ?? '0') === '1',
+            // Hide the whole stats strip + the member/marriage counters in the
+            // hero. A brand-new site showing "0+ Members" reads worse than
+            // showing nothing at all. Default ON = existing sites unchanged.
+            'show_stats_bar' => ($settings['show_stats_bar'] ?? '1') === '1',
+
+            // Wording — lets one codebase serve matrimony and dating-style
+            // sites. Blank falls back to the built-in default.
+            'hero_badge_text' => $settings['hero_badge_text'] ?? '',
+            'hero_highlight_title' => $settings['hero_highlight_title'] ?? '',
+            'hero_highlight_subtitle' => $settings['hero_highlight_subtitle'] ?? '',
+            'search_subheading' => $settings['search_subheading'] ?? '',
+            'gender_label_male' => $settings['gender_label_male'] ?? 'Groom',
+            'gender_label_female' => $settings['gender_label_female'] ?? 'Bride',
+            'footer_description' => $settings['footer_description'] ?? '',
 
             // Homepage section visibility toggles (default ON)
             'show_featured_profiles' => ($settings['show_featured_profiles'] ?? '1') === '1',
@@ -151,9 +165,56 @@ class HomepageSettings extends Page implements HasForms
                             ->helperText('Text above the search form. e.g., "Search for Your Perfect Partner"'),
                     ]),
 
+                \Filament\Schemas\Components\Section::make('Wording & Labels')
+                    ->description('Adapt the site language to your audience. Leave any field blank to keep the built-in default. Useful for non-matrimony audiences (e.g. a Catholic dating site).')
+                    ->schema([
+                        Forms\Components\TextInput::make('hero_badge_text')
+                            ->label('Hero Badge Text')
+                            ->maxLength(120)
+                            ->helperText('Small pill above the hero heading. Blank = "X+ Members Online". e.g. "Faith-Centered Catholic Matchmaking"'),
+
+                        Forms\Components\TextInput::make('search_subheading')
+                            ->label('Search Box Subheading')
+                            ->maxLength(200)
+                            ->helperText('Blank = "Search by age, community, and more"'),
+
+                        Forms\Components\TextInput::make('hero_highlight_title')
+                            ->label('Hero Highlight — Title')
+                            ->maxLength(60)
+                            ->helperText('Small floating card on the hero. Blank = "X+" marriages count. e.g. "Faith First"'),
+
+                        Forms\Components\TextInput::make('hero_highlight_subtitle')
+                            ->label('Hero Highlight — Subtitle')
+                            ->maxLength(60)
+                            ->helperText('Blank = "Happy Marriages". e.g. "Catholic singles"'),
+
+                        Forms\Components\TextInput::make('gender_label_male')
+                            ->label('Label for Male')
+                            ->maxLength(40)
+                            ->helperText('Used in search dropdowns. Default "Groom"; a dating site may prefer "A Man".'),
+
+                        Forms\Components\TextInput::make('gender_label_female')
+                            ->label('Label for Female')
+                            ->maxLength(40)
+                            ->helperText('Default "Bride"; a dating site may prefer "A Woman".'),
+
+                        Forms\Components\Textarea::make('footer_description')
+                            ->label('Footer Description')
+                            ->rows(2)
+                            ->maxLength(300)
+                            ->helperText('Sentence under the site name in the footer. Blank = "A trusted matrimony platform for families seeking meaningful connections."')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+
                 \Filament\Schemas\Components\Section::make('Stats Section')
                     ->description('Numbers displayed on the homepage to build trust. When "Auto-Compute" is on, the Total Members figure is read live from the database instead of the manual value below.')
                     ->schema([
+                        Forms\Components\Toggle::make('show_stats_bar')
+                            ->label('Show the stats strip and member counters')
+                            ->helperText('Turn OFF for a brand-new site — hides the stats strip plus the "X+ Members Online" badge and the marriages bubble, so visitors never see zeros. (Modern/Premium designs.)')
+                            ->columnSpanFull(),
+
                         Forms\Components\Toggle::make('stats_auto_compute')
                             ->label('Auto-compute Total Members from live database')
                             ->helperText('When ON: homepage shows the real count of active approved profiles. When OFF: shows the manual number below. Successful Marriages + Years are always manual.')
@@ -362,7 +423,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
+        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,

@@ -13,6 +13,11 @@
 
 @php
     $codes = config('reference_data.phone_codes');
+    // Site-wide default dial code (admin: General Settings). A caller that
+    // passes an explicit :countryCode still wins over the setting.
+    if ($countryCode === '+91') {
+        $countryCode = \App\Models\SiteSetting::getValue('default_phone_code', '+91') ?: '+91';
+    }
     $defaultCode = collect($codes)->firstWhere(1, $countryCode) ?? $codes[0];
     $inputId = $name . '_' . uniqid();
 @endphp

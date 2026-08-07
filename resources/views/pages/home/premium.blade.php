@@ -133,7 +133,7 @@
                         <a href="{{ route('register') }}" class="block relative overflow-hidden rounded-lg shadow-md hover:shadow-2xl transition-shadow">
                             <div class="aspect-[3/4] relative">
                                 @if($profile->primaryPhoto && $profile->primaryPhoto->photo_url)
-                                    <img src="{{ $profile->primaryPhoto->photo_url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style="filter: blur(3px);">
+                                    <img src="{{ $profile->primaryPhoto->full_url }}" alt="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" style="filter: blur(3px);">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-7xl p-serif font-bold text-white" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
                                         {{ strtoupper(substr($profile->full_name ?? 'A', 0, 1)) }}

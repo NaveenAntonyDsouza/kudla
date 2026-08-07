@@ -61,6 +61,7 @@ class SiteSettings extends Page implements HasForms
             // Registration Settings
             'profile_id_prefix' => $settings['profile_id_prefix'] ?? 'AM',
             'show_diocese' => ($settings['show_diocese'] ?? '1') === '1',
+            'default_phone_code' => $settings['default_phone_code'] ?? '+91',
             'cascade_countries' => $settings['cascade_countries'] ?? '',
             'email_verification_enabled' => $settings['email_verification_enabled'] ?? '1',
             'phone_verification_enabled' => $settings['phone_verification_enabled'] ?? '0',
@@ -170,6 +171,12 @@ class SiteSettings extends Page implements HasForms
                             ->required()
                             ->maxLength(5)
                             ->helperText('e.g., "AM" generates AM100001, AM100002...'),
+
+                        Forms\Components\TextInput::make('default_phone_code')
+                            ->label('Default Phone Country Code')
+                            ->maxLength(6)
+                            ->placeholder('+91')
+                            ->helperText('Pre-selected dial code on every phone field (registration, login, profile). e.g. "+91" for India, "+1" for USA. Users can still pick any country. Default: +91.'),
 
                         Forms\Components\Toggle::make('show_diocese')
                             ->label('Show Diocese field')

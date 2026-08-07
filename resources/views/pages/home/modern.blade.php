@@ -15,6 +15,15 @@
         $ctaDesc = \App\Models\SiteSetting::getValue('cta_description', 'Join thousands who found love through our platform.');
         $ctaButton = \App\Models\SiteSetting::getValue('cta_button_text', 'Register Free Now');
         $successStories = \App\Models\Testimonial::where('is_visible', true)->orderBy('display_order')->limit(8)->get();
+        // Wording + stats visibility are settings so one codebase can serve a
+        // matrimony site and a dating-style site. Blank = built-in default.
+        $showStatsBar = \App\Models\SiteSetting::getValue('show_stats_bar', '1') === '1';
+        $heroBadgeText = \App\Models\SiteSetting::getValue('hero_badge_text', '');
+        $heroHighlightTitle = \App\Models\SiteSetting::getValue('hero_highlight_title', '');
+        $heroHighlightSubtitle = \App\Models\SiteSetting::getValue('hero_highlight_subtitle', '');
+        $searchSubheading = \App\Models\SiteSetting::getValue('search_subheading', '');
+        $labelMale = \App\Models\SiteSetting::getValue('gender_label_male', 'Groom');
+        $labelFemale = \App\Models\SiteSetting::getValue('gender_label_female', 'Bride');
     @endphp
 
     {{-- Modern homepage: tech-startup aesthetic, split hero, compact sections --}}
@@ -48,10 +57,12 @@
             <div class="m-hero-grid">
                 {{-- Left: headline + form --}}
                 <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold" style="background: var(--brand-primary); color: white;">
-                        <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                        {{ number_format($stats['members']) }}+ Members Online
-                    </div>
+                    @if($heroBadgeText || $showStatsBar)
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold" style="background: var(--brand-primary); color: white;">
+                            <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                            {{ $heroBadgeText ?: (number_format($stats['members']) . '+ Members Online') }}
+                        </div>
+                    @endif
                     <h1 class="mt-4 text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-gray-900 leading-tight">
                         {{ $heroHeading }}
                     </h1>
@@ -95,10 +106,12 @@
                         <div class="{{ $rot }} absolute bg-white rounded-2xl shadow-2xl p-4 border border-gray-100"
                              style="width: 260px; top: {{ 30 + $i * 80 }}px; {{ $i % 2 === 0 ? 'left' : 'right' }}: {{ $i * 20 }}px; z-index: {{ 10 - $i }};">
                             @if($profile->primaryPhoto && $profile->primaryPhoto->photo_url)
-                                <img src="{{ $profile->primaryPhoto->photo_url }}" alt="" class="w-full h-52 object-cover rounded-xl">
+                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="" class="w-full h-52 object-cover rounded-xl">
                             @else
-                                <div class="w-full h-52 rounded-xl flex items-center justify-center text-5xl font-serif font-bold text-white" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
-                                    {{ strtoupper(substr($profile->full_name ?? 'A', 0, 1)) }}
+                                <div class="w-full h-52 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--brand-primary-light) 0%, #ffffff 100%);">
+                                    <div class="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-serif font-bold text-white shadow-lg" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
+                                        {{ strtoupper(substr($profile->full_name ?? 'A', 0, 1)) }}
+                                    </div>
                                 </div>
                             @endif
                             <div class="mt-3">
@@ -111,22 +124,27 @@
                         </div>
                     @endforeach
 
-                    {{-- Floating stat bubble --}}
-                    <div class="absolute bottom-0 right-0 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3 border border-gray-100" style="z-index: 20;">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--brand-primary-light);">
-                            <svg class="w-6 h-6" fill="none" stroke="var(--brand-primary)" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    {{-- Floating highlight bubble: the marriages counter by
+                         default, or custom wording when the stats are hidden. --}}
+                    @if($heroHighlightTitle || $showStatsBar)
+                        <div class="absolute bottom-0 right-0 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3 border border-gray-100" style="z-index: 20;">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: var(--brand-primary-light);">
+                                <svg class="w-6 h-6" fill="none" stroke="var(--brand-primary)" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-900">{{ $heroHighlightTitle ?: (number_format($stats['marriages']) . '+') }}</p>
+                                <p class="text-xs text-gray-500">{{ $heroHighlightSubtitle ?: 'Happy Marriages' }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-bold text-gray-900">{{ number_format($stats['marriages']) }}+</p>
-                            <p class="text-xs text-gray-500">Happy Marriages</p>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- 2. Stats bar: horizontal strip, no counters --}}
+    {{-- 2. Stats bar: horizontal strip, no counters. Hidden on new sites so
+           visitors never see "0+ Members / 0+ Marriages". --}}
+    @if($showStatsBar)
     <section class="bg-white border-y border-gray-100 py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="m-stat-bar text-center">
@@ -145,18 +163,19 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- 3. Search bar — prominent, full-width --}}
     <section class="py-12 bg-gray-50">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100">
                 <h2 class="text-xl md:text-2xl font-serif font-bold text-gray-900 mb-1">Find your match in seconds</h2>
-                <p class="text-sm text-gray-500 mb-5">Search by age, community, and more</p>
+                <p class="text-sm text-gray-500 mb-5">{{ $searchSubheading ?: 'Search by age, community, and more' }}</p>
                 <form action="{{ route('search.quick') }}" method="GET" class="grid grid-cols-2 md:grid-cols-5 gap-3">
                     <select name="gender" class="col-span-2 md:col-span-1 px-4 py-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-gray-900">
                         <option value="">I'm looking for</option>
-                        <option value="male">Groom</option>
-                        <option value="female">Bride</option>
+                        <option value="male">{{ $labelMale }}</option>
+                        <option value="female">{{ $labelFemale }}</option>
                     </select>
                     <input type="number" name="age_from" min="18" max="80" placeholder="Age from" class="px-4 py-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-gray-900">
                     <input type="number" name="age_to" min="18" max="80" placeholder="Age to" class="px-4 py-3 rounded-lg border-2 border-gray-200 text-sm focus:outline-none focus:border-gray-900">
@@ -213,10 +232,12 @@
                     <a href="{{ route('register') }}" class="m-card-hover group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 block">
                         <div class="relative aspect-[3/4]">
                             @if($profile->primaryPhoto && $profile->primaryPhoto->photo_url)
-                                <img src="{{ $profile->primaryPhoto->photo_url }}" alt="" class="w-full h-full object-cover" style="filter: blur(4px);">
+                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="" class="w-full h-full object-cover" style="filter: blur(4px);">
                             @else
-                                <div class="w-full h-full flex items-center justify-center text-6xl font-serif font-bold text-white" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
-                                    {{ strtoupper(substr($profile->full_name ?? 'A', 0, 1)) }}
+                                <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--brand-primary-light) 0%, #ffffff 100%);">
+                                    <div class="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-serif font-bold text-white shadow-lg" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
+                                        {{ strtoupper(substr($profile->full_name ?? 'A', 0, 1)) }}
+                                    </div>
                                 </div>
                             @endif
                             <div class="absolute inset-0" style="background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.75) 100%);"></div>

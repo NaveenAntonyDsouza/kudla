@@ -536,7 +536,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     <div>
                         <h3 class="text-white font-semibold text-sm mb-3">{{ $siteName }}</h3>
-                        <p class="text-xs text-gray-500 leading-relaxed">{{ $siteTagline }}. A trusted matrimony platform for families seeking meaningful connections.</p>
+                        <p class="text-xs text-gray-500 leading-relaxed">{{ $siteTagline }}. {{ \App\Models\SiteSetting::getValue('footer_description', '') ?: 'A trusted matrimony platform for families seeking meaningful connections.' }}</p>
                     </div>
                     <div>
                         <h4 class="text-white font-semibold text-sm mb-3">Quick Links</h4>
