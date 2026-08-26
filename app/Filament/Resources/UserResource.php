@@ -1454,8 +1454,10 @@ class UserResource extends Resource
                     ->icon('heroicon-o-phone')
                     ->columns(3)
                     ->schema([
+                        // Email is OPTIONAL (users.email is nullable — see the
+                        // make_users_email_nullable migration). Mirrors the phone
+                        // field: unique when provided, blank stored as NULL.
                         Forms\Components\TextInput::make('user_email')->label('Email')->email()
-                            ->required(fn (string $operation): bool => $operation === 'create')
                             ->unique(table: 'users', column: 'email', ignorable: fn (?Profile $record) => $record?->user),
                         Forms\Components\TextInput::make('user_phone')->label('Phone')->tel()
                             ->unique(table: 'users', column: 'phone', ignorable: fn (?Profile $record) => $record?->user),

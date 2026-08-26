@@ -29,7 +29,9 @@ class CreateUser extends CreateRecord
             // 1. Create User
             $user = User::create([
                 'name' => $data['full_name'],
-                'email' => $data['user_email'],
+                // Email is optional; store blank as NULL so multiple no-email
+                // members don't collide on the unique index (empty string would).
+                'email' => filled($data['user_email'] ?? null) ? $data['user_email'] : null,
                 'phone' => $data['user_phone'] ?? null,
                 'password' => bcrypt(Str::random(12)),
                 'role' => 'user',
