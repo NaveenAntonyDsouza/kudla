@@ -1446,6 +1446,13 @@ class UserResource extends Resource
                             // the same default the registration wizard uses.
                             ->default('Normal')
                             ->required(),
+                        // Children — relevant for divorced/widowed members.
+                        Forms\Components\TextInput::make('children_with_me')->label('Children Living With Me')->numeric()->minValue(0)->maxValue(20),
+                        Forms\Components\TextInput::make('children_not_with_me')->label('Children Not Living With Me')->numeric()->minValue(0)->maxValue(20),
+                        Forms\Components\Select::make('how_did_you_hear_about_us')->label('How Did You Hear About Us')
+                            // how_did_you_hear_list is GROUPED (optgroups) — must use grouped options.
+                            ->options(fn () => self::listToGroupedOptions(config('reference_data.how_did_you_hear_list', [])))
+                            ->searchable(),
                         Forms\Components\Textarea::make('about_me')->label('About Me')->rows(3)->columnSpanFull(),
                     ]),
 
@@ -1483,8 +1490,15 @@ class UserResource extends Resource
                             ->options(fn () => self::listToOptions(config('reference_data.preferred_call_time_list', []))),
                         Forms\Components\Textarea::make('cont_communication_address')->label('Communication Address')->rows(2)->maxLength(200)->columnSpanFull(),
                         Forms\Components\TextInput::make('cont_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
+                        Forms\Components\TextInput::make('cont_secondary_phone')->label('Secondary Phone')->tel()->maxLength(20),
+                        Forms\Components\TextInput::make('cont_alternate_email')->label('Alternate Email')->email()->maxLength(150),
                         Forms\Components\TextInput::make('cont_reference_name')->label('Reference Name')->maxLength(100),
                         Forms\Components\TextInput::make('cont_reference_mobile')->label('Reference Mobile')->maxLength(15),
+                        Forms\Components\TextInput::make('cont_reference_relationship')->label('Reference Relationship')->maxLength(100),
+                        Forms\Components\Textarea::make('cont_present_address')->label('Present Address')->rows(2)->maxLength(300)->columnSpan(2),
+                        Forms\Components\TextInput::make('cont_present_pin_zip_code')->label('Present PIN/ZIP Code')->maxLength(10),
+                        Forms\Components\Textarea::make('cont_permanent_address')->label('Permanent Address')->rows(2)->maxLength(300)->columnSpan(2),
+                        Forms\Components\TextInput::make('cont_permanent_pin_zip_code')->label('Permanent PIN/ZIP Code')->maxLength(10),
                     ]),
 
                 // ── Section 3: Religious Information ──
@@ -1670,6 +1684,9 @@ class UserResource extends Resource
                         Forms\Components\Select::make('loc_residency_status')->label('Residency Status')
                             ->options(fn () => self::listToOptions(config('reference_data.residency_status_list', []))),
                         Forms\Components\TextInput::make('loc_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
+                        // Outstation leave — when an NRI/outstation member is available in-town.
+                        Forms\Components\DatePicker::make('loc_outstation_from')->label('Outstation Leave From')->native(false),
+                        Forms\Components\DatePicker::make('loc_outstation_to')->label('Outstation Leave To')->native(false),
                     ]),
 
                 // ── Section 7: Lifestyle ──
@@ -1686,6 +1703,22 @@ class UserResource extends Resource
                             ->options(fn () => self::listToOptions(config('reference_data.drinking_habits', []))),
                         Forms\Components\Select::make('life_cultural_background')->label('Cultural Background')
                             ->options(fn () => self::listToOptions(config('reference_data.cultural_background_list', []))),
+                        // Multi-value interests (stored as JSON arrays on lifestyle_info).
+                        Forms\Components\Select::make('life_hobbies')->label('Hobbies')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.hobbies_list', []))),
+                        Forms\Components\TagsInput::make('life_interests')->label('Interests')->placeholder('Type and press Enter'),
+                        Forms\Components\Select::make('life_languages_known')->label('Languages Known')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.language_list', []))),
+                        Forms\Components\Select::make('life_favorite_music')->label('Favourite Music')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.music_list', []))),
+                        Forms\Components\Select::make('life_preferred_books')->label('Preferred Books')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.books_list', []))),
+                        Forms\Components\Select::make('life_preferred_movies')->label('Preferred Movies')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.movies_list', []))),
+                        Forms\Components\Select::make('life_sports_fitness_games')->label('Sports / Fitness / Games')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.sports_list', []))),
+                        Forms\Components\Select::make('life_favorite_cuisine')->label('Favourite Cuisine')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(config('reference_data.cuisine_list', []))),
                     ]),
 
                 // ── Section 8: Social Media ──
@@ -1697,6 +1730,8 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('social_instagram')->label('Instagram URL')->url()->maxLength(300),
                         Forms\Components\TextInput::make('social_facebook')->label('Facebook URL')->url()->maxLength(300),
                         Forms\Components\TextInput::make('social_linkedin')->label('LinkedIn URL')->url()->maxLength(300),
+                        Forms\Components\TextInput::make('social_youtube')->label('YouTube URL')->url()->maxLength(300),
+                        Forms\Components\TextInput::make('social_website')->label('Personal Website')->url()->maxLength(300),
                     ]),
 
                 // ── Partner Preferences ──
@@ -1725,6 +1760,15 @@ class UserResource extends Resource
                         self::ppMultiSelect('working_states', 'Preferred Working State(s)', 'locations.indian_states', false, true),
                         self::ppMultiSelect('working_districts', 'Preferred Working District(s)', 'locations.state_district_map', true, true),
                         self::ppMultiSelect('native_districts', 'Preferred Native District(s)', 'locations.state_district_map', true, true),
+                        self::ppMultiSelect('languages_known', 'Partner Should Know Languages', 'reference_data.language_list', false, true),
+                        self::ppMultiSelect('income_range', 'Preferred Annual Income', 'reference_data.annual_income_list', false, true),
+                        // Fixed-option preferences (same choices as the member's own page).
+                        Forms\Components\Select::make('pp_children_status')->label('Children Status')->multiple()
+                            ->options(['Any' => 'Any', 'Having Children' => 'Having Children', 'No Children' => 'No Children']),
+                        Forms\Components\Select::make('pp_manglik')->label('Manglik / Chovva Dosham')->multiple()
+                            ->options(['Yes' => 'Yes', 'No' => 'No', "Don't Know" => "Don't Know"]),
+                        Forms\Components\Select::make('pp_da_category')->label('Category of Differently Abled')->multiple()
+                            ->options(self::listToOptions(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'])),
                         Forms\Components\Textarea::make('pp_about_partner')->label('About Partner Expectations')->rows(3)->maxLength(5000)->columnSpanFull(),
                     ]),
 

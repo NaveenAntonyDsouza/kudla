@@ -68,6 +68,9 @@ class CreateUser extends CreateRecord
                 'physical_status' => $data['physical_status'] ?? 'Normal',
                 'mother_tongue' => $data['mother_tongue'] ?? null,
                 'about_me' => $data['about_me'] ?? null,
+                'children_with_me' => $data['children_with_me'] ?? null,
+                'children_not_with_me' => $data['children_not_with_me'] ?? null,
+                'how_did_you_hear_about_us' => $data['how_did_you_hear_about_us'] ?? null,
                 'created_by' => 'admin',
                 'registration_source' => \App\Support\DeviceDetector::ADMIN,
                 'is_approved' => $data['is_approved'] ?? true,
@@ -153,6 +156,8 @@ class CreateUser extends CreateRecord
                 'native_place' => $data['loc_native_place'] ?? null,
                 'residency_status' => $data['loc_residency_status'] ?? 'citizen',
                 'pin_zip_code' => $data['loc_pin_zip_code'] ?? null,
+                'outstation_leave_date_from' => $data['loc_outstation_from'] ?? null,
+                'outstation_leave_date_to' => $data['loc_outstation_to'] ?? null,
             ]);
 
             // 8. Create Contact Info
@@ -166,6 +171,13 @@ class CreateUser extends CreateRecord
                 'pincode' => $data['cont_pin_zip_code'] ?? null,
                 'reference_name' => $data['cont_reference_name'] ?? null,
                 'reference_mobile' => $data['cont_reference_mobile'] ?? null,
+                'secondary_phone' => $data['cont_secondary_phone'] ?? null,
+                'alternate_email' => $data['cont_alternate_email'] ?? null,
+                'reference_relationship' => $data['cont_reference_relationship'] ?? null,
+                'present_address' => $data['cont_present_address'] ?? null,
+                'present_pin_zip_code' => $data['cont_present_pin_zip_code'] ?? null,
+                'permanent_address' => $data['cont_permanent_address'] ?? null,
+                'permanent_pin_zip_code' => $data['cont_permanent_pin_zip_code'] ?? null,
             ]);
 
             // 9. Create Lifestyle Info
@@ -175,6 +187,14 @@ class CreateUser extends CreateRecord
                 'smoking' => $data['life_smoking'] ?? null,
                 'drinking' => $data['life_drinking'] ?? null,
                 'cultural_background' => $data['life_cultural_background'] ?? null,
+                'hobbies' => $data['life_hobbies'] ?? null,
+                'interests' => $data['life_interests'] ?? null,
+                'languages_known' => $data['life_languages_known'] ?? null,
+                'favorite_music' => $data['life_favorite_music'] ?? null,
+                'preferred_books' => $data['life_preferred_books'] ?? null,
+                'preferred_movies' => $data['life_preferred_movies'] ?? null,
+                'sports_fitness_games' => $data['life_sports_fitness_games'] ?? null,
+                'favorite_cuisine' => $data['life_favorite_cuisine'] ?? null,
             ]);
 
             // 10. Create Social Media Links
@@ -183,6 +203,8 @@ class CreateUser extends CreateRecord
                 'instagram_url' => $data['social_instagram'] ?? null,
                 'facebook_url' => $data['social_facebook'] ?? null,
                 'linkedin_url' => $data['social_linkedin'] ?? null,
+                'youtube_url' => $data['social_youtube'] ?? null,
+                'website_url' => $data['social_website'] ?? null,
             ]);
 
             // 11. Create Partner Preferences
@@ -205,6 +227,11 @@ class CreateUser extends CreateRecord
                 'working_states' => $data['pp_working_states'] ?? [],
                 'working_districts' => $data['pp_working_districts'] ?? [],
                 'native_districts' => $data['pp_native_districts'] ?? [],
+                'languages_known' => $data['pp_languages_known'] ?? [],
+                'income_range' => $data['pp_income_range'] ?? [],
+                'children_status' => $data['pp_children_status'] ?? [],
+                'manglik' => $data['pp_manglik'] ?? [],
+                'da_category' => $data['pp_da_category'] ?? [],
                 'about_partner' => $data['pp_about_partner'] ?? null,
             ]);
 

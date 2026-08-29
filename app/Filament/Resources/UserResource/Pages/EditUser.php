@@ -114,6 +114,8 @@ class EditUser extends EditRecord
         $data['loc_native_place'] = $loc?->native_place;
         $data['loc_residency_status'] = $loc?->residency_status;
         $data['loc_pin_zip_code'] = $loc?->pin_zip_code;
+        $data['loc_outstation_from'] = $loc?->outstation_leave_date_from;
+        $data['loc_outstation_to'] = $loc?->outstation_leave_date_to;
 
         // Contact Info
         $cont = $profile->contactInfo;
@@ -125,6 +127,13 @@ class EditUser extends EditRecord
         $data['cont_pin_zip_code'] = $cont?->pincode ?? $cont?->present_pin_zip_code;
         $data['cont_reference_name'] = $cont?->reference_name;
         $data['cont_reference_mobile'] = $cont?->reference_mobile;
+        $data['cont_secondary_phone'] = $cont?->secondary_phone;
+        $data['cont_alternate_email'] = $cont?->alternate_email;
+        $data['cont_reference_relationship'] = $cont?->reference_relationship;
+        $data['cont_present_address'] = $cont?->present_address;
+        $data['cont_present_pin_zip_code'] = $cont?->present_pin_zip_code;
+        $data['cont_permanent_address'] = $cont?->permanent_address;
+        $data['cont_permanent_pin_zip_code'] = $cont?->permanent_pin_zip_code;
 
         // Lifestyle
         $life = $profile->lifestyleInfo;
@@ -132,12 +141,22 @@ class EditUser extends EditRecord
         $data['life_smoking'] = $life?->smoking;
         $data['life_drinking'] = $life?->drinking;
         $data['life_cultural_background'] = $life?->cultural_background;
+        $data['life_hobbies'] = $life?->hobbies ?? [];
+        $data['life_interests'] = $life?->interests ?? [];
+        $data['life_languages_known'] = $life?->languages_known ?? [];
+        $data['life_favorite_music'] = $life?->favorite_music ?? [];
+        $data['life_preferred_books'] = $life?->preferred_books ?? [];
+        $data['life_preferred_movies'] = $life?->preferred_movies ?? [];
+        $data['life_sports_fitness_games'] = $life?->sports_fitness_games ?? [];
+        $data['life_favorite_cuisine'] = $life?->favorite_cuisine ?? [];
 
         // Social Media
         $social = $profile->socialMediaLink;
         $data['social_instagram'] = $social?->instagram_url;
         $data['social_facebook'] = $social?->facebook_url;
         $data['social_linkedin'] = $social?->linkedin_url;
+        $data['social_youtube'] = $social?->youtube_url;
+        $data['social_website'] = $social?->website_url;
 
         // Partner Preferences
         $pp = $profile->partnerPreference;
@@ -158,6 +177,11 @@ class EditUser extends EditRecord
         $data['pp_working_states'] = $pp?->working_states ?? [];
         $data['pp_working_districts'] = $pp?->working_districts ?? [];
         $data['pp_native_districts'] = $pp?->native_districts ?? [];
+        $data['pp_languages_known'] = $pp?->languages_known ?? [];
+        $data['pp_income_range'] = $pp?->income_range ?? [];
+        $data['pp_children_status'] = $pp?->children_status ?? [];
+        $data['pp_manglik'] = $pp?->manglik ?? [];
+        $data['pp_da_category'] = $pp?->da_category ?? [];
         $data['pp_about_partner'] = $pp?->about_partner;
 
         return $data;
@@ -263,6 +287,8 @@ class EditUser extends EditRecord
                 'native_place' => $data['loc_native_place'] ?? null,
                 'residency_status' => $data['loc_residency_status'] ?? null,
                 'pin_zip_code' => $data['loc_pin_zip_code'] ?? null,
+                'outstation_leave_date_from' => $data['loc_outstation_from'] ?? null,
+                'outstation_leave_date_to' => $data['loc_outstation_to'] ?? null,
             ]
         );
 
@@ -278,6 +304,13 @@ class EditUser extends EditRecord
                 'pincode' => $data['cont_pin_zip_code'] ?? null,
                 'reference_name' => $data['cont_reference_name'] ?? null,
                 'reference_mobile' => $data['cont_reference_mobile'] ?? null,
+                'secondary_phone' => $data['cont_secondary_phone'] ?? null,
+                'alternate_email' => $data['cont_alternate_email'] ?? null,
+                'reference_relationship' => $data['cont_reference_relationship'] ?? null,
+                'present_address' => $data['cont_present_address'] ?? null,
+                'present_pin_zip_code' => $data['cont_present_pin_zip_code'] ?? null,
+                'permanent_address' => $data['cont_permanent_address'] ?? null,
+                'permanent_pin_zip_code' => $data['cont_permanent_pin_zip_code'] ?? null,
             ]
         );
 
@@ -289,6 +322,14 @@ class EditUser extends EditRecord
                 'smoking' => $data['life_smoking'] ?? null,
                 'drinking' => $data['life_drinking'] ?? null,
                 'cultural_background' => $data['life_cultural_background'] ?? null,
+                'hobbies' => $data['life_hobbies'] ?? null,
+                'interests' => $data['life_interests'] ?? null,
+                'languages_known' => $data['life_languages_known'] ?? null,
+                'favorite_music' => $data['life_favorite_music'] ?? null,
+                'preferred_books' => $data['life_preferred_books'] ?? null,
+                'preferred_movies' => $data['life_preferred_movies'] ?? null,
+                'sports_fitness_games' => $data['life_sports_fitness_games'] ?? null,
+                'favorite_cuisine' => $data['life_favorite_cuisine'] ?? null,
             ]
         );
 
@@ -299,6 +340,8 @@ class EditUser extends EditRecord
                 'instagram_url' => $data['social_instagram'] ?? null,
                 'facebook_url' => $data['social_facebook'] ?? null,
                 'linkedin_url' => $data['social_linkedin'] ?? null,
+                'youtube_url' => $data['social_youtube'] ?? null,
+                'website_url' => $data['social_website'] ?? null,
             ]
         );
 
@@ -323,6 +366,11 @@ class EditUser extends EditRecord
                 'working_states' => $data['pp_working_states'] ?? [],
                 'working_districts' => $data['pp_working_districts'] ?? [],
                 'native_districts' => $data['pp_native_districts'] ?? [],
+                'languages_known' => $data['pp_languages_known'] ?? [],
+                'income_range' => $data['pp_income_range'] ?? [],
+                'children_status' => $data['pp_children_status'] ?? [],
+                'manglik' => $data['pp_manglik'] ?? [],
+                'da_category' => $data['pp_da_category'] ?? [],
                 'about_partner' => $data['pp_about_partner'] ?? null,
             ]
         );
