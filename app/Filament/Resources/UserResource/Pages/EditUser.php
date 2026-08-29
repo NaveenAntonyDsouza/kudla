@@ -68,6 +68,7 @@ class EditUser extends EditRecord
         $data['rel_other_religion_name'] = $rel?->other_religion_name;
         $data['rel_time_of_birth'] = $rel?->time_of_birth;
         $data['rel_place_of_birth'] = $rel?->place_of_birth;
+        $data['rel_jathakam'] = $rel?->jathakam_upload_url;
 
         // Education
         $edu = $profile->educationDetail;
@@ -225,6 +226,7 @@ class EditUser extends EditRecord
             'other_religion_name' => $data['rel_other_religion_name'] ?? null,
             'time_of_birth' => $data['rel_time_of_birth'] ?? null,
             'place_of_birth' => $data['rel_place_of_birth'] ?? null,
+            'jathakam_upload_url' => $data['rel_jathakam'] ?? null,
         ];
         $relData = ReligiousInfo::clearFieldsForReligion($relData, $data['rel_religion'] ?? null);
         ReligiousInfo::updateOrCreate(

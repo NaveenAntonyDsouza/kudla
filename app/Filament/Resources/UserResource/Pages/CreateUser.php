@@ -10,9 +10,11 @@ use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\PartnerPreference;
 use App\Models\Profile;
+use App\Models\ProfilePhoto;
 use App\Models\ReligiousInfo;
 use App\Models\SocialMediaLink;
 use App\Models\User;
+use App\Services\WatermarkService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -102,6 +104,8 @@ class CreateUser extends CreateRecord
                 'other_religion_name' => $data['rel_other_religion_name'] ?? null,
                 'time_of_birth' => $data['rel_time_of_birth'] ?? null,
                 'place_of_birth' => $data['rel_place_of_birth'] ?? null,
+                // Religion-agnostic — clearFieldsForReligion leaves it untouched.
+                'jathakam_upload_url' => $data['rel_jathakam'] ?? null,
             ];
             $relData = ReligiousInfo::clearFieldsForReligion($relData, $data['rel_religion'] ?? null);
             ReligiousInfo::create($relData);
@@ -234,6 +238,26 @@ class CreateUser extends CreateRecord
                 'da_category' => $data['pp_da_category'] ?? [],
                 'about_partner' => $data['pp_about_partner'] ?? null,
             ]);
+
+            // 12. Profile photo (optional) — mirrors the Photos relation manager:
+            // watermark the file, store as the primary/visible 'profile' photo.
+            if (! empty($data['profile_photo'])) {
+                $path = $data['profile_photo'];
+                try {
+                    app(WatermarkService::class)->apply($path);
+                } catch (\Throwable $e) {
+                    // Watermark failure must not block profile creation.
+                }
+                ProfilePhoto::create([
+                    'profile_id' => $profile->id,
+                    'photo_type' => 'profile',
+                    'photo_url' => $path,
+                    'thumbnail_url' => $path,
+                    'is_primary' => true,
+                    'is_visible' => true,
+                    'display_order' => 0,
+                ]);
+            }
 
             Notification::make()
                 ->title('Profile created: ' . $profile->matri_id)

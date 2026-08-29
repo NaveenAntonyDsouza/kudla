@@ -1453,6 +1453,21 @@ class UserResource extends Resource
                             // how_did_you_hear_list is GROUPED (optgroups) — must use grouped options.
                             ->options(fn () => self::listToGroupedOptions(config('reference_data.how_did_you_hear_list', [])))
                             ->searchable(),
+                        // Profile photo — CREATE only. On edit, the Photos relation
+                        // manager (tab below the form) handles all photo management,
+                        // so this create-time upload doesn't clash with it. Stored as
+                        // a primary ProfilePhoto in the CreateUser handler.
+                        Forms\Components\FileUpload::make('profile_photo')
+                            ->label('Profile Photo')
+                            ->image()
+                            ->disk('public')
+                            ->directory('photos/admin')
+                            ->maxSize(5120)
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([null, '3:4', '1:1', '4:5'])
+                            ->visible(fn (string $operation): bool => $operation === 'create')
+                            ->helperText('Optional. After creating, use the Photos section to add or change photos.')
+                            ->columnSpanFull(),
                         Forms\Components\Textarea::make('about_me')->label('About Me')->rows(3)->columnSpanFull(),
                     ]),
 
@@ -1607,6 +1622,17 @@ class UserResource extends Resource
                         // Always shown (any religion).
                         Forms\Components\TextInput::make('rel_time_of_birth')->label('Time of Birth')->maxLength(20),
                         Forms\Components\TextInput::make('rel_place_of_birth')->label('Place of Birth')->maxLength(100),
+                        // Horoscope / Jathakam document — image or PDF, stored on the
+                        // public disk (same as the member/onboarding upload). Maps to
+                        // religious_info.jathakam_upload_url (religion-agnostic).
+                        Forms\Components\FileUpload::make('rel_jathakam')
+                            ->label('Horoscope / Jathakam')
+                            ->disk('public')
+                            ->directory('jathakam')
+                            ->maxSize(5120)
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+                            ->helperText('Optional — image or PDF.')
+                            ->columnSpanFull(),
                     ]),
 
                 // ── Section 4: Education & Career ──
