@@ -33,7 +33,12 @@ class CreateUser extends CreateRecord
                 // members don't collide on the unique index (empty string would).
                 'email' => filled($data['user_email'] ?? null) ? $data['user_email'] : null,
                 'phone' => $data['user_phone'] ?? null,
-                'password' => bcrypt(Str::random(12)),
+                // Admin may set a login password; blank = auto-generated. Passed
+                // RAW — the User model's 'hashed' cast bcrypts it once (pre-hashing
+                // here would double-hash and lock the member out).
+                'password' => filled($data['user_password'] ?? null)
+                    ? $data['user_password']
+                    : Str::random(12),
                 'role' => 'user',
                 'is_active' => true,
                 'email_verified_at' => now(),

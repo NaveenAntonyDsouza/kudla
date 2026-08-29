@@ -1461,6 +1461,18 @@ class UserResource extends Resource
                             ->unique(table: 'users', column: 'email', ignorable: fn (?Profile $record) => $record?->user),
                         Forms\Components\TextInput::make('user_phone')->label('Phone')->tel()
                             ->unique(table: 'users', column: 'phone', ignorable: fn (?Profile $record) => $record?->user),
+                        // Optional login password (create only — editing a member
+                        // uses the "Reset Password" action instead). Left blank =
+                        // auto-generated. Stored raw; the User model's 'hashed'
+                        // cast bcrypts it once (do NOT pre-hash here).
+                        Forms\Components\TextInput::make('user_password')
+                            ->label('Password')
+                            ->password()
+                            ->revealable()
+                            ->minLength(8)
+                            ->maxLength(72)
+                            ->visible(fn (string $operation): bool => $operation === 'create')
+                            ->helperText('Optional — leave blank to auto-generate. Min 8 characters. The member signs in with their email or phone + this password.'),
                         Forms\Components\TextInput::make('cont_whatsapp')->label('WhatsApp')->maxLength(15),
                         Forms\Components\TextInput::make('cont_custodian_name')->label('Custodian Name')->maxLength(100),
                         Forms\Components\Select::make('cont_custodian_relation')
