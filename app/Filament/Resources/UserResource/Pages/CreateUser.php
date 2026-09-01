@@ -176,6 +176,10 @@ class CreateUser extends CreateRecord
                 'reference_name' => $data['cont_reference_name'] ?? null,
                 'reference_mobile' => $data['cont_reference_mobile'] ?? null,
                 'secondary_phone' => $data['cont_secondary_phone'] ?? null,
+                // primary_phone mirrors the member's mobile (registration stores it
+                // in both users.phone and contact_info.primary_phone).
+                'primary_phone' => $data['user_phone'] ?? null,
+                'residential_phone_number' => $data['cont_residential_phone_number'] ?? null,
                 'alternate_email' => $data['cont_alternate_email'] ?? null,
                 'reference_relationship' => $data['cont_reference_relationship'] ?? null,
                 'present_address' => $data['cont_present_address'] ?? null,
@@ -223,19 +227,31 @@ class CreateUser extends CreateRecord
                 'body_type' => $data['pp_body_type'] ?? [],
                 'physical_status' => $data['pp_physical_status'] ?? [],
                 'family_status' => $data['pp_family_status'] ?? [],
-                'religions' => $data['pp_religions'] ?? [],
+                'religions' => $ppReligions = $data['pp_religions'] ?? [],
                 'mother_tongues' => $data['pp_mother_tongues'] ?? [],
                 'education_levels' => $data['pp_education_levels'] ?? [],
+                'educational_qualifications' => $data['pp_educational_qualifications'] ?? [],
                 'occupations' => $data['pp_occupations'] ?? [],
+                'employment_status' => $data['pp_employment_status'] ?? [],
                 'working_countries' => $data['pp_working_countries'] ?? [],
                 'working_states' => $data['pp_working_states'] ?? [],
                 'working_districts' => $data['pp_working_districts'] ?? [],
+                'native_countries' => $data['pp_native_countries'] ?? [],
                 'native_districts' => $data['pp_native_districts'] ?? [],
                 'languages_known' => $data['pp_languages_known'] ?? [],
                 'income_range' => $data['pp_income_range'] ?? [],
                 'children_status' => $data['pp_children_status'] ?? [],
                 'manglik' => $data['pp_manglik'] ?? [],
                 'da_category' => $data['pp_da_category'] ?? [],
+                // Religion-gated partner sub-preferences — null unless that religion
+                // is among the desired religions (mirrors the onboarding flow).
+                'denomination' => in_array('Christian', (array) $ppReligions, true) ? ($data['pp_denomination'] ?? []) : [],
+                'diocese' => in_array('Christian', (array) $ppReligions, true) ? ($data['pp_diocese'] ?? []) : [],
+                'caste' => array_intersect(['Hindu', 'Jain'], (array) $ppReligions) ? ($data['pp_caste'] ?? []) : [],
+                'sub_caste' => array_intersect(['Hindu', 'Jain'], (array) $ppReligions) ? ($data['pp_sub_caste'] ?? []) : [],
+                'muslim_sect' => in_array('Muslim', (array) $ppReligions, true) ? ($data['pp_muslim_sect'] ?? []) : [],
+                'muslim_community' => in_array('Muslim', (array) $ppReligions, true) ? ($data['pp_muslim_community'] ?? []) : [],
+                'jain_sect' => in_array('Jain', (array) $ppReligions, true) ? ($data['pp_jain_sect'] ?? []) : [],
                 'about_partner' => $data['pp_about_partner'] ?? null,
             ]);
 

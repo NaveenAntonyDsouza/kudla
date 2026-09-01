@@ -1506,6 +1506,7 @@ class UserResource extends Resource
                         Forms\Components\Textarea::make('cont_communication_address')->label('Communication Address')->rows(2)->maxLength(200)->columnSpanFull(),
                         Forms\Components\TextInput::make('cont_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
                         Forms\Components\TextInput::make('cont_secondary_phone')->label('Secondary Phone')->tel()->maxLength(20),
+                        Forms\Components\TextInput::make('cont_residential_phone_number')->label('Residential / Landline Phone')->tel()->maxLength(20),
                         Forms\Components\TextInput::make('cont_alternate_email')->label('Alternate Email')->email()->maxLength(150),
                         Forms\Components\TextInput::make('cont_reference_name')->label('Reference Name')->maxLength(100),
                         Forms\Components\TextInput::make('cont_reference_mobile')->label('Reference Mobile')->maxLength(15),
@@ -1778,13 +1779,39 @@ class UserResource extends Resource
                         self::ppMultiSelect('body_type', 'Body Type', 'reference_data.body_type_list', false),
                         self::ppMultiSelect('physical_status', 'Physical Status', 'reference_data.physical_status_list', false),
                         self::ppMultiSelect('family_status', 'Family Status', 'reference_data.family_status_list', false),
-                        self::ppMultiSelect('religions', 'Religion', 'reference_data.religion_list', false),
+                        // ->live() so the religion-specific partner sub-preferences
+                        // below show/hide as the desired religion(s) change.
+                        self::ppMultiSelect('religions', 'Religion', 'reference_data.religion_list', false)->live(),
+                        // Partner religion sub-preferences (same as the member's own
+                        // partner-preferences page; gated by the chosen religion(s)).
+                        self::ppMultiSelect('denomination', 'Partner: Denomination', 'reference_data.denomination_list', true, true)
+                            ->visible(fn (Get $get) => in_array('Christian', (array) $get('pp_religions'), true)),
+                        self::ppMultiSelect('diocese', 'Partner: Diocese', 'reference_data.diocese_list', false, true)
+                            ->visible(fn (Get $get) => in_array('Christian', (array) $get('pp_religions'), true)),
+                        Forms\Components\Select::make('pp_caste')->label('Partner: Caste / Community')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(\App\Models\Community::getCasteList()))
+                            ->visible(fn (Get $get) => (bool) array_intersect(['Hindu', 'Jain'], (array) $get('pp_religions'))),
+                        Forms\Components\Select::make('pp_sub_caste')->label('Partner: Sub-Caste')->multiple()->searchable()
+                            ->options(fn () => self::listToOptions(\App\Models\Community::getSubCasteList()))
+                            ->visible(fn (Get $get) => (bool) array_intersect(['Hindu', 'Jain'], (array) $get('pp_religions'))),
+                        Forms\Components\Select::make('pp_muslim_sect')->label('Partner: Muslim Sect')->multiple()
+                            ->options(self::listToOptions(['Sunni', 'Shia', 'Ahmadiyya', 'Sufi', 'Other', 'Prefer Not to Say']))
+                            ->visible(fn (Get $get) => in_array('Muslim', (array) $get('pp_religions'), true)),
+                        self::ppMultiSelect('muslim_community', 'Partner: Muslim Community', 'reference_data.jamath_list', false, true)
+                            ->visible(fn (Get $get) => in_array('Muslim', (array) $get('pp_religions'), true)),
+                        Forms\Components\Select::make('pp_jain_sect')->label('Partner: Jain Sect')->multiple()
+                            ->options(self::listToOptions(['Digambar', 'Svetambara', 'Other']))
+                            ->visible(fn (Get $get) => in_array('Jain', (array) $get('pp_religions'), true)),
                         self::ppMultiSelect('mother_tongues', 'Mother Tongue', 'reference_data.language_list', false, true),
                         self::ppMultiSelect('education_levels', 'Education Level', 'reference_data.educational_qualifications_list', true, true),
+                        self::ppMultiSelect('educational_qualifications', 'Educational Qualifications', 'reference_data.educational_qualifications_list', true, true),
                         self::ppMultiSelect('occupations', 'Occupation', 'reference_data.occupation_category_list', true, true),
+                        Forms\Components\Select::make('pp_employment_status')->label('Employment Category')->multiple()
+                            ->options(self::listToOptions(['Central Govt.', 'Entrepreneurship', 'Govt.', 'MNC', 'Others', 'Overseas', 'Own Business', 'Private', 'Public Limited', 'Semi Govt.'])),
                         self::ppMultiSelect('working_countries', 'Preferred Working Country(ies)', 'reference_data.country_list', true, true),
                         self::ppMultiSelect('working_states', 'Preferred Working State(s)', 'locations.indian_states', false, true),
                         self::ppMultiSelect('working_districts', 'Preferred Working District(s)', 'locations.state_district_map', true, true),
+                        self::ppMultiSelect('native_countries', 'Preferred Native Country(ies)', 'reference_data.country_list', true, true),
                         self::ppMultiSelect('native_districts', 'Preferred Native District(s)', 'locations.state_district_map', true, true),
                         self::ppMultiSelect('languages_known', 'Partner Should Know Languages', 'reference_data.language_list', false, true),
                         self::ppMultiSelect('income_range', 'Preferred Annual Income', 'reference_data.annual_income_list', false, true),
