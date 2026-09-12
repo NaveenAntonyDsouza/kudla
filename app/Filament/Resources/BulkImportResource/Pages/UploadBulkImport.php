@@ -35,18 +35,23 @@ class UploadBulkImport extends Page implements HasForms
     {
         return $form
             ->schema([
-                \Filament\Schemas\Components\Section::make('Upload CSV')
-                    ->description('Upload a CSV file with member data. Use the "Download CSV Template" button on the list page to get the correct format. After upload, you\'ll see a preview with validation errors before any imports happen.')
+                \Filament\Schemas\Components\Section::make('Upload CSV or Excel')
+                    ->description('Upload a CSV or Excel (.xlsx / .xls) file with member data. Use the "Download CSV Template" button on the list page to get the correct columns. After upload, you\'ll see a preview with validation errors before any imports happen.')
                     ->schema([
                         Forms\Components\FileUpload::make('csv_file')
-                            ->label('CSV File')
+                            ->label('CSV / Excel File')
                             ->required()
-                            ->acceptedFileTypes(['text/csv', 'application/csv', 'application/vnd.ms-excel'])
+                            ->acceptedFileTypes([
+                                'text/csv',
+                                'application/csv',
+                                'application/vnd.ms-excel', // .xls (and Windows-tagged .csv)
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                            ])
                             ->maxSize(5120) // 5 MB
                             ->disk('local')
                             ->directory('bulk-imports')
                             ->visibility('private')
-                            ->helperText('Maximum 5 MB. Up to 1000 rows. UTF-8 encoded.'),
+                            ->helperText('CSV or Excel (.xlsx/.xls). Maximum 5 MB, up to 1000 rows. For CSV, use UTF-8 encoding.'),
                     ])
                     ->columns(1),
 
