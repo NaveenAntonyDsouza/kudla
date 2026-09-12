@@ -58,6 +58,9 @@ class CreateUser extends CreateRecord
             // 3. Create Profile (matri_id auto-generates via model boot)
             $profile = Profile::create([
                 'user_id' => $user->id,
+                // Optional custom Matri ID (e.g. an existing offline ID). Null lets
+                // the Profile model's creating() hook auto-generate the next one.
+                'matri_id' => filled($data['matri_id'] ?? null) ? $data['matri_id'] : null,
                 'full_name' => $data['full_name'],
                 'gender' => $data['gender'] ?? null,
                 'date_of_birth' => $data['date_of_birth'] ?? null,
