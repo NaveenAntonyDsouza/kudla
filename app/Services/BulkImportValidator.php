@@ -85,6 +85,20 @@ class BulkImportValidator
             }
         }
 
+        // Layer 5b: matri_id — optional custom ID; <=10 chars and unique (within
+        // this CSV and against all profiles, including soft-deleted ones since the
+        // unique index covers them). Blank falls through to auto-generation.
+        if (!isset($errors['matri_id']) && !empty($normalized['matri_id'])) {
+            $matriId = $normalized['matri_id'];
+            if (mb_strlen($matriId) > 10) {
+                $errors['matri_id'] = "Matri ID must be 10 characters or fewer (got " . mb_strlen($matriId) . ")";
+            } elseif (in_array($matriId, $seenInThisImport['matri_ids'] ?? [], true)) {
+                $errors['matri_id'] = "Duplicate Matri ID within this CSV (appears in an earlier row)";
+            } elseif (\App\Models\Profile::withTrashed()->where('matri_id', $matriId)->exists()) {
+                $errors['matri_id'] = "Matri ID already exists in the system";
+            }
+        }
+
         // Layer 6: branch_code resolution (optional)
         if (!isset($errors['branch_code']) && !empty($normalized['branch_code'])) {
             $code = strtoupper($normalized['branch_code']);
@@ -190,7 +204,7 @@ class BulkImportValidator
      */
     public function validateBatch(array $rows): array
     {
-        $seen = ['emails' => [], 'phones' => []];
+        $seen = ['emails' => [], 'phones' => [], 'matri_ids' => []];
         $results = [];
         $validCount = 0;
         $invalidCount = 0;
@@ -205,6 +219,9 @@ class BulkImportValidator
                 }
                 if (!empty($result['normalized']['phone'])) {
                     $seen['phones'][] = $result['normalized']['phone'];
+                }
+                if (!empty($result['normalized']['matri_id'])) {
+                    $seen['matri_ids'][] = $result['normalized']['matri_id'];
                 }
                 $validCount++;
             } else {

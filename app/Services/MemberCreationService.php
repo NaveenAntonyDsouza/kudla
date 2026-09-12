@@ -108,6 +108,9 @@ class MemberCreationService
     {
         return [
             'user_id' => $userId,
+            // Optional custom Matri ID (e.g. from a bulk import of offline profiles);
+            // null lets the Profile model auto-generate the next sequential ID.
+            'matri_id' => filled($data['matri_id'] ?? null) ? $data['matri_id'] : null,
             'full_name' => $data['full_name'] ?? '',
             'gender' => isset($data['gender']) ? strtolower(trim($data['gender'])) : null,
             'date_of_birth' => $data['date_of_birth'] ?? null,

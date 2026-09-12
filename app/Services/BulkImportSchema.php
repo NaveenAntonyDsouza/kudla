@@ -24,6 +24,12 @@ class BulkImportSchema
     public static function columns(): array
     {
         return [
+            'matri_id' => [
+                'required' => false,
+                'type' => 'string',
+                'help' => 'Optional custom Matri ID (e.g. an existing offline ID). Max 10 characters, must be unique. Leave blank to auto-generate.',
+                'example' => '',
+            ],
             'full_name' => [
                 'required' => true,
                 'type' => 'string',
