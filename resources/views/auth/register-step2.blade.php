@@ -13,8 +13,15 @@
         </div>
     @endif
 
+    @php
+        // A single-religion site (e.g. Catholic-only) pre-selects that religion.
+        $religionOptions = config('reference_data.religion_list', []);
+        $defaultReligion = count($religionOptions) === 1 ? reset($religionOptions) : '';
+        $currentReligion = old('religion', $religiousInfo->religion ?? '') ?: $defaultReligion;
+        $casteRequired = \App\Models\SiteSetting::casteRequired();
+    @endphp
     <form method="POST" action="{{ route('register.store2') }}" enctype="multipart/form-data" x-data="{
-        religion: '{{ old('religion', $religiousInfo->religion ?? '') }}',
+        religion: '{{ $currentReligion }}',
         maritalStatus: '{{ old('marital_status', $profile->marital_status ?? '') }}',
         communities: [],
         subCommunities: [],
@@ -152,8 +159,8 @@
             <div class="float-field">
                 <select name="religion" id="religion" x-model="religion" @change="fetchCommunities()" required>
                     <option value="">Select</option>
-                    @foreach(config('reference_data.religion_list', []) as $opt)
-                        <option value="{{ $opt }}" {{ old('religion', $religiousInfo->religion ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                    @foreach($religionOptions as $opt)
+                        <option value="{{ $opt }}" {{ $currentReligion === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
                 <label for="religion">Religion <span class="text-red-500">*</span></label>
@@ -274,14 +281,14 @@
                     <template x-if="religion === 'Hindu'">
                         <div class="space-y-5">
                             <div class="float-field">
-                                <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
+                                <select name="caste" id="caste" x-model="selectedCaste" @change="loadSubCommunities()" @if($casteRequired) required @endif>
                                     <option value="">Select</option>
                                     <template x-for="community in communities" :key="community.id">
                                         <option :value="community.community_name" x-text="community.community_name"
                                             :selected="community.community_name === selectedCaste"></option>
                                     </template>
                                 </select>
-                                <label for="caste">Caste / Community <span class="text-red-500">*</span></label>
+                                <label for="caste">Caste / Community @if($casteRequired)<span class="text-red-500">*</span>@endif</label>
                                 @error('caste') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                             </div>
                             {{-- "Other / Not Listed" → show ONLY this free-text box

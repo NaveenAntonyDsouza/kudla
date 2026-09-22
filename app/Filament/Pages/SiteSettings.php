@@ -61,6 +61,7 @@ class SiteSettings extends Page implements HasForms
             // Registration Settings
             'profile_id_prefix' => $settings['profile_id_prefix'] ?? 'AM',
             'show_diocese' => ($settings['show_diocese'] ?? '1') === '1',
+            'caste_required' => ($settings['caste_required'] ?? '1') === '1',
             'default_phone_code' => $settings['default_phone_code'] ?? '+91',
             'cascade_countries' => $settings['cascade_countries'] ?? '',
             'email_verification_enabled' => $settings['email_verification_enabled'] ?? '1',
@@ -184,6 +185,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('show_diocese')
                             ->label('Show Diocese field')
                             ->helperText('Shows the Christian Diocese dropdown in registration & profile editing (it cascades from Denomination). Turn OFF for a global audience that has no single-country diocese list. Default: ON.'),
+
+                        Forms\Components\Toggle::make('caste_required')
+                            ->label('Caste / Community required')
+                            ->helperText('Hindu members must pick a Caste / Community in registration & profile editing. Turn OFF to make it optional (e.g. a dating site). Default: ON.'),
 
                         Forms\Components\Toggle::make('email_verification_enabled')
                             ->label('Email Verification Required')
@@ -328,7 +333,7 @@ class SiteSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         $toggleFields = [
-            'show_diocese',
+            'show_diocese', 'caste_required',
             'email_verification_enabled', 'phone_verification_enabled',
             'mobile_otp_login_enabled', 'email_otp_login_enabled',
             'auto_approve_profiles', 'auto_approve_profile_photos',

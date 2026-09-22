@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SiteSetting;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RegisterStep2Request extends FormRequest
@@ -34,9 +35,10 @@ class RegisterStep2Request extends FormRequest
             'diocese' => 'nullable|string',
             'diocese_name' => 'nullable|string',
             'parish_name_place' => 'nullable|string',
-            // Hindu/Jain conditional. Horoscope cluster (time/place of birth,
-            // rashi, nakshatra, gotra, manglik, jathakam) moved to onboarding.
-            'caste' => 'nullable|required_if:religion,Hindu|required_if:religion,Jain|string',
+            // Hindu conditional (Jains pick a sect instead). Horoscope cluster
+            // (time/place of birth, rashi, nakshatra, gotra, manglik, jathakam)
+            // moved to onboarding.
+            'caste' => SiteSetting::casteRule(),
             'other_caste_name' => 'nullable|string|max:100',
             'sub_caste' => 'nullable|string',
             // Muslim conditional
@@ -56,7 +58,7 @@ class RegisterStep2Request extends FormRequest
             'mother_tongue.required' => 'Please select your mother tongue.',
             'denomination.required_if' => 'Denomination is required for Christian profiles.',
             'other_denomination_name.required_if' => 'Please specify the denomination.',
-            'caste.required_if' => 'Caste/Community is required for Hindu and Jain profiles.',
+            'caste.required_if' => 'Caste/Community is required for Hindu profiles.',
             'muslim_sect.required_if' => 'Sect is required for Muslim profiles.',
             'other_religion_name.required_if' => 'Please specify your religion.',
         ];

@@ -11,6 +11,7 @@ use App\Models\LocationInfo;
 use App\Models\PartnerPreference;
 use App\Models\Profile;
 use App\Models\ReligiousInfo;
+use App\Models\SiteSetting;
 use App\Models\SocialMediaLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -167,7 +168,7 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'religion' => 'required|string|max:50',
-            'caste' => 'nullable|required_if:religion,Hindu|required_if:religion,Jain|string|max:50',
+            'caste' => SiteSetting::casteRule('max:50'),
             'other_caste_name' => 'nullable|string|max:100',
             'sub_caste' => 'nullable|string|max:50',
             'gotra' => 'nullable|string|max:50',

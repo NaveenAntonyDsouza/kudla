@@ -1,7 +1,15 @@
-@php $r = $profile->religiousInfo; @endphp
+@php
+    $r = $profile->religiousInfo;
+    // A single-religion site (e.g. Catholic-only) pre-selects that religion
+    // for members who haven't set one yet.
+    $religionOptions = config('reference_data.religion_list', []);
+    $defaultReligion = count($religionOptions) === 1 ? reset($religionOptions) : '';
+    $currentReligion = ($r?->religion ?? '') ?: $defaultReligion;
+    $casteRequired = \App\Models\SiteSetting::casteRequired();
+@endphp
 <form method="POST" action="{{ route('profile.update', 'religious') }}" enctype="multipart/form-data" @submit="submitting = true" x-data="{
     submitting: false,
-    religion: '{{ $r?->religion ?? '' }}',
+    religion: '{{ $currentReligion }}',
     communities: [],
     subCommunities: [],
     selectedCaste: '{{ $r?->caste ?? '' }}',
@@ -57,10 +65,6 @@
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field">
-            @php
-                $religionOptions = config('reference_data.religion_list', []);
-                $currentReligion = $r?->religion ?? '';
-            @endphp
             <select name="religion" x-model="religion" @change="fetchCommunities()" required>
                 <option value="">Select</option>
                 @foreach($religionOptions as $opt)
@@ -186,7 +190,7 @@
                 <template x-if="religion === 'Hindu'">
                     <div class="contents">
                         <div class="float-field">
-                            <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()" required>
+                            <select name="caste" x-model="selectedCaste" @change="loadSubCommunities()" @if($casteRequired) required @endif>
                                 <option value="">Select</option>
                                 <template x-for="community in communities" :key="community.id">
                                     <option :value="community.community_name" x-text="community.community_name" :selected="community.community_name === selectedCaste"></option>

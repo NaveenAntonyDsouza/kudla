@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Profile;
 
 use App\Http\Requests\Api\V1\ApiFormRequest;
+use App\Models\SiteSetting;
 
 /**
  * Validates PUT /api/v1/profile/me/religious.
@@ -22,7 +23,7 @@ class UpdateReligiousSectionRequest extends ApiFormRequest
     {
         return [
             'religion' => 'required|string|max:50',
-            'caste' => 'nullable|required_if:religion,Hindu|required_if:religion,Jain|string|max:50',
+            'caste' => SiteSetting::casteRule('max:50'),
             'other_caste_name' => 'nullable|string|max:100',
             'sub_caste' => 'nullable|string|max:50',
             'gotra' => 'nullable|string|max:50',

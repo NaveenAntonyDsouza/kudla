@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 
 class SiteSetting extends Model
@@ -27,6 +28,34 @@ class SiteSetting extends Model
         static::updateOrCreate(['key' => $key], ['value' => $value]);
         Cache::forget("site_setting.{$key}");
         Cache::forget('site_settings.all');
+    }
+
+    /**
+     * Whether Hindu members must pick a caste/community. On by default
+     * (matrimony); a site can switch it off (e.g. a dating site) via the
+     * `caste_required` setting.
+     */
+    public static function casteRequired(): bool
+    {
+        try {
+            return static::getValue('caste_required', '1') === '1';
+        } catch (QueryException) {
+            // Validation rules are also built where no site_settings table
+            // exists (fresh install, tests with a partial schema). Fall back
+            // to the matrimony default rather than blowing up rule building.
+            return true;
+        }
+    }
+
+    /**
+     * Validation rule for the `caste` field. Only Hindus are ever required
+     * to give one — Jains pick a sect instead and never see a caste field.
+     */
+    public static function casteRule(string $extra = ''): string
+    {
+        $rule = static::casteRequired() ? 'nullable|required_if:religion,Hindu|string' : 'nullable|string';
+
+        return $extra === '' ? $rule : $rule.'|'.$extra;
     }
 
     public static function getAll(): Collection
