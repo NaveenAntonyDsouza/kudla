@@ -30,14 +30,20 @@ class RoleSeeder extends Seeder
         ];
 
         foreach ($permissions as $perm) {
-            Permission::create(['name' => $perm]);
+            Permission::firstOrCreate(['name' => $perm]);
         }
 
+        // Every member gets the 'User' role on creation (MemberCreationService,
+        // Filament CreateUser). Without this row those calls throw
+        // RoleDoesNotExist and leave an orphan user behind — so it belongs in
+        // the seeder, not in a manual step after each deploy.
+        Role::firstOrCreate(['name' => 'User', 'guard_name' => 'web']);
+
         // Create roles and assign permissions
-        $superAdmin = Role::create(['name' => 'Super Admin']);
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        $moderator = Role::create(['name' => 'Moderator']);
+        $moderator = Role::firstOrCreate(['name' => 'Moderator']);
         $moderator->givePermissionTo([
             'manage_profiles',
             'approve_profiles',
@@ -46,7 +52,7 @@ class RoleSeeder extends Seeder
             'moderate_photos',
         ]);
 
-        $support = Role::create(['name' => 'Support Agent']);
+        $support = Role::firstOrCreate(['name' => 'Support Agent']);
         $support->givePermissionTo([
             'manage_faqs',
             'view_reports',
