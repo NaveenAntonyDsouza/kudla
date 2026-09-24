@@ -2,12 +2,21 @@
 
 namespace App\Models;
 
+use App\Support\PhotoVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Interest extends Model
 {
+    protected static function booted(): void
+    {
+        // An accepted interest unlocks "after interest accepted" photos —
+        // keep photo-visibility answers fresh within the same request.
+        static::saved(fn () => PhotoVisibility::invalidate());
+        static::deleted(fn () => PhotoVisibility::invalidate());
+    }
+
     protected $fillable = [
         'sender_profile_id',
         'receiver_profile_id',

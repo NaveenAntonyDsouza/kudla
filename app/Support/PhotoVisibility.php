@@ -77,18 +77,36 @@ class PhotoVisibility
     }
 
     /**
+     * Bumped whenever a photo request or interest is saved or deleted (see
+     * those models' hooks). It is part of the memo key below, so an approval
+     * in the middle of a request/process is seen immediately — without it, a
+     * visibility check made before approving kept answering "hidden".
+     */
+    private static int $version = 0;
+
+    public static function invalidate(): void
+    {
+        self::$version++;
+    }
+
+    /**
      * Profiles whose photo request from $viewerId was approved. Memoised
-     * per request with once(), so a page of 20 cards costs one query.
+     * with once() (keyed on viewer + version), so a page of 20 cards costs
+     * one query.
      *
      * @return list<int>
      */
     private static function approvedRequestTargets(int $viewerId): array
     {
-        return once(fn () => PhotoRequest::where('requester_profile_id', $viewerId)
-            ->where('status', 'approved')
-            ->pluck('target_profile_id')
-            ->map(fn ($id) => (int) $id)
-            ->all());
+        $version = self::$version;
+
+        return once(function () use ($viewerId, $version) {
+            return PhotoRequest::where('requester_profile_id', $viewerId)
+                ->where('status', 'approved')
+                ->pluck('target_profile_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+        });
     }
 
     /**
@@ -98,10 +116,14 @@ class PhotoVisibility
      */
     private static function acceptedPartners(int $viewerId): array
     {
-        return once(fn () => Interest::where('status', 'accepted')
-            ->where(fn ($q) => $q->where('sender_profile_id', $viewerId)->orWhere('receiver_profile_id', $viewerId))
-            ->get(['sender_profile_id', 'receiver_profile_id'])
-            ->map(fn ($i) => (int) ((int) $i->sender_profile_id === $viewerId ? $i->receiver_profile_id : $i->sender_profile_id))
-            ->all());
+        $version = self::$version;
+
+        return once(function () use ($viewerId, $version) {
+            return Interest::where('status', 'accepted')
+                ->where(fn ($q) => $q->where('sender_profile_id', $viewerId)->orWhere('receiver_profile_id', $viewerId))
+                ->get(['sender_profile_id', 'receiver_profile_id'])
+                ->map(fn ($i) => (int) ((int) $i->sender_profile_id === $viewerId ? $i->receiver_profile_id : $i->sender_profile_id))
+                ->all();
+        });
     }
 }

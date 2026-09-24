@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\MemberEmailService;
+use App\Support\PhotoVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,10 @@ class PhotoRequest extends Model
         // Photo request emails, hooked on the model so the web and app
         // (API) flows both send them without duplicating the call. The
         // service never throws, so a mail problem can't fail the request.
+        // Keep photo-visibility answers fresh within the same request.
+        static::saved(fn () => PhotoVisibility::invalidate());
+        static::deleted(fn () => PhotoVisibility::invalidate());
+
         static::created(function (PhotoRequest $request) {
             if ($request->status === 'pending') {
                 DB::afterCommit(fn () => app(MemberEmailService::class)->photoRequested($request));

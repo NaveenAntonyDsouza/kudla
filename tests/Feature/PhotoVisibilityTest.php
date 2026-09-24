@@ -145,6 +145,30 @@ it('shows an after-interest photo only once an interest is accepted, in either d
         ->and(PV::state($owner, null))->toBe(PV::AFTER_ACCEPTANCE);
 });
 
+it('sees an approval made after an earlier check in the same request', function () {
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'hidden']);
+    $viewer = pvMember();
+    $request = PhotoRequest::create(['requester_profile_id' => $viewer->id, 'target_profile_id' => $owner->id, 'status' => 'pending']);
+
+    expect(PV::state($owner, $viewer))->toBe(PV::HIDDEN); // memoised here…
+
+    $request->update(['status' => 'approved']);
+
+    expect(PV::state($owner, $viewer))->toBe(PV::VISIBLE); // …but not stale
+});
+
+it('sees an interest accepted after an earlier check in the same request', function () {
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'interest_accepted']);
+    $viewer = pvMember();
+    $interest = Interest::create(['sender_profile_id' => $viewer->id, 'receiver_profile_id' => $owner->id, 'status' => 'pending']);
+
+    expect(PV::state($owner, $viewer))->toBe(PV::AFTER_ACCEPTANCE);
+
+    $interest->update(['status' => 'accepted']);
+
+    expect(PV::state($owner, $viewer))->toBe(PV::VISIBLE);
+});
+
 it('still honours the legacy privacy_level for older rows', function () {
     $owner = pvMember(privacy: ['privacy_level' => 'hidden']);
 
