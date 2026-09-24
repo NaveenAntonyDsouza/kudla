@@ -105,8 +105,8 @@
                         @php $rot = ['m-rotate-card-1', 'm-rotate-card-2', 'm-rotate-card-3'][$i] ?? ''; @endphp
                         <div class="{{ $rot }} absolute bg-white rounded-2xl shadow-2xl p-4 border border-gray-100"
                              style="width: 260px; top: {{ 30 + $i * 80 }}px; {{ $i % 2 === 0 ? 'left' : 'right' }}: {{ $i * 20 }}px; z-index: {{ 10 - $i }};">
-                            @if($profile->primaryPhoto && $profile->primaryPhoto->photo_url)
-                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="" class="w-full h-52 object-cover rounded-xl">
+                            @if($__photoUrl = \App\Support\PhotoVisibility::urlForCurrentViewer($profile))
+                                <img src="{{ $__photoUrl }}" alt="" class="w-full h-52 object-cover rounded-xl">
                             @else
                                 <div class="w-full h-52 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, var(--brand-primary-light) 0%, #ffffff 100%);">
                                     <div class="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-serif font-bold text-white shadow-lg" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
@@ -231,8 +231,8 @@
                 @foreach($featuredProfiles as $profile)
                     <a href="{{ route('register') }}" class="m-card-hover group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 block">
                         <div class="relative aspect-[3/4]">
-                            @if($profile->primaryPhoto && $profile->primaryPhoto->photo_url)
-                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="" class="w-full h-full object-cover" style="filter: blur(4px);">
+                            @if($__photoUrl = \App\Support\PhotoVisibility::urlForCurrentViewer($profile))
+                                <img src="{{ $__photoUrl }}" alt="" class="w-full h-full object-cover" style="filter: blur(4px);">
                             @else
                                 <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, var(--brand-primary-light) 0%, #ffffff 100%);">
                                     <div class="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-serif font-bold text-white shadow-lg" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">

@@ -117,8 +117,8 @@
 
                                     {{-- Photo --}}
                                     <div class="w-10 h-10 rounded-full bg-gray-100 overflow-hidden shrink-0">
-                                        @if($other?->primaryPhoto)
-                                            <img src="{{ $other->primaryPhoto->full_url }}" alt="" class="w-full h-full object-cover">
+                                        @if($__photoUrl = \App\Support\PhotoVisibility::urlForCurrentViewer($other))
+                                            <img src="{{ $__photoUrl }}" alt="" class="w-full h-full object-cover">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center">
                                                 <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>

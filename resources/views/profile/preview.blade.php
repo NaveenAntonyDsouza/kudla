@@ -32,36 +32,17 @@
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                         {{-- Photo with privacy enforcement --}}
                         @php
-                            $privacyLevel = $profile->photoPrivacySetting?->privacy_level ?? 'visible_to_all';
-                            $hasPhoto = (bool) $profile->primaryPhoto;
-                            $showFullPhoto = true;
-                            $photoOverlayType = null;
-
-                            if (!($isOwn ?? false)) {
-                                if (!$hasPhoto) {
-                                    $showFullPhoto = false;
-                                    $photoOverlayType = 'no_photo';
-                                } elseif ($privacyLevel === 'hidden') {
-                                    // Check if photo view request was approved
-                                    $photoRequestApproved = \App\Models\PhotoRequest::where('requester_profile_id', auth()->user()->profile->id)
-                                        ->where('target_profile_id', $profile->id)
-                                        ->where('status', 'approved')->exists();
-                                    if (!$photoRequestApproved) {
-                                        $showFullPhoto = false;
-                                        $photoOverlayType = 'hidden';
-                                    }
-                                } elseif ($privacyLevel === 'interest_accepted') {
-                                    $interestAccepted = \App\Models\Interest::where('status', 'accepted')
-                                        ->where(fn($q) => $q
-                                            ->where(fn($q2) => $q2->where('sender_profile_id', auth()->user()->profile->id)->where('receiver_profile_id', $profile->id))
-                                            ->orWhere(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('receiver_profile_id', auth()->user()->profile->id))
-                                        )->exists();
-                                    if (!$interestAccepted) {
-                                        $showFullPhoto = false;
-                                        $photoOverlayType = 'after_acceptance';
-                                    }
-                                }
-                            }
+                            // The shared rule (App\Support\PhotoVisibility) — same as
+                            // search cards, so the two can't disagree again.
+                            $photoState = \App\Support\PhotoVisibility::stateForCurrentViewer($profile);
+                            $hasPhoto = $photoState !== \App\Support\PhotoVisibility::NO_PHOTO;
+                            $showFullPhoto = $photoState === \App\Support\PhotoVisibility::VISIBLE;
+                            $photoOverlayType = match (true) {
+                                $showFullPhoto || ($isOwn ?? false) => null,
+                                $photoState === \App\Support\PhotoVisibility::HIDDEN => 'hidden',
+                                $photoState === \App\Support\PhotoVisibility::AFTER_ACCEPTANCE => 'after_acceptance',
+                                default => 'no_photo',
+                            };
 
                             $photoRequestSent = false;
                             if ($photoOverlayType === 'hidden' || $photoOverlayType === 'no_photo') {
@@ -83,9 +64,9 @@
                                     </div>
                                 @endif
                             @elseif($photoOverlayType === 'hidden' && $hasPhoto)
-                                {{-- Blurred photo --}}
-                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
-                                    class="w-full aspect-[3/4] object-cover" style="filter: blur(20px); transform: scale(1.1);">
+                                {{-- Locked placeholder — the real image is never sent (a CSS
+                                     blur still hands anyone the photo's address). --}}
+                                <div class="w-full aspect-[3/4]" style="background: linear-gradient(135deg, var(--color-primary-light, #F3E8F7), #e5e7eb);"></div>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
                                     <svg class="w-10 h-10 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
                                     <p class="text-sm font-semibold text-gray-700">This photo is hidden</p>
@@ -102,9 +83,8 @@
                                     @endif
                                 </div>
                             @elseif($photoOverlayType === 'after_acceptance' && $hasPhoto)
-                                {{-- Blurred photo - visible after acceptance --}}
-                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
-                                    class="w-full aspect-[3/4] object-cover" style="filter: blur(20px); transform: scale(1.1);">
+                                {{-- Locked placeholder — see the 'hidden' branch above. --}}
+                                <div class="w-full aspect-[3/4]" style="background: linear-gradient(135deg, var(--color-primary-light, #F3E8F7), #e5e7eb);"></div>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
                                     <svg class="w-10 h-10 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
                                     <p class="text-sm font-semibold text-gray-700">Visible only after acceptance</p>

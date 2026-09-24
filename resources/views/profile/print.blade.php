@@ -62,8 +62,8 @@
 {{-- Profile Top: Photo + Quick Info --}}
 <div class="profile-top">
     <div class="photo-container">
-        @if($profile->primaryPhoto)
-            <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}">
+        @if($__photoUrl = \App\Support\PhotoVisibility::urlForCurrentViewer($profile))
+            <img src="{{ $__photoUrl }}" alt="{{ $profile->full_name }}">
         @else
             <div class="photo-placeholder">No Photo</div>
         @endif

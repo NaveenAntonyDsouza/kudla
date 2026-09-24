@@ -137,7 +137,10 @@
                                             @endswitch
                                             <span>{{ $rowLabel }}</span>
                                         </label>
-                                        <select name="{{ $type }}_photo_privacy"
+                                        {{-- Field names must match PhotoController::updatePrivacy
+                                             (album/family are plural there). Deriving them as
+                                             "{type}_photo_privacy" silently dropped album + family. --}}
+                                        <select name="{{ ['profile' => 'profile_photo_privacy', 'album' => 'album_photos_privacy', 'family' => 'family_photos_privacy'][$type] }}"
                                             class="w-full text-sm border-gray-300 rounded-md focus:ring-(--color-primary) focus:border-(--color-primary)"
                                             @change="saving = true; $el.form.submit()">
                                             @foreach($levels as $val => $label)
