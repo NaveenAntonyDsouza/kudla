@@ -3,9 +3,13 @@
 use App\Mail\InterestReceivedMail;
 use App\Mail\MembershipActivatedMail;
 use App\Mail\PhotoApprovedMail;
+use App\Mail\PhotoAddedMail;
 use App\Mail\PhotoRequestApprovedMail;
 use App\Mail\PhotoRequestReceivedMail;
+use App\Mail\PhotoUploadRequestedMail;
+use App\Models\PhotoPrivacySetting;
 use App\Models\PhotoRequest;
+use App\Models\ProfilePhoto;
 use App\Mail\ProfileApprovedMail;
 use App\Mail\ProfileRejectedMail;
 use App\Mail\WelcomeMail;
@@ -83,6 +87,45 @@ beforeEach(function () {
         $t->string('status')->default('pending');
         $t->timestamps();
     });
+    Schema::create('profile_photos', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id');
+        $t->string('photo_type')->default('profile');
+        $t->string('photo_url')->nullable();
+        $t->string('storage_driver')->default('public');
+        $t->boolean('is_primary')->default(false);
+        $t->boolean('is_visible')->default(true);
+        $t->string('approval_status')->default('approved');
+        $t->timestamps();
+    });
+    Schema::create('photo_privacy_settings', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id')->unique();
+        $t->string('privacy_level')->nullable();
+        $t->string('profile_photo_privacy')->nullable();
+        $t->string('album_photos_privacy')->nullable();
+        $t->string('family_photos_privacy')->nullable();
+        $t->timestamps();
+    });
+    // In-app notices ("photo added") + the push lookup they trigger.
+    Schema::create('notifications', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->unsignedBigInteger('profile_id')->nullable();
+        $t->string('type', 50);
+        $t->string('title', 200);
+        $t->text('message');
+        $t->json('data')->nullable();
+        $t->boolean('is_read')->default(false);
+        $t->timestamps();
+    });
+    Schema::create('devices', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->string('fcm_token')->nullable();
+        $t->boolean('is_active')->default(true);
+        $t->timestamps();
+    });
     // Empty on purpose: asserting recipients renders the envelope, which
     // looks up the template and falls back to the class's default subject.
     Schema::create('email_templates', function (Blueprint $t) {
@@ -96,7 +139,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (['email_templates', 'photo_requests', 'user_memberships', 'membership_plans', 'profiles', 'users'] as $table) {
+    foreach (['email_templates', 'devices', 'notifications', 'photo_privacy_settings', 'profile_photos', 'photo_requests', 'user_memberships', 'membership_plans', 'profiles', 'users'] as $table) {
         Schema::dropIfExists($table);
     }
 });
@@ -251,20 +294,64 @@ it('emails the reason when an admin requests profile changes', function () {
 
 /* ---------------- Photo requests ---------------- */
 
-it('emails the member whose photos were requested, and the requester on approval', function () {
+function givePhoto(Profile $profile, string $privacy = 'visible_to_all'): ProfilePhoto
+{
+    PhotoPrivacySetting::updateOrCreate(['profile_id' => $profile->id], ['profile_photo_privacy' => $privacy]);
+
+    return ProfilePhoto::create(['profile_id' => $profile->id, 'photo_type' => 'profile', 'photo_url' => 'p/x.jpg', 'is_primary' => true]);
+}
+
+it('hidden photo: "would like to see your photos", then "approved" once revealed', function () {
     $requester = emailMember(user: ['email' => 'asker@example.test']);
     $target = emailMember(user: ['email' => 'owner@example.test']);
+    givePhoto($target, 'hidden');
 
-    $request = PhotoRequest::create([
-        'requester_profile_id' => $requester->id,
-        'target_profile_id' => $target->id,
-        'status' => 'pending',
-    ]);
+    $request = PhotoRequest::create(['requester_profile_id' => $requester->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
     Mail::assertQueued(PhotoRequestReceivedMail::class, fn ($m) => $m->hasTo('owner@example.test'));
-    Mail::assertNotQueued(PhotoRequestApprovedMail::class);
+    Mail::assertNotQueued(PhotoUploadRequestedMail::class);
 
     $request->update(['status' => 'approved']);
     Mail::assertQueued(PhotoRequestApprovedMail::class, fn ($m) => $m->hasTo('asker@example.test'));
+});
+
+it('no photo: "would like you to add a photo", and no "approved" email since nothing is revealed', function () {
+    $requester = emailMember(user: ['email' => 'asker@example.test']);
+    $target = emailMember(user: ['email' => 'owner@example.test']);
+
+    $request = PhotoRequest::create(['requester_profile_id' => $requester->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
+    Mail::assertQueued(PhotoUploadRequestedMail::class, fn ($m) => $m->hasTo('owner@example.test'));
+    Mail::assertNotQueued(PhotoRequestReceivedMail::class);
+
+    $request->update(['status' => 'approved']); // e.g. via the app API
+    Mail::assertNotQueued(PhotoRequestApprovedMail::class);
+});
+
+it('tells everyone who asked once the member adds a photo they can see', function () {
+    $asker1 = emailMember(user: ['email' => 'asker1@example.test']);
+    $asker2 = emailMember(user: ['email' => 'asker2@example.test']);
+    $target = emailMember(user: ['email' => 'owner@example.test']);
+    $r1 = PhotoRequest::create(['requester_profile_id' => $asker1->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
+    $r2 = PhotoRequest::create(['requester_profile_id' => $asker2->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
+
+    givePhoto($target, 'visible_to_all');
+
+    Mail::assertQueued(PhotoAddedMail::class, 2);
+    Mail::assertQueued(PhotoAddedMail::class, fn ($m) => $m->hasTo('asker1@example.test'));
+    Mail::assertNotQueued(PhotoRequestApprovedMail::class); // "added", not "approved"
+    expect($r1->fresh()->status)->toBe('approved')
+        ->and($r2->fresh()->status)->toBe('approved')
+        ->and(App\Models\Notification::where('type', 'photo_added')->count())->toBe(2);
+});
+
+it('keeps the request pending, and sends nothing, if the new photo is hidden', function () {
+    $asker = emailMember(user: ['email' => 'asker@example.test']);
+    $target = emailMember(user: ['email' => 'owner@example.test']);
+    $request = PhotoRequest::create(['requester_profile_id' => $asker->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
+
+    givePhoto($target, 'hidden');
+
+    Mail::assertNotQueued(PhotoAddedMail::class);
+    expect($request->fresh()->status)->toBe('pending'); // now an ordinary view request
 });
 
 it('does not email about photo requests when the member turned off interest emails', function () {
@@ -274,6 +361,7 @@ it('does not email about photo requests when the member turned off interest emai
     PhotoRequest::create(['requester_profile_id' => $requester->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
 
     Mail::assertNotQueued(PhotoRequestReceivedMail::class);
+    Mail::assertNotQueued(PhotoUploadRequestedMail::class);
 });
 
 it('does not email the requester when a request is ignored', function () {

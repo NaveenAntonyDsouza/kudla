@@ -165,7 +165,7 @@ class EmailTemplateResource extends Resource
                             return [$var => match ($var) {
                                 'USER_NAME', 'SENDER_NAME', 'RECEIVER_NAME', 'REQUESTER_NAME' => 'John Doe',
                                 'MATRI_ID', 'SENDER_MATRI_ID', 'ACCEPTER_MATRI_ID', 'DECLINER_MATRI_ID',
-                                'REQUESTER_MATRI_ID', 'APPROVER_MATRI_ID' => 'AM100001',
+                                'REQUESTER_MATRI_ID', 'APPROVER_MATRI_ID', 'OWNER_MATRI_ID' => 'AM100001',
                                 'PLAN_NAME' => 'Gold Plan',
                                 'EXPIRY_DATE' => now()->addMonths(6)->format('d M Y'),
                                 'EXPIRY_MINUTES' => '60',

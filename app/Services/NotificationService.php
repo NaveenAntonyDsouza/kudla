@@ -132,6 +132,8 @@ class NotificationService
             'interest_received', 'interest_accepted', 'interest_declined' => isset($data['interest_id']) ? route('interests.show', $data['interest_id']) : route('interests.inbox'),
             'profile_view' => isset($data['viewer_profile_id']) ? route('profile.view', $data['viewer_profile_id']) : route('dashboard'),
             'photo_approved', 'photo_rejected' => route('photos.manage'),
+            'photo_added' => isset($data['owner_profile_id']) ? route('profile.view', $data['owner_profile_id']) : route('photo-requests.index'),
+            'photo_request', 'photo_request_approved' => route('photo-requests.index'),
             'profile_changes_requested' => route('profile.show'),
             default => route('dashboard'),
         };

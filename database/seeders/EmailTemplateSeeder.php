@@ -48,6 +48,20 @@ class EmailTemplateSeeder extends Seeder
                 'body_html' => '<h1>Photo Request Approved</h1><p>Dear {{REQUESTER_NAME}},</p><p><strong>{{APPROVER_MATRI_ID}}</strong> has approved your photo request on {{SITE_NAME}}. Their photos are now visible to you.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;">View Profile</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>',
                 'variables' => ['REQUESTER_NAME', 'APPROVER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
             ],
+            [
+                'slug' => 'photo-upload-requested',
+                'name' => 'Photo Upload Requested',
+                'subject' => 'A Member Would Like to See Your Photo - {{SITE_NAME}}',
+                'body_html' => '<h1>Add a Photo to Your Profile</h1><p>Dear {{RECEIVER_NAME}},</p><p><strong>{{REQUESTER_MATRI_ID}}</strong> is interested in your profile on {{SITE_NAME}} and would like you to add a photo.</p><p>Profiles with a photo receive many more responses. You stay in control: you can choose who sees it in your photo privacy settings.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;">Add a Photo</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>',
+                'variables' => ['RECEIVER_NAME', 'REQUESTER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+            ],
+            [
+                'slug' => 'photo-added',
+                'name' => 'Photo Added',
+                'subject' => 'A Member You Asked Has Added a Photo - {{SITE_NAME}}',
+                'body_html' => '<h1>New Photo Added</h1><p>Dear {{REQUESTER_NAME}},</p><p><strong>{{OWNER_MATRI_ID}}</strong>, whom you asked for a photo, has now added one on {{SITE_NAME}}.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;">View Profile</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>',
+                'variables' => ['REQUESTER_NAME', 'OWNER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+            ],
 
             // ── Registration & Account ──
             [

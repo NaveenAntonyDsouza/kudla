@@ -57,10 +57,17 @@
                             </div>
                             <div class="shrink-0 flex items-center gap-2">
                                 @if($req->status === 'pending')
-                                    <form method="POST" action="{{ route('photo-requests.approve', $req) }}">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors">Approve</button>
-                                    </form>
+                                    @if(auth()->user()->profile->primaryPhoto)
+                                        <form method="POST" action="{{ route('photo-requests.approve', $req) }}">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors">Approve</button>
+                                        </form>
+                                    @else
+                                        {{-- No photo yet: they asked you to add one. Approving would
+                                             show nothing; the requester is told automatically once
+                                             the photo is approved and visible to them. --}}
+                                        <a href="{{ route('photos.manage') }}" class="px-3 py-1.5 text-xs font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors">Add a photo</a>
+                                    @endif
                                     <form method="POST" action="{{ route('photo-requests.ignore', $req) }}">
                                         @csrf
                                         <button type="submit" class="px-3 py-1.5 text-xs font-medium text-gray-600 border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">Ignore</button>

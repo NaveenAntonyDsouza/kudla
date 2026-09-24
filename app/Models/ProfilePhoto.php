@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\MemberEmailService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProfilePhoto extends Model
@@ -27,6 +29,19 @@ class ProfilePhoto extends Model
         'approved_at',
     ];
 
+    /**
+     * Mirrors the column defaults. Laravel doesn't read DB defaults back
+     * after an insert, so without these a photo created without explicit
+     * values (admin Create User, admin photo upload) had a null
+     * approval_status in memory — and the "photo added" hook below, which
+     * checks it, silently never fired. Stored values are unchanged.
+     */
+    protected $attributes = [
+        'approval_status' => 'approved',
+        'is_visible' => true,
+        'is_primary' => false,
+    ];
+
     protected function casts(): array
     {
         return [
@@ -35,6 +50,28 @@ class ProfilePhoto extends Model
             'display_order' => 'integer',
             'approved_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // "<ID> has added a photo" for members who asked this person for one.
+        // Fires when a photo becomes the member's visible main photo — an
+        // auto-approved upload, an admin approving it, or the member making
+        // it primary / visible. The service only acts on pending requests,
+        // so ordinary photo edits cost one cheap query and send nothing.
+        static::saved(function (ProfilePhoto $photo) {
+            $isMainPhoto = $photo->is_primary && $photo->is_visible
+                && $photo->approval_status === self::STATUS_APPROVED;
+            $justBecameMain = $photo->wasRecentlyCreated
+                || $photo->wasChanged(['is_primary', 'is_visible', 'approval_status']);
+
+            // Pass the id, not $photo->profile: the lookup must happen inside
+            // the service's fail-safe, never in the upload request itself.
+            if ($isMainPhoto && $justBecameMain && $photo->profile_id) {
+                $profileId = (int) $photo->profile_id;
+                DB::afterCommit(fn () => app(MemberEmailService::class)->photoAdded($profileId));
+            }
+        });
     }
 
     // Approval status constants

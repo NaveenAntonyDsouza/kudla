@@ -62,12 +62,16 @@ class PhotoRequestController extends Controller
             'status' => 'pending',
         ]);
 
-        // Notify the target user
+        // Notify the target user — asking to see a hidden photo, or asking a
+        // member with no photo to add one. (The email is sent by the
+        // PhotoRequest model hook, with the same two versions.)
         $this->notificationService->send(
             $profile->user,
             'photo_request',
             'Photo Request Received',
-            $myProfile->matri_id . ' has requested to view your photos.',
+            $profile->primaryPhoto
+                ? $myProfile->matri_id . ' has requested to view your photos.'
+                : $myProfile->matri_id . ' would like you to add a photo.',
             $myProfile->id
         );
 
@@ -83,6 +87,13 @@ class PhotoRequestController extends Controller
 
         if ($photoRequest->target_profile_id !== $myProfile->id) {
             abort(403);
+        }
+
+        // Nothing to approve without a photo — the requester is told
+        // automatically ("photo added") once one is uploaded and visible.
+        if (! $myProfile->primaryPhoto) {
+            return redirect()->route('photos.manage')
+                ->with('info', 'Add a photo first — members who asked will be notified automatically once it is approved.');
         }
 
         $photoRequest->update(['status' => 'approved']);
