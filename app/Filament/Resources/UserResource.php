@@ -623,6 +623,9 @@ class UserResource extends Resource
                     ->visible(fn (Profile $record): bool => !$record->is_approved && \App\Support\Permissions::can('approve_member'))
                     ->successNotificationTitle('Profile approved'),
 
+                // Request changes — send a pending profile back with a reason.
+                \App\Filament\Actions\RequestProfileChangesAction::make(),
+
                 // Toggle Active
                 \Filament\Actions\Action::make('toggleActive')
                     ->label(fn(Profile $record): string => $record->is_active ? 'Deactivate' : 'Activate')

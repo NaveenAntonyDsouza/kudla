@@ -15,7 +15,9 @@ class PhotoRejectedMail extends DatabaseMailable
         return [
             'USER_NAME' => $this->user->name,
             'REASON' => $this->reason,
-            'ACTION_URL' => url('/profile/photos'),
+            // Named route — the photo page lives at /manage-photos; the old
+            // hardcoded /profile/photos was a 404.
+            'ACTION_URL' => route('photos.manage'),
         ];
     }
 

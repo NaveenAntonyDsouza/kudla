@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\UserMembership;
+use App\Services\MemberEmailService;
 use App\Services\NotificationService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 #[Description('Send reminder notifications to users whose membership is expiring in 3 days or has expired today')]
 class SendMembershipExpiryReminders extends Command
 {
-    public function handle(NotificationService $notificationService): int
+    public function handle(NotificationService $notificationService, MemberEmailService $memberEmails): int
     {
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
 
@@ -36,22 +37,8 @@ class SendMembershipExpiryReminders extends Command
                 ['membership_id' => $membership->id]
             );
 
-            // Email
-            try {
-                Mail::raw(
-                    "Dear {$user->name},\n\n" .
-                    "Your {$membership->plan->plan_name} plan on {$siteName} expires on {$membership->ends_at->format('d M Y')}.\n\n" .
-                    "Renew your plan to continue enjoying premium features like viewing contacts, unlimited messaging, and highlighted profile.\n\n" .
-                    "Visit: " . url('/membership-plans') . "\n\n" .
-                    "Best regards,\n{$siteName} Team",
-                    function ($message) use ($user, $siteName) {
-                        $message->to($user->email)
-                            ->subject("Your {$siteName} membership expires in 3 days");
-                    }
-                );
-            } catch (\Throwable $e) {
-                $this->warn("Failed to email {$user->email}: {$e->getMessage()}");
-            }
+            // Email — the admin-editable 'membership-expiring' template.
+            $memberEmails->membershipExpiring($membership);
         }
 
         $this->info("Sent {$expiringIn3Days->count()} expiring-in-3-days reminders.");
@@ -77,6 +64,11 @@ class SendMembershipExpiryReminders extends Command
                 null,
                 ['membership_id' => $membership->id]
             );
+
+            // Email is optional on profiles — nothing to send without one.
+            if (blank($user->email)) {
+                continue;
+            }
 
             try {
                 Mail::raw(

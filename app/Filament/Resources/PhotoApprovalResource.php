@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PhotoApprovalResource\Pages;
 use App\Models\ProfilePhoto;
+use App\Services\MemberEmailService;
+use App\Services\NotificationService;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -12,6 +14,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class PhotoApprovalResource extends Resource
 {
@@ -167,14 +171,7 @@ class PhotoApprovalResource extends Resource
                             }
                         }
 
-                        // Send notification to user
-                        \App\Models\Notification::create([
-                            'profile_id' => $record->profile_id,
-                            'type' => 'photo_approved',
-                            'title' => ucfirst($record->photo_type) . ' photo approved',
-                            'message' => 'Your ' . $record->photo_type . ' photo has been approved and is now visible to other members.',
-                            'is_read' => false,
-                        ]);
+                        static::notifyApproved(collect([$record]));
                     })
                     ->visible(fn (ProfilePhoto $record): bool => $record->approval_status !== 'approved')
                     ->successNotificationTitle('Photo approved'),
@@ -206,14 +203,7 @@ class PhotoApprovalResource extends Resource
                             'is_primary' => false,
                         ]);
 
-                        // Send notification to user
-                        \App\Models\Notification::create([
-                            'profile_id' => $record->profile_id,
-                            'type' => 'photo_rejected',
-                            'title' => ucfirst($record->photo_type) . ' photo rejected',
-                            'message' => 'Your ' . $record->photo_type . ' photo was rejected. Reason: ' . $reason . '. Please upload a new photo.',
-                            'is_read' => false,
-                        ]);
+                        static::notifyRejected(collect([$record]), $reason);
                     })
                     ->visible(fn (ProfilePhoto $record): bool => $record->approval_status !== 'rejected')
                     ->successNotificationTitle('Photo rejected'),
@@ -248,6 +238,8 @@ class PhotoApprovalResource extends Resource
                                 'rejection_reason' => null,
                             ]);
                         });
+
+                        static::notifyApproved($records);
                     })
                     ->deselectRecordsAfterCompletion()
                     ->successNotificationTitle('Selected photos approved'),
@@ -272,12 +264,65 @@ class PhotoApprovalResource extends Resource
                                 'is_primary' => false,
                             ]);
                         });
+
+                        static::notifyRejected($records, $reason);
                     })
                     ->deselectRecordsAfterCompletion()
                     ->successNotificationTitle('Selected photos rejected'),
             ])
             ->searchPlaceholder('Search by matri ID or name...')
             ->poll('30s');
+    }
+
+    /**
+     * Tell each member their photos were approved: one in-app notification
+     * and one email per member, however many of their photos are in $photos.
+     */
+    protected static function notifyApproved(Collection $photos): void
+    {
+        foreach (static::photosByMember($photos) as [$user, $memberPhotos]) {
+            $count = $memberPhotos->count();
+            $message = $count === 1
+                ? 'Your ' . $memberPhotos->first()->photo_type . ' photo has been approved and is now visible to other members.'
+                : "{$count} of your photos have been approved and are now visible to other members.";
+
+            app(NotificationService::class)->send($user, 'photo_approved', $count === 1 ? 'Photo approved' : 'Photos approved', $message);
+            DB::afterCommit(fn () => app(MemberEmailService::class)->photosApproved($user));
+        }
+    }
+
+    /** Same as notifyApproved(), for rejections, carrying the reason. */
+    protected static function notifyRejected(Collection $photos, string $reason): void
+    {
+        foreach (static::photosByMember($photos) as [$user, $memberPhotos]) {
+            $count = $memberPhotos->count();
+            $message = ($count === 1
+                ? 'Your ' . $memberPhotos->first()->photo_type . ' photo was rejected.'
+                : "{$count} of your photos were rejected.")
+                . " Reason: {$reason}. Please upload a new photo.";
+
+            app(NotificationService::class)->send($user, 'photo_rejected', $count === 1 ? 'Photo rejected' : 'Photos rejected', $message);
+            DB::afterCommit(fn () => app(MemberEmailService::class)->photoRejected($user, $reason));
+        }
+    }
+
+    /**
+     * Group photos by the member who owns them. Photos whose profile or
+     * user no longer exists (soft-deleted member) are skipped.
+     *
+     * @return list<array{0: \App\Models\User, 1: Collection<int, ProfilePhoto>}>
+     */
+    protected static function photosByMember(Collection $photos): array
+    {
+        $groups = [];
+        foreach ($photos->groupBy('profile_id') as $memberPhotos) {
+            $user = $memberPhotos->first()->profile?->user;
+            if ($user) {
+                $groups[] = [$user, $memberPhotos];
+            }
+        }
+
+        return $groups;
     }
 
     public static function getPages(): array

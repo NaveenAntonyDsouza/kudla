@@ -3,22 +3,19 @@
 namespace App\Services;
 
 use App\Exceptions\Interest\DailyLimitReachedException;
-use App\Mail\InterestAcceptedMail;
-use App\Mail\InterestDeclinedMail;
-use App\Mail\InterestReceivedMail;
 use App\Models\DailyInterestUsage;
 use App\Models\Interest;
 use App\Models\InterestReply;
 use App\Models\Profile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class InterestService
 {
     const FREE_DAILY_LIMIT = 5;
 
     public function __construct(
-        private NotificationService $notificationService
+        private NotificationService $notificationService,
+        private MemberEmailService $memberEmails,
     ) {}
 
     /**
@@ -132,7 +129,7 @@ class InterestService
                 $sender->id,
                 ['interest_id' => $interest->id]
             );
-            Mail::to($receiver->user->email)->queue(new InterestReceivedMail($interest));
+            $this->memberEmails->interestReceived($receiver->user, $interest);
 
             return $interest;
         });
@@ -171,7 +168,7 @@ class InterestService
                     $receiver->id,
                     ['interest_id' => $interest->id]
                 );
-                Mail::to($sender->user->email)->queue(new InterestAcceptedMail($interest));
+                $this->memberEmails->interestAccepted($sender->user, $interest);
             }
 
             return $reply;
@@ -213,7 +210,7 @@ class InterestService
                         $receiver->id,
                         ['interest_id' => $interest->id]
                     );
-                    Mail::to($sender->user->email)->queue(new InterestDeclinedMail($interest));
+                    $this->memberEmails->interestDeclined($sender->user, $interest);
                 }
             }
 

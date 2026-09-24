@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\MemberEmailService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class UserMembership extends Model
 {
@@ -24,6 +26,23 @@ class UserMembership extends Model
             'ends_at' => 'datetime',
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // "Your plan is active" email. Hooked on the model because five
+        // separate paths create memberships (Razorpay/PayPal webhook via
+        // SubscriptionActivator, web payment verify, 100%-coupon free plan,
+        // admin Change Membership Plan, admin Memberships → Create); one hook
+        // keeps them from drifting. Waits for the surrounding transaction so a
+        // rolled-back activation never emails.
+        static::created(function (UserMembership $membership) {
+            if (! $membership->is_active) {
+                return;
+            }
+
+            DB::afterCommit(fn () => app(MemberEmailService::class)->membershipActivated($membership));
+        });
     }
 
     public function scopeActive(Builder $query): Builder

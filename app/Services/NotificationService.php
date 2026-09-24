@@ -131,6 +131,8 @@ class NotificationService
         return match ($notification->type) {
             'interest_received', 'interest_accepted', 'interest_declined' => isset($data['interest_id']) ? route('interests.show', $data['interest_id']) : route('interests.inbox'),
             'profile_view' => isset($data['viewer_profile_id']) ? route('profile.view', $data['viewer_profile_id']) : route('dashboard'),
+            'photo_approved', 'photo_rejected' => route('photos.manage'),
+            'profile_changes_requested' => route('profile.show'),
             default => route('dashboard'),
         };
     }

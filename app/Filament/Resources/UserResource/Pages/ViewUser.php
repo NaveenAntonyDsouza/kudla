@@ -40,6 +40,9 @@ class ViewUser extends ViewRecord
                 ->visible(fn (): bool => !$this->record->is_approved)
                 ->successNotificationTitle('Profile approved'),
 
+            // Request changes — shared with the members list.
+            \App\Filament\Actions\RequestProfileChangesAction::make(),
+
             // Notes — the SAME shared popup as the members list (history + Type +
             // Note + Follow-up). Replaces the old stripped-down "Add Note" that
             // was missing the Type field and the history timeline.

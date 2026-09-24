@@ -439,6 +439,15 @@ class MembershipController extends Controller
         $plan = MembershipPlan::find($subscription->plan_id);
         $durationMonths = $plan?->duration_months ?? 1;
 
+        // Already activated — the Razorpay webhook (SubscriptionActivator) got
+        // here first, or the member re-submitted / refreshed this page. Don't
+        // create a second membership, count the coupon twice, or re-send the
+        // "plan active" email.
+        if ($subscription->payment_status === 'paid') {
+            return redirect()->route('membership.index')
+                ->with('success', 'Payment successful! Your ' . ($plan->plan_name ?? 'Premium') . ' plan is now active.');
+        }
+
         // Update subscription record (payment audit)
         $subscription->update([
             'razorpay_payment_id' => $request->razorpay_payment_id,

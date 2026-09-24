@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BranchScopable;
+use App\Services\MemberEmailService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Profile extends Model
 {
@@ -102,6 +104,28 @@ class Profile extends Model
                 $next = $last ? intval(substr($last->matri_id, strlen($prefix))) + 1 : 100001;
                 $profile->matri_id = $prefix.$next;
             }
+        });
+
+        // Member lifecycle emails. Hooked on `updated` (not `created`) on
+        // purpose: a profile created already approved / already complete —
+        // admin Create User, bulk import, lead conversion — gets the separate
+        // staff-created welcome instead, so it must not trigger these too.
+        static::updated(function (Profile $profile) {
+            // An admin approved a pending profile (row, view page or bulk action).
+            $approved = $profile->wasChanged('is_approved') && $profile->is_approved;
+
+            // The member just finished registering (web or app). The flag
+            // flips false → true once, so this sends once.
+            $completed = $profile->wasChanged('onboarding_completed') && $profile->onboarding_completed;
+
+            if (! $approved && ! $completed) {
+                return; // most profile edits — no lookup, no email
+            }
+
+            // Deferred until the surrounding transaction commits (Filament
+            // actions can run in one) so a rolled-back change never emails.
+            // The service never throws, so this can't fail the save.
+            DB::afterCommit(fn () => app(MemberEmailService::class)->profileUpdated($profile, $approved, $completed));
         });
     }
 
