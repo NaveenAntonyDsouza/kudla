@@ -9,10 +9,13 @@ use App\Mail\MembershipActivatedMail;
 use App\Mail\MembershipExpiringMail;
 use App\Mail\PhotoApprovedMail;
 use App\Mail\PhotoRejectedMail;
+use App\Mail\PhotoRequestApprovedMail;
+use App\Mail\PhotoRequestReceivedMail;
 use App\Mail\ProfileApprovedMail;
 use App\Mail\ProfileRejectedMail;
 use App\Mail\WelcomeMail;
 use App\Models\Interest;
+use App\Models\PhotoRequest;
 use App\Models\Profile;
 use App\Models\User;
 use App\Models\UserMembership;
@@ -141,6 +144,31 @@ class MemberEmailService
     public function interestDeclined(User $sender, Interest $interest): void
     {
         $this->attempt('interestDeclined', fn () => $this->deliver($sender, new InterestDeclinedMail($interest), 'email_declined'));
+    }
+
+    /**
+     * Photo requests are the same kind of member-to-member signal as
+     * interests, so they follow the member's "Interest notifications" email
+     * setting rather than adding a separate toggle.
+     */
+    public function photoRequested(PhotoRequest $photoRequest): void
+    {
+        $this->attempt('photoRequested', function () use ($photoRequest) {
+            $user = $photoRequest->targetProfile?->user;
+            if ($user) {
+                $this->deliver($user, new PhotoRequestReceivedMail($photoRequest), 'email_interest');
+            }
+        });
+    }
+
+    public function photoRequestApproved(PhotoRequest $photoRequest): void
+    {
+        $this->attempt('photoRequestApproved', function () use ($photoRequest) {
+            $user = $photoRequest->requesterProfile?->user;
+            if ($user) {
+                $this->deliver($user, new PhotoRequestApprovedMail($photoRequest), 'email_interest');
+            }
+        });
     }
 
     protected function deliver(User $user, Mailable $mail, ?string $prefKey = null): void

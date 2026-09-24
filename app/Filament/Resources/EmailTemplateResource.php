@@ -77,7 +77,7 @@ class EmailTemplateResource extends Resource
                     Forms\Components\Toggle::make('is_active')
                         ->label('Active')
                         ->default(true)
-                        ->helperText('Inactive templates will fall back to the default Blade view.'),
+                        ->helperText('Turn OFF to stop sending this email to members. (OTP, verification and password-reset emails are not templates and always send.)'),
                 ])
                 ->columns(3),
 
@@ -163,8 +163,9 @@ class EmailTemplateResource extends Resource
                         // Render with sample data
                         $sampleVars = collect($record->variables ?? [])->mapWithKeys(function ($var) {
                             return [$var => match ($var) {
-                                'USER_NAME', 'SENDER_NAME', 'RECEIVER_NAME' => 'John Doe',
-                                'MATRI_ID', 'SENDER_MATRI_ID', 'ACCEPTER_MATRI_ID', 'DECLINER_MATRI_ID' => 'AM100001',
+                                'USER_NAME', 'SENDER_NAME', 'RECEIVER_NAME', 'REQUESTER_NAME' => 'John Doe',
+                                'MATRI_ID', 'SENDER_MATRI_ID', 'ACCEPTER_MATRI_ID', 'DECLINER_MATRI_ID',
+                                'REQUESTER_MATRI_ID', 'APPROVER_MATRI_ID' => 'AM100001',
                                 'PLAN_NAME' => 'Gold Plan',
                                 'EXPIRY_DATE' => now()->addMonths(6)->format('d M Y'),
                                 'EXPIRY_MINUTES' => '60',
@@ -176,6 +177,10 @@ class EmailTemplateResource extends Resource
                                 default => "[{$var}]",
                             }];
                         })->toArray();
+
+                        // Theme colour used in button styles — real sends get it
+                        // from DatabaseMailable; the test preview needs it too.
+                        $sampleVars['PRIMARY_COLOR'] = \App\Models\ThemeSetting::first()?->primary_color ?? '#8B1D91';
 
                         $rendered = $record->render($sampleVars);
 

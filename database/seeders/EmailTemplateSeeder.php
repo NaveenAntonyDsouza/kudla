@@ -33,6 +33,22 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['SENDER_NAME', 'DECLINER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
             ],
 
+            // ── Photo requests ──
+            [
+                'slug' => 'photo-request-received',
+                'name' => 'Photo Request Received',
+                'subject' => 'New Photo Request - {{SITE_NAME}}',
+                'body_html' => '<h1>New Photo Request</h1><p>Dear {{RECEIVER_NAME}},</p><p><strong>{{REQUESTER_MATRI_ID}}</strong> would like to see your photos on {{SITE_NAME}}.</p><p>You decide who can see your photos. Log in to approve or ignore the request.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;">View Photo Requests</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>',
+                'variables' => ['RECEIVER_NAME', 'REQUESTER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+            ],
+            [
+                'slug' => 'photo-request-approved',
+                'name' => 'Photo Request Approved',
+                'subject' => 'Your Photo Request Was Approved - {{SITE_NAME}}',
+                'body_html' => '<h1>Photo Request Approved</h1><p>Dear {{REQUESTER_NAME}},</p><p><strong>{{APPROVER_MATRI_ID}}</strong> has approved your photo request on {{SITE_NAME}}. Their photos are now visible to you.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;">View Profile</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>',
+                'variables' => ['REQUESTER_NAME', 'APPROVER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+            ],
+
             // ── Registration & Account ──
             [
                 'slug' => 'welcome',
@@ -137,8 +153,12 @@ class EmailTemplateSeeder extends Seeder
             ],
         ];
 
+        // Only ADD missing templates — never overwrite an existing one. Admins
+        // edit subjects/bodies (and switch templates off) per site, and this
+        // seeder is re-run on live databases to add new templates; updating
+        // existing rows would silently undo their changes.
         foreach ($templates as $template) {
-            EmailTemplate::updateOrCreate(
+            EmailTemplate::firstOrCreate(
                 ['slug' => $template['slug']],
                 $template,
             );

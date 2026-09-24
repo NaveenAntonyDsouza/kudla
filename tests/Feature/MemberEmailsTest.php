@@ -3,6 +3,9 @@
 use App\Mail\InterestReceivedMail;
 use App\Mail\MembershipActivatedMail;
 use App\Mail\PhotoApprovedMail;
+use App\Mail\PhotoRequestApprovedMail;
+use App\Mail\PhotoRequestReceivedMail;
+use App\Models\PhotoRequest;
 use App\Mail\ProfileApprovedMail;
 use App\Mail\ProfileRejectedMail;
 use App\Mail\WelcomeMail;
@@ -73,6 +76,13 @@ beforeEach(function () {
         $t->boolean('is_active')->default(true);
         $t->timestamps();
     });
+    Schema::create('photo_requests', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('requester_profile_id');
+        $t->unsignedBigInteger('target_profile_id');
+        $t->string('status')->default('pending');
+        $t->timestamps();
+    });
     // Empty on purpose: asserting recipients renders the envelope, which
     // looks up the template and falls back to the class's default subject.
     Schema::create('email_templates', function (Blueprint $t) {
@@ -86,7 +96,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (['email_templates', 'user_memberships', 'membership_plans', 'profiles', 'users'] as $table) {
+    foreach (['email_templates', 'photo_requests', 'user_memberships', 'membership_plans', 'profiles', 'users'] as $table) {
         Schema::dropIfExists($table);
     }
 });
@@ -237,6 +247,43 @@ it('emails the reason when an admin requests profile changes', function () {
 
     Mail::assertQueued(ProfileRejectedMail::class, fn ($m) => $m->reason === 'Some profile details are incomplete'
         && $m->hasTo('member@example.test'));
+});
+
+/* ---------------- Photo requests ---------------- */
+
+it('emails the member whose photos were requested, and the requester on approval', function () {
+    $requester = emailMember(user: ['email' => 'asker@example.test']);
+    $target = emailMember(user: ['email' => 'owner@example.test']);
+
+    $request = PhotoRequest::create([
+        'requester_profile_id' => $requester->id,
+        'target_profile_id' => $target->id,
+        'status' => 'pending',
+    ]);
+    Mail::assertQueued(PhotoRequestReceivedMail::class, fn ($m) => $m->hasTo('owner@example.test'));
+    Mail::assertNotQueued(PhotoRequestApprovedMail::class);
+
+    $request->update(['status' => 'approved']);
+    Mail::assertQueued(PhotoRequestApprovedMail::class, fn ($m) => $m->hasTo('asker@example.test'));
+});
+
+it('does not email about photo requests when the member turned off interest emails', function () {
+    $requester = emailMember(user: ['email' => 'asker@example.test']);
+    $target = emailMember(user: ['email' => 'owner@example.test', 'notification_preferences' => ['email_interest' => false]]);
+
+    PhotoRequest::create(['requester_profile_id' => $requester->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
+
+    Mail::assertNotQueued(PhotoRequestReceivedMail::class);
+});
+
+it('does not email the requester when a request is ignored', function () {
+    $requester = emailMember(user: ['email' => 'asker@example.test']);
+    $target = emailMember(user: ['email' => 'owner@example.test']);
+    $request = PhotoRequest::create(['requester_profile_id' => $requester->id, 'target_profile_id' => $target->id, 'status' => 'pending']);
+
+    $request->update(['status' => 'ignored']);
+
+    Mail::assertNotQueued(PhotoRequestApprovedMail::class);
 });
 
 it('queues a photo-approved email for the member', function () {

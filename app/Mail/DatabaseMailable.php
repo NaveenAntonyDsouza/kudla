@@ -64,6 +64,20 @@ abstract class DatabaseMailable extends Mailable
         return new Envelope(subject: $this->fallbackSubject());
     }
 
+    /**
+     * An admin switching a template to Inactive (Email Templates → Active)
+     * stops that email entirely. Every send path — immediate, queued (the
+     * queue worker calls this too), and each subclass — goes through here.
+     */
+    public function send($mailer)
+    {
+        if (EmailTemplate::isDisabled($this->templateSlug)) {
+            return null;
+        }
+
+        return parent::send($mailer);
+    }
+
     public function content(): Content
     {
         $template = EmailTemplate::findBySlug($this->templateSlug);

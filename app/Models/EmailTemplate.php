@@ -48,6 +48,22 @@ class EmailTemplate extends Model
     }
 
     /**
+     * Whether an admin has switched this email off (Email Templates → Active).
+     * Only an existing row marked inactive counts: a slug with no row at all
+     * still sends, using the mailable's built-in fallback. Read uncached so a
+     * switch-off takes effect immediately, and fails open (keeps sending) if
+     * the table can't be read.
+     */
+    public static function isDisabled(string $slug): bool
+    {
+        try {
+            return static::where('slug', $slug)->where('is_active', false)->exists();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
      * Render subject and body with variable substitution.
      */
     public function render(array $data): array
