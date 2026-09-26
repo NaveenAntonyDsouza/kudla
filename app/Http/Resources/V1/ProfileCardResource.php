@@ -125,14 +125,16 @@ class ProfileCardResource extends JsonResource
             return null;
         }
 
-        $full = (new PhotoResource($photo, viewer: $this->viewer))->resolve();
+        $full = (new PhotoResource($photo, viewer: $this->viewer, owner: $profile))->resolve();
 
-        // Card variant exposes just the URLs + blur flag, not the full photo payload.
+        // Card variant exposes just the URLs + lock info, not the full photo
+        // payload. URLs are null when locked (see PhotoResource).
         return [
             'id'            => $full['id'],
             'thumbnail_url' => $full['thumbnail_url'],
             'medium_url'    => $full['medium_url'],
             'is_blurred'    => $full['is_blurred'],
+            'lock_reason'   => $full['lock_reason'],
         ];
     }
 

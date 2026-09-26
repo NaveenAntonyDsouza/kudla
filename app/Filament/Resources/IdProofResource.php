@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\IdProofResource\Pages;
 use App\Models\IdProof;
-use App\Models\Notification;
 use BackedEnum;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -171,13 +170,17 @@ class IdProofResource extends Resource
                         ]);
                         $record->profile?->update(['id_proof_verified' => true]);
 
-                        Notification::create([
-                            'profile_id' => $record->profile_id,
-                            'type' => 'id_proof_approved',
-                            'title' => 'ID Proof Verified',
-                            'message' => 'Your ' . $record->document_type . ' has been verified successfully. Your profile now shows the verified badge.',
-                            'is_read' => false,
-                        ]);
+                        // Addressed to the member via NotificationService (sets the required
+                        // user_id + sends the app push). The old Notification::create() omitted
+                        // user_id, so it threw and rolled this whole action back.
+                        if ($member = $record->profile?->user) {
+                            app(\App\Services\NotificationService::class)->send(
+                                $member,
+                                'id_proof_approved',
+                                'ID Proof Verified',
+                                'Your ' . $record->document_type . ' has been verified successfully. Your profile now shows the verified badge.',
+                            );
+                        }
                     })
                     ->visible(fn (IdProof $record) => $record->verification_status !== 'approved')
                     ->successNotificationTitle('ID proof approved'),
@@ -227,13 +230,17 @@ class IdProofResource extends Resource
                         ]);
                         $record->profile?->update(['id_proof_verified' => false]);
 
-                        Notification::create([
-                            'profile_id' => $record->profile_id,
-                            'type' => 'id_proof_rejected',
-                            'title' => 'ID Proof Rejected',
-                            'message' => 'Your ' . $record->document_type . ' was rejected. Reason: ' . $reason . '. Please upload a valid document.',
-                            'is_read' => false,
-                        ]);
+                        // Addressed to the member via NotificationService (sets the required
+                        // user_id + sends the app push). The old Notification::create() omitted
+                        // user_id, so it threw and rolled this whole action back.
+                        if ($member = $record->profile?->user) {
+                            app(\App\Services\NotificationService::class)->send(
+                                $member,
+                                'id_proof_rejected',
+                                'ID Proof Rejected',
+                                'Your ' . $record->document_type . ' was rejected. Reason: ' . $reason . '. Please upload a valid document.',
+                            );
+                        }
                     })
                     ->visible(fn (IdProof $record) => $record->verification_status !== 'rejected')
                     ->successNotificationTitle('ID proof rejected'),

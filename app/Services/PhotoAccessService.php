@@ -7,14 +7,17 @@ use App\Models\Profile;
 use Illuminate\Support\Carbon;
 
 /**
- * Manages per-viewer access to gated/blurred photos.
+ * Records per-viewer photo access grants — a RECORD ONLY.
  *
- * Called from:
- *   - Step 11 (photo request endpoints): approving a PhotoRequest calls
- *     grant() so the requester can see the target's gated photos.
- *   - Step 9 onwards (PhotoResource::shouldBlurFor): hasAccess() is
- *     consulted when deciding whether a non-owner viewer sees the real
- *     photo or a blurred placeholder.
+ * ⚠ Do NOT use hasAccess() to decide whether a photo is shown. Photo
+ * visibility has exactly one rule, App\Support\PhotoVisibility, used by the
+ * website and the API alike: a hidden photo is visible to a member whose
+ * photo request was APPROVED (photo_requests.status). A second source of
+ * truth here would let the app and the website disagree — which is how
+ * hidden photos leaked before (Sep 2026).
+ *
+ * Still called from the API approve endpoint (grant()), which keeps the
+ * photo_access_grants table as an audit trail of who was granted access.
  *
  * All three methods wrap DB access in try/catch and return safe defaults
  * on failure. Matches the defensive pattern across ProfileAccessService,

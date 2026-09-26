@@ -120,12 +120,13 @@ function buildNotification(array $overrides = []): Notification
     return $n;
 }
 
-it('NotificationResource exposes exactly the 9 documented keys', function () {
+it('NotificationResource exposes exactly the 10 documented keys', function () {
     $data = (new NotificationResource(buildNotification()))->resolve();
 
+    // `target` added Sep 2026 — see docs/mobile-app/reference/api-changes-2026-09.md
     $expected = [
         'id', 'type', 'title', 'message', 'data', 'is_read',
-        'created_at', 'icon_type', 'from_profile_id',
+        'created_at', 'icon_type', 'from_profile_id', 'target',
     ];
 
     foreach ($expected as $key) {

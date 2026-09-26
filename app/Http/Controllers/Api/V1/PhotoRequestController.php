@@ -148,16 +148,23 @@ class PhotoRequestController extends BaseApiController
             'status' => 'pending',
         ]);
 
-        // Best-effort notification to the target.
+        // Best-effort notification to the target — Matri ID only (never the
+        // requester's name), same as the website. Two versions: asking to
+        // see hidden photos, or asking a member with no photo to add one.
+        // (The email is sent by the PhotoRequest model hook.)
+        $hasPhoto = (bool) $target->primaryPhoto;
         $this->safeNotify(
             $target->user,
             'photo_request',
             'New photo request',
-            ($requester->full_name ?: 'Someone').' has requested to see your photos.',
+            $hasPhoto
+                ? $requester->matri_id.' has requested to see your photos.'
+                : $requester->matri_id.' would like you to add a photo.',
             $requester->id,
             [
                 'photo_request_id' => $photoRequest->id,
                 'requester_matri_id' => $requester->matri_id,
+                'kind' => $hasPhoto ? 'view' : 'upload',
             ],
         );
 
@@ -257,11 +264,24 @@ class PhotoRequestController extends BaseApiController
             );
         }
 
+        // Nothing to approve without a photo: this was a "please add a
+        // photo" request. The requester is told automatically ("photo
+        // added") once the member uploads one they can see.
+        $target = $request->user()->profile;
+        if (! $target->primaryPhoto) {
+            return ApiResponse::error(
+                'PHOTO_REQUIRED',
+                'Add a photo first — members who asked will be notified automatically once it is approved.',
+                null,
+                422,
+            );
+        }
+
         $photoRequest->update(['status' => 'approved']);
 
-        // Wire step-8's grant machinery. The target is the grantor
-        // (their photos become visible); the requester is the grantee.
-        $target = $request->user()->profile;
+        // Visibility is decided by App\Support\PhotoVisibility from approved
+        // photo_requests (the website's rule). The grant row is kept as a
+        // record only — see PhotoAccessService.
         $requester = $photoRequest->requesterProfile;
         if ($requester) {
             $this->photoAccess->grant($target, $requester);
@@ -270,7 +290,7 @@ class PhotoRequestController extends BaseApiController
                 $requester->user,
                 'photo_request_approved',
                 'Photo request approved',
-                ($target->full_name ?: 'Someone').' approved your photo request.',
+                $target->matri_id.' approved your photo request.',
                 $target->id,
                 [
                     'photo_request_id' => $photoRequest->id,

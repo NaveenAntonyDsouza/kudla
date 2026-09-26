@@ -28,6 +28,7 @@ class SiteSetting extends Model
         static::updateOrCreate(['key' => $key], ['value' => $value]);
         Cache::forget("site_setting.{$key}");
         Cache::forget('site_settings.all');
+        Cache::forget('api:v1:site-settings'); // the app's /site/settings snapshot
     }
 
     /**

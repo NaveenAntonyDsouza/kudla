@@ -15,15 +15,15 @@ use Carbon\Carbon;
 |   - Every URL field starts with http:// or https:// (absolute)
 |   - `original_url` only populated for the owner (prevents free-tier leak
 |     of full-resolution images)
-|   - `is_blurred` respects the current PhotoPrivacySetting schema
+|   - Privacy follows App\Support\PhotoVisibility (same rule as the website),
+|     per photo type: a photo the viewer may not see has ALL URL fields null,
+|     is_blurred true and lock_reason 'hidden' | 'after_acceptance'
 |   - All timestamps are ISO 8601 or null
 |   - Booleans are real booleans
-|   - Missing relations don't crash — stable shape under partial data
+|   - Missing relations don't crash — and privacy fails CLOSED (hidden)
 |
-| The fuller "gated_premium + photo_access_grants" blur logic lands in
-| step-8 which owns the photo_privacy_settings column migration + the
-| PhotoAccessGrant model. Step-7's job is the URL contract + test coverage
-| of what works today.
+| (The gated_premium / blur_non_premium flags the first version read never
+| existed in the database; per-type privacy levels replaced them, Sep 2026.)
 |
 | Reference: docs/mobile-app/reference/ui-safe-api-checklist.md
 */
@@ -126,10 +126,10 @@ function buildViewer(int $id = 99, bool $premium = false): Profile
 }
 
 /* ==================================================================
- |  Shape — 15 keys, all present every time
+ |  Shape — 16 keys, all present every time
  | ================================================================== */
 
-it('returns all 15 expected keys', function () {
+it('returns all 16 expected keys', function () {
     $photo = buildPhoto();
     wirePhotoProfile($photo);
 
@@ -137,7 +137,7 @@ it('returns all 15 expected keys', function () {
 
     expect($data)->toHaveKeys([
         'id', 'photo_type', 'url', 'thumbnail_url', 'medium_url', 'original_url',
-        'is_primary', 'is_visible', 'is_blurred',
+        'is_primary', 'is_visible', 'is_blurred', 'lock_reason',
         'approval_status', 'rejection_reason',
         'display_order', 'storage_driver',
         'approved_at', 'created_at',
@@ -245,16 +245,65 @@ it('original_url is null when viewer is anonymous (null)', function () {
 });
 
 /* ==================================================================
- |  is_blurred — current-schema behaviour (step-8 expands this)
+ |  Privacy — PhotoVisibility per photo type; locked = no URLs at all
  | ================================================================== */
 
-it('is_blurred is true when viewer is null (anonymous / public view)', function () {
+it('shows a visible-to-all photo to an anonymous viewer, as the website does', function () {
     $photo = buildPhoto();
-    wirePhotoProfile($photo);
+    wirePhotoProfile($photo); // no privacy row = visible to all
 
     $data = (new PhotoResource($photo))->resolve();
 
-    expect($data['is_blurred'])->toBeTrue();
+    expect($data['is_blurred'])->toBeFalse()
+        ->and($data['lock_reason'])->toBeNull()
+        ->and($data['url'])->toMatch('#^https?://#');
+});
+
+it('locks a hidden photo with no URLs at all — nothing of the image is sent', function () {
+    $photo = buildPhoto(['photo_type' => 'profile']);
+    wirePhotoProfile($photo, privacyOverrides: ['profile_photo_privacy' => 'hidden']);
+
+    $data = (new PhotoResource($photo, viewer: buildViewer(99)))->resolve();
+
+    expect($data['is_blurred'])->toBeTrue()
+        ->and($data['lock_reason'])->toBe('hidden')
+        ->and($data['url'])->toBeNull()
+        ->and($data['thumbnail_url'])->toBeNull()
+        ->and($data['medium_url'])->toBeNull()
+        ->and($data['original_url'])->toBeNull();
+});
+
+it('locks an after-interest photo for a member without an accepted interest', function () {
+    $photo = buildPhoto(['photo_type' => 'profile']);
+    wirePhotoProfile($photo, privacyOverrides: ['profile_photo_privacy' => 'interest_accepted']);
+
+    $data = (new PhotoResource($photo))->resolve(); // guest
+
+    expect($data['lock_reason'])->toBe('after_acceptance')
+        ->and($data['url'])->toBeNull();
+});
+
+it('applies each photo type its own privacy level (album vs profile)', function () {
+    $album = buildPhoto(['photo_type' => 'album']);
+    wirePhotoProfile($album, privacyOverrides: [
+        'profile_photo_privacy' => 'visible_to_all',
+        'album_photos_privacy' => 'hidden',
+    ]);
+
+    $data = (new PhotoResource($album))->resolve();
+
+    expect($data['lock_reason'])->toBe('hidden')
+        ->and($data['url'])->toBeNull();
+});
+
+it('never locks a member out of their own hidden photos', function () {
+    $photo = buildPhoto(['photo_type' => 'profile', 'profile_id' => 42]);
+    $owner = wirePhotoProfile($photo, privacyOverrides: ['profile_photo_privacy' => 'hidden']);
+
+    $data = (new PhotoResource($photo, viewer: $owner))->resolve();
+
+    expect($data['is_blurred'])->toBeFalse()
+        ->and($data['url'])->toMatch('#^https?://#');
 });
 
 it('is_blurred is false when viewer is the owner', function () {
@@ -276,10 +325,10 @@ it('is_blurred is false when target has no PhotoPrivacySetting row', function ()
     expect($data['is_blurred'])->toBeFalse();
 });
 
-it('is_blurred is false when privacy has blur_non_premium=false', function () {
+it('is_blurred is false when privacy is explicitly visible_to_all', function () {
     $photo = buildPhoto(['profile_id' => 42]);
     wirePhotoProfile($photo, privacyOverrides: [
-        'blur_non_premium' => false,
+        'album_photos_privacy' => 'visible_to_all',
     ]);
     $stranger = buildViewer(99);
 
@@ -364,15 +413,16 @@ it('approved_at is ISO 8601 when set, null when unset', function () {
  |  Defensive — no crash on missing relations
  | ================================================================== */
 
-it('does not crash when photo has no profile relation', function () {
+it('does not crash when photo has no profile relation — and fails closed', function () {
     $photo = buildPhoto();
-    // Don't wire profile — shouldBlurFor needs to handle null profile gracefully.
+    // Don't wire profile — the owner can't be resolved.
 
     $data = (new PhotoResource($photo, viewer: null))->resolve();
 
-    // Anonymous viewer with no profile relation → blurred (public fallback).
-    expect($data['is_blurred'])->toBeTrue();
-    expect($data['url'])->toMatch('#^https?://#');
+    // Privacy unknown → treated as hidden: never send the image.
+    expect($data['is_blurred'])->toBeTrue()
+        ->and($data['lock_reason'])->toBe('hidden')
+        ->and($data['url'])->toBeNull();
 });
 
 it('display_order defaults to 0 when null in DB', function () {

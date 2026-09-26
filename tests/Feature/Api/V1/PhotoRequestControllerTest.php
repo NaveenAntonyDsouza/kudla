@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\PhotoRequestController;
 use App\Models\PhotoAccessGrant;
 use App\Models\PhotoRequest;
 use App\Models\Profile;
+use App\Models\ProfilePhoto;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\PhotoAccessService;
@@ -101,12 +102,21 @@ function buildPhotoRequestUser(int $id, string $gender = 'male', bool $withProfi
         $profile->setRelation('user', $user);
         $profile->setRelation('partnerPreference', null);
         $profile->setRelation('photoPrivacySetting', null);
+        $profile->setRelation('primaryPhoto', null); // no photo unless a test gives one (givePrimaryPhoto)
         $user->setRelation('profile', $profile);
     } else {
         $user->setRelation('profile', null);
     }
 
     return $user;
+}
+
+/** Give an in-memory profile a (hidden-behind-request) main photo. */
+function givePrimaryPhoto(Profile $profile): void
+{
+    $photo = new ProfilePhoto();
+    $photo->forceFill(['id' => 9000 + $profile->id, 'profile_id' => $profile->id, 'photo_type' => 'profile', 'photo_url' => 'p/x.jpg', 'is_primary' => true]);
+    $profile->setRelation('primaryPhoto', $photo);
 }
 
 /**
@@ -191,6 +201,52 @@ it('send fires a best-effort photo_request notification to the target user', fun
     expect($notifier->dispatched[0]['type'])->toBe('photo_request');
     expect($notifier->dispatched[0]['user_id'])->toBe($target->user->id);
     expect($notifier->dispatched[0]['from_profile_id'])->toBe($requester->profile->id);
+});
+
+it('send names the requester by Matri ID only — never their full name', function () {
+    $requester = buildPhotoRequestUser(100, gender: 'male');
+    $target = buildPhotoRequestUser(200, gender: 'female')->profile;
+    $notifier = new RecordingNotifier();
+
+    buildPhotoRequestController($target, $notifier)->send(authedReq($requester), $target->matri_id);
+
+    $message = $notifier->dispatched[0]['message'];
+    expect($message)->toContain($requester->profile->matri_id)
+        ->and($message)->not->toContain($requester->profile->full_name);
+});
+
+it('send uses the "add a photo" version when the member has no photo', function () {
+    $requester = buildPhotoRequestUser(100, gender: 'male');
+    $target = buildPhotoRequestUser(200, gender: 'female')->profile;
+    $notifier = new RecordingNotifier();
+
+    buildPhotoRequestController($target, $notifier)->send(authedReq($requester), $target->matri_id);
+
+    expect($notifier->dispatched[0]['message'])->toContain('would like you to add a photo')
+        ->and($notifier->dispatched[0]['data']['kind'])->toBe('upload');
+});
+
+it('send uses the "see your photos" version when the member has a photo', function () {
+    $requester = buildPhotoRequestUser(100, gender: 'male');
+    $target = buildPhotoRequestUser(200, gender: 'female')->profile;
+    givePrimaryPhoto($target);
+    $notifier = new RecordingNotifier();
+
+    buildPhotoRequestController($target, $notifier)->send(authedReq($requester), $target->matri_id);
+
+    expect($notifier->dispatched[0]['message'])->toContain('has requested to see your photos')
+        ->and($notifier->dispatched[0]['data']['kind'])->toBe('view');
+});
+
+it('approve returns 422 PHOTO_REQUIRED when the member has no photo yet', function () {
+    $target = buildPhotoRequestUser(200, gender: 'female'); // no photo
+    $photoRequest = PhotoRequest::create(['requester_profile_id' => 100, 'target_profile_id' => 200, 'status' => 'pending']);
+
+    $response = buildPhotoRequestController()->approve(authedReq($target), $photoRequest);
+
+    expect($response->getStatusCode())->toBe(422)
+        ->and($response->getData(true)['error']['code'])->toBe('PHOTO_REQUIRED')
+        ->and($photoRequest->fresh()->status)->toBe('pending');
 });
 
 it('send returns 422 SELF_REQUEST when requesting own photos', function () {
@@ -335,6 +391,7 @@ it('index returns 422 PROFILE_REQUIRED when user has no profile', function () {
 
 it('approve flips status to approved and grants photo access', function () {
     $target = buildPhotoRequestUser(200, gender: 'female');
+    givePrimaryPhoto($target->profile);
     $requesterProfile = buildPhotoRequestUser(100, gender: 'male')->profile;
 
     $photoRequest = PhotoRequest::create([

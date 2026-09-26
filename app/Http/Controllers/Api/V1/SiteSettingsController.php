@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Responses\ApiResponse;
 use App\Models\SiteSetting;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -89,13 +90,29 @@ class SiteSettingsController extends BaseApiController
                     'horoscope_enabled'           => self::bool(SiteSetting::getValue('horoscope_enabled', '0')),
                     'realtime_chat_enabled'       => false,  // v1 uses polling; toggled to true when Reverb lands in Phase 3
                     'auto_approve_profiles'       => self::bool(SiteSetting::getValue('auto_approve_profiles', '1')),
+                    // Free Membership mode: every member has full premium
+                    // access — the app must not show plans / a paywall.
+                    'free_membership'             => User::freeMembershipEnabled(),
                 ],
 
                 'registration' => [
                     'min_age'             => (int) config('matrimony.registration_min_age', 18),
                     'password_min_length' => (int) config('matrimony.password_min_length', 6),
                     'password_max_length' => (int) config('matrimony.password_max_length', 64),
-                    'id_prefix'           => config('matrimony.id_prefix', 'AM'),
+                    // Member IDs are generated from the profile_id_prefix
+                    // setting (Profile::creating), not the MATRI_ID_PREFIX
+                    // env value this used to report.
+                    'id_prefix'           => SiteSetting::getValue('profile_id_prefix', config('matrimony.id_prefix', 'AM')),
+                    // Caste / Community required for Hindu members (off on
+                    // dating sites); the diocese field is shown for Christians.
+                    'caste_required'      => SiteSetting::casteRequired(),
+                    'show_diocese'        => self::bool(SiteSetting::getValue('show_diocese', '1')),
+                ],
+
+                // Wording that differs between matrimony and dating sites.
+                'labels' => [
+                    'gender_male'   => SiteSetting::getValue('gender_label_male', 'Groom'),
+                    'gender_female' => SiteSetting::getValue('gender_label_female', 'Bride'),
                 ],
 
                 'membership' => [

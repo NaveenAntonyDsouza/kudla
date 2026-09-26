@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Models\PhotoPrivacySetting;
+use App\Models\PhotoRequest;
 use App\Models\Profile;
+use App\Support\PhotoVisibility;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -320,34 +323,107 @@ class ProfileResource extends JsonResource
     private function photosBlock(Profile $profile): array
     {
         $all = $profile->profilePhotos ?? collect();
+        $isOwn = $this->viewerProfile()?->id === $profile->id;
 
         return [
-            'profile' => $this->photoCollection($all->where('photo_type', 'profile')->where('is_visible', true)->where('approval_status', 'approved')->values()),
-            'album'   => $this->photoCollection($all->where('photo_type', 'album')->where('is_visible', true)->where('approval_status', 'approved')->values()),
-            'family'  => $this->photoCollection($all->where('photo_type', 'family')->where('is_visible', true)->where('approval_status', 'approved')->values()),
-            'photo_privacy' => $this->photoPrivacyShape($profile),
+            // Locked photos keep their slot (the app can show "3 album photos
+            // — visible after acceptance") but carry no URLs; see PhotoResource.
+            'profile' => $this->photoCollection($profile, $all->where('photo_type', 'profile')->where('is_visible', true)->where('approval_status', 'approved')->values()),
+            'album'   => $this->photoCollection($profile, $all->where('photo_type', 'album')->where('is_visible', true)->where('approval_status', 'approved')->values()),
+            'family'  => $this->photoCollection($profile, $all->where('photo_type', 'family')->where('is_visible', true)->where('approval_status', 'approved')->values()),
+            'photo_privacy' => $isOwn ? $this->photoPrivacyShape($profile) : null,
+            'photo_access'  => $isOwn ? null : $this->photoAccessShape($profile),
         ];
     }
 
-    private function photoCollection($photos): array
+    private function photoCollection(Profile $profile, $photos): array
     {
         return $photos->map(
-            fn ($p) => (new PhotoResource($p, viewer: $this->viewer))->resolve()
+            fn ($p) => (new PhotoResource($p, viewer: $this->viewer, owner: $profile))->resolve()
         )->all();
     }
 
-    private function photoPrivacyShape(Profile $profile): ?array
+    /**
+     * The member's own privacy settings (own profile only), one level per
+     * photo type: 'visible_to_all' | 'interest_accepted' | 'hidden'. The
+     * previous gated_premium / show_watermark / blur_non_premium flags
+     * never existed in the database and always read false.
+     */
+    private function photoPrivacyShape(Profile $profile): array
     {
         $pp = $profile->photoPrivacySetting;
-        if (! $pp) {
-            return null;
-        }
+        $level = fn (string $type) => $pp?->levelForType($type) ?? PhotoPrivacySetting::LEVEL_VISIBLE_TO_ALL;
 
         return [
-            'gated_premium'    => (bool) ($pp->gated_premium ?? false),
-            'show_watermark'   => (bool) ($pp->show_watermark ?? false),
-            'blur_non_premium' => (bool) ($pp->blur_non_premium ?? false),
+            'profile' => $level('profile'),
+            'album'   => $level('album'),
+            'family'  => $level('family'),
         ];
+    }
+
+    /**
+     * What the viewer (another member) can see and do — lets the app pick
+     * the right placeholder and button, the same way the website does:
+     *   profile         'visible' | 'hidden' | 'after_acceptance' | 'no_photo'
+     *   album / family  'visible' | 'hidden' | 'after_acceptance'
+     *   request_status  this viewer's request to them: 'pending' |
+     *                   'approved' | 'ignored' | null
+     *   can_request     a photo request would be accepted by
+     *                   POST /profiles/{matriId}/photo-request: something is
+     *                   hidden or there's no photo, and no pending/approved
+     *                   request exists (an ignored one may be re-sent).
+     */
+    private function photoAccessShape(Profile $profile): array
+    {
+        $viewer = $this->viewerProfile();
+        // Fails CLOSED (everything locked, no request button) if the privacy
+        // lookups can't be resolved — never breaks the profile response and
+        // never reports a photo as visible when unsure. Mirrors PhotoResource.
+        try {
+            $state = PhotoVisibility::state($profile, $viewer);
+            $album = PhotoVisibility::gate($profile, $viewer, 'album');
+            $family = PhotoVisibility::gate($profile, $viewer, 'family');
+        } catch (\Throwable) {
+            return [
+                'profile'        => PhotoVisibility::HIDDEN,
+                'album'          => PhotoVisibility::HIDDEN,
+                'family'         => PhotoVisibility::HIDDEN,
+                'request_status' => null,
+                'can_request'    => false,
+            ];
+        }
+
+        // Best-effort: a failed lookup must not break the whole profile
+        // response; the send endpoint still enforces the duplicate rule.
+        try {
+            $requestStatus = $viewer
+                ? PhotoRequest::where('requester_profile_id', $viewer->id)
+                    ->where('target_profile_id', $profile->id)
+                    ->latest('id')
+                    ->value('status')
+                : null;
+        } catch (\Throwable) {
+            $requestStatus = null;
+        }
+
+        $somethingToAskFor = in_array($state, [PhotoVisibility::HIDDEN, PhotoVisibility::NO_PHOTO], true)
+            || $album === PhotoVisibility::HIDDEN
+            || $family === PhotoVisibility::HIDDEN;
+
+        return [
+            'profile'        => $state,
+            'album'          => $album,
+            'family'         => $family,
+            'request_status' => $requestStatus,
+            'can_request'    => $viewer !== null && $somethingToAskFor
+                && ! in_array($requestStatus, ['pending', 'approved'], true),
+        ];
+    }
+
+    /** The viewing member, defaulting to the authenticated one (as PhotoResource does). */
+    private function viewerProfile(): ?Profile
+    {
+        return $this->viewer ?? auth()->user()?->profile;
     }
 
     /* ------------------------------------------------------------------

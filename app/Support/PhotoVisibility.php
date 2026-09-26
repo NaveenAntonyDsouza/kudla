@@ -35,18 +35,33 @@ class PhotoVisibility
     public const HIDDEN = 'hidden';
     public const AFTER_ACCEPTANCE = 'after_acceptance';
 
+    /** State of the member's main (profile) photo for this viewer. */
     public static function state(Profile $owner, ?Profile $viewer = null): string
     {
-        $photo = $owner->primaryPhoto;
-        if (! $photo) {
+        if (! $owner->primaryPhoto) {
             return self::NO_PHOTO;
         }
 
+        return self::gate($owner, $viewer, 'profile');
+    }
+
+    /**
+     * Whether photos of a given type ('profile' | 'album' | 'family') are
+     * visible to the viewer, by that type's own privacy level. The app
+     * shows album and family photos (the website doesn't show them to
+     * other members at all), so each type must be gated separately. An
+     * approved photo request unlocks every hidden type, since the member
+     * asked to see "your photos".
+     *
+     * @return self::VISIBLE|self::HIDDEN|self::AFTER_ACCEPTANCE
+     */
+    public static function gate(Profile $owner, ?Profile $viewer, string $photoType): string
+    {
         if ($viewer && $viewer->id === $owner->id) {
             return self::VISIBLE;
         }
 
-        $level = $owner->photoPrivacySetting?->levelForType('profile') ?? PhotoPrivacySetting::LEVEL_VISIBLE_TO_ALL;
+        $level = $owner->photoPrivacySetting?->levelForType($photoType) ?? PhotoPrivacySetting::LEVEL_VISIBLE_TO_ALL;
 
         return match ($level) {
             PhotoPrivacySetting::LEVEL_HIDDEN => $viewer && in_array($owner->id, self::approvedRequestTargets($viewer->id), true)

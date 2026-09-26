@@ -1,5 +1,11 @@
 # 5. Photo API
 
+> **Updated Sep 2026 — read [`reference/api-changes-2026-09.md`](../reference/api-changes-2026-09.md) first.**
+> Photo privacy now follows `App\Support\PhotoVisibility` (the website's rule): locked photos
+> carry **no URLs** plus a `lock_reason`; the profile `photos` block has `photo_privacy` (own) and
+> `photo_access` (others); photo requests have two versions and `PHOTO_REQUIRED`. Where this
+> design doc disagrees (blur flags, access grants deciding visibility), the changes doc wins.
+
 Covers: upload (multipart), list, set primary, archive/delete, privacy toggles, photo request lifecycle.
 
 **Source:** `App\Http\Controllers\PhotoController`, `App\Http\Controllers\PhotoRequestController`, `App\Services\PhotoStorageService`, `App\Services\ImageProcessingService`, `App\Services\WatermarkService`, `App\Services\CloudinaryService`.

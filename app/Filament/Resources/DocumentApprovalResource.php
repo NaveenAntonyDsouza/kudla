@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DocumentApprovalResource\Pages;
-use App\Models\Notification;
 use App\Models\ReligiousInfo;
 use BackedEnum;
 use Filament\Forms;
@@ -166,13 +165,17 @@ class DocumentApprovalResource extends Resource
                         ]);
 
                         $docType = $record->religion === 'Christian' ? 'Baptism Certificate' : 'Horoscope';
-                        Notification::create([
-                            'profile_id' => $record->profile_id,
-                            'type' => 'document_approved',
-                            'title' => $docType . ' Approved',
-                            'message' => 'Your ' . $docType . ' has been verified and approved.',
-                            'is_read' => false,
-                        ]);
+                        // Addressed to the member via NotificationService (sets the required
+                        // user_id + sends the app push). The old Notification::create() omitted
+                        // user_id, so it threw and rolled this whole action back.
+                        if ($member = $record->profile?->user) {
+                            app(\App\Services\NotificationService::class)->send(
+                                $member,
+                                'document_approved',
+                                $docType . ' Approved',
+                                'Your ' . $docType . ' has been verified and approved.',
+                            );
+                        }
                     })
                     ->visible(fn (ReligiousInfo $record) => $record->jathakam_approval_status !== 'approved')
                     ->successNotificationTitle('Document approved'),
@@ -218,13 +221,17 @@ class DocumentApprovalResource extends Resource
                         ]);
 
                         $docType = $record->religion === 'Christian' ? 'Baptism Certificate' : 'Horoscope';
-                        Notification::create([
-                            'profile_id' => $record->profile_id,
-                            'type' => 'document_rejected',
-                            'title' => $docType . ' Rejected',
-                            'message' => 'Your ' . $docType . ' was rejected. Reason: ' . $reason . '. Please upload a valid document.',
-                            'is_read' => false,
-                        ]);
+                        // Addressed to the member via NotificationService (sets the required
+                        // user_id + sends the app push). The old Notification::create() omitted
+                        // user_id, so it threw and rolled this whole action back.
+                        if ($member = $record->profile?->user) {
+                            app(\App\Services\NotificationService::class)->send(
+                                $member,
+                                'document_rejected',
+                                $docType . ' Rejected',
+                                'Your ' . $docType . ' was rejected. Reason: ' . $reason . '. Please upload a valid document.',
+                            );
+                        }
                     })
                     ->visible(fn (ReligiousInfo $record) => $record->jathakam_approval_status !== 'rejected')
                     ->successNotificationTitle('Document rejected'),

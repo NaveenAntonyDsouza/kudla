@@ -36,6 +36,7 @@ Anti-enumeration + business-rule guards on cross-profile actions (interest, phot
 | `GENDER_MISMATCH` | 403 | Same-gender interaction attempt | Server-side guard — shouldn't show in normal UI | No |
 | `INVALID_TARGET` | 422 | Target is self, blocked, or otherwise ineligible (block/report/shortlist/ignore) | Snackbar carrying the service message | No |
 | `SELF_REQUEST` | 422 | Photo-request flow specifically — user pointed at own profile | Same as INVALID_TARGET | No |
+| `PHOTO_REQUIRED` | 422 | Approving a photo request while the member has no photo (it was a "please add a photo" request) | Route to the photo upload screen; requesters are told automatically once the photo is approved | No — upload a photo |
 | `INVALID_INTEREST` | 422 | Generic interest-service failure (block, premium-gate, duplicate, accept/decline state) | Snackbar carrying the service message | No |
 | `DAILY_LIMIT_REACHED` | 429 | Interest daily cap exceeded for sender's plan | Upgrade dialog with `{limit}/day, used {used}` | At midnight (or via plan upgrade) |
 | `ALREADY_EXISTS` | 409 | Duplicate resource (interest, photo-request) | "You already have an open request" snackbar | No |
