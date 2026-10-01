@@ -42,6 +42,7 @@ class SendReengagementEmails extends Command
                 ['Level 2 (14-day) ' . ($dryRun ? 'would send' : 'sent'), $result['sent_by_level'][2]],
                 ['Level 3 (30-day) ' . ($dryRun ? 'would send' : 'sent'), $result['sent_by_level'][3]],
                 ['Total ' . ($dryRun ? 'would send' : 'sent'), array_sum($result['sent_by_level'])],
+                ['Deferred to the next run (daily cap)', $result['deferred'] ?? 0],
             ]
         );
 

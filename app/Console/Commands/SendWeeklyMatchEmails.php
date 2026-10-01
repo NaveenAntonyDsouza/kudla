@@ -42,6 +42,7 @@ class SendWeeklyMatchEmails extends Command
                 [$dryRun ? 'Would send emails' : 'Emails sent', $result['sent']],
                 ['Skipped: no matching profiles', $result['skipped_no_matches']],
                 ['Skipped: other reasons (opt-out, rate-limit, etc.)', $result['skipped_other']],
+                ['Deferred to the next run (per-run cap)', $result['deferred'] ?? 0],
             ]
         );
 

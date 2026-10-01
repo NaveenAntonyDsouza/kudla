@@ -50,12 +50,23 @@ class ReengagementService
 
         $thresholds = $this->getThresholds();
         $candidates = $this->findCandidates($thresholds);
+        $cap = $this->getDailyCap();
 
         $sentByLevel = [1 => 0, 2 => 0, 3 => 0];
         $skipped = 0;
+        $deferred = 0;
         $recipients = [];
 
         foreach ($candidates as $user) {
+            // Daily cap: the rest wait for tomorrow's run (they stay eligible).
+            // Protects the mailbox's daily sending allowance — OTP and
+            // password-reset emails must never be crowded out by a backlog
+            // (e.g. 700 inactive members the first time a site's cron runs).
+            if (array_sum($sentByLevel) >= $cap) {
+                $deferred++;
+                continue;
+            }
+
             if (!$user->canReceiveReengagement()) {
                 $skipped++;
                 continue;
@@ -101,9 +112,19 @@ class ReengagementService
             'eligible' => count($candidates),
             'sent_by_level' => $sentByLevel,
             'skipped' => $skipped,
+            'deferred' => $deferred,
             'recipients' => $recipients,
             'dry_run' => $dryRun,
         ];
+    }
+
+    /**
+     * Most re-engagement emails sent per run (it runs once a day).
+     * Admin-configurable via the `reengagement_daily_cap` setting.
+     */
+    public function getDailyCap(): int
+    {
+        return max(1, (int) SiteSetting::getValue('reengagement_daily_cap', '100'));
     }
 
     /**
@@ -149,6 +170,9 @@ class ReengagementService
 
         return User::query()
             ->whereNull('staff_role_id')
+            // Members only — the site's own admin account (role 'admin', no
+            // staff_role_id) was getting "we miss you" emails.
+            ->where(fn (Builder $q) => $q->where('role', '!=', 'admin')->orWhereNull('role'))
             ->where('is_active', true)
             ->whereNotNull('email')
             ->where(function (Builder $q) use ($minThreshold) {
@@ -160,6 +184,10 @@ class ReengagementService
                 $q->whereNull('last_reengagement_sent_at')
                     ->orWhere('last_reengagement_sent_at', '<', now()->subDays(6));
             })
+            // Most recently active first — likeliest to come back, so they
+            // go first when the daily cap defers the rest.
+            ->orderByRaw('last_login_at IS NULL')
+            ->orderByDesc('last_login_at')
             ->get();
     }
 

@@ -51,13 +51,23 @@ class WeeklyMatchSuggestionsService
         $matchCount = $this->getMatchCount();
         $minScore = $this->getMinScore();
         $candidates = $this->findCandidates();
+        $cap = $this->getRunCap();
 
         $sent = 0;
         $skippedNoMatches = 0;
         $skippedOther = 0;
+        $deferred = 0;
         $recipients = [];
 
         foreach ($candidates as $user) {
+            // Per-run cap so a large member base can't use up the mailbox's
+            // daily sending allowance (OTPs must still go out). Candidates are
+            // ordered longest-waiting first, so the deferred ones lead next week.
+            if ($sent >= $cap) {
+                $deferred++;
+                continue;
+            }
+
             if (!$user->canReceiveWeeklyMatches()) {
                 $skippedOther++;
                 continue;
@@ -110,9 +120,19 @@ class WeeklyMatchSuggestionsService
             'sent' => $sent,
             'skipped_no_matches' => $skippedNoMatches,
             'skipped_other' => $skippedOther,
+            'deferred' => $deferred,
             'recipients' => $recipients,
             'dry_run' => $dryRun,
         ];
+    }
+
+    /**
+     * Most weekly-match emails sent per run. Admin-configurable via the
+     * `weekly_matches_run_cap` setting.
+     */
+    public function getRunCap(): int
+    {
+        return max(1, (int) SiteSetting::getValue('weekly_matches_run_cap', '200'));
     }
 
     /**
@@ -162,6 +182,10 @@ class WeeklyMatchSuggestionsService
             // Must have a profile with a partner preference (otherwise no matches)
             ->whereHas('profile.partnerPreference')
             ->with(['profile.partnerPreference'])
+            // Longest-waiting first (never sent, then oldest send) — fair
+            // rotation when the per-run cap defers some members.
+            ->orderByRaw('last_weekly_match_sent_at IS NOT NULL')
+            ->orderBy('last_weekly_match_sent_at')
             ->get();
     }
 }
