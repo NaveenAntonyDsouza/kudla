@@ -48,6 +48,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Affiliate tracking — captures ?ref=CODE on every public web request
         $middleware->web(append: [
             \App\Http\Middleware\CaptureAffiliateRef::class,
+            // Keeps last_login_at = "last active" (see the class doc)
+            \App\Http\Middleware\TrackMemberActivity::class,
         ]);
 
         // Force JSON responses on /api/* — guarantees JSON even if client
@@ -55,6 +57,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // handling so errors also come through JSON.
         $middleware->api(prepend: [
             \App\Http\Middleware\ForceJsonResponse::class,
+        ]);
+        $middleware->api(append: [
+            \App\Http\Middleware\TrackMemberActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

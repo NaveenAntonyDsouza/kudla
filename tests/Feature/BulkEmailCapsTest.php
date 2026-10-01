@@ -110,3 +110,28 @@ it('sends to the most recently active members first when capped', function () {
     Mail::assertSent(Reengagement7DayMail::class, fn (Mailable $m) => $m->hasTo('recent@site.test'));
     Mail::assertSentCount(1);
 });
+
+it('sends nothing before the re-engagement start date, then starts on that day', function () {
+    inactiveUser('member@site.test', 30);
+    SiteSetting::setValue('reengagement_start_date', now()->addDays(7)->toDateString());
+
+    $service = app(ReengagementService::class);
+    expect($service->isEnabled())->toBeFalse()
+        ->and($service->run()['disabled'] ?? false)->toBeTrue();
+    Mail::assertNothingSent();
+
+    $this->travel(7)->days();
+    expect($service->isEnabled())->toBeTrue();
+    $service->run();
+    Mail::assertSent(fn (Mailable $m) => $m->hasTo('member@site.test'));
+});
+
+it('treats a blank or unreadable start date as no start date', function () {
+    $service = app(ReengagementService::class);
+
+    SiteSetting::setValue('reengagement_start_date', '');
+    expect($service->isEnabled())->toBeTrue();
+
+    SiteSetting::setValue('reengagement_start_date', 'not a date');
+    expect($service->isEnabled())->toBeTrue();
+});

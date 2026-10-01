@@ -20,7 +20,9 @@ class SendReengagementEmails extends Command
         }
 
         if (!$service->isEnabled()) {
-            $this->error('Re-engagement is disabled via SiteSetting `reengagement_enabled`.');
+            $this->error($service->isBeforeStartDate()
+                ? 'Re-engagement starts on ' . $service->getStartDate()->toDateString() . ' (SiteSetting `reengagement_start_date`).'
+                : 'Re-engagement is disabled via SiteSetting `reengagement_enabled`.');
             return self::SUCCESS;
         }
 

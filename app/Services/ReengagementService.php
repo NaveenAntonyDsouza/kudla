@@ -8,6 +8,7 @@ use App\Mail\Reengagement7DayMail;
 use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 
@@ -128,11 +129,40 @@ class ReengagementService
     }
 
     /**
-     * Is the feature enabled? Controlled by SiteSetting for easy admin toggle.
+     * Is the feature enabled? Controlled by SiteSetting for easy admin toggle,
+     * and never before the optional start date.
      */
     public function isEnabled(): bool
     {
-        return SiteSetting::getValue('reengagement_enabled', '1') === '1';
+        return SiteSetting::getValue('reengagement_enabled', '1') === '1'
+            && ! $this->isBeforeStartDate();
+    }
+
+    /**
+     * Optional `reengagement_start_date` (Y-m-d): nothing is sent before it.
+     * Used when switching the feature on for a site whose last-active data is
+     * not yet trustworthy (TrackMemberActivity needs a week of visits first),
+     * so active members don't get "we miss you".
+     */
+    public function getStartDate(): ?Carbon
+    {
+        $value = trim((string) SiteSetting::getValue('reengagement_start_date', ''));
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public function isBeforeStartDate(): bool
+    {
+        $start = $this->getStartDate();
+
+        return $start !== null && now()->lessThan($start);
     }
 
     /**
