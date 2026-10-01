@@ -214,6 +214,8 @@ class ReengagementService
                 $q->whereNull('last_reengagement_sent_at')
                     ->orWhere('last_reengagement_sent_at', '<', now()->subDays(6));
             })
+            // canReceiveReengagement() checks the profile's standing
+            ->with('profile')
             // Most recently active first — likeliest to come back, so they
             // go first when the daily cap defers the rest.
             ->orderByRaw('last_login_at IS NULL')

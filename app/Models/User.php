@@ -155,8 +155,9 @@ class User extends Authenticatable implements FilamentUser
         if ($this->staff_role_id !== null) {
             return false;
         }
-        // Must be active + have email
-        if (!$this->is_active || !$this->email) {
+        // Must have email + an account in good standing — no engagement mail
+        // to deactivated, suspended, banned or deleted members
+        if (!$this->email || $this->blockedStatus() !== null) {
             return false;
         }
         // Must not have opted out
@@ -195,8 +196,8 @@ class User extends Authenticatable implements FilamentUser
         if ($this->staff_role_id !== null) {
             return false;
         }
-        // Must be active
-        if (!$this->is_active) {
+        // Must be in good standing (not deactivated / suspended / banned / deleted)
+        if ($this->blockedStatus() !== null) {
             return false;
         }
         // Must have completed onboarding (if not, EnsureProfileComplete middleware handles them)
@@ -232,8 +233,9 @@ class User extends Authenticatable implements FilamentUser
         if ($this->staff_role_id !== null) {
             return false;
         }
-        // Must be active + have email
-        if (!$this->is_active || !$this->email) {
+        // Must have email + an account in good standing — no engagement mail
+        // to deactivated, suspended, banned or deleted members
+        if (!$this->email || $this->blockedStatus() !== null) {
             return false;
         }
         // Must not have opted out

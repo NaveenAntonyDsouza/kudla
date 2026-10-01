@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\ReengagementService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 
@@ -38,6 +39,21 @@ beforeEach(function () {
         $t->timestamp('last_reengagement_sent_at')->nullable();
         $t->integer('reengagement_level')->default(0);
         $t->json('notification_preferences')->nullable();
+        $t->timestamp('last_weekly_match_sent_at')->nullable();
+        $t->timestamp('last_nudge_sent_at')->nullable();
+        $t->integer('nudges_sent_count')->default(0);
+        $t->timestamps();
+    });
+
+    // Member standing (deactivated / suspended / banned / deleted) lives on the profile
+    Schema::create('profiles', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->unsignedBigInteger('branch_id')->nullable();
+        $t->boolean('is_active')->default(true);
+        $t->string('suspension_status')->nullable();
+        $t->boolean('onboarding_completed')->default(true);
+        $t->softDeletes();
         $t->timestamps();
     });
 
@@ -61,6 +77,7 @@ beforeEach(function () {
 
 afterEach(function () {
     Schema::dropIfExists('users');
+    Schema::dropIfExists('profiles');
     Schema::dropIfExists('site_settings');
     Schema::dropIfExists('email_templates');
 });
@@ -134,4 +151,45 @@ it('treats a blank or unreadable start date as no start date', function () {
 
     SiteSetting::setValue('reengagement_start_date', 'not a date');
     expect($service->isEnabled())->toBeTrue();
+});
+
+function memberWithProfile(string $email, array $profile): User
+{
+    $user = inactiveUser($email, 30);
+    DB::table('profiles')->insert(array_merge([
+        'user_id' => $user->id, 'is_active' => true, 'suspension_status' => null,
+        'onboarding_completed' => true, 'created_at' => now(), 'updated_at' => now(),
+    ], $profile));
+
+    return $user;
+}
+
+it('sends no engagement email to deactivated, suspended, banned or deleted members', function () {
+    memberWithProfile('ok@site.test', []);
+    inactiveUser('new-registrant@site.test', 30); // no profile yet — still a member
+    memberWithProfile('deactivated@site.test', ['is_active' => false]);
+    memberWithProfile('suspended@site.test', ['suspension_status' => 'suspended']);
+    memberWithProfile('banned@site.test', ['suspension_status' => 'banned']);
+    memberWithProfile('deleted@site.test', ['deleted_at' => now()->subMonth()]);
+
+    $result = app(ReengagementService::class)->run();
+
+    expect(array_sum($result['sent_by_level']))->toBe(2);
+    Mail::assertSent(fn (Mailable $m) => $m->hasTo('ok@site.test'));
+    Mail::assertSent(fn (Mailable $m) => $m->hasTo('new-registrant@site.test'));
+    foreach (['deactivated', 'suspended', 'banned', 'deleted'] as $who) {
+        Mail::assertNotSent(fn (Mailable $m) => $m->hasTo("$who@site.test"));
+    }
+});
+
+it('applies the same standing rule to weekly matches and nudges', function () {
+    $ok = memberWithProfile('ok@site.test', []);
+    $off = memberWithProfile('deactivated@site.test', ['is_active' => false]);
+    $ok->update(['last_login_at' => now()->subDays(2)]);
+    $off->update(['last_login_at' => now()->subDays(2)]);
+
+    expect($ok->fresh()->canReceiveWeeklyMatches())->toBeTrue()
+        ->and($ok->fresh()->canReceiveNudge())->toBeTrue()
+        ->and($off->fresh()->canReceiveWeeklyMatches())->toBeFalse()
+        ->and($off->fresh()->canReceiveNudge())->toBeFalse();
 });
