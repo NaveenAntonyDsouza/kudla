@@ -491,11 +491,19 @@ class RegisterController extends Controller
 
         session(['email_otp' => \Illuminate\Support\Facades\Hash::make((string) $otp), 'email_otp_expires' => now()->addMinutes(10)]);
 
-        // Send OTP via email
+        // Send OTP via email. The mailbox can refuse (e.g. the hosting
+        // provider's daily sending limit) — show a message, not an error page.
         $siteName = SiteSetting::getValue('site_name', config('app.name'));
-        \Illuminate\Support\Facades\Mail::raw("Your {$siteName} email verification code is: {$otp}\n\nThis code expires in 10 minutes.", function ($message) use ($email, $siteName) {
-            $message->to($email)->subject("Email Verification OTP - {$siteName}");
-        });
+        try {
+            \Illuminate\Support\Facades\Mail::raw("Your {$siteName} email verification code is: {$otp}\n\nThis code expires in 10 minutes.", function ($message) use ($email, $siteName) {
+                $message->to($email)->subject("Email Verification OTP - {$siteName}");
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            session()->forget(['email_otp', 'email_otp_expires']);
+
+            return back()->withErrors(['email_otp_send' => "We couldn't send the verification code right now. Please try again in a little while."]);
+        }
 
         return back()->with('email_otp_sent', true);
     }

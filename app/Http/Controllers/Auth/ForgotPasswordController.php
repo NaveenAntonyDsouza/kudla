@@ -17,7 +17,14 @@ class ForgotPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $status = Password::sendResetLink($request->only('email'));
+        try {
+            $status = Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $e) {
+            // The mailbox refused (e.g. the hosting provider's daily sending limit)
+            report($e);
+
+            return back()->withErrors(['email' => "We couldn't send the reset email right now. Please try again in a little while."])->withInput();
+        }
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('success', 'Password reset link sent to your email!')

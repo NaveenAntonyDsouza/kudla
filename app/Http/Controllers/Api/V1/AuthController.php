@@ -317,8 +317,14 @@ class AuthController extends BaseApiController
         ]);
 
         // Password::sendResetLink is silent on unknown emails — exactly
-        // what we want. It returns a status enum; we don't leak it.
-        \Illuminate\Support\Facades\Password::sendResetLink(['email' => $data['email']]);
+        // what we want. It returns a status enum; we don't leak it. A mail
+        // failure (e.g. the mailbox's daily limit) only happens for real
+        // accounts, so it is logged but answered the same way (no leak).
+        try {
+            \Illuminate\Support\Facades\Password::sendResetLink(['email' => $data['email']]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return ApiResponse::ok([
             'sent' => true,
