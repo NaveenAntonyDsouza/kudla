@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Support\Analytics;
 use App\Http\Requests\RegisterStep1Request;
 use App\Http\Requests\RegisterStep2Request;
 use App\Http\Requests\RegisterStep3Request;
@@ -100,6 +101,9 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
+        Analytics::track('sign_up', ['method' => 'email'], 'Lead');
+        Analytics::track('registration_step', ['step' => 1]);
+
         return redirect()->route('register.step2');
     }
 
@@ -166,6 +170,8 @@ class RegisterController extends Controller
             $relData
         );
 
+        Analytics::track('registration_step', ['step' => 2]);
+
         return redirect()->route('register.step3');
     }
 
@@ -189,6 +195,8 @@ class RegisterController extends Controller
         );
 
         $profile->update(['onboarding_step_completed' => 3]);
+
+        Analytics::track('registration_step', ['step' => 3]);
 
         return redirect()->route('register.step4');
     }
@@ -262,6 +270,8 @@ class RegisterController extends Controller
             'how_did_you_hear_about_us' => $validated['how_did_you_hear_about_us'] ?? null,
             'onboarding_step_completed' => 5,
         ]);
+
+        Analytics::track('registration_step', ['step' => 4]);
 
         return $this->redirectAfterStep5();
     }
@@ -340,7 +350,7 @@ class RegisterController extends Controller
         }
 
         // Both disabled or already verified — go straight to complete
-        $user->profile->update(['onboarding_completed' => true]);
+        $this->finishRegistration($user->profile);
         return redirect()->route('register.complete');
     }
 
@@ -418,6 +428,8 @@ class RegisterController extends Controller
             'approved_at' => $autoApprove ? now() : null,
         ]);
 
+        Analytics::track('photo_upload', ['source' => 'registration'], 'PhotoUploaded');
+
         return $this->redirectAfterPhotoStep();
     }
 
@@ -434,7 +446,7 @@ class RegisterController extends Controller
     {
         // Skip if phone verification is disabled
         if (SiteSetting::getValue('phone_verification_enabled', '0') !== '1') {
-            auth()->user()->profile->update(['onboarding_completed' => true]);
+            $this->finishRegistration(auth()->user()->profile);
             return redirect()->route('register.complete');
         }
 
@@ -465,7 +477,9 @@ class RegisterController extends Controller
 
         $user = auth()->user();
         $user->update(['phone_verified_at' => now()]);
-        $user->profile->update(['onboarding_completed' => true]);
+        $this->finishRegistration($user->profile);
+
+        Analytics::track('phone_verified');
 
         return redirect()->route('register.complete');
     }
@@ -480,7 +494,7 @@ class RegisterController extends Controller
             if ($phoneEnabled && !auth()->user()->phone_verified_at) {
                 return redirect()->route('register.verify');
             }
-            auth()->user()->profile->update(['onboarding_completed' => true]);
+            $this->finishRegistration(auth()->user()->profile);
             return redirect()->route('register.complete');
         }
 
@@ -527,6 +541,7 @@ class RegisterController extends Controller
 
         $user = auth()->user();
         $user->update(['email_verified_at' => now()]);
+        Analytics::track('email_verified');
 
         session()->forget(['email_otp', 'email_otp_expires']);
 
@@ -537,7 +552,7 @@ class RegisterController extends Controller
         }
 
         // Phone disabled or already verified — complete registration
-        $user->profile->update(['onboarding_completed' => true]);
+        $this->finishRegistration($user->profile);
         return redirect()->route('register.complete');
     }
 
@@ -546,10 +561,21 @@ class RegisterController extends Controller
         $profile = auth()->user()->profile;
 
         // Mark onboarding as complete (even if verification was skipped)
-        if (! $profile->onboarding_completed) {
-            $profile->update(['onboarding_completed' => true]);
-        }
+        $this->finishRegistration($profile);
 
         return view('auth.register-complete', compact('profile'));
+    }
+
+    /**
+     * Mark the registration finished — the ONE place that does it, so the
+     * "registration_complete" key moment is recorded exactly once.
+     */
+    private function finishRegistration(\App\Models\Profile $profile): void
+    {
+        if ($profile->onboarding_completed) {
+            return;
+        }
+        $profile->update(['onboarding_completed' => true]);
+        Analytics::track('registration_complete', [], 'CompleteRegistration');
     }
 }

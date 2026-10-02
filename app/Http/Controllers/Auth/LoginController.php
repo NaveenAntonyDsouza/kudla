@@ -7,6 +7,7 @@ use App\Models\LoginHistory;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\OtpService;
+use App\Support\Analytics;
 use App\Support\LoginIdentifier;
 use App\Support\OtpResendNotice;
 use Illuminate\Http\Request;
@@ -81,6 +82,7 @@ class LoginController extends Controller
             'reengagement_level' => 0,
         ]);
         LoginHistory::record($user, 'password');
+        Analytics::track('login', ['method' => 'password']);
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
@@ -148,6 +150,7 @@ class LoginController extends Controller
             'reengagement_level' => 0,
         ]);
         LoginHistory::record($user, 'mobile_otp');
+        Analytics::track('login', ['method' => 'mobile_otp']);
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
             $step = $user->profile->onboarding_step_completed;
@@ -269,6 +272,7 @@ class LoginController extends Controller
             'reengagement_level' => 0,
         ]);
         LoginHistory::record($user, 'email_otp');
+        Analytics::track('login', ['method' => 'email_otp']);
 
         // Mark email as verified if not already
         if (! $user->email_verified_at) {

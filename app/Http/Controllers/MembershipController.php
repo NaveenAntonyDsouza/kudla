@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use App\Models\UserMembership;
 use App\Services\Payment\PaymentGatewayInterface;
 use App\Services\Payment\PaymentGatewayManager;
+use App\Support\Analytics;
 use Illuminate\Http\Request;
 
 class MembershipController extends Controller
@@ -365,6 +366,7 @@ class MembershipController extends Controller
         // Already activated by the webhook? Land on the success page.
         if ($subscription->payment_status === 'paid') {
             $planName = MembershipPlan::find($subscription->plan_id)?->plan_name ?? 'Premium';
+            $this->trackPurchase($subscription);
             return redirect()->route('membership.index')
                 ->with('success', 'Payment successful! Your '.$planName.' plan is now active.');
         }
@@ -406,6 +408,7 @@ class MembershipController extends Controller
 
         $planName = MembershipPlan::find($subscription->plan_id)?->plan_name ?? 'Premium';
 
+        $this->trackPurchase($subscription);
         return redirect()->route('membership.index')
             ->with('success', 'Payment successful! Your '.$planName.' plan is now active.');
     }
@@ -444,6 +447,7 @@ class MembershipController extends Controller
         // create a second membership, count the coupon twice, or re-send the
         // "plan active" email.
         if ($subscription->payment_status === 'paid') {
+            $this->trackPurchase($subscription);
             return redirect()->route('membership.index')
                 ->with('success', 'Payment successful! Your ' . ($plan->plan_name ?? 'Premium') . ' plan is now active.');
         }
@@ -484,6 +488,7 @@ class MembershipController extends Controller
             'is_active' => true,
         ]);
 
+        $this->trackPurchase($subscription);
         return redirect()->route('membership.index')
             ->with('success', 'Payment successful! Your ' . ($plan->plan_name ?? 'Premium') . ' plan is now active.');
     }
@@ -532,7 +537,36 @@ class MembershipController extends Controller
             'is_active' => true,
         ]);
 
+        $this->trackPurchase($subscription);
         return redirect()->route('membership.index')
             ->with('success', 'Coupon applied! Your ' . $plan->plan_name . ' plan is now active (100% discount).');
+    }
+
+    /**
+     * Record the purchase key moment (GA4 'purchase' / Meta 'Purchase') on
+     * the page where the member sees "Payment successful". The order id is
+     * the transaction id, so a refresh or a second success path is counted
+     * once by GA4. Amounts are stored in paise; plans are priced in INR.
+     */
+    private function trackPurchase(?Subscription $subscription): void
+    {
+        if (! $subscription) {
+            return;
+        }
+        $plan = MembershipPlan::find($subscription->plan_id);
+        $value = round(((int) $subscription->amount) / 100, 2);
+
+        Analytics::track('purchase', [
+            'transaction_id' => (string) $subscription->id,
+            'value' => $value,
+            'currency' => 'INR',
+            'coupon' => (string) ($subscription->coupon_code ?? ''),
+            'items' => [[
+                'item_id' => 'plan-' . ($plan?->id ?? $subscription->plan_id),
+                'item_name' => $plan?->plan_name ?? ($subscription->plan_name ?? 'Membership'),
+                'price' => $value,
+                'quantity' => 1,
+            ]],
+        ], 'Purchase');
     }
 }

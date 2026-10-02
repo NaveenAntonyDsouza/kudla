@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Interest;
 use App\Models\Profile;
 use App\Services\InterestService;
+use App\Support\Analytics;
 use Illuminate\Http\Request;
 
 class InterestController extends Controller
@@ -145,6 +146,7 @@ class InterestController extends Controller
                 $request->custom_message
             );
 
+            Analytics::track('interest_sent', [], 'InterestSent');
             return back()->with('success', 'Interest sent successfully!');
         } catch (\Exception $e) {
             return back()->withErrors(['interest' => $e->getMessage()]);
@@ -168,6 +170,7 @@ class InterestController extends Controller
 
         try {
             $this->interestService->accept($interest, $request->template_id, $request->custom_message);
+            Analytics::track('interest_accepted', [], 'InterestAccepted');
             return back()->with('success', 'Interest accepted!');
         } catch (\Exception $e) {
             return back()->withErrors(['interest' => $e->getMessage()]);

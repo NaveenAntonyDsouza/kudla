@@ -8,6 +8,7 @@ use App\Models\SiteSetting;
 use App\Services\ImageProcessingService;
 use App\Services\PhotoStorageService;
 use App\Services\WatermarkService;
+use App\Support\Analytics;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -134,6 +135,7 @@ class PhotoController extends Controller
             }
         }
 
+        Analytics::track('photo_upload', ['source' => 'photos_page'], 'PhotoUploaded');
         return redirect()->route($redirectName, ['tab' => $request->input('tab', $tab)])
             ->with('success', $message);
     }

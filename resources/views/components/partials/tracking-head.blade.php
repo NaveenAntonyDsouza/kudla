@@ -50,7 +50,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         person_profiles: 'identified_only',
         capture_pageview: true,
         capture_pageleave: true,
-        autocapture: true
+        autocapture: true,
+        // Matrimony pages are full of personal data (names, phones, photos):
+        // never capture page text, attributes or typed input.
+        mask_all_text: true,
+        mask_all_element_attributes: true,
+        session_recording: { maskAllInputs: true, maskTextSelector: '*' }
     });
+</script>
+@endif
+{{-- Key moments (App\Support\Analytics — registration steps, photo added,
+     interest sent, purchase…): queued by the server, sent once from here. --}}
+@php $analyticsEvents = \App\Support\Analytics::pull(); @endphp
+@if($analyticsEvents && ($gaId || $gtmId || $fbPixelId || $posthogKey))
+<script>
+(function (events) {
+    events.forEach(function (e) {
+        @if($gaId) if (window.gtag) { gtag('event', e.name, e.params); } @endif
+        @if($gtmId) window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: e.name }, e.params)); @endif
+        @if($fbPixelId) if (window.fbq && e.meta) { fbq(e.meta_standard ? 'track' : 'trackCustom', e.meta, e.params); } @endif
+        @if($posthogKey) if (window.posthog) { posthog.capture(e.name, e.params); } @endif
+    });
+})(@js($analyticsEvents));
 </script>
 @endif
