@@ -172,6 +172,29 @@ class Profile extends Model
         return $query->where('is_approved', true);
     }
 
+    /**
+     * Completed registrations first, half-filled ones after. Unfinished
+     * profiles (e.g. only name + date of birth) stay listed but no longer
+     * crowd out complete ones — kudla had 112 of 650 search results
+     * unfinished. Apply BEFORE any other order clause.
+     */
+    public function scopeCompletedFirst(Builder $query): Builder
+    {
+        return $query->orderByDesc('profiles.onboarding_completed');
+    }
+
+    /**
+     * Same rule for already-loaded collections (match scoring sorts in PHP):
+     * completed first, then by $scoreKey, highest first.
+     */
+    public static function sortCompletedFirst(\Illuminate\Support\Collection $profiles, string $scoreKey): \Illuminate\Support\Collection
+    {
+        return $profiles->sortBy([
+            fn ($a, $b) => (int) $b->onboarding_completed <=> (int) $a->onboarding_completed,
+            fn ($a, $b) => ($b->{$scoreKey} ?? 0) <=> ($a->{$scoreKey} ?? 0),
+        ])->values();
+    }
+
     public function scopeVip(Builder $query): Builder
     {
         return $query->where('is_vip', true);

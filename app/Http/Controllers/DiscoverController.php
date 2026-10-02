@@ -132,6 +132,8 @@ class DiscoverController extends Controller
      */
     private function applySortOrder(Builder $query, string $sort): Builder
     {
+        $query->completedFirst(); // finished registrations before half-filled ones, whatever the sort
+
         return match ($sort) {
             'recently_active' => $query
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')

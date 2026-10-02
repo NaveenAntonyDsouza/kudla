@@ -83,6 +83,7 @@ class HomeController extends Controller
             ->whereNotNull('full_name')
             ->when($featuredManualOnly, fn($q) => $q->where(fn($sub) => $sub->where('is_vip', true)->orWhere('is_featured', true)))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
+            ->completedFirst()
             ->orderBy('is_vip', 'desc')
             ->orderBy('is_featured', 'desc')
             ->orderBy('created_at', 'desc')

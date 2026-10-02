@@ -302,6 +302,8 @@ class SearchController extends BaseApiController
      */
     protected function applySortOrder(Builder $query, string $sort): Builder
     {
+        $query->completedFirst(); // same as the website: finished registrations first
+
         return match ($sort) {
             'newest' => $query->orderBy('profiles.created_at', 'desc'),
 

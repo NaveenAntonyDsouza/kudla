@@ -234,6 +234,8 @@ class SearchController extends Controller
      */
     private function applySortOrder(Builder $query, string $sort): Builder
     {
+        $query->completedFirst(); // finished registrations before half-filled ones, whatever the sort
+
         return match ($sort) {
             'newest' => $query->orderBy('profiles.created_at', 'desc'),
 
@@ -450,7 +452,7 @@ class SearchController extends Controller
             $query->whereHas('lifestyleInfo', fn($q) => $q->whereIn('drinking', $drinking));
         }
 
-        $results = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $results = $query->completedFirst()->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         // Pick a single human label for the results header, tolerating
         // array (multi-select) values for caste/denomination/religion.

@@ -157,6 +157,15 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['USER_NAME', 'LOGIN_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME'],
             ],
 
+            // ── Unfinished registration (members:remind-incomplete) ──
+            [
+                'slug' => 'registration-reminder',
+                'name' => 'Reminder — finish registration',
+                'subject' => '{{USER_NAME}}, your {{SITE_NAME}} profile is almost ready',
+                'body_html' => '<h1>Hi {{USER_NAME}},</h1><p>Thank you for registering on {{SITE_NAME}}. {{STATUS_LINE}}</p><p>Completed profiles are shown first in search, so finishing yours helps the right people find you. It only takes a few minutes, and you\'ll continue right where you left off.</p><p style="text-align:center;margin:2rem 0;"><a href="{{LOGIN_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Complete my profile</a></p><p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} (<strong>{{MATRI_ID}}</strong>) and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p><p>If something didn\'t work while you were filling in the form, we\'re sorry — we\'ve recently fixed some problems on our registration pages, so please give it another try. {{HELP_LINE}}</p><p>Warm regards,<br>Team {{SITE_NAME}}</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;"><p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>',
+                'variables' => ['USER_NAME', 'MATRI_ID', 'MEMBER_ID_LABEL', 'STATUS_LINE', 'HELP_LINE', 'LOGIN_URL', 'FORGOT_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
+            ],
+
             // ── Weekly Match Suggestions ──
             [
                 'slug' => 'weekly-match-suggestions',

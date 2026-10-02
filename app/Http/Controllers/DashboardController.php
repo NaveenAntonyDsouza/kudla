@@ -98,6 +98,7 @@ class DashboardController extends Controller
         // Newly joined profiles (always show — latest 6 opposite gender)
         $newlyJoined = $this->baseQuery($profile)
             ->whereNotNull('full_name')
+            ->completedFirst()
             ->orderBy('created_at', 'desc')
             ->limit(6)
             ->get();

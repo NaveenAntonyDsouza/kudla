@@ -111,6 +111,7 @@ class MatchingService
 
         $candidates = $this->baseQuery($profile)
             ->with(['familyDetail', 'lifestyleInfo'])
+            ->completedFirst()
             ->limit(500)
             ->get();
 
@@ -120,7 +121,8 @@ class MatchingService
             $candidate->match_badge = $result['badge'];
             $candidate->match_breakdown = $result['breakdown'];
             return $candidate;
-        })->sortByDesc('match_score')->values();
+        });
+        $scored = Profile::sortCompletedFirst($scored, 'match_score');
 
         // Manual pagination
         $page = request()->input('page', 1);
@@ -148,6 +150,7 @@ class MatchingService
 
         $candidates = $this->baseQuery($profile)
             ->with(['familyDetail', 'lifestyleInfo', 'partnerPreference'])
+            ->completedFirst()
             ->limit(500)
             ->get();
 
@@ -176,7 +179,8 @@ class MatchingService
             $candidate->mutual_score = (int) round(($myResult['score'] + $theirResult['score']) / 2);
 
             return true;
-        })->sortByDesc('mutual_score')->values();
+        });
+        $mutualMatches = Profile::sortCompletedFirst($mutualMatches, 'mutual_score');
 
         // Manual pagination
         $page = request()->input('page', 1);
@@ -204,15 +208,18 @@ class MatchingService
 
         $candidates = $this->baseQuery($profile)
             ->with(['familyDetail', 'lifestyleInfo'])
+            ->completedFirst() // the 200-row cap must not fill up with half-filled profiles
             ->limit(200)
             ->get();
 
-        return $candidates->map(function ($candidate) use ($prefs) {
+        $scored = $candidates->map(function ($candidate) use ($prefs) {
             $result = $this->calculateScore($candidate, $prefs);
             $candidate->match_score = $result['score'];
             $candidate->match_badge = $result['badge'];
             return $candidate;
-        })->sortByDesc('match_score')->take($limit)->values();
+        });
+
+        return Profile::sortCompletedFirst($scored, 'match_score')->take($limit)->values();
     }
 
     /**
