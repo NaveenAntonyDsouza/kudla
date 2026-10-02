@@ -47,6 +47,10 @@ class SiteSettings extends Page implements HasForms
             'site_name' => $settings['site_name'] ?? '',
             'tagline' => $settings['tagline'] ?? '',
 
+            // Legal pages
+            'grievance_officer_name' => $settings['grievance_officer_name'] ?? '',
+            'legal_courts_city' => $settings['legal_courts_city'] ?? '',
+
             // Contact
             'email' => $settings['email'] ?? '',
             'phone' => $settings['phone'] ?? '',
@@ -167,6 +171,21 @@ class SiteSettings extends Page implements HasForms
                             ->helperText('e.g., 2024 shows "2024-2026"'),
                     ])
                     ->columns(3),
+
+                \Filament\Schemas\Components\Section::make('Legal Pages')
+                    ->description('Filled into the Privacy Policy and Terms pages ({{ grievance_officer }} and {{ courts }}).')
+                    ->schema([
+                        Forms\Components\TextInput::make('grievance_officer_name')
+                            ->label('Grievance Officer name')
+                            ->maxLength(100)
+                            ->helperText('Leave blank to show the title only: "Grievance Officer, <site name>". Contact shown is the site email.'),
+
+                        Forms\Components\TextInput::make('legal_courts_city')
+                            ->label('Courts city (jurisdiction)')
+                            ->maxLength(60)
+                            ->helperText('e.g. Mangalore → "courts at Mangalore have jurisdiction". Blank = "courts in India".'),
+                    ])
+                    ->columns(2),
 
                 \Filament\Schemas\Components\Section::make('Registration & Approval')
                     ->description('Control user registration and content approval behavior.')

@@ -219,8 +219,10 @@ HTML,
             ],
         ];
 
+        // Only ADD missing pages — never overwrite one an admin has edited.
+        // (The newer, site-specific legal pages: `php artisan legal:install`.)
         foreach ($pages as $page) {
-            StaticPage::updateOrCreate(
+            StaticPage::firstOrCreate(
                 ['slug' => $page['slug']],
                 $page
             );

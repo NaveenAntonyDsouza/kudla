@@ -98,7 +98,14 @@ class StaticPage extends Model
     {
         $content = $this->content;
 
+        // Legal pages (resources/legal): who handles grievances and where
+        // disputes go — per-site settings, editable in Site Settings.
+        $officer = trim((string) SiteSetting::getValue('grievance_officer_name', ''));
+        $courtsCity = trim((string) SiteSetting::getValue('legal_courts_city', ''));
+
         $variables = [
+            '{{ grievance_officer }}' => $officer !== '' ? e($officer) : 'Grievance Officer, ' . e(config('app.name')),
+            '{{ courts }}' => $courtsCity !== '' ? 'at ' . e($courtsCity) : 'in India',
             '{{ app_name }}' => config('app.name'),
             '{{ email }}' => SiteSetting::getValue('email', ''),
             '{{ phone }}' => SiteSetting::getValue('phone', ''),
