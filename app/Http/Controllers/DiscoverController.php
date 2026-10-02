@@ -132,25 +132,20 @@ class DiscoverController extends Controller
      */
     private function applySortOrder(Builder $query, string $sort): Builder
     {
-        $query->completedFirst(); // finished registrations before half-filled ones, whatever the sort
-
         return match ($sort) {
-            'recently_active' => $query
+            'recently_active' => $query->completedFirst()
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC'),
 
-            'age_low' => $query
+            'age_low' => $query->completedFirst()
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
 
-            'age_high' => $query
+            'age_high' => $query->completedFirst()
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
 
-            // Default: VIP → Featured → with photo → newest first
-            default => $query
-                ->orderBy('profiles.is_vip', 'desc')
-                ->orderBy('profiles.is_featured', 'desc')
-                ->photoFirst()
-                ->orderBy('profiles.created_at', 'desc'),
+            // Default: paid boosts → finished → with photo → recently active → newest
+            // (Profile::scopeDefaultOrder — one definition for every listing)
+            default => $query->defaultOrder(),
         };
     }
 

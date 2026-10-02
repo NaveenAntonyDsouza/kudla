@@ -115,3 +115,54 @@ it('ranks matches: finished, then with a photo, then best score', function () {
 
     expect($sorted->pluck('matri_id')->all())->toBe(['DONE-PHOTO-80', 'DONE-PHOTO-60', 'DONE-NOPHOTO-95', 'HALF-PHOTO-99']);
 });
+
+it('default order: paid boosts, then finished, then with photo, then recently active, then newest', function () {
+    Schema::table('profiles', fn (Blueprint $t) => $t->boolean('is_featured')->default(false));
+    Schema::create('users', function (Blueprint $t) {
+        $t->id();
+        $t->timestamp('last_login_at')->nullable();
+    });
+    Schema::create('membership_plans', function (Blueprint $t) {
+        $t->id();
+        $t->boolean('is_highlighted')->default(false);
+    });
+    Schema::create('user_memberships', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->unsignedBigInteger('plan_id');
+        $t->boolean('is_active')->default(true);
+        $t->timestamp('ends_at')->nullable();
+    });
+    DB::table('membership_plans')->insert(['id' => 1, 'is_highlighted' => false]);
+
+    $add = function (string $id, bool $done, array $p = [], ?string $login = null, bool $photo = false, bool $paid = false) {
+        $uid = DB::table('users')->insertGetId(['last_login_at' => $login]);
+        DB::table('profiles')->insert(array_merge([
+            'user_id' => $uid, 'matri_id' => $id, 'onboarding_completed' => $done,
+            'created_at' => '2026-09-01', 'updated_at' => '2026-09-01',
+        ], $p));
+        if ($photo) {
+            cfPhoto($id);
+        }
+        if ($paid) {
+            DB::table('user_memberships')->insert(['user_id' => $uid, 'plan_id' => 1, 'is_active' => true, 'ends_at' => now()->addMonth()]);
+        }
+    };
+    $add('DONE-NOPHOTO', true);
+    $add('HALF-PHOTO', false, photo: true);
+    $add('DONE-PHOTO-OLDLOGIN', true, login: '2026-01-01', photo: true);
+    $add('DONE-PHOTO-RECENT', true, login: '2026-09-30', photo: true);
+    $add('PREMIUM-DONE', true, paid: true);
+    $add('FEATURED-DONE', true, ['is_featured' => true]);
+    $add('VIP-HALF', false, ['is_vip' => true]);   // paid boost beats "finished"
+
+    expect(Profile::query()->defaultOrder()->pluck('matri_id')->all())->toBe([
+        'VIP-HALF', 'FEATURED-DONE', 'PREMIUM-DONE',
+        'DONE-PHOTO-RECENT', 'DONE-PHOTO-OLDLOGIN', 'DONE-NOPHOTO',
+        'HALF-PHOTO',
+    ]);
+
+    foreach (['users', 'membership_plans', 'user_memberships'] as $t) {
+        Schema::dropIfExists($t);
+    }
+});

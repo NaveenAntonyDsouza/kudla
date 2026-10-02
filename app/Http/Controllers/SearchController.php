@@ -229,36 +229,27 @@ class SearchController extends Controller
 
     /**
      * Apply sort order to query.
-     * "relevance" = Premium → Recently Active → Newest (default)
+     * "relevance" (default) = Profile::scopeDefaultOrder(): paid boosts → finished → photo → recently active → newest
      * Uses subqueries instead of JOINs to avoid ambiguous column issues with baseQuery.
      */
     private function applySortOrder(Builder $query, string $sort): Builder
     {
-        $query->completedFirst(); // finished registrations before half-filled ones, whatever the sort
-
         return match ($sort) {
-            'newest' => $query->orderBy('profiles.created_at', 'desc'),
+            'newest' => $query->completedFirst()->orderBy('profiles.created_at', 'desc'),
 
-            'recently_active' => $query
+            'recently_active' => $query->completedFirst()
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC'),
 
-            'age_low' => $query
+            'age_low' => $query->completedFirst()
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
 
-            'age_high' => $query
+            'age_high' => $query->completedFirst()
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
 
-            // Default: relevance = VIP → Featured → Premium → With photo → Recently Active → Newest
-            default => $query
-                ->orderBy('profiles.is_vip', 'desc')
-                ->orderBy('profiles.is_featured', 'desc')
-                ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships um JOIN membership_plans mp ON mp.id = um.plan_id WHERE um.user_id = profiles.user_id AND um.is_active = 1 AND (um.ends_at IS NULL OR um.ends_at > NOW()) AND mp.is_highlighted = 1) DESC')
-                ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
-                ->photoFirst() // with a photo before without (after the paid boosts)
-                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
-                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
-                ->orderBy('profiles.created_at', 'desc'),
+            // Default: paid boosts → finished → with photo → recently active → newest
+            // (Profile::scopeDefaultOrder — one definition for every listing)
+            default => $query->defaultOrder(),
         };
     }
 
@@ -453,7 +444,7 @@ class SearchController extends Controller
             $query->whereHas('lifestyleInfo', fn($q) => $q->whereIn('drinking', $drinking));
         }
 
-        $results = $query->completedFirst()->photoFirst()->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $results = $query->defaultOrder()->paginate(20)->withQueryString();
 
         // Pick a single human label for the results header, tolerating
         // array (multi-select) values for caste/denomination/religion.

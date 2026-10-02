@@ -302,27 +302,22 @@ class SearchController extends BaseApiController
      */
     protected function applySortOrder(Builder $query, string $sort): Builder
     {
-        $query->completedFirst(); // same as the website: finished registrations first
-
         return match ($sort) {
-            'newest' => $query->orderBy('profiles.created_at', 'desc'),
+            'newest' => $query->completedFirst()->orderBy('profiles.created_at', 'desc'),
 
-            'recently_active' => $query
+            'recently_active' => $query->completedFirst()
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC'),
 
-            'age_low' => $query->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
-            'age_high' => $query->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
+            'age_low' => $query->completedFirst()
+                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
 
-            default => $query
-                ->orderBy('profiles.is_vip', 'desc')
-                ->orderBy('profiles.is_featured', 'desc')
-                ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships um JOIN membership_plans mp ON mp.id = um.plan_id WHERE um.user_id = profiles.user_id AND um.is_active = 1 AND (um.ends_at IS NULL OR um.ends_at > NOW()) AND mp.is_highlighted = 1) DESC')
-                ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
-                ->photoFirst() // with a photo before without (after the paid boosts)
-                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
-                ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
-                ->orderBy('profiles.created_at', 'desc'),
+            'age_high' => $query->completedFirst()
+                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
+
+            // Default: paid boosts → finished → with photo → recently active → newest
+            // (Profile::scopeDefaultOrder — one definition for every listing)
+            default => $query->defaultOrder(),
         };
     }
 

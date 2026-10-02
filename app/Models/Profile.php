@@ -176,11 +176,47 @@ class Profile extends Model
      * Completed registrations first, half-filled ones after. Unfinished
      * profiles (e.g. only name + date of birth) stay listed but no longer
      * crowd out complete ones — kudla had 112 of 650 search results
-     * unfinished. Apply BEFORE any other order clause.
+     * unfinished. First in member-chosen sorts; after the paid boosts in
+     * defaultOrder().
      */
     public function scopeCompletedFirst(Builder $query): Builder
     {
         return $query->orderByDesc('profiles.onboarding_completed');
+    }
+
+    /**
+     * Paid boosts: VIP → Featured → members on a highlighted plan → any
+     * active paid membership. (CURRENT_TIMESTAMP rather than NOW() so the
+     * same SQL runs on MySQL and the SQLite test database.)
+     */
+    public function scopePaidBoostsFirst(Builder $query): Builder
+    {
+        $active = 'um.is_active = 1 AND (um.ends_at IS NULL OR um.ends_at > CURRENT_TIMESTAMP)';
+
+        return $query
+            ->orderBy('profiles.is_vip', 'desc')
+            ->orderBy('profiles.is_featured', 'desc')
+            ->orderByRaw("EXISTS(SELECT 1 FROM user_memberships um JOIN membership_plans mp ON mp.id = um.plan_id WHERE um.user_id = profiles.user_id AND {$active} AND mp.is_highlighted = 1) DESC")
+            ->orderByRaw("EXISTS(SELECT 1 FROM user_memberships um WHERE um.user_id = profiles.user_id AND {$active}) DESC");
+    }
+
+    /**
+     * THE default listing order (owner's choice 2026-10-02) — search (web
+     * + app), public search results, Discover, homepage showcase:
+     *   1. paid boosts  2. finished registration  3. with a photo
+     *   4. recently active  5. newest
+     * When a member picks a sort themselves (newest / age / recently
+     * active) the listing uses completedFirst() + their choice instead.
+     */
+    public function scopeDefaultOrder(Builder $query): Builder
+    {
+        return $query
+            ->paidBoostsFirst()
+            ->completedFirst()
+            ->photoFirst()
+            ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
+            ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
+            ->orderBy('profiles.created_at', 'desc');
     }
 
     /**
@@ -200,7 +236,8 @@ class Profile extends Model
 
     /**
      * Same rules for already-loaded collections (match scoring sorts in PHP):
-     * completed first, then with a photo, then by $scoreKey, highest first.
+     * completed first, then with a photo, then by $scoreKey, highest first
+     * (match suggestions rank by fit, so paid boosts are not applied here).
      * Load the candidates withExists('primaryPhoto as has_photo').
      */
     public static function sortCompletedFirst(\Illuminate\Support\Collection $profiles, string $scoreKey): \Illuminate\Support\Collection
