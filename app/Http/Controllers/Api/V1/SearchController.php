@@ -297,7 +297,7 @@ class SearchController extends BaseApiController
     /**
      * Sort variants — also MySQL-specific. Copied verbatim from web
      * SearchController. Unknown/missing sort key falls through to the
-     * "relevance" cascade (VIP → Featured → Premium → Recently Active →
+     * "relevance" cascade (VIP → Featured → Premium → With photo → Recently Active →
      * Newest), so invalid input from Flutter never breaks the query.
      */
     protected function applySortOrder(Builder $query, string $sort): Builder
@@ -319,6 +319,7 @@ class SearchController extends BaseApiController
                 ->orderBy('profiles.is_featured', 'desc')
                 ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships um JOIN membership_plans mp ON mp.id = um.plan_id WHERE um.user_id = profiles.user_id AND um.is_active = 1 AND (um.ends_at IS NULL OR um.ends_at > NOW()) AND mp.is_highlighted = 1) DESC')
                 ->orderByRaw('EXISTS(SELECT 1 FROM user_memberships WHERE user_memberships.user_id = profiles.user_id AND user_memberships.is_active = 1 AND (user_memberships.ends_at IS NULL OR user_memberships.ends_at > NOW())) DESC')
+                ->photoFirst() // with a photo before without (after the paid boosts)
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
                 ->orderBy('profiles.created_at', 'desc'),

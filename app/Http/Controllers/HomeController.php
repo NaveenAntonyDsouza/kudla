@@ -86,6 +86,7 @@ class HomeController extends Controller
             ->completedFirst()
             ->orderBy('is_vip', 'desc')
             ->orderBy('is_featured', 'desc')
+            ->photoFirst()
             ->orderBy('created_at', 'desc')
             ->limit($featuredCount)
             ->get();

@@ -145,10 +145,11 @@ class DiscoverController extends Controller
             'age_high' => $query
                 ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
 
-            // Default: VIP → Featured → newest first
+            // Default: VIP → Featured → with photo → newest first
             default => $query
                 ->orderBy('profiles.is_vip', 'desc')
                 ->orderBy('profiles.is_featured', 'desc')
+                ->photoFirst()
                 ->orderBy('profiles.created_at', 'desc'),
         };
     }

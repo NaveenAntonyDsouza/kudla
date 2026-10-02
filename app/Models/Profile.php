@@ -184,13 +184,30 @@ class Profile extends Model
     }
 
     /**
-     * Same rule for already-loaded collections (match scoring sorts in PHP):
-     * completed first, then by $scoreKey, highest first.
+     * Profiles with a photo before those without (owner's choice
+     * 2026-10-02: on kudla 329 of 539 finished profiles had no photo).
+     * "Has a photo" = an approved, visible main photo — the same test as
+     * primaryPhoto(), whatever its privacy level. Used in the DEFAULT order
+     * only, after the paid boosts; a member's own sort choice is respected.
+     */
+    public function scopePhotoFirst(Builder $query): Builder
+    {
+        return $query->orderByRaw(
+            "EXISTS(SELECT 1 FROM profile_photos pp WHERE pp.profile_id = profiles.id AND pp.is_primary = 1"
+            . " AND pp.is_visible = 1 AND pp.approval_status = 'approved') DESC"
+        );
+    }
+
+    /**
+     * Same rules for already-loaded collections (match scoring sorts in PHP):
+     * completed first, then with a photo, then by $scoreKey, highest first.
+     * Load the candidates withExists('primaryPhoto as has_photo').
      */
     public static function sortCompletedFirst(\Illuminate\Support\Collection $profiles, string $scoreKey): \Illuminate\Support\Collection
     {
         return $profiles->sortBy([
             fn ($a, $b) => (int) $b->onboarding_completed <=> (int) $a->onboarding_completed,
+            fn ($a, $b) => (int) $b->has_photo <=> (int) $a->has_photo,
             fn ($a, $b) => ($b->{$scoreKey} ?? 0) <=> ($a->{$scoreKey} ?? 0),
         ])->values();
     }

@@ -99,6 +99,7 @@ class DashboardController extends Controller
         $newlyJoined = $this->baseQuery($profile)
             ->whereNotNull('full_name')
             ->completedFirst()
+            ->photoFirst()
             ->orderBy('created_at', 'desc')
             ->limit(6)
             ->get();

@@ -112,6 +112,8 @@ class MatchingService
         $candidates = $this->baseQuery($profile)
             ->with(['familyDetail', 'lifestyleInfo'])
             ->completedFirst()
+            ->photoFirst()
+            ->withExists('primaryPhoto as has_photo') // read by Profile::sortCompletedFirst()
             ->limit(500)
             ->get();
 
@@ -151,6 +153,8 @@ class MatchingService
         $candidates = $this->baseQuery($profile)
             ->with(['familyDetail', 'lifestyleInfo', 'partnerPreference'])
             ->completedFirst()
+            ->photoFirst()
+            ->withExists('primaryPhoto as has_photo') // read by Profile::sortCompletedFirst()
             ->limit(500)
             ->get();
 
@@ -209,6 +213,8 @@ class MatchingService
         $candidates = $this->baseQuery($profile)
             ->with(['familyDetail', 'lifestyleInfo'])
             ->completedFirst() // the 200-row cap must not fill up with half-filled profiles
+            ->photoFirst()
+            ->withExists('primaryPhoto as has_photo') // read by Profile::sortCompletedFirst()
             ->limit(200)
             ->get();
 
