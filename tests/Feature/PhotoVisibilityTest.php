@@ -48,8 +48,10 @@ beforeEach(function () {
         $t->unsignedBigInteger('profile_id');
         $t->string('photo_type')->default('profile');
         $t->string('photo_url')->nullable();
+        $t->string('thumbnail_url')->nullable();
         $t->string('storage_driver')->default('public');
         $t->boolean('is_primary')->default(false);
+        $t->integer('display_order')->default(0);
         $t->boolean('is_visible')->default(true);
         $t->string('approval_status')->default('approved');
         $t->timestamps();
@@ -186,4 +188,98 @@ it('reports no photo when there is no approved primary photo', function () {
 
     expect(PV::state($owner, pvMember()))->toBe(PV::NO_PHOTO)
         ->and(PV::url($owner, null))->toBeNull();
+});
+
+/* ---------------- Photo viewer (profile page) ---------------- */
+
+function pvAddPhoto(Profile $p, string $type, string $file, array $attrs = []): void
+{
+    ProfilePhoto::create(array_merge(['profile_id' => $p->id, 'photo_type' => $type, 'photo_url' => "photos/{$file}"], $attrs));
+}
+
+function pvGallerySrcs(array $gallery): array
+{
+    return array_map(fn ($p) => basename($p['src']), $gallery['photos']);
+}
+
+it('lists the viewer\'s photos main first, then profile, album, family — approved and visible only', function () {
+    $owner = pvMember(); // primary: photos/{n}.jpg
+    pvAddPhoto($owner, 'family', 'fam.jpg');
+    pvAddPhoto($owner, 'album', 'album-2.jpg', ['display_order' => 2]);
+    pvAddPhoto($owner, 'album', 'album-1.jpg', ['display_order' => 1]);
+    pvAddPhoto($owner, 'profile', 'side.jpg');
+    pvAddPhoto($owner, 'album', 'pending.jpg', ['approval_status' => 'pending']);
+    pvAddPhoto($owner, 'album', 'rejected.jpg', ['approval_status' => 'rejected']);
+    pvAddPhoto($owner, 'album', 'switched-off.jpg', ['is_visible' => false]);
+    $owner = $owner->fresh();
+
+    $srcs = pvGallerySrcs(PV::gallery($owner, pvMember()));
+
+    expect($srcs[0])->toBe(basename($owner->primaryPhoto->photo_url))
+        ->and(array_slice($srcs, 1))->toBe(['side.jpg', 'album-1.jpg', 'album-2.jpg', 'fam.jpg']);
+});
+
+it('gates each photo type by its own privacy and never sends locked image addresses', function () {
+    $owner = pvMember(privacy: [
+        'profile_photo_privacy' => 'visible_to_all',
+        'album_photos_privacy' => 'hidden',
+        'family_photos_privacy' => 'interest_accepted',
+    ]);
+    pvAddPhoto($owner, 'album', 'secret-album.jpg');
+    pvAddPhoto($owner, 'album', 'secret-album-2.jpg');
+    pvAddPhoto($owner, 'family', 'secret-family.jpg');
+
+    $gallery = PV::gallery($owner->fresh(), pvMember());
+
+    expect(count($gallery['photos']))->toBe(1) // the main photo only
+        ->and($gallery['locked'])->toBe([
+            'album' => ['count' => 2, 'state' => PV::HIDDEN],
+            'family' => ['count' => 1, 'state' => PV::AFTER_ACCEPTANCE],
+        ])
+        ->and(json_encode($gallery))->not->toContain('secret');
+});
+
+it('shows a guest nothing behind a hidden main photo', function () {
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'hidden']);
+    pvAddPhoto($owner, 'album', 'album.jpg');
+
+    $gallery = PV::gallery($owner->fresh(), null);
+
+    expect($gallery['photos'])->toBe([])
+        ->and($gallery['locked']['profile']['state'])->toBe(PV::HIDDEN);
+});
+
+it('opens every hidden type once the viewer\'s photo request is approved', function () {
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'hidden', 'album_photos_privacy' => 'hidden']);
+    pvAddPhoto($owner, 'album', 'album.jpg');
+    $viewer = pvMember();
+    PhotoRequest::create(['requester_profile_id' => $viewer->id, 'target_profile_id' => $owner->id, 'status' => 'approved']);
+
+    $gallery = PV::gallery($owner->fresh(), $viewer);
+
+    expect(count($gallery['photos']))->toBe(2)->and($gallery['locked'])->toBe([]);
+});
+
+it('shows members all their own photos whatever their privacy', function () {
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'hidden', 'album_photos_privacy' => 'hidden', 'family_photos_privacy' => 'interest_accepted']);
+    pvAddPhoto($owner, 'album', 'album.jpg');
+    pvAddPhoto($owner, 'family', 'fam.jpg');
+    $owner = $owner->fresh();
+
+    expect(count(PV::gallery($owner, $owner)['photos']))->toBe(3);
+});
+
+it('never makes album or family photos more visible than the main photo', function () {
+    // Main photo after-interest; album left on the default "visible to all"
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'interest_accepted']);
+    pvAddPhoto($owner, 'album', 'album.jpg');
+    $owner = $owner->fresh();
+    $stranger = pvMember();
+    $partner = pvMember();
+    Interest::create(['sender_profile_id' => $partner->id, 'receiver_profile_id' => $owner->id, 'status' => 'accepted']);
+
+    expect(PV::gate($owner, $stranger, 'album'))->toBe(PV::AFTER_ACCEPTANCE)
+        ->and(PV::gallery($owner, $stranger)['photos'])->toBe([])
+        ->and(PV::gate($owner, $partner, 'album'))->toBe(PV::VISIBLE)
+        ->and(count(PV::gallery($owner, $partner)['photos']))->toBe(2);
 });

@@ -47,15 +47,27 @@ class PhotoVisibility
 
     /**
      * Whether photos of a given type ('profile' | 'album' | 'family') are
-     * visible to the viewer, by that type's own privacy level. The app
-     * shows album and family photos (the website doesn't show them to
-     * other members at all), so each type must be gated separately. An
-     * approved photo request unlocks every hidden type, since the member
-     * asked to see "your photos".
+     * visible to the viewer, by that type's own privacy level — and album /
+     * family photos are never MORE visible than the main photo: a member
+     * who hides their main photo but left the album on the default
+     * "visible to all" (10 members on kudla) expects all their photos
+     * hidden. An approved photo request unlocks every hidden type, since
+     * the member asked to see "your photos".
      *
      * @return self::VISIBLE|self::HIDDEN|self::AFTER_ACCEPTANCE
      */
     public static function gate(Profile $owner, ?Profile $viewer, string $photoType): string
+    {
+        $own = self::gateByLevel($owner, $viewer, $photoType);
+        if ($own !== self::VISIBLE || $photoType === 'profile') {
+            return $own;
+        }
+
+        return self::gateByLevel($owner, $viewer, 'profile');
+    }
+
+    /** One type's own privacy level, ignoring the other types. */
+    private static function gateByLevel(Profile $owner, ?Profile $viewer, string $photoType): string
     {
         if ($viewer && $viewer->id === $owner->id) {
             return self::VISIBLE;
@@ -84,6 +96,48 @@ class PhotoVisibility
     public static function urlForCurrentViewer(?Profile $owner): ?string
     {
         return $owner ? self::url($owner, auth()->user()?->profile) : null;
+    }
+
+    /**
+     * The photo viewer's contents: every approved, visible photo this viewer
+     * may see — main photo first, then the rest of the profile photos,
+     * album, family — each type gated by its own privacy level (same as
+     * the app's PhotoResource). Locked types come back as counts only, so
+     * their image addresses never reach the page.
+     *
+     * @return array{photos: list<array{src: string, thumb: string, type: string}>,
+     *               locked: array<string, array{count: int, state: string}>}
+     */
+    public static function gallery(Profile $owner, ?Profile $viewer = null): array
+    {
+        $all = $owner->profilePhotos
+            ->where('is_visible', true)
+            ->where('approval_status', 'approved');
+
+        $photos = [];
+        $locked = [];
+        foreach (['profile', 'album', 'family'] as $type) {
+            $ofType = $all->where('photo_type', $type)
+                ->sortBy([['is_primary', 'desc'], ['display_order', 'asc'], ['id', 'asc']]);
+            if ($ofType->isEmpty()) {
+                continue;
+            }
+
+            $state = self::gate($owner, $viewer, $type);
+            if ($state !== self::VISIBLE) {
+                $locked[$type] = ['count' => $ofType->count(), 'state' => $state];
+                continue;
+            }
+
+            foreach ($ofType as $photo) {
+                if ($photo->full_url === '') {
+                    continue;
+                }
+                $photos[] = ['src' => $photo->full_url, 'thumb' => $photo->thumb_url, 'type' => $type];
+            }
+        }
+
+        return ['photos' => $photos, 'locked' => $locked];
     }
 
     public static function stateForCurrentViewer(Profile $owner): string

@@ -50,19 +50,34 @@
                                     ->where('target_profile_id', $profile->id)->exists();
                             }
 
-                            $photoCount = $profile->profilePhotos->where('is_visible', true)->where('approval_status', 'approved')->count();
+                            // Photo viewer: only the photos this viewer may see, per type
+                            // (main / album / family); locked types come back as counts only.
+                            $gallery = \App\Support\PhotoVisibility::gallery($profile, auth()->user()?->profile);
+                            $photoCount = count($gallery['photos']);
+                            $lockedExtras = collect($gallery['locked'])->except('profile');
+                            $lockedRequestSent = $lockedExtras->contains('state', \App\Support\PhotoVisibility::HIDDEN)
+                                && \App\Models\PhotoRequest::where('requester_profile_id', auth()->user()->profile->id ?? 0)
+                                    ->where('target_profile_id', $profile->id)->exists();
                         @endphp
 
                         <div class="relative overflow-hidden">
                             @if($showFullPhoto && $hasPhoto)
-                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
-                                    class="w-full aspect-[3/4] object-cover">
-                                @if($photoCount > 1)
-                                    <div class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
-                                        {{ $photoCount }}
-                                    </div>
-                                @endif
+                                {{-- Click / tap opens the photo viewer --}}
+                                <button type="button" x-on:click="$dispatch('open-photo-viewer', { index: 0 })"
+                                    class="pv-main block w-full"
+                                    aria-label="{{ $photoCount > 1 ? 'View all ' . $photoCount . ' photos' : 'View photo' }}">
+                                    <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
+                                        class="w-full aspect-[3/4] object-cover">
+                                    <span class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                        @if($photoCount > 1)
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+                                            {{ $photoCount }}
+                                        @else
+                                            {{-- single photo: "enlarge" hint --}}
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/></svg>
+                                        @endif
+                                    </span>
+                                </button>
                             @elseif($photoOverlayType === 'hidden' && $hasPhoto)
                                 {{-- Locked placeholder — the real image is never sent (a CSS
                                      blur still hands anyone the photo's address). --}}
@@ -116,6 +131,176 @@
                                 </div>
                             @endif
                         </div>
+
+                        {{-- Thumbnails: the other photos this viewer may see --}}
+                        @if($photoCount > 1)
+                            @php $thumbs = array_slice($gallery['photos'], 1, 4); $moreCount = $photoCount - 1 - count($thumbs); @endphp
+                            <div class="pv-thumbs">
+                                @foreach($thumbs as $i => $photo)
+                                    <button type="button" x-on:click="$dispatch('open-photo-viewer', { index: {{ $i + 1 }} })"
+                                        class="pv-main relative aspect-square overflow-hidden rounded"
+                                        aria-label="View photo {{ $i + 2 }} of {{ $photoCount }}">
+                                        <img src="{{ $photo['thumb'] }}" alt="" loading="lazy" class="w-full h-full object-cover hover:opacity-90 transition-opacity">
+                                        @if($loop->last && $moreCount > 0)
+                                            <span class="pv-more">+{{ $moreCount }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Album / family photos the viewer can't see yet — count only, never the images --}}
+                        {{-- (Only under a visible main photo — a locked main photo's overlay already explains, with its own request button.) --}}
+                        @if($lockedExtras->isNotEmpty() && $showFullPhoto && ! ($isOwn ?? false))
+                            <div class="px-4 pt-3 space-y-1.5">
+                                @foreach($lockedExtras as $type => $lock)
+                                    <p class="flex items-start gap-1.5 text-xs text-gray-600">
+                                        <svg class="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                        <span>
+                                            {{ $lock['count'] }} {{ $type }} {{ \Illuminate\Support\Str::plural('photo', $lock['count']) }}
+                                            {{ $lock['state'] === \App\Support\PhotoVisibility::AFTER_ACCEPTANCE ? 'visible after an accepted interest' : 'hidden by the member' }}
+                                        </span>
+                                    </p>
+                                @endforeach
+                                @if($lockedExtras->contains('state', \App\Support\PhotoVisibility::HIDDEN))
+                                    @if(! $lockedRequestSent)
+                                        <form method="POST" action="{{ route('photo-requests.send', $profile) }}">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-semibold text-(--color-primary) hover:underline"
+                                                onclick="return confirm('Ask this member to let you see their photos?')">
+                                                Request access
+                                            </button>
+                                        </form>
+                                    @else
+                                        <p class="text-xs text-gray-400">Photo request sent</p>
+                                    @endif
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- ══ Photo viewer (full screen) ══
+                             Opened by the main photo or a thumbnail. Teleported to <body>
+                             so the sticky sidebar can't clip it. Keys: ← → Esc; swipe on phones. --}}
+                        @if($photoCount > 0)
+                            {{-- Viewer styles live here, not in the Tailwind build: the servers
+                                 can't rebuild assets, and these utilities aren't in the shipped CSS. --}}
+                            <style>
+                                .pv-main { cursor: zoom-in; }
+                                .pv-main:focus, .pv-btn:focus { outline: none; }
+                                .pv-main:focus-visible { box-shadow: inset 0 0 0 3px var(--color-primary, #8B1D91); }
+                                .pv-btn:focus-visible { box-shadow: 0 0 0 2px #fff; }
+                                .pv-thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; padding: .25rem; background: #f9fafb; }
+                                .pv-more { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); color: #fff; font-size: .875rem; font-weight: 600; }
+                                .pv-overlay { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: rgba(0,0,0,.97); -webkit-user-select: none; user-select: none; }
+                                .pv-overlay[x-cloak] { display: none; }
+                                .pv-dim { color: rgba(255,255,255,.7); }
+                                .pv-close { padding: .5rem; margin: -.5rem; border-radius: 9999px; color: #fff; }
+                                .pv-close:hover { background: rgba(255,255,255,.1); }
+                                .pv-stage { position: relative; flex: 1 1 0%; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 .5rem; }
+                                .pv-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: .25rem; }
+                                .pv-nav { position: absolute; top: 50%; transform: translateY(-50%); padding: .5rem; border-radius: 9999px; background: rgba(255,255,255,.12); color: #fff; }
+                                .pv-nav:hover { background: rgba(255,255,255,.22); }
+                                .pv-prev { left: .5rem; }
+                                .pv-next { right: .5rem; }
+                                .pv-strip { display: flex; gap: .5rem; overflow-x: auto; padding: .75rem 1rem; justify-content: flex-start; }
+                                .pv-thumb { flex-shrink: 0; width: 3.5rem; height: 3.5rem; border-radius: .25rem; overflow: hidden; opacity: .5; box-shadow: 0 0 0 2px transparent; transition: opacity .15s, box-shadow .15s; }
+                                .pv-thumb:hover { opacity: .8; }
+                                .pv-thumb.is-active { opacity: 1; box-shadow: 0 0 0 2px #fff; }
+                                @media (min-width: 640px) {
+                                    .pv-stage { padding: 0 4rem; }
+                                    .pv-nav { padding: .75rem; }
+                                    .pv-prev { left: 1rem; }
+                                    .pv-next { right: 1rem; }
+                                    .pv-strip { justify-content: center; }
+                                }
+                            </style>
+                            <div x-data="{
+                                    photos: @js($gallery['photos']),
+                                    open: false, index: 0, touchX: null, returnFocus: null,
+                                    show(i) {
+                                        this.index = Math.min(Math.max(i, 0), this.photos.length - 1);
+                                        this.returnFocus = document.activeElement;
+                                        this.open = true;
+                                        document.documentElement.style.overflow = 'hidden';
+                                        this.$nextTick(() => this.$refs.viewerClose?.focus());
+                                        this.preload();
+                                    },
+                                    close() {
+                                        this.open = false;
+                                        document.documentElement.style.overflow = '';
+                                        this.returnFocus?.focus?.();
+                                    },
+                                    next() { this.index = (this.index + 1) % this.photos.length; this.preload(); },
+                                    prev() { this.index = (this.index - 1 + this.photos.length) % this.photos.length; this.preload(); },
+                                    preload() {
+                                        if (this.photos.length > 1) { (new Image()).src = this.photos[(this.index + 1) % this.photos.length].src; }
+                                    },
+                                    onKey(e) {
+                                        if (!this.open) return;
+                                        if (e.key === 'Escape') this.close();
+                                        else if (e.key === 'ArrowRight') this.next();
+                                        else if (e.key === 'ArrowLeft') this.prev();
+                                    },
+                                    swipeStart(e) { this.touchX = e.changedTouches[0].clientX; },
+                                    swipeEnd(e) {
+                                        if (this.touchX === null) return;
+                                        const dx = e.changedTouches[0].clientX - this.touchX;
+                                        this.touchX = null;
+                                        if (Math.abs(dx) > 50 && this.photos.length > 1) { dx < 0 ? this.next() : this.prev(); }
+                                    },
+                                }"
+                                x-on:open-photo-viewer.window="show($event.detail.index)"
+                                x-on:keydown.window="onKey($event)">
+                                <template x-teleport="body">
+                                    <div x-show="open" x-cloak x-transition.opacity.duration.150ms
+                                        class="pv-overlay"
+                                        role="dialog" aria-modal="true" aria-label="Photos of {{ $profile->matri_id }}"
+                                        x-on:touchstart.passive="swipeStart($event)" x-on:touchend.passive="swipeEnd($event)">
+
+                                        {{-- Top bar: counter + close --}}
+                                        <div class="flex items-center justify-between px-4 py-3 text-white">
+                                            <span class="text-sm font-medium">
+                                                {{ $profile->matri_id }}
+                                                <template x-if="photos.length > 1"><span class="pv-dim" x-text="' · ' + (index + 1) + ' / ' + photos.length"></span></template>
+                                            </span>
+                                            <button type="button" x-ref="viewerClose" x-on:click="close()" class="pv-btn pv-close" aria-label="Close">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+
+                                        {{-- Photo (click the dark area around it to close) --}}
+                                        <div class="pv-stage" x-on:click.self="close()">
+                                            <img x-bind:src="photos[index].src" x-bind:alt="'Photo ' + (index + 1) + ' of ' + photos.length"
+                                                class="pv-img" draggable="false">
+
+                                            <template x-if="photos.length > 1">
+                                                <div>
+                                                    <button type="button" x-on:click="prev()" class="pv-btn pv-nav pv-prev" aria-label="Previous photo">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                                                    </button>
+                                                    <button type="button" x-on:click="next()" class="pv-btn pv-nav pv-next" aria-label="Next photo">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        {{-- Thumbnail strip --}}
+                                        <template x-if="photos.length > 1">
+                                            <div class="pv-strip">
+                                                <template x-for="(photo, i) in photos" x-bind:key="i">
+                                                    <button type="button" x-on:click="index = i; preload()"
+                                                        x-bind:aria-label="'Show photo ' + (i + 1)" x-bind:aria-current="i === index"
+                                                        class="pv-btn pv-thumb" x-bind:class="i === index && 'is-active'">
+                                                        <img x-bind:src="photo.thumb" alt="" class="w-full h-full object-cover" loading="lazy">
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        @endif
 
                         <div class="p-5 text-center">
                             <h2 class="text-lg font-semibold text-gray-900">{{ $profile->full_name }}</h2>

@@ -24,6 +24,13 @@ photos — for the website **and** the API. Per photo type (`profile`, `album`,
 
 The owner always sees their own photos.
 
+**Album and family photos are never more visible than the main photo**
+(October 2026): if the main (`profile`) photo is locked for a viewer, album
+and family photos are locked too, with the main photo's `lock_reason` — even
+when their own level is `visible_to_all` (the default members often never
+change). Members who hide their main photo expect all their photos hidden.
+The website's photo viewer uses the same rule (`PhotoVisibility::gallery()`).
+
 ### Photo object (`PhotoResource`) — 16 keys
 
 New: **`lock_reason`**. When the viewer may not see the photo:
