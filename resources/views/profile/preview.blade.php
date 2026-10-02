@@ -41,11 +41,12 @@
                                 $showFullPhoto || ($isOwn ?? false) => null,
                                 $photoState === \App\Support\PhotoVisibility::HIDDEN => 'hidden',
                                 $photoState === \App\Support\PhotoVisibility::AFTER_ACCEPTANCE => 'after_acceptance',
+                                $photoState === \App\Support\PhotoVisibility::PREMIUM_ONLY => 'premium_only',
                                 default => 'no_photo',
                             };
 
                             $photoRequestSent = false;
-                            if ($photoOverlayType === 'hidden' || $photoOverlayType === 'no_photo') {
+                            if (in_array($photoOverlayType, ['hidden', 'no_photo', 'premium_only'], true)) {
                                 $photoRequestSent = \App\Models\PhotoRequest::where('requester_profile_id', auth()->user()->profile->id ?? 0)
                                     ->where('target_profile_id', $profile->id)->exists();
                             }
@@ -104,6 +105,28 @@
                                     <svg class="w-10 h-10 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
                                     <p class="text-sm font-semibold text-gray-700">Visible only after acceptance</p>
                                 </div>
+                            @elseif($photoOverlayType === 'premium_only' && $hasPhoto)
+                                {{-- Locked placeholder — see the 'hidden' branch above. Upgrading
+                                     unlocks it; so does the member approving a photo request. --}}
+                                <div class="w-full aspect-[3/4]" style="background: linear-gradient(135deg, var(--color-primary-light, #F3E8F7), #e5e7eb);"></div>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                                    <svg class="w-10 h-10 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                                    <p class="text-sm font-semibold text-gray-700">Visible to premium members</p>
+                                    <a href="{{ route('membership.index') }}" class="mt-2 px-4 py-1.5 text-xs font-bold text-white bg-(--color-primary) rounded-full shadow-sm hover:bg-(--color-primary-hover) transition-colors">
+                                        UPGRADE TO VIEW
+                                    </a>
+                                    @if(!$photoRequestSent)
+                                        <form method="POST" action="{{ route('photo-requests.send', $profile) }}" class="mt-2">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-semibold text-gray-700 hover:underline"
+                                                onclick="return confirm('Ask this member to let you see their photo?')">
+                                                or send a photo request
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="mt-2 text-xs text-gray-500">Photo request sent</span>
+                                    @endif
+                                </div>
                             @elseif($photoOverlayType === 'no_photo')
                                 {{-- No photo placeholder with request button --}}
                                 <div class="w-full aspect-[3/4] bg-gray-100 flex flex-col items-center justify-center">
@@ -158,10 +181,17 @@
                                         <svg class="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
                                         <span>
                                             {{ $lock['count'] }} {{ $type }} {{ \Illuminate\Support\Str::plural('photo', $lock['count']) }}
-                                            {{ $lock['state'] === \App\Support\PhotoVisibility::AFTER_ACCEPTANCE ? 'visible after an accepted interest' : 'hidden by the member' }}
+                                            {{ match ($lock['state']) {
+                                                \App\Support\PhotoVisibility::AFTER_ACCEPTANCE => 'visible after an accepted interest',
+                                                \App\Support\PhotoVisibility::PREMIUM_ONLY => 'visible to premium members',
+                                                default => 'hidden by the member',
+                                            } }}
                                         </span>
                                     </p>
                                 @endforeach
+                                @if($lockedExtras->contains('state', \App\Support\PhotoVisibility::PREMIUM_ONLY))
+                                    <a href="{{ route('membership.index') }}" class="text-xs font-semibold text-(--color-primary) hover:underline">Upgrade to view</a>
+                                @endif
                                 @if($lockedExtras->contains('state', \App\Support\PhotoVisibility::HIDDEN))
                                     @if(! $lockedRequestSent)
                                         <form method="POST" action="{{ route('photo-requests.send', $profile) }}">

@@ -81,7 +81,7 @@ class PhotoResource extends JsonResource
 
     /**
      * null when the viewer may see this photo, otherwise why not:
-     * 'hidden' or 'after_acceptance'. Fails CLOSED — if the owner or the
+     * 'hidden', 'after_acceptance' or 'premium_only'. Fails CLOSED — if the owner or the
      * privacy lookups can't be resolved, the photo is treated as hidden:
      * a privacy check must never fail open.
      */

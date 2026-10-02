@@ -92,7 +92,9 @@
                         <form method="POST" action="{{ route('photos.privacy') }}" x-data="{ saving: false }" @submit="saving = true">
                             @csrf
                             @php
-                                $levels = \App\Models\PhotoPrivacySetting::LEVELS;
+                                // "Premium members only" is offered only on sites that sell
+                                // memberships; a member who already chose it keeps seeing it.
+                                $levels = \App\Models\PhotoPrivacySetting::levelsOffered();
                                 $typeLevels = [
                                     'profile' => $privacy?->profile_photo_privacy ?? 'visible_to_all',
                                     'album' => $privacy?->album_photos_privacy ?? 'visible_to_all',
@@ -143,7 +145,7 @@
                                         <select name="{{ ['profile' => 'profile_photo_privacy', 'album' => 'album_photos_privacy', 'family' => 'family_photos_privacy'][$type] }}"
                                             class="w-full text-sm border-gray-300 rounded-md focus:ring-(--color-primary) focus:border-(--color-primary)"
                                             @change="saving = true; $el.form.submit()">
-                                            @foreach($levels as $val => $label)
+                                            @foreach($levels + array_intersect_key(\App\Models\PhotoPrivacySetting::LEVELS, [$typeLevels[$type] => true]) as $val => $label)
                                                 <option value="{{ $val }}" {{ $typeLevels[$type] === $val ? 'selected' : '' }}>
                                                     {{ $label }}
                                                 </option>

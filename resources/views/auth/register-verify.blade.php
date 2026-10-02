@@ -77,6 +77,8 @@
                         </p>
                     @endif
 
+                    @include('auth.partials.otp-resent')
+
                     @if ($errors->any())
                         <div class="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
                             <p class="text-sm text-red-600 font-medium">{{ $errors->first() }}</p>
@@ -114,6 +116,7 @@
                         <div class="mt-5 text-center">
                             <form method="POST" action="{{ route('register.sendotp') }}">
                                 @csrf
+                                <input type="hidden" name="resend" value="1">
                                 <button type="submit" class="text-sm text-gray-600">
                                     Didn't receive OTP? <span class="text-(--color-primary) font-medium hover:underline">Resend OTP</span>
                                 </button>

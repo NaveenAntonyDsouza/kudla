@@ -29,19 +29,23 @@ use Illuminate\Contracts\Validation\Validator;
  */
 class UpdatePhotoPrivacyRequest extends ApiFormRequest
 {
-    /** Allowed privacy levels — matches PhotoPrivacySetting constants. */
+    /** Allowed per-type privacy levels — PhotoPrivacySetting::LEVELS. */
     private const LEVELS = [
         'visible_to_all',
+        'premium_only',
         'interest_accepted',
         'hidden',
     ];
+
+    /** The legacy single `privacy_level` column is a MySQL ENUM of these three. */
+    private const LEGACY_LEVELS = ['visible_to_all', 'interest_accepted', 'hidden'];
 
     public function rules(): array
     {
         $levelRule = 'nullable|in:'.implode(',', self::LEVELS);
 
         return [
-            'privacy_level' => $levelRule,
+            'privacy_level' => 'nullable|in:'.implode(',', self::LEGACY_LEVELS),
             'profile_photo_privacy' => $levelRule,
             'album_photos_privacy' => $levelRule,
             'family_photos_privacy' => $levelRule,
@@ -89,13 +93,13 @@ class UpdatePhotoPrivacyRequest extends ApiFormRequest
      */
     public function bodyParameters(): array
     {
-        $description = 'One of: visible_to_all | interest_accepted | hidden. Send at least one privacy field per request.';
+        $description = 'One of: visible_to_all | premium_only | interest_accepted | hidden. Send at least one privacy field per request.';
 
         return [
             'privacy_level' => [
-                'description' => "Legacy field — applies the same privacy level to every photo type. {$description}",
+                'description' => 'Legacy field — applies the same privacy level to every photo type. One of: visible_to_all | interest_accepted | hidden (premium_only is per-type only).',
                 'type' => 'string',
-                'enum' => self::LEVELS,
+                'enum' => self::LEGACY_LEVELS,
                 'required' => false,
                 'example' => 'visible_to_all',
             ],

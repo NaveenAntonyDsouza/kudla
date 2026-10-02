@@ -8,6 +8,7 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\OtpService;
 use App\Support\LoginIdentifier;
+use App\Support\OtpResendNotice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -112,7 +113,11 @@ class LoginController extends Controller
         $otpService = app(OtpService::class);
         $otpService->sendOtp($request->phone);
 
-        return back()->with(['otp_sent' => true, 'login_phone' => $request->phone]);
+        return back()->with(array_filter([
+            'otp_sent' => true,
+            'login_phone' => $request->phone,
+            'otp_resent' => $request->boolean('resend') ? OtpResendNotice::phone($request->phone) : null,
+        ]));
     }
 
     public function verifyLoginOtp(Request $request)
@@ -207,7 +212,11 @@ class LoginController extends Controller
             }
         }
 
-        return back()->with(['email_otp_sent' => true, 'login_email' => $request->email]);
+        return back()->with(array_filter([
+            'email_otp_sent' => true,
+            'login_email' => $request->email,
+            'otp_resent' => $request->boolean('resend') ? OtpResendNotice::email($request->email) : null,
+        ]));
     }
 
     /**

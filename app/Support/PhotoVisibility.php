@@ -6,6 +6,7 @@ use App\Models\Interest;
 use App\Models\PhotoPrivacySetting;
 use App\Models\PhotoRequest;
 use App\Models\Profile;
+use App\Models\User;
 
 /**
  * The ONE answer to "may this viewer see this member's profile photo?".
@@ -20,9 +21,11 @@ use App\Models\Profile;
  *   - own photo                → always visible
  *   - no approved primary photo → NO_PHOTO
  *   - 'visible_to_all'         → visible
+ *   - 'premium_only'           → premium (paying) members, plus anyone the owner already
+ *                                accepted (accepted interest / approved photo request)
  *   - 'hidden'                 → only if the owner approved this viewer's photo request
  *   - 'interest_accepted'      → only if an interest between them was accepted
- * Guests never pass the hidden / interest_accepted gates.
+ * Guests never pass the premium / hidden / interest_accepted gates.
  *
  * When a photo isn't visible, callers get null from url() and must render a
  * placeholder — never the real image blurred with CSS, which still hands
@@ -34,6 +37,7 @@ class PhotoVisibility
     public const NO_PHOTO = 'no_photo';
     public const HIDDEN = 'hidden';
     public const AFTER_ACCEPTANCE = 'after_acceptance';
+    public const PREMIUM_ONLY = 'premium_only';
 
     /** State of the member's main (profile) photo for this viewer. */
     public static function state(Profile $owner, ?Profile $viewer = null): string
@@ -54,7 +58,7 @@ class PhotoVisibility
      * hidden. An approved photo request unlocks every hidden type, since
      * the member asked to see "your photos".
      *
-     * @return self::VISIBLE|self::HIDDEN|self::AFTER_ACCEPTANCE
+     * @return self::VISIBLE|self::HIDDEN|self::AFTER_ACCEPTANCE|self::PREMIUM_ONLY
      */
     public static function gate(Profile $owner, ?Profile $viewer, string $photoType): string
     {
@@ -82,6 +86,13 @@ class PhotoVisibility
             PhotoPrivacySetting::LEVEL_INTEREST_ACCEPTED => $viewer && in_array($owner->id, self::acceptedPartners($viewer->id), true)
                 ? self::VISIBLE
                 : self::AFTER_ACCEPTANCE,
+            // Paying members see it; so does anyone the owner already said yes
+            // to — hiding a photo from someone you're talking to makes no sense.
+            PhotoPrivacySetting::LEVEL_PREMIUM_ONLY => $viewer && (
+                self::viewerIsPremium($viewer->id)
+                || in_array($owner->id, self::acceptedPartners($viewer->id), true)
+                || in_array($owner->id, self::approvedRequestTargets($viewer->id), true)
+            ) ? self::VISIBLE : self::PREMIUM_ONLY,
             default => self::VISIBLE,
         };
     }
@@ -175,6 +186,20 @@ class PhotoVisibility
                 ->pluck('target_profile_id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
+        });
+    }
+
+    /**
+     * Whether the viewing member has premium access (an active paid
+     * membership, or Free Membership mode). Memoised per viewer, so a page
+     * of cards costs one query.
+     */
+    private static function viewerIsPremium(int $viewerProfileId): bool
+    {
+        return once(function () use ($viewerProfileId) {
+            $userId = Profile::withTrashed()->whereKey($viewerProfileId)->value('user_id');
+
+            return (bool) ($userId ? User::find($userId)?->isPremium() : false);
         });
     }
 

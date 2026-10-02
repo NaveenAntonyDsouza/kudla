@@ -19,10 +19,19 @@ photos — for the website **and** the API. Per photo type (`profile`, `album`,
 | Level | Visible to |
 |---|---|
 | `visible_to_all` | everyone (incl. guests) |
+| `premium_only` | premium (paying) members, **plus** members with an accepted interest or an approved photo request (October 2026) |
 | `interest_accepted` | members with an accepted interest with them (either direction) |
 | `hidden` | members whose photo request they **approved** |
 
 The owner always sees their own photos.
+
+**`premium_only` in the privacy picker:** offer it only when
+`/site/settings` → `features.free_membership` is **false** (in Free Membership
+mode everyone is premium, so it would mean nothing; the website hides it too).
+Set it per type (`profile_photo_privacy` / `album_photos_privacy` /
+`family_photos_privacy`); the legacy `privacy_level` field does **not** accept
+it. `photo_access.can_request` is true for `premium_only` too — an approved
+photo request unlocks it.
 
 **Album and family photos are never more visible than the main photo**
 (October 2026): if the main (`profile`) photo is locked for a viewer, album
@@ -40,7 +49,7 @@ New: **`lock_reason`**. When the viewer may not see the photo:
   "is_blurred": true, "lock_reason": "hidden" }
 ```
 
-`lock_reason` is `null` (visible) · `"hidden"` · `"after_acceptance"`.
+`lock_reason` is `null` (visible) · `"hidden"` · `"after_acceptance"` · `"premium_only"` (show an **Upgrade** button → membership plans).
 **No URL of a locked photo is ever sent** — render a placeholder, not a blur
 of the real image. (Before: real URLs were always sent and `is_blurred` only
 *asked* the app to blur them.) Unknown privacy fails closed (`"hidden"`).
@@ -56,8 +65,8 @@ Card photos (`primary_photo` on profile cards) carry the same `lock_reason`.
   "family":  [ … ],
   "photo_privacy": { "profile": "hidden", "album": "interest_accepted", "family": "visible_to_all" },
   "photo_access": {
-    "profile": "hidden",        // visible | hidden | after_acceptance | no_photo
-    "album": "visible",         // visible | hidden | after_acceptance
+    "profile": "hidden",        // visible | hidden | after_acceptance | premium_only | no_photo
+    "album": "visible",         // visible | hidden | after_acceptance | premium_only
     "family": "after_acceptance",
     "request_status": null,     // this viewer's request to them: pending | approved | ignored | null
     "can_request": true

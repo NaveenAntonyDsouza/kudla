@@ -8,6 +8,7 @@ use App\Models\ProfilePhoto;
 use App\Models\User;
 use App\Support\PhotoVisibility as PV;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 
@@ -84,7 +85,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (['interests', 'photo_requests', 'photo_privacy_settings', 'profile_photos', 'profiles', 'users'] as $table) {
+    foreach (['interests', 'photo_requests', 'photo_privacy_settings', 'profile_photos', 'profiles', 'users', 'site_settings', 'user_memberships', 'membership_plans'] as $table) {
         Schema::dropIfExists($table);
     }
 });
@@ -282,4 +283,93 @@ it('never makes album or family photos more visible than the main photo', functi
         ->and(PV::gallery($owner, $stranger)['photos'])->toBe([])
         ->and(PV::gate($owner, $partner, 'album'))->toBe(PV::VISIBLE)
         ->and(count(PV::gallery($owner, $partner)['photos']))->toBe(2);
+});
+
+/* ---------------- "Premium members only" ---------------- */
+
+function pvPremiumSchema(): void
+{
+    if (! Schema::hasTable('site_settings')) {
+        Schema::create('site_settings', function (Blueprint $t) {
+            $t->id();
+            $t->string('key')->unique();
+            $t->text('value')->nullable();
+            $t->timestamps();
+        });
+    }
+    if (! Schema::hasTable('membership_plans')) {
+        Schema::create('membership_plans', function (Blueprint $t) {
+            $t->id();
+            $t->boolean('can_view_contact')->default(true);
+            $t->timestamps();
+        });
+        DB::table('membership_plans')->insert(['id' => 1, 'can_view_contact' => true]);
+    }
+    if (! Schema::hasTable('user_memberships')) {
+        Schema::create('user_memberships', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('user_id');
+            $t->unsignedBigInteger('plan_id')->nullable();
+            $t->boolean('is_active')->default(true);
+            $t->timestamp('starts_at')->nullable();
+            $t->timestamp('ends_at')->nullable();
+            $t->timestamps();
+        });
+    }
+}
+
+function pvMakePremium(Profile $p): void
+{
+    DB::table('user_memberships')->insert(['user_id' => $p->user_id, 'plan_id' => 1, 'is_active' => true, 'ends_at' => now()->addMonth()]);
+}
+
+it('premium-only: paying members see it; free members and guests get a premium placeholder', function () {
+    pvPremiumSchema();
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'premium_only']);
+    $free = pvMember();
+    $paid = pvMember();
+    pvMakePremium($paid);
+
+    expect(PV::state($owner, $paid))->toBe(PV::VISIBLE)
+        ->and(PV::state($owner, $free))->toBe(PV::PREMIUM_ONLY)
+        ->and(PV::state($owner, null))->toBe(PV::PREMIUM_ONLY)
+        ->and(PV::url($owner, $free))->toBeNull();
+});
+
+it('premium-only: someone the owner already accepted sees it without paying', function () {
+    pvPremiumSchema();
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'premium_only']);
+    $partner = pvMember();
+    $requester = pvMember();
+    Interest::create(['sender_profile_id' => $partner->id, 'receiver_profile_id' => $owner->id, 'status' => 'accepted']);
+    PhotoRequest::create(['requester_profile_id' => $requester->id, 'target_profile_id' => $owner->id, 'status' => 'approved']);
+
+    expect(PV::state($owner, $partner))->toBe(PV::VISIBLE)
+        ->and(PV::state($owner, $requester))->toBe(PV::VISIBLE);
+});
+
+it('premium-only: in Free Membership mode every member sees it and the choice is not offered', function () {
+    pvPremiumSchema();
+    DB::table('site_settings')->insert(['key' => 'free_membership_enabled', 'value' => '1']);
+    \Illuminate\Support\Facades\Cache::flush();
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'premium_only']);
+
+    expect(PV::state($owner, pvMember()))->toBe(PV::VISIBLE)
+        ->and(PV::state($owner, null))->toBe(PV::PREMIUM_ONLY) // still never guests
+        ->and(PhotoPrivacySetting::levelsOffered())->not->toHaveKey('premium_only');
+
+    DB::table('site_settings')->where('key', 'free_membership_enabled')->update(['value' => '0']);
+    \Illuminate\Support\Facades\Cache::flush();
+    expect(PhotoPrivacySetting::levelsOffered())->toHaveKey('premium_only');
+});
+
+it('premium-only album photos stay locked for free members even when the main photo is public', function () {
+    pvPremiumSchema();
+    $owner = pvMember(privacy: ['profile_photo_privacy' => 'visible_to_all', 'album_photos_privacy' => 'premium_only']);
+    pvAddPhoto($owner, 'album', 'album.jpg');
+    $owner = $owner->fresh();
+
+    $gallery = PV::gallery($owner, pvMember());
+    expect(count($gallery['photos']))->toBe(1)
+        ->and($gallery['locked']['album']['state'])->toBe(PV::PREMIUM_ONLY);
 });

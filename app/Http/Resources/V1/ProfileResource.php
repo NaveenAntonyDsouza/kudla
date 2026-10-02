@@ -364,8 +364,8 @@ class ProfileResource extends JsonResource
     /**
      * What the viewer (another member) can see and do — lets the app pick
      * the right placeholder and button, the same way the website does:
-     *   profile         'visible' | 'hidden' | 'after_acceptance' | 'no_photo'
-     *   album / family  'visible' | 'hidden' | 'after_acceptance'
+     *   profile         'visible' | 'hidden' | 'after_acceptance' | 'premium_only' | 'no_photo'
+     *   album / family  'visible' | 'hidden' | 'after_acceptance' | 'premium_only'
      *   request_status  this viewer's request to them: 'pending' |
      *                   'approved' | 'ignored' | null
      *   can_request     a photo request would be accepted by
@@ -406,9 +406,11 @@ class ProfileResource extends JsonResource
             $requestStatus = null;
         }
 
-        $somethingToAskFor = in_array($state, [PhotoVisibility::HIDDEN, PhotoVisibility::NO_PHOTO], true)
-            || $album === PhotoVisibility::HIDDEN
-            || $family === PhotoVisibility::HIDDEN;
+        // An approved request unlocks 'hidden' and 'premium_only' photos alike
+        $askable = [PhotoVisibility::HIDDEN, PhotoVisibility::PREMIUM_ONLY];
+        $somethingToAskFor = in_array($state, [...$askable, PhotoVisibility::NO_PHOTO], true)
+            || in_array($album, $askable, true)
+            || in_array($family, $askable, true);
 
         return [
             'profile'        => $state,

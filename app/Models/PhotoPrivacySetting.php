@@ -8,14 +8,32 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PhotoPrivacySetting extends Model
 {
     public const LEVEL_VISIBLE_TO_ALL = 'visible_to_all';
+    public const LEVEL_PREMIUM_ONLY = 'premium_only';
     public const LEVEL_INTEREST_ACCEPTED = 'interest_accepted';
     public const LEVEL_HIDDEN = 'hidden';
 
+    /** Most open → most private (the order members see them in). */
     public const LEVELS = [
         self::LEVEL_VISIBLE_TO_ALL => 'Visible to all',
+        self::LEVEL_PREMIUM_ONLY => 'Premium members only',
         self::LEVEL_INTEREST_ACCEPTED => 'Only after interest accepted',
         self::LEVEL_HIDDEN => 'Hidden',
     ];
+
+    /**
+     * The choices to offer on this site. "Premium members only" is left out
+     * while Free Membership mode is on — everyone is premium then, so it
+     * would mean nothing. (A member who already chose it keeps it; it then
+     * behaves as "logged-in members only".)
+     *
+     * @return array<string, string>
+     */
+    public static function levelsOffered(): array
+    {
+        return User::freeMembershipEnabled()
+            ? array_diff_key(self::LEVELS, [self::LEVEL_PREMIUM_ONLY => true])
+            : self::LEVELS;
+    }
 
     protected $fillable = [
         'profile_id',
@@ -61,29 +79,5 @@ class PhotoPrivacySetting extends Model
 
         // Fallback to legacy global level
         return $this->privacy_level ?: self::LEVEL_VISIBLE_TO_ALL;
-    }
-
-    /**
-     * Is a photo of the given type visible to a viewer with the given relationship?
-     *
-     * @param  string  $photoType       'profile' | 'album' | 'family'
-     * @param  string  $viewerRelation  'self' | 'interest_accepted' | 'member' | 'guest'
-     * @return bool
-     */
-    public function isVisibleTo(string $photoType, string $viewerRelation): bool
-    {
-        // Owner always sees their own photos
-        if ($viewerRelation === 'self') {
-            return true;
-        }
-
-        $level = $this->levelForType($photoType);
-
-        return match ($level) {
-            self::LEVEL_VISIBLE_TO_ALL => true,
-            self::LEVEL_INTEREST_ACCEPTED => $viewerRelation === 'interest_accepted',
-            self::LEVEL_HIDDEN => false,
-            default => true,
-        };
     }
 }

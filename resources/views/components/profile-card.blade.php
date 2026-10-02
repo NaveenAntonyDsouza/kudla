@@ -39,6 +39,7 @@
         $showPhoto => null,
         $photoState === \App\Support\PhotoVisibility::HIDDEN => 'hidden',
         $photoState === \App\Support\PhotoVisibility::AFTER_ACCEPTANCE => 'after_acceptance',
+        $photoState === \App\Support\PhotoVisibility::PREMIUM_ONLY => 'premium_only',
         ! $isGuest && ! $isOwnCard => 'request_photo', // no photo yet
         default => null,
     };
@@ -80,6 +81,16 @@
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
                     <svg class="w-8 h-8 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
                     <p class="text-xs font-semibold text-gray-700">Visible only after acceptance</p>
+                </div>
+            @elseif($photoOverlay === 'premium_only' && $hasPhoto)
+                {{-- Locked placeholder — see the 'hidden' branch above. --}}
+                <div class="absolute inset-0" style="background: linear-gradient(135deg, var(--color-primary-light, #F3E8F7), #e5e7eb);"></div>
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <svg class="w-8 h-8 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                    <p class="text-xs font-semibold text-gray-700">Visible to premium members</p>
+                    @unless($isGuest)
+                        <span class="mt-2 inline-block px-3 py-1 text-[10px] font-bold text-(--color-primary) bg-white rounded-full shadow-sm">UPGRADE TO VIEW</span>
+                    @endunless
                 </div>
             @elseif($photoOverlay === 'request_photo')
                 {{-- No photo — placeholder with "Request Photo" --}}

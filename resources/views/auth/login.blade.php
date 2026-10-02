@@ -93,6 +93,7 @@
                         OTP sent to <strong x-text="'+91 ' + phone"></strong>
                         <button type="button" x-on:click="mobileOtpSent = false" class="text-(--color-primary) hover:underline ml-1 text-sm">Change</button>
                     </p>
+                    @include('auth.partials.otp-resent')
 
                     <div class="mb-4">
                         <label for="login_otp" class="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
@@ -125,6 +126,7 @@
                             <form method="POST" action="{{ route('login.otp.send') }}" class="inline">
                                 @csrf
                                 <input type="hidden" name="phone" x-bind:value="phone">
+                                <input type="hidden" name="resend" value="1">
                                 <button type="submit" class="text-sm text-(--color-primary) hover:underline font-medium">
                                     Resend OTP
                                 </button>
@@ -175,6 +177,7 @@
                         OTP sent to <strong x-text="loginEmail"></strong>
                         <button type="button" x-on:click="emailOtpSent = false" class="text-(--color-primary) hover:underline ml-1 text-sm">Change</button>
                     </p>
+                    @include('auth.partials.otp-resent')
 
                     <div class="mb-4">
                         <label for="email_login_otp" class="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
@@ -207,6 +210,7 @@
                             <form method="POST" action="{{ route('login.email-otp.send') }}" class="inline">
                                 @csrf
                                 <input type="hidden" name="email" x-bind:value="loginEmail">
+                                <input type="hidden" name="resend" value="1">
                                 <button type="submit" class="text-sm text-(--color-primary) hover:underline font-medium">
                                     Resend OTP
                                 </button>

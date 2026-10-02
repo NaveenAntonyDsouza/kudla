@@ -447,7 +447,10 @@ class RegisterController extends Controller
         $otpService = app(OtpService::class);
         $otpService->sendOtp($phone);
 
-        return back()->with('otp_sent', true);
+        return back()->with(array_filter([
+            'otp_sent' => true,
+            'otp_resent' => $request->boolean('resend') ? \App\Support\OtpResendNotice::phone((string) $phone) : null,
+        ]));
     }
 
     public function verifyOtp(Request $request)
@@ -505,7 +508,10 @@ class RegisterController extends Controller
             return back()->withErrors(['email_otp_send' => "We couldn't send the verification code right now. Please try again in a little while."]);
         }
 
-        return back()->with('email_otp_sent', true);
+        return back()->with(array_filter([
+            'email_otp_sent' => true,
+            'otp_resent' => $request->boolean('resend') ? \App\Support\OtpResendNotice::email((string) $email) : null,
+        ]));
     }
 
     public function verifyEmailOtp(Request $request)

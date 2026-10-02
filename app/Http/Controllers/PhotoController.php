@@ -190,11 +190,14 @@ class PhotoController extends Controller
     public function updatePrivacy(Request $request)
     {
         $profile = auth()->user()->profile;
-        $levels = 'in:visible_to_all,interest_accepted,hidden';
+        // Per-type fields take every level; the legacy single `privacy_level`
+        // column is a MySQL ENUM of the original three (no premium_only).
+        $levels = 'in:' . implode(',', array_keys(PhotoPrivacySetting::LEVELS));
+        $legacyLevels = 'in:visible_to_all,interest_accepted,hidden';
 
         // Support BOTH legacy single-level + new per-type fields.
         $validated = $request->validate([
-            'privacy_level' => "nullable|$levels",
+            'privacy_level' => "nullable|$legacyLevels",
             'profile_photo_privacy' => "nullable|$levels",
             'album_photos_privacy' => "nullable|$levels",
             'family_photos_privacy' => "nullable|$levels",
