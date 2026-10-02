@@ -1,6 +1,6 @@
 <x-layouts.app title="Search">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
-        activeTab: '{{ $activeTab }}',
+        activeTab: @js($activeTab),
         religions: [],
         moreOpen: false,
         showProfileOpen: false,
@@ -147,9 +147,9 @@
                                  nearly uniform, so only Native Country is offered. --}}
                             <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-5"
                                 x-data="{
-                                    wCountry: '{{ request('working_country', '') }}',
-                                    wState: '{{ request('working_state', '') }}',
-                                    wDistrict: '{{ request('working_district', '') }}',
+                                    wCountry: @js(request('working_country', '')),
+                                    wState: @js(request('working_state', '')),
+                                    wDistrict: @js(request('working_district', '')),
                                     wStates: [],
                                     wDistricts: [],
                                     async fetchWStates() {

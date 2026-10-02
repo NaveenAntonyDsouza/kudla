@@ -14,10 +14,10 @@
     @endif
 
     <form method="POST" action="{{ route('register.store4') }}" x-data="{
-        nativeCountry: '{{ old('native_country', $locationInfo?->native_country ?? '') }}',
-        nativeState: '{{ old('native_state', $locationInfo?->native_state ?? '') }}',
-        nativeDistrict: '{{ old('native_district', $locationInfo?->native_district ?? '') }}',
-        nativePlace: '{{ old('native_place', $locationInfo?->native_place ?? '') }}',
+        nativeCountry: @js(old('native_country', $locationInfo?->native_country ?? '')),
+        nativeState: @js(old('native_state', $locationInfo?->native_state ?? '')),
+        nativeDistrict: @js(old('native_district', $locationInfo?->native_district ?? '')),
+        nativePlace: @js(old('native_place', $locationInfo?->native_place ?? '')),
         nativeStates: [],
         nativeDistricts: [],
         nativePlaces: [],
@@ -25,20 +25,20 @@
         // Working location cascade — moved here from step 3 so all geography
         // (working + native) is collected on one step. Working location is the
         // primary location used in partner-preference matching.
-        workingCountry: '{{ old('working_country', $educationDetail?->working_country ?? '') }}',
-        workingState: '{{ old('working_state', $educationDetail?->working_state ?? '') }}',
-        workingDistrict: '{{ old('working_district', $educationDetail?->working_district ?? '') }}',
-        workingCity: '{{ old('working_city', $educationDetail?->working_city ?? '') }}',
+        workingCountry: @js(old('working_country', $educationDetail?->working_country ?? '')),
+        workingState: @js(old('working_state', $educationDetail?->working_state ?? '')),
+        workingDistrict: @js(old('working_district', $educationDetail?->working_district ?? '')),
+        workingCity: @js(old('working_city', $educationDetail?->working_city ?? '')),
         workingStates: [],
         workingDistricts: [],
         workingCities: [],
 
         // Profile Creation Details (merged from former Step 5)
-        createdBy: '{{ old('created_by', $profile?->created_by ?? '') }}',
-        userName: '{{ auth()->user()->name ?? '' }}',
-        userPhone: '{{ auth()->user()->phone ?? '' }}',
-        creatorName: '{{ old('creator_name', $profile?->creator_name ?? '') }}',
-        creatorPhone: '{{ old('creator_contact_number', $profile?->creator_contact_number ?? '') }}',
+        createdBy: @js(old('created_by', $profile?->created_by ?? '')),
+        userName: @js(auth()->user()->name ?? ''),
+        userPhone: @js(auth()->user()->phone ?? ''),
+        creatorName: @js(old('creator_name', $profile?->creator_name ?? '')),
+        creatorPhone: @js(old('creator_contact_number', $profile?->creator_contact_number ?? '')),
 
         async fetchNativeStates() {
             if (!this.nativeCountry) {

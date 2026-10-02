@@ -20,7 +20,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('report.store', $profile) }}" x-data="{ reason: '{{ old('reason', '') }}', submitting: false }" @submit="submitting = true">
+            <form method="POST" action="{{ route('report.store', $profile) }}" x-data="{ reason: @js(old('reason', '')), submitting: false }" @submit="submitting = true">
                 @csrf
 
                 {{-- Reason --}}

@@ -24,7 +24,7 @@
             </div>
         @endif
 
-        <div class="flex flex-col lg:flex-row gap-8" x-data="{ activeTab: '{{ $activeTab }}' }">
+        <div class="flex flex-col lg:flex-row gap-8" x-data="{ activeTab: @js($activeTab) }">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
             <div class="w-full shrink-0 mx-auto lg:mx-0" style="max-width: 256px;">

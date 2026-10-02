@@ -20,7 +20,7 @@
     <form method="POST" action="{{ route('onboarding.store1') }}" enctype="multipart/form-data" @submit="submitting = true" x-data="{
         submitting: false,
         languagesKnown: {{ Js::from(old('languages_known', $lifestyleInfo?->languages_known ?? [])) }},
-        physicalStatus: '{{ old('physical_status', $profile?->physical_status ?? '') }}'
+        physicalStatus: @js(old('physical_status', $profile?->physical_status ?? ''))
     }">
         @csrf
 
@@ -97,7 +97,7 @@
             </div>
 
             {{-- Differently Abled Details (when applicable) --}}
-            <div x-show="physicalStatus === 'Differently Abled'" x-transition class="space-y-5 pl-4 border-l-2 border-(--color-primary)/30" x-data="{ daCategory: '{{ old('da_category', $differentlyAbledInfo?->category ?? '') }}' }">
+            <div x-show="physicalStatus === 'Differently Abled'" x-transition class="space-y-5 pl-4 border-l-2 border-(--color-primary)/30" x-data="{ daCategory: @js(old('da_category', $differentlyAbledInfo?->category ?? '')) }">
                 <div class="float-field">
                     <select name="da_category" id="da_category" x-model="daCategory">
                         <option value="">Select</option>

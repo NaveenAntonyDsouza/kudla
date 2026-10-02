@@ -1,5 +1,5 @@
 @php $l = $profile->locationInfo; @endphp
-<form method="POST" action="{{ route('profile.update', 'location') }}" x-data="{ submitting: false, residingCountry: '{{ $l?->residing_country ?? '' }}' }" @submit="submitting = true">
+<form method="POST" action="{{ route('profile.update', 'location') }}" x-data="{ submitting: false, residingCountry: @js($l?->residing_country ?? '') }" @submit="submitting = true">
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field"><input type="text" name="native_country" value="{{ $l?->native_country ?? '' }}" maxlength="100" placeholder=" "><label>Native Country</label></div>

@@ -89,10 +89,10 @@
                     <p class="text-xs text-gray-500 mb-4">Create your profile in 2 minutes</p>
 
                     <form method="POST" action="{{ route('register.store1') }}" class="space-y-3" x-data="{
-                        gender: '{{ old('gender', '') }}',
+                        gender: @js(old('gender', '')),
                         showPw: false,
                         submitting: false,
-                        dob: '{{ old('date_of_birth', '') }}',
+                        dob: @js(old('date_of_birth', '')),
                         get calculatedAge() {
                             if (!this.dob) return '';
                             const birth = new Date(this.dob);

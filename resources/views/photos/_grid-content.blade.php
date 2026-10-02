@@ -31,7 +31,7 @@
     </div>
 @endif
 
-<div x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, '{{ request('tab', 'album') }}', @js($redirectTo ?? route('photos.manage')))">
+<div x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, @js(request('tab', 'album')), @js($redirectTo ?? route('photos.manage')))">
 
     <div class="flex flex-col lg:flex-row gap-8">
 

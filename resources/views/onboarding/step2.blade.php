@@ -19,7 +19,7 @@
 
     <form method="POST" action="{{ route('onboarding.store2') }}" @submit="submitting = true" x-data="{
         submitting: false,
-        residingCountry: '{{ old('residing_country', $defaultResidingCountry) }}',
+        residingCountry: @js(old('residing_country', $defaultResidingCountry)),
         presentSameAsComm: {{ old('present_address_same_as_comm') ? 'true' : ($contactInfo?->present_address_same_as_comm ? 'true' : 'false') }},
         permSameAsComm: {{ old('permanent_address_same_as_comm') ? 'true' : ($contactInfo?->permanent_address_same_as_comm ? 'true' : 'false') }},
         permSameAsPresent: {{ old('permanent_address_same_as_present') ? 'true' : ($contactInfo?->permanent_address_same_as_present ? 'true' : 'false') }},

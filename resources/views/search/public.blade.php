@@ -1,7 +1,7 @@
 <x-layouts.app title="Search Profiles">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
-        activeTab: '{{ $activeTab }}',
-        advReligion: '{{ is_array(request('religion')) ? '' : request('religion', '') }}',
+        activeTab: @js($activeTab),
+        advReligion: @js(is_array(request('religion')) ? '' : request('religion', '')),
         moreOpen: false,
         hasReligion(r) { return this.advReligion === r; }
     }">
@@ -80,7 +80,7 @@
                     @endphp
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6"
                          x-data="{
-                            selectedReligion: '{{ request('religion', '') }}',
+                            selectedReligion: @js(request('religion', '')),
                             communities: [],
                             selectedCastes: {{ Js::from($quickCasteSelected) }},
                             casteAny: {{ $quickCasteAny ? 'true' : 'false' }},

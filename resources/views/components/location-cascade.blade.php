@@ -7,9 +7,9 @@
 {{-- Country → State → District cascade (states from /api/cascade; District is India-only). --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5"
     x-data="{
-        c: '{{ request($cc, '') }}',
-        s: '{{ request($sc, '') }}',
-        d: '{{ request($dc, '') }}',
+        c: @js(request($cc, '')),
+        s: @js(request($sc, '')),
+        d: @js(request($dc, '')),
         states: [],
         districts: [],
         async fetchStates() {

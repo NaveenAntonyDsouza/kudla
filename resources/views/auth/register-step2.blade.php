@@ -21,15 +21,15 @@
         $casteRequired = \App\Models\SiteSetting::casteRequired();
     @endphp
     <form method="POST" action="{{ route('register.store2') }}" enctype="multipart/form-data" x-data="{
-        religion: '{{ $currentReligion }}',
-        maritalStatus: '{{ old('marital_status', $profile->marital_status ?? '') }}',
+        religion: @js($currentReligion),
+        maritalStatus: @js(old('marital_status', $profile->marital_status ?? '')),
         communities: [],
         subCommunities: [],
-        selectedCaste: '{{ old('caste', $religiousInfo->caste ?? '') }}',
-        otherCasteName: '{{ old('other_caste_name', $religiousInfo->other_caste_name ?? '') }}',
+        selectedCaste: @js(old('caste', $religiousInfo->caste ?? '')),
+        otherCasteName: @js(old('other_caste_name', $religiousInfo->other_caste_name ?? '')),
         subCasteChoice: '',
         subCasteOther: '',
-        savedSubCaste: '{{ old('sub_caste', $religiousInfo->sub_caste ?? '') }}',
+        savedSubCaste: @js(old('sub_caste', $religiousInfo->sub_caste ?? '')),
 
         async fetchCommunities(preserve = false) {
             const keepCaste = this.selectedCaste;
@@ -170,13 +170,13 @@
             {{-- ── Christian Fields ──────────────── --}}
             <template x-if="religion === 'Christian'">
                 <div class="space-y-5" x-data="{
-                    selectedDenomination: '{{ old('denomination', $religiousInfo->denomination ?? '') }}',
-                    otherDenominationName: '{{ old('other_denomination_name', $religiousInfo->other_denomination_name ?? '') }}',
+                    selectedDenomination: @js(old('denomination', $religiousInfo->denomination ?? '')),
+                    otherDenominationName: @js(old('other_denomination_name', $religiousInfo->other_denomination_name ?? '')),
                     dioceses: [],
                     dioceseChoice: '',
                     dioceseOther: '',
-                    savedDiocese: '{{ old('diocese', $religiousInfo->diocese ?? '') }}',
-                    savedDioceseName: '{{ old('diocese_name', $religiousInfo->diocese_name ?? '') }}',
+                    savedDiocese: @js(old('diocese', $religiousInfo->diocese ?? '')),
+                    savedDioceseName: @js(old('diocese_name', $religiousInfo->diocese_name ?? '')),
 
                     async fetchDioceses(preserve = false) {
                         if (!this.selectedDenomination) {

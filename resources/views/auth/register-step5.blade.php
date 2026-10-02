@@ -14,11 +14,11 @@
     @endif
 
     <form method="POST" action="{{ route('register.store5') }}" x-data="{
-        createdBy: '{{ old('created_by', $profile?->created_by ?? '') }}',
-        userName: '{{ auth()->user()->name ?? '' }}',
-        userPhone: '{{ auth()->user()->phone ?? '' }}',
-        creatorName: '{{ old('creator_name', $profile?->creator_name ?? '') }}',
-        creatorPhone: '{{ old('creator_contact_number', $profile?->creator_contact_number ?? '') }}',
+        createdBy: @js(old('created_by', $profile?->created_by ?? '')),
+        userName: @js(auth()->user()->name ?? ''),
+        userPhone: @js(auth()->user()->phone ?? ''),
+        creatorName: @js(old('creator_name', $profile?->creator_name ?? '')),
+        creatorPhone: @js(old('creator_contact_number', $profile?->creator_contact_number ?? '')),
 
         onCreatedByChange() {
             if (this.createdBy === 'Self / Candidate') {

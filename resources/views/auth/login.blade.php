@@ -38,13 +38,13 @@
 
     {{-- Tab Navigation --}}
     <div x-data="{
-        tab: '{{ session('email_otp_sent') ? 'email_otp' : (session('otp_sent') ? 'mobile' : (($errors->has('login') || old('login')) ? 'email' : $defaultTab)) }}',
+        tab: @js(session('email_otp_sent') ? 'email_otp' : (session('otp_sent') ? 'mobile' : (($errors->has('login') || old('login')) ? 'email' : $defaultTab))),
         mobileOtpSent: {{ session('otp_sent') ? 'true' : 'false' }},
         emailOtpSent: {{ session('email_otp_sent') ? 'true' : 'false' }},
         cooldown: 0,
         emailCooldown: 0,
-        phone: '{{ session('login_phone', old('phone', '')) }}',
-        loginEmail: '{{ session('login_email', old('email', '')) }}'
+        phone: @js(session('login_phone', old('phone', ''))),
+        loginEmail: @js(session('login_email', old('email', '')))
     }" x-init="
         if (mobileOtpSent) { tab = 'mobile'; cooldown = 30; let timer = setInterval(() => { cooldown--; if (cooldown <= 0) clearInterval(timer); }, 1000); }
         if (emailOtpSent) { tab = 'email_otp'; emailCooldown = 30; let timer2 = setInterval(() => { emailCooldown--; if (emailCooldown <= 0) clearInterval(timer2); }, 1000); }

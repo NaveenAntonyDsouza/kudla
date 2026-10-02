@@ -9,14 +9,14 @@
 @endphp
 <form method="POST" action="{{ route('profile.update', 'religious') }}" enctype="multipart/form-data" @submit="submitting = true" x-data="{
     submitting: false,
-    religion: '{{ $currentReligion }}',
+    religion: @js($currentReligion),
     communities: [],
     subCommunities: [],
-    selectedCaste: '{{ $r?->caste ?? '' }}',
-    otherCasteName: '{{ $r?->other_caste_name ?? '' }}',
+    selectedCaste: @js($r?->caste ?? ''),
+    otherCasteName: @js($r?->other_caste_name ?? ''),
     subCasteChoice: '',
     subCasteOther: '',
-    savedSubCaste: '{{ $r?->sub_caste ?? '' }}',
+    savedSubCaste: @js($r?->sub_caste ?? ''),
 
     async fetchCommunities(preserve = false) {
         const keepCaste = this.selectedCaste;
@@ -91,13 +91,13 @@
              falls outside the chosen rite. --}}
         <template x-if="religion === 'Christian'">
             <div class="contents" x-data="{
-                selectedDenomination: '{{ $r?->denomination ?? '' }}',
-                otherDenominationName: '{{ $r?->other_denomination_name ?? '' }}',
+                selectedDenomination: @js($r?->denomination ?? ''),
+                otherDenominationName: @js($r?->other_denomination_name ?? ''),
                 dioceses: [],
                 dioceseChoice: '',
                 dioceseOther: '',
-                savedDiocese: '{{ $r?->diocese ?? '' }}',
-                savedDioceseName: '{{ $r?->diocese_name ?? '' }}',
+                savedDiocese: @js($r?->diocese ?? ''),
+                savedDioceseName: @js($r?->diocese_name ?? ''),
 
                 async fetchDioceses(preserve = false) {
                     if (!this.selectedDenomination) {
