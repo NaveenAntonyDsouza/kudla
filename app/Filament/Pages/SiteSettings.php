@@ -71,6 +71,7 @@ class SiteSettings extends Page implements HasForms
             'login_method_order' => collect(
                 json_decode($settings['login_method_order'] ?? '', true) ?: ['mobile_otp', 'email_otp', 'password']
             )->map(fn ($m) => ['method' => $m])->all(),
+            'member_id_label' => $settings['member_id_label'] ?? 'Matri ID',
             'auto_approve_profiles' => $settings['auto_approve_profiles'] ?? '1',
             'auto_approve_profile_photos' => $settings['auto_approve_profile_photos'] ?? '1',
             'auto_approve_album_photos' => $settings['auto_approve_album_photos'] ?? '1',
@@ -215,13 +216,18 @@ class SiteSettings extends Page implements HasForms
                                     ->options([
                                         'mobile_otp' => 'Mobile OTP',
                                         'email_otp' => 'Email OTP',
-                                        'password' => 'Email & Password',
+                                        'password' => 'Password (email, mobile or member ID)',
                                     ])
                                     ->required(),
                             ])
                             ->maxItems(3)
                             ->reorderable()
                             ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('member_id_label')
+                            ->label('Name for the member ID')
+                            ->maxLength(30)
+                            ->helperText('Shown on the login page: "Email, Mobile Number or Matri ID". Default "Matri ID"; a dating site may prefer "Member ID".'),
 
                         Forms\Components\Toggle::make('auto_approve_profiles')
                             ->label('Auto-Approve Profiles')

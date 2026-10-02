@@ -7,11 +7,14 @@ use App\Models\LoginHistory;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\OtpService;
+use App\Support\LoginIdentifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
@@ -22,14 +25,40 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        // `login` = email, mobile number or Matri ID (LoginIdentifier).
+        // `email` is the old field name — still accepted.
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            'login' => 'required_without:email|nullable|string|max:255',
+            'email' => 'nullable|string|max:255',
+            'password' => 'required|string',
+        ], [
+            'login.required_without' => 'Please enter your email, mobile number or ' . LoginIdentifier::memberIdLabel() . '.',
         ]);
+        $identifier = trim((string) ($request->input('login') ?? $request->input('email')));
 
-        if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'These credentials do not match our records.'])->onlyInput('email');
+        // 5 tries a minute per identifier + IP (the route also caps each IP).
+        // Matri IDs are sequential and public, so guessing must stay slow.
+        $throttleKey = 'login:' . Str::lower($identifier) . '|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return back()->withErrors(['login' => "Too many login attempts. Please try again in {$seconds} seconds."])
+                ->withInput(['login' => $identifier]);
         }
+
+        [$status, $matched] = LoginIdentifier::authenticate($identifier, $request->input('password'));
+
+        if ($status === LoginIdentifier::AMBIGUOUS) {
+            RateLimiter::hit($throttleKey, 60);
+            return back()->withErrors(['login' => 'This mobile number belongs to more than one account. Please log in with your email or ' . LoginIdentifier::memberIdLabel() . '.'])
+                ->withInput(['login' => $identifier]);
+        }
+
+        if (! $matched || ! Auth::attempt(['id' => $matched->id, 'password' => $request->input('password')], $request->boolean('remember'))) {
+            RateLimiter::hit($throttleKey, 60);
+            return back()->withErrors(['login' => 'These credentials do not match our records.'])
+                ->withInput(['login' => $identifier]);
+        }
+        RateLimiter::clear($throttleKey);
 
         $user = Auth::user();
 
@@ -39,7 +68,8 @@ class LoginController extends Controller
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-            return back()->withErrors(['email' => User::blockedStatusMessage($blocked)])->onlyInput('email');
+            return back()->withErrors(['login' => User::blockedStatusMessage($blocked)])
+                ->withInput(['login' => $identifier]);
         }
 
         $request->session()->regenerate();

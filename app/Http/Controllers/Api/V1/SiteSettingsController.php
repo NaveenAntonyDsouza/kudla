@@ -113,6 +113,8 @@ class SiteSettingsController extends BaseApiController
                 'labels' => [
                     'gender_male'   => SiteSetting::getValue('gender_label_male', 'Groom'),
                     'gender_female' => SiteSetting::getValue('gender_label_female', 'Bride'),
+                    // "Matri ID" / "Member ID" — login box: "Email, Mobile Number or …"
+                    'member_id'     => \App\Support\LoginIdentifier::memberIdLabel(),
                 ],
 
                 'membership' => [

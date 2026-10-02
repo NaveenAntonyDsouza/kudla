@@ -107,6 +107,7 @@ UI mapping (same as the website):
 | `registration.show_diocese` | bool | Show the Diocese field for Christians |
 | `registration.id_prefix` | string | Now from the setting that actually generates member IDs (was the unused `.env` value) |
 | `labels.gender_male` / `labels.gender_female` | string | "Groom"/"Bride" on matrimony sites, e.g. "A Man"/"A Woman" on dating sites |
+| `labels.member_id` | string | What the site calls the member ID: "Matri ID" (matrimony) or "Member ID" (dating). Use it in the login field label — see §5 |
 
 Admin changes to any setting now clear the cached snapshot immediately
 (previously up to 5 minutes stale).
@@ -138,8 +139,37 @@ notification (or map `type` the same way) to get the target.
 
 ---
 
+## 5. Password login — email, mobile number or Matri ID (October 2026)
+
+`POST /auth/login/password` takes **`login`** + `password` (+ optional
+`device_name`). `login` may be any of:
+
+| Typed | Matches |
+|---|---|
+| contains `@` | the account email (exact) |
+| letters + digits — `KM100123`, `km100123`, `KM 100123`, `KM-100123` | the Matri ID |
+| 10–13 digits, spaces/`+`/`-`/`()` allowed — `9845012345`, `+91 98450 12345` | the mobile number, compared on the **last 10 digits** |
+
+The old `email` field is still accepted (any of the three values) — send
+`login` from the app. Label the field
+**"Email, Mobile Number or {labels.member_id}"** and use a plain text keyboard
+(not the email keyboard).
+
+- Wrong password / unknown identifier → `401 UNAUTHENTICATED`, message
+  "Invalid login details or password." (never says which part was wrong).
+- Missing `login` → `422 VALIDATION_FAILED` with `fields.login`.
+- A mobile number shared by two old accounts: the password picks the account;
+  if both share the password too, it's `401` — the member must use email or
+  Matri ID.
+- Same rules as the website (`App\Support\LoginIdentifier`). The website also
+  allows 5 attempts a minute per identifier; the API route is capped at 10 a
+  minute per IP.
+
+---
+
 ## Tests
 
 `tests/Feature/Api/V1/PhotoResourceTest.php`,
 `PhotoRequestControllerTest.php`, `AppPhotoAndSettingsContractTest.php`,
-`tests/Feature/PhotoVisibilityTest.php`, `MemberEmailsTest.php`.
+`tests/Feature/PhotoVisibilityTest.php`, `MemberEmailsTest.php`,
+`tests/Feature/LoginIdentifierTest.php`.

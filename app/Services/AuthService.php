@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\LoginHistory;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Support\LoginIdentifier;
 
 /**
  * Authentication helper used by the API layer (Api\V1\AuthController).
@@ -38,17 +38,16 @@ class AuthService
     public function __construct(private OtpService $otp) {}
 
     /**
-     * Verify email + password. Returns the User on success, null otherwise.
-     * Does NOT issue a token, log in, or record history — caller does those.
+     * Verify email / mobile number / Matri ID + password (same rules as the
+     * web login — App\Support\LoginIdentifier). Returns the User on success,
+     * null otherwise (incl. a mobile number shared by several accounts with
+     * the same password). Does NOT issue a token, log in, or record
+     * history — caller does those.
      */
-    public function authenticatePassword(string $email, string $password): ?User
+    public function authenticatePassword(string $login, string $password): ?User
     {
-        $user = User::where('email', $email)->first();
-        if (! $user) {
-            return null;
-        }
-
-        if (! Hash::check($password, $user->password)) {
+        [$status, $user] = LoginIdentifier::authenticate($login, $password);
+        if ($status !== LoginIdentifier::MATCHED) {
             return null;
         }
 

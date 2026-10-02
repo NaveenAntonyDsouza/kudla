@@ -117,7 +117,8 @@ Route::prefix('api/cascade')->group(function () {
 Route::middleware('guest')->group(function () {
     // Login
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+    // Per-IP cap on top of the controller's per-identifier limit
+    Route::post('/login', [LoginController::class, 'login'])->name('login.submit')->middleware('throttle:20,1');
     Route::post('/login/send-otp', [LoginController::class, 'sendLoginOtp'])->name('login.otp.send')->middleware('throttle:5,1');
     Route::post('/login/verify-otp', [LoginController::class, 'verifyLoginOtp'])->name('login.otp.verify')->middleware('throttle:10,1');
     Route::post('/login/send-email-otp', [LoginController::class, 'sendEmailLoginOtp'])->name('login.email-otp.send')->middleware('throttle:5,1');

@@ -144,6 +144,7 @@ it('site settings expose the switches the app needs, from the real settings tabl
         'show_diocese' => '0',
         'gender_label_male' => 'A Man',
         'gender_label_female' => 'A Woman',
+        'member_id_label' => 'Member ID',
         'profile_id_prefix' => 'KD',
     ] as $k => $v) {
         SiteSetting::create(['key' => $k, 'value' => $v]);
@@ -156,7 +157,7 @@ it('site settings expose the switches the app needs, from the real settings tabl
         ->and($data['registration']['caste_required'])->toBeFalse()
         ->and($data['registration']['show_diocese'])->toBeFalse()
         ->and($data['registration']['id_prefix'])->toBe('KD')
-        ->and($data['labels'])->toBe(['gender_male' => 'A Man', 'gender_female' => 'A Woman']);
+        ->and($data['labels'])->toBe(['gender_male' => 'A Man', 'gender_female' => 'A Woman', 'member_id' => 'Member ID']);
 
     Schema::dropIfExists('site_settings');
 });

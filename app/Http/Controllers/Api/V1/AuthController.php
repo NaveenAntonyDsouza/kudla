@@ -240,12 +240,14 @@ class AuthController extends BaseApiController
      | ------------------------------------------------------------------ */
 
     /**
-     * Log in with email + password. Primary login flow for existing users.
+     * Log in with email, mobile number or Matri ID + password. Primary login
+     * flow for existing users. Same matching rules as the website login.
      *
      * @unauthenticated
      * @group Authentication
      *
-     * @bodyParam email string required Registered email address.
+     * @bodyParam login string Email, 10-digit mobile number (country code / spaces allowed) or Matri ID (e.g. KM100123). Required unless `email` is sent. Example: KM100123
+     * @bodyParam email string Older field name — still accepted (any of the three identifiers).
      * @bodyParam password string required Account password.
      * @bodyParam device_name string Optional device label (max 60 chars). Defaults to "mobile".
      *
@@ -259,25 +261,27 @@ class AuthController extends BaseApiController
      *     "next_step": "home"
      *   }
      * }
-     * @response 401 scenario="bad-credentials" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "Invalid email or password."}}
-     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"email": ["..."]}}}
+     * @response 401 scenario="bad-credentials" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "Invalid login details or password."}}
+     * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"login": ["..."]}}}
      * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many attempts. Try again later."}}
      */
     public function loginPassword(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'email' => 'required|email',
+            'login' => 'required_without:email|nullable|string|max:255',
+            'email' => 'nullable|string|max:255',
             'password' => 'required|string',
             'device_name' => 'nullable|string|max:60',
         ]);
+        $login = trim((string) ($data['login'] ?? $data['email'] ?? ''));
 
-        $user = $this->auth->authenticatePassword($data['email'], $data['password']);
+        $user = $this->auth->authenticatePassword($login, $data['password']);
 
         if (! $user) {
-            // Generic UNAUTHENTICATED — don't leak whether the email exists.
+            // Generic UNAUTHENTICATED — don't leak whether the account exists.
             return ApiResponse::error(
                 code: 'UNAUTHENTICATED',
-                message: 'Invalid email or password.',
+                message: 'Invalid login details or password.',
                 status: 401,
             );
         }

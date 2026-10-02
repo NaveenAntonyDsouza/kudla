@@ -10,7 +10,7 @@
         $allLoginTabs = [
             'mobile_otp' => ['key' => 'mobile',    'label' => 'Mobile OTP',      'enabled' => $mobileOtpEnabled],
             'email_otp'  => ['key' => 'email_otp', 'label' => 'Email OTP',       'enabled' => $emailOtpEnabled],
-            'password'   => ['key' => 'email',     'label' => 'Email & Password', 'enabled' => true],
+            'password'   => ['key' => 'email',     'label' => 'Password',        'enabled' => true],
         ];
 
         $loginOrder = json_decode(\App\Models\SiteSetting::getValue('login_method_order', ''), true);
@@ -38,7 +38,7 @@
 
     {{-- Tab Navigation --}}
     <div x-data="{
-        tab: '{{ session('email_otp_sent') ? 'email_otp' : (session('otp_sent') ? 'mobile' : $defaultTab) }}',
+        tab: '{{ session('email_otp_sent') ? 'email_otp' : (session('otp_sent') ? 'mobile' : (($errors->has('login') || old('login')) ? 'email' : $defaultTab)) }}',
         mobileOtpSent: {{ session('otp_sent') ? 'true' : 'false' }},
         emailOtpSent: {{ session('email_otp_sent') ? 'true' : 'false' }},
         cooldown: 0,
@@ -224,17 +224,22 @@
                 @csrf
 
                 <div class="mb-4">
-                    <label for="login_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    {{-- Email, mobile number or Matri ID (App\Support\LoginIdentifier) --}}
+                    @php $idPrefix = \App\Models\SiteSetting::getValue('profile_id_prefix', 'AM'); @endphp
+                    <label for="login_identifier" class="block text-sm font-medium text-gray-700 mb-1">{{ \App\Support\LoginIdentifier::fieldLabel() }}</label>
                     <input
-                        type="email"
-                        id="login_email"
-                        name="email"
-                        value="{{ old('email') }}"
-                        placeholder="you@example.com"
+                        type="text"
+                        id="login_identifier"
+                        name="login"
+                        value="{{ old('login') }}"
+                        placeholder="e.g. you@example.com, 9876543210 or {{ $idPrefix }}100123"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
                         required
                     >
-                    @error('email')
+                    @error('login')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
