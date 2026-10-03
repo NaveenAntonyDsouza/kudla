@@ -112,8 +112,18 @@ it('refuses weak new passwords', function (string $weak) {
 
     expect(Hash::check('Admin@1234', DB::table('users')->where('id', 1)->value('password')))->toBeTrue();
 })->with([
-    'too short' => 'Ab1#short',
-    'no symbol' => 'Abcdefghijk12',
-    'no capital' => 'abcdefgh#1234',
-    'no number' => 'Abcdefgh#ijkl',
+    'too short (7)' => 'ab1#xyz',
+    'no symbol' => 'abcdefg12',
+    'no number' => 'abcdefg#h',
+    'the current password' => 'Admin@1234',
+    'a known default, any case' => 'ADMIN@1234',
 ]);
+
+it('accepts 8 characters with a number and a symbol (owner\'s rule)', function () {
+    Livewire::test(EditAdminProfile::class)
+        ->fillForm(['password' => 'kudla#26', 'passwordConfirmation' => 'kudla#26', 'currentPassword' => 'Admin@1234'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(Hash::check('kudla#26', DB::table('users')->where('id', 1)->value('password')))->toBeTrue();
+});
