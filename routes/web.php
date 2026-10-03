@@ -56,8 +56,10 @@ Route::get('/page/{slug}', [\App\Http\Controllers\StaticPageController::class, '
 // Success Stories (public listing)
 Route::get('/success-stories', [\App\Http\Controllers\SuccessStoryController::class, 'index'])->name('success-stories.index');
 
-// SEO: Sitemap
+// SEO: Sitemap + robots.txt (robots is served by Laravel so each site gets its
+// own absolute Sitemap: URL — the static public/robots.txt had a relative one)
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [\App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
 
 // 301 redirects from old URLs (SEO — pass link juice to new URLs)
 Route::permanentRedirect('/cms/index/child-safety-policy', '/child-safety');

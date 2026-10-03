@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SiteSetting;
+use App\Models\StaticPage;
 use App\Models\Testimonial;
 use Illuminate\Http\Response;
 
@@ -26,20 +27,27 @@ class SitemapController extends Controller
             ['url' => url('/faq'), 'priority' => '0.6', 'changefreq' => 'monthly'],
             ['url' => url('/contact-us'), 'priority' => '0.6', 'changefreq' => 'monthly'],
             ['url' => url('/success-stories'), 'priority' => '0.7', 'changefreq' => 'weekly'],
-            ['url' => url('/privacy-policy'), 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['url' => url('/terms-condition'), 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['url' => url('/refund-policy'), 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['url' => url('/child-safety'), 'priority' => '0.3', 'changefreq' => 'yearly'],
             ['url' => url('/demograph'), 'priority' => '0.5', 'changefreq' => 'monthly'],
         ];
         $urls = $urls->merge($staticPages);
 
-        // Search pages
+        // Legal pages actually published on THIS site — a site that never
+        // installed one (or switched it off) must not advertise it to Google.
+        $legal = StaticPage::query()
+            ->where('is_active', true)
+            ->whereIn('slug', ['privacy-policy', 'terms-condition', 'refund-policy', 'child-safety', 'report-misuse'])
+            ->orderBy('sort_order')
+            ->pluck('slug')
+            ->map(fn ($slug) => ['url' => url("/{$slug}"), 'priority' => '0.3', 'changefreq' => 'yearly']);
+        $urls = $urls->merge($legal);
+
+        // Search pages — route() so a renamed route can't leave a dead link
+        // here (/search/advanced-search and /search/search-by-id were 404s).
         $searchPages = [
-            ['url' => url('/search/quick-search'), 'priority' => '0.8', 'changefreq' => 'daily'],
-            ['url' => url('/search/advanced-search'), 'priority' => '0.7', 'changefreq' => 'daily'],
-            ['url' => url('/search/keyword-search'), 'priority' => '0.6', 'changefreq' => 'daily'],
-            ['url' => url('/search/search-by-id'), 'priority' => '0.5', 'changefreq' => 'daily'],
+            ['url' => route('search.quick'), 'priority' => '0.8', 'changefreq' => 'daily'],
+            ['url' => route('search.advance'), 'priority' => '0.7', 'changefreq' => 'daily'],
+            ['url' => route('search.keyword'), 'priority' => '0.6', 'changefreq' => 'daily'],
+            ['url' => route('search.byid'), 'priority' => '0.5', 'changefreq' => 'daily'],
         ];
         $urls = $urls->merge($searchPages);
 
@@ -64,5 +72,42 @@ class SitemapController extends Controller
         $xml .= '</urlset>';
 
         return response($xml, 200, ['Content-Type' => 'application/xml']);
+    }
+
+    /**
+     * robots.txt — served per site so the `Sitemap:` line is an ABSOLUTE URL
+     * (crawlers ignore a relative one, and the old static public/robots.txt
+     * said just "/sitemap.xml" on all six sites). Admins can edit the body in
+     * SEO Settings; the Sitemap line is always appended from this host.
+     */
+    public function robots(): Response
+    {
+        $body = trim((string) SiteSetting::getValue('robots_txt', ''));
+        if ($body === '') {
+            $body = implode("\n", [
+                'User-agent: *',
+                'Disallow: /admin',
+                'Disallow: /dashboard',
+                'Disallow: /settings',
+                'Disallow: /interests',
+                'Disallow: /shortlist',
+                'Disallow: /views',
+                'Disallow: /photo-requests',
+                'Disallow: /saved-searches',
+                'Disallow: /submit-id-proof',
+                'Disallow: /onboarding',
+                'Disallow: /register/step*',
+                'Disallow: /membership-plans/checkout',
+                'Allow: /',
+            ]);
+        }
+
+        // Drop any Sitemap: lines the admin typed, then add the correct one.
+        $body = trim(preg_replace('/^\s*Sitemap:.*$/mi', '', $body));
+        if (SiteSetting::getValue('sitemap_enabled', '1') === '1') {
+            $body .= "\n\nSitemap: " . route('sitemap');
+        }
+
+        return response($body . "\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 }
