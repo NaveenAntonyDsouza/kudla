@@ -64,6 +64,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path(config('app.admin_path', 'admin'))
             ->login()
+            // "My Profile" in the avatar menu — admins change their own password here.
+            ->profile(\App\Filament\Pages\Auth\EditAdminProfile::class, isSimple: false)
             ->brandName(($theme?->site_name ?? 'Matrimony') . ' Admin')
             ->colors([
                 'primary' => $this->hexToFilamentColor($theme?->primary_color ?? '#8B1D91'),
