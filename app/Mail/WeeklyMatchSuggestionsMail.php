@@ -2,7 +2,9 @@
 
 namespace App\Mail;
 
+use App\Models\Profile;
 use App\Models\User;
+use App\Support\PhotoVisibility;
 use Illuminate\Support\Collection;
 
 /**
@@ -70,7 +72,7 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
                 default => '#f59e0b',
             };
 
-            $profileUrl = url('/profiles/' . $match->matri_id);
+            $profileUrl = route('profile.view', $match);
 
             $details = [];
             if ($age) $details[] = "$age yrs";
@@ -101,26 +103,18 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
     }
 
     /**
-     * Safely extract a photo URL for a match profile (public, approved, visible primary photo).
-     * Returns null if no suitable photo available.
+     * The match's photo URL only if this recipient may see it (the same rule
+     * as the website — PhotoVisibility). Hidden / after-interest / premium-only
+     * photos get the placeholder, never the real image.
      */
-    protected function photoUrlFor($match): ?string
+    protected function photoUrlFor(Profile $match): ?string
     {
-        $photo = $match->primaryPhoto ?? null;
-        if (!$photo) return null;
-
-        // Use full_url accessor if available, else fallback to photo_url
         try {
-            $url = $photo->full_url ?? null;
-            if ($url) return $url;
+            return PhotoVisibility::url($match, $this->user->profile);
         } catch (\Throwable $e) {
-            // Accessor may fail if storage misconfigured
+            report($e);
+
+            return null;
         }
-
-        // Fallback: try to build URL from photo_url column
-        $rawUrl = $photo->photo_url ?? null;
-        if (!$rawUrl) return null;
-
-        return str_starts_with($rawUrl, 'http') ? $rawUrl : asset('storage/' . $rawUrl);
     }
 }

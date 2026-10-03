@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Sleep;
 
 /**
  * WeeklyMatchSuggestionsService — finds members eligible for a weekly match digest
@@ -52,8 +53,10 @@ class WeeklyMatchSuggestionsService
         $minScore = $this->getMinScore();
         $candidates = $this->findCandidates();
         $cap = $this->getRunCap();
+        $delay = $this->getSendDelay();
 
         $sent = 0;
+        $attempts = 0;
         $skippedNoMatches = 0;
         $skippedOther = 0;
         $deferred = 0;
@@ -102,6 +105,10 @@ class WeeklyMatchSuggestionsService
             ];
 
             if (!$dryRun) {
+                // Pace the sends like the other bulk emails (mailbox sending limits)
+                if ($attempts++ > 0 && $delay > 0) {
+                    Sleep::for($delay)->seconds();
+                }
                 try {
                     Mail::to($user->email)->send(new WeeklyMatchSuggestionsMail($user, $matches));
                     $user->update(['last_weekly_match_sent_at' => now()]);
@@ -133,6 +140,15 @@ class WeeklyMatchSuggestionsService
     public function getRunCap(): int
     {
         return max(1, (int) SiteSetting::getValue('weekly_matches_run_cap', '200'));
+    }
+
+    /**
+     * Seconds to wait between emails. Admin-configurable via the
+     * `weekly_matches_send_delay` setting (0 = no pause).
+     */
+    public function getSendDelay(): int
+    {
+        return max(0, (int) SiteSetting::getValue('weekly_matches_send_delay', '2'));
     }
 
     /**
