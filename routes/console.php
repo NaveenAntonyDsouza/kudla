@@ -27,6 +27,9 @@ Schedule::command('engagement:send-interest-reminders')->dailyAt('11:00')->witho
 // Master switch: SiteSetting `payment_reminders_enabled`. Cap: `payment_reminders_run_cap` (default 20).
 Schedule::command('engagement:send-payment-reminders')->hourly()->between('9:00', '21:00')->withoutOverlapping();
 
+// Email Activity log: keep 180 days (EmailLog::prunable)
+Schedule::command('model:prune', ['--model' => [\App\Models\EmailLog::class]])->dailyAt('03:30');
+
 // Profile completion nudges — daily 19:00 (evening, when users check phones)
 // Master switch: SiteSetting `profile_nudges_enabled`. Threshold: `profile_nudges_threshold_pct` (default 80).
 Schedule::command('engagement:send-profile-nudges')->dailyAt('19:00')->withoutOverlapping();

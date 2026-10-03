@@ -6,6 +6,7 @@ use App\Models\EmailTemplate;
 use App\Models\SiteSetting;
 use App\Models\ThemeSetting;
 use App\Models\User;
+use App\Support\EmailLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -85,7 +86,13 @@ abstract class DatabaseMailable extends Mailable
             return null;
         }
 
-        return parent::send($mailer);
+        try {
+            return parent::send($mailer);
+        } catch (\Throwable $e) {
+            // For admin → Reports → Email Activity; the caller still sees the error
+            EmailLogger::failed($this->templateSlug, $this->to, $e);
+            throw $e;
+        }
     }
 
     /**

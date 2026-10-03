@@ -40,6 +40,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Every email that leaves the site is logged for admin → Reports → Email Activity
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Mail\Events\MessageSent::class,
+            [\App\Support\EmailLogger::class, 'sent'],
+        );
+
         // Carbon ->displayTz() macro: convert a UTC-stored timestamp to
         // the configured display timezone (Asia/Kolkata by default) for
         // rendering. Storage stays UTC; this is display-only.

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\EmailLogger;
 use Illuminate\Http\Request;
 
 /**
@@ -78,6 +79,8 @@ class UnsubscribeController extends Controller
 
         $user->notification_preferences = $prefs;
         $user->saveQuietly();
+
+        EmailLogger::unsubscribed($user, $preference);
     }
 
     /**
