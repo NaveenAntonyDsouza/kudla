@@ -27,6 +27,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @include('components.partials.tracking-head')
 </head>
 <body class="bg-gray-50 text-[#1C1917] font-sans antialiased min-h-screen flex flex-col">
 

@@ -132,3 +132,27 @@ it('a purchase records value in rupees, the order id and the plan — nothing pe
         ->and($event['params']['transaction_id'])->toBe('77')
         ->and($event['params']['items'][0]['item_name'])->toBe('Gold');
 });
+
+it('every member-facing page with its own <head> loads the tracking tags', function () {
+    // Pages that don't use a layout must include the partial themselves, or
+    // GA never counts them (registration step 1 was missed this way).
+    $exempt = [
+        'components/partials/tracking-head.blade.php', // the partial itself
+        'emails/', 'scribe/', 'welcome.blade.php',     // emails, API docs, unused stock page
+        'membership/checkout.blade.php',               // instant hand-off to Razorpay
+        'profile/print.blade.php', 'unsubscribe/',     // print view; one-click unsubscribe
+    ];
+    $missing = [];
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(resource_path('views'), FilesystemIterator::SKIP_DOTS)) as $file) {
+        $rel = str_replace(DIRECTORY_SEPARATOR, '/', substr($file->getPathname(), strlen(resource_path('views')) + 1));
+        if (! str_ends_with($rel, '.blade.php') || collect($exempt)->contains(fn ($e) => str_starts_with($rel, $e))) {
+            continue;
+        }
+        $src = file_get_contents($file->getPathname());
+        if (preg_match('/<head[\s>]/i', $src) && ! str_contains($src, 'tracking-head')) {
+            $missing[] = $rel;
+        }
+    }
+
+    expect($missing)->toBe([]);
+});
