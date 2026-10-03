@@ -52,6 +52,7 @@ beforeEach(function () {
         $t->string('slug');
         $t->string('name')->nullable();
         $t->string('subject')->nullable();
+        $t->string('preheader')->nullable();
         $t->text('body_html')->nullable();
         $t->json('variables')->nullable();
         $t->boolean('is_active')->default(true);
@@ -136,7 +137,8 @@ it('writes the right status line, first name, ID and help phone', function () {
     $stuck = rrMember('KM10', 3, user: ['name' => "Naveen D'Souza"]);
     $verify = rrMember('KM11', 5);
 
-    $html = (new RegistrationReminderMail($stuck))->render();
+    // Values are HTML-escaped in the body ("isn&#039;t"); compare the text a member sees
+    $html = html_entity_decode((new RegistrationReminderMail($stuck))->render(), ENT_QUOTES);
     expect($html)->toContain("Hi Naveen,")
         ->and($html)->toContain("Your profile (KM10) isn't finished yet")
         ->and($html)->toContain('Matri ID (<strong>KM10</strong>)')

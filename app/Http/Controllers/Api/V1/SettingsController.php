@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\MemberEmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -242,6 +243,7 @@ class SettingsController extends BaseApiController
         }
 
         $user->update(['password' => Hash::make($data['new_password'])]);
+        app(MemberEmailService::class)->passwordChanged($user);
 
         $count = $this->revokeOtherTokens($user);
 

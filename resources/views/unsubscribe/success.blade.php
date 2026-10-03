@@ -28,7 +28,7 @@
 
         <div class="resubscribe">
             Changed your mind?
-            <a href="{{ route('unsubscribe.resubscribe', ['user' => $user->id, 'preference' => $preference]) }}">
+            <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('unsubscribe.resubscribe', ['user' => $user->id, 'preference' => $preference]) }}">
                 Re-subscribe with one click
             </a>
         </div>

@@ -90,6 +90,11 @@ class EmailTemplateResource extends Resource
                         ->maxLength(255)
                         ->helperText('e.g., "New Interest Received - {{SITE_NAME}}"'),
 
+                    Forms\Components\TextInput::make('preheader')
+                        ->label('Preview Text')
+                        ->maxLength(255)
+                        ->helperText('Shown next to the subject in the inbox. Keep it under about 90 characters. {{VARIABLE}} placeholders work here too.'),
+
                     Forms\Components\Textarea::make('body_html')
                         ->label('Email Body (HTML)')
                         ->required()

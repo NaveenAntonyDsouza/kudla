@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\MemberEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 
@@ -48,6 +49,7 @@ class ForgotPasswordController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, $password) {
                 $user->forceFill(['password' => bcrypt($password)])->save();
+                app(MemberEmailService::class)->passwordChanged($user);
             }
         );
 

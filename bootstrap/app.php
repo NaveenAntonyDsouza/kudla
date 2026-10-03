@@ -36,7 +36,16 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_PORT
             | Request::HEADER_X_FORWARDED_PROTO);
 
-        $middleware->redirectGuestsTo('/login');
+        // Keep email campaign tags on the way to the login page, so GA4 still
+        // credits the email that brought a logged-out member back.
+        $middleware->redirectGuestsTo(function (Request $request) {
+            $utm = array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign']), 'is_string');
+
+            return '/login' . ($utm ? '?' . http_build_query($utm) : '');
+        });
+
+        // Mail apps POST one-tap unsubscribes without a session or CSRF token
+        $middleware->validateCsrfTokens(except: ['unsubscribe/*']);
         $middleware->redirectUsersTo('/dashboard');
 
         $middleware->alias([

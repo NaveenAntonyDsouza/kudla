@@ -61,6 +61,7 @@ beforeEach(function () {
         $t->string('slug');
         $t->string('name')->nullable();
         $t->string('subject')->nullable();
+        $t->string('preheader')->nullable();
         $t->text('body_html')->nullable();
         $t->json('variables')->nullable();
         $t->boolean('is_active')->default(true);

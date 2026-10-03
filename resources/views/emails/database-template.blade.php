@@ -33,6 +33,11 @@
     </style>
 </head>
 <body>
+    @if(!empty($preheader))
+        {{-- Preview text: shown next to the subject in the inbox, hidden in the email.
+             The padding characters stop the inbox from filling the preview with body text. --}}
+        <div style="display:none;font-size:1px;color:#f4f4f7;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">{{ $preheader }}{!! str_repeat('&#8199;&#65279;&#847; ', 60) !!}</div>
+    @endif
     <div class="wrapper">
         <div class="header">
             @if($logoUrl)

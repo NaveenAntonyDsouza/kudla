@@ -8,16 +8,13 @@ use App\Services\NotificationService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 
 #[Signature('membership:expiry-reminders')]
-#[Description('Send reminder notifications to users whose membership is expiring in 3 days or has expired today')]
+#[Description('Remind members whose membership ends in 3 days or tomorrow, and close and notify those that ended today')]
 class SendMembershipExpiryReminders extends Command
 {
     public function handle(NotificationService $notificationService, MemberEmailService $memberEmails): int
     {
-        $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-
         // 1. Memberships expiring in exactly 3 days
         $expiringIn3Days = UserMembership::where('is_active', true)
             ->whereDate('ends_at', now()->addDays(3)->toDateString())
@@ -43,7 +40,19 @@ class SendMembershipExpiryReminders extends Command
 
         $this->info("Sent {$expiringIn3Days->count()} expiring-in-3-days reminders.");
 
-        // 2. Memberships that expired today — deactivate and notify
+        // 2. Memberships ending tomorrow — a last email before premium switches off
+        $endingTomorrow = UserMembership::where('is_active', true)
+            ->whereDate('ends_at', now()->addDay()->toDateString())
+            ->with(['user', 'plan'])
+            ->get();
+
+        foreach ($endingTomorrow as $membership) {
+            $memberEmails->membershipEndingTomorrow($membership);
+        }
+
+        $this->info("Sent {$endingTomorrow->count()} ending-tomorrow reminders.");
+
+        // 3. Memberships that expired today — deactivate and notify
         $expiredToday = UserMembership::where('is_active', true)
             ->whereDate('ends_at', now()->subDay()->toDateString())
             ->with(['user', 'plan'])
@@ -65,26 +74,8 @@ class SendMembershipExpiryReminders extends Command
                 ['membership_id' => $membership->id]
             );
 
-            // Email is optional on profiles — nothing to send without one.
-            if (blank($user->email)) {
-                continue;
-            }
-
-            try {
-                Mail::raw(
-                    "Dear {$user->name},\n\n" .
-                    "Your {$membership->plan->plan_name} plan on {$siteName} has expired.\n\n" .
-                    "You will no longer be able to view contact details, send messages, or see who viewed your profile.\n\n" .
-                    "Renew now: " . url('/membership-plans') . "\n\n" .
-                    "Best regards,\n{$siteName} Team",
-                    function ($message) use ($user, $siteName) {
-                        $message->to($user->email)
-                            ->subject("Your {$siteName} membership has expired");
-                    }
-                );
-            } catch (\Throwable $e) {
-                $this->warn("Failed to email {$user->email}: {$e->getMessage()}");
-            }
+            // Email — the admin-editable 'membership-expired' template (skips members without an email)
+            $memberEmails->membershipExpired($membership);
         }
 
         $this->info("Processed {$expiredToday->count()} expired memberships.");

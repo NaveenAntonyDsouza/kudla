@@ -367,6 +367,7 @@ class AuthController extends BaseApiController
                 $user->update([
                     'password' => \Illuminate\Support\Facades\Hash::make($password),
                 ]);
+                app(\App\Services\MemberEmailService::class)->passwordChanged($user);
                 // Revoke every Sanctum token — all devices must re-login.
                 $this->auth->revokeAllTokens($user);
             },

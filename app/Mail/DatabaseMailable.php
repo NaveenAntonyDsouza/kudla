@@ -5,10 +5,12 @@ namespace App\Mail;
 use App\Models\EmailTemplate;
 use App\Models\SiteSetting;
 use App\Models\ThemeSetting;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
 
 abstract class DatabaseMailable extends Mailable
@@ -19,6 +21,14 @@ abstract class DatabaseMailable extends Mailable
      * The template slug to look up in the database.
      */
     protected string $templateSlug;
+
+    /**
+     * The member's email preference this email belongs to (e.g.
+     * 'email_weekly_matches'), for the one-tap unsubscribe header. Null for
+     * service emails that can't be turned off: codes, approvals, payments,
+     * security alerts.
+     */
+    protected ?string $unsubscribePreference = null;
 
     /**
      * Variables to substitute in the template.
@@ -78,6 +88,45 @@ abstract class DatabaseMailable extends Mailable
         return parent::send($mailer);
     }
 
+    /**
+     * One-tap unsubscribe (List-Unsubscribe + List-Unsubscribe-Post, RFC 8058)
+     * for emails that belong to a member's email preference, plus a
+     * Feedback-ID naming the email type for Gmail's sender statistics.
+     */
+    public function headers(): Headers
+    {
+        $text = ['Feedback-ID' => $this->templateSlug . ':' . (self::siteHost() ?: 'site')];
+
+        $url = $this->oneClickUnsubscribeUrl();
+        if ($url !== null) {
+            $text['List-Unsubscribe'] = '<' . $url . '>';
+            $text['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+        }
+
+        return new Headers(text: $text);
+    }
+
+    /** The member receiving this email, for their unsubscribe link. */
+    protected function recipient(): ?User
+    {
+        return null;
+    }
+
+    protected function oneClickUnsubscribeUrl(): ?string
+    {
+        if ($this->unsubscribePreference === null) {
+            return null;
+        }
+
+        try {
+            $user = $this->recipient();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $user ? $user->unsubscribeUrl($this->unsubscribePreference) : null;
+    }
+
     public function content(): Content
     {
         $template = EmailTemplate::findBySlug($this->templateSlug);
@@ -88,7 +137,10 @@ abstract class DatabaseMailable extends Mailable
 
             return new Content(
                 view: 'emails.database-template',
-                with: array_merge(['body' => $rendered['body']], $themeVars),
+                with: array_merge([
+                    'body' => $this->tagLinks($rendered['body']),
+                    'preheader' => $rendered['preheader'] ?? '',
+                ], $themeVars),
             );
         }
 
@@ -109,6 +161,50 @@ abstract class DatabaseMailable extends Mailable
                 $themeVars
             ),
         );
+    }
+
+    /**
+     * Campaign tags on every link back to this site, so GA4 shows which email
+     * brought a member back (utm_campaign = the template's slug). Signed links,
+     * such as unsubscribe, are left alone: changing them breaks the signature.
+     */
+    protected function tagLinks(string $html): string
+    {
+        $host = self::siteHost();
+        if ($host === null) {
+            return $html;
+        }
+
+        return preg_replace_callback('/href=(["\'])(.*?)\1/i', function (array $m) use ($host) {
+            $url = html_entity_decode($m[2], ENT_QUOTES | ENT_HTML5);
+            $parts = parse_url($url);
+            if (! is_array($parts) || ! isset($parts['host'])
+                || strcasecmp(preg_replace('/^www\./i', '', $parts['host']), $host) !== 0) {
+                return $m[0];
+            }
+
+            parse_str($parts['query'] ?? '', $query);
+            if (isset($query['signature']) || isset($query['utm_campaign'])) {
+                return $m[0];
+            }
+
+            $query += ['utm_source' => 'email', 'utm_medium' => 'email', 'utm_campaign' => $this->templateSlug];
+            $tagged = ($parts['scheme'] ?? 'https') . '://' . $parts['host']
+                . (isset($parts['port']) ? ':' . $parts['port'] : '')
+                . ($parts['path'] ?? '/')
+                . '?' . http_build_query($query)
+                . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
+
+            return 'href=' . $m[1] . e($tagged) . $m[1];
+        }, $html) ?? $html;
+    }
+
+    /** This site's host without "www.", from APP_URL. */
+    protected static function siteHost(): ?string
+    {
+        $host = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        return $host ? preg_replace('/^www\./i', '', $host) : null;
     }
 
     /**

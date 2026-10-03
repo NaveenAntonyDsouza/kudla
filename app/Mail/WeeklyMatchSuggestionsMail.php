@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Profile;
 use App\Models\User;
+use App\Support\MemberName;
 use App\Support\PhotoVisibility;
 use Illuminate\Support\Collection;
 
@@ -20,12 +21,20 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
 {
     protected string $templateSlug = 'weekly-match-suggestions';
 
+    protected ?string $unsubscribePreference = 'email_weekly_matches';
+
+    protected function recipient(): ?User
+    {
+        return $this->user;
+    }
+
     public function __construct(public User $user, public Collection $matches) {}
 
     protected function templateVariables(): array
     {
         return [
-            'USER_NAME' => $this->user->name,
+            // First name reads warmer ("Your 5 matches this week, Naveen")
+            'USER_NAME' => MemberName::first($this->user->name) ?: $this->user->name,
             'MATCH_COUNT' => (string) $this->matches->count(),
             'MATCH_CARDS_HTML' => $this->renderMatchCards(),
             'MATCHES_URL' => url('/matches'),
@@ -48,7 +57,8 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
 
         foreach ($this->matches as $match) {
             $photoUrl = $this->photoUrlFor($match);
-            $name = htmlspecialchars($match->full_name ?? 'Member');
+            // First name + last initial with the Matri ID; the full name stays behind login
+            $name = htmlspecialchars((MemberName::short($match->full_name) ?: 'Member') . ' · ' . $match->matri_id);
             $age = $match->date_of_birth
                 ? (int) \Carbon\Carbon::parse($match->date_of_birth)->diffInYears(now())
                 : null;
@@ -81,7 +91,7 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
             if ($occupation) $details[] = $occupation;
 
             $photoHtml = $photoUrl
-                ? '<img src="' . $photoUrl . '" alt="' . $name . '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;">'
+                ? '<img src="' . $photoUrl . '" alt="' . htmlspecialchars((string) $match->matri_id) . '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;">'
                 : '<div style="width:80px;height:80px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:2rem;">👤</div>';
 
             $cards[] = '<table style="width:100%;border-collapse:collapse;margin-bottom:1rem;border:1px solid #e5e7eb;border-radius:8px;background:white;">

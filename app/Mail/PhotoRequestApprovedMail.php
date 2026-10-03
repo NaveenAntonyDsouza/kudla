@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\PhotoRequest;
+use App\Models\User;
 
 /**
  * "<MATRI_ID> approved your photo request." — to the member who asked,
@@ -11,6 +12,13 @@ use App\Models\PhotoRequest;
 class PhotoRequestApprovedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-request-approved';
+
+    protected ?string $unsubscribePreference = 'email_interest';
+
+    protected function recipient(): ?User
+    {
+        return $this->photoRequest->requesterProfile?->user;
+    }
 
     public function __construct(public PhotoRequest $photoRequest) {}
 

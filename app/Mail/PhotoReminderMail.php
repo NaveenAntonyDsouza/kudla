@@ -15,6 +15,13 @@ class PhotoReminderMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-reminder';
 
+    protected ?string $unsubscribePreference = 'email_reengagement';
+
+    protected function recipient(): ?User
+    {
+        return $this->user;
+    }
+
     public function __construct(public User $user) {}
 
     protected function templateVariables(): array

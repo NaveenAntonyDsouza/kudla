@@ -173,14 +173,22 @@
             </div>
         @elseif($interest->status === 'pending' && !$isSender)
             {{-- Receiver can Accept or Decline --}}
-            <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-5" x-data="{
-                action: '',
-                selectedTemplate: '',
+            @php
+                // From the email's Accept / Decline buttons: open with that reply
+                // chosen. The member still confirms below — a link never answers.
+                $emailReply = in_array(request('reply'), ['accept', 'decline'], true) ? request('reply') : '';
+            @endphp
+            <div id="reply" class="bg-white rounded-lg border border-gray-200 shadow-xs p-5" x-data="{
+                action: @js($emailReply),
+                selectedTemplate: @js($emailReply === 'accept' ? 'reply_accept_1' : ($emailReply === 'decline' ? 'decline_standard' : '')),
                 customMessage: '',
                 submitting: false,
-                declineOpen: false
+                declineOpen: @js($emailReply === 'decline')
             }">
                 <h3 class="text-sm font-semibold text-gray-900 mb-4">Reply to this interest</h3>
+                @if($emailReply)
+                    <p class="text-sm text-gray-700 mb-4">Your reply is selected below. Change it if you like, then confirm.</p>
+                @endif
 
                 {{-- Accept section --}}
                 <div class="mb-4">

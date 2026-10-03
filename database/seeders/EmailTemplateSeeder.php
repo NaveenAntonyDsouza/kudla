@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\EmailTemplate;
+use App\Support\EmailPreheaders;
+use App\Support\EmailTemplateBodies;
 use Illuminate\Database\Seeder;
 
 class EmailTemplateSeeder extends Seeder
@@ -15,8 +17,8 @@ class EmailTemplateSeeder extends Seeder
                 'slug' => 'interest-received',
                 'name' => 'Interest Received',
                 'subject' => 'New Interest Received - {{SITE_NAME}}',
-                'body_html' => '<h1>New Interest Received</h1><p>Dear {{RECEIVER_NAME}},</p><p><strong>{{SENDER_MATRI_ID}}</strong> has expressed interest in your profile on {{SITE_NAME}}.</p><p>Log in to view their profile and respond to the interest.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">View Interest</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>',
-                'variables' => ['RECEIVER_NAME', 'SENDER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+                'body_html' => EmailTemplateBodies::INTEREST_RECEIVED,
+                'variables' => ['RECEIVER_NAME', 'SENDER_MATRI_ID', 'SENDER_SUMMARY', 'ACCEPT_URL', 'DECLINE_URL', 'ACTION_URL', 'SITE_NAME'],
             ],
             [
                 'slug' => 'interest-accepted',
@@ -68,8 +70,15 @@ class EmailTemplateSeeder extends Seeder
                 'slug' => 'welcome',
                 'name' => 'Welcome Email',
                 'subject' => 'Welcome to {{SITE_NAME}}! Your Journey Begins',
-                'body_html' => '<h1>Welcome to {{SITE_NAME}}!</h1><p>Dear {{USER_NAME}},</p><p>Thank you for registering with {{SITE_NAME}}. Your Matri ID is <strong>{{MATRI_ID}}</strong>.</p><p>Here\'s what to do next:</p><ul><li>Complete your profile to get more visibility</li><li>Upload your photos</li><li>Set your partner preferences</li><li>Start browsing profiles</li></ul><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">Complete Your Profile</a></p><p>If you have any questions, feel free to contact us.</p><p>Warm regards,<br>{{SITE_NAME}} Team</p>',
-                'variables' => ['USER_NAME', 'MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+                'body_html' => EmailTemplateBodies::WELCOME,
+                'variables' => ['USER_NAME', 'MEMBER_ID_LABEL', 'MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+            ],
+            [
+                'slug' => 'password-changed',
+                'name' => 'Password Changed (security alert)',
+                'subject' => 'Your {{SITE_NAME}} password was changed',
+                'body_html' => EmailTemplateBodies::PASSWORD_CHANGED,
+                'variables' => ['USER_NAME', 'CHANGED_AT', 'FORGOT_URL', 'HELP_LINE', 'SITE_NAME'],
             ],
             [
                 'slug' => 'password-reset',
@@ -183,6 +192,36 @@ class EmailTemplateSeeder extends Seeder
                 'body_html' => '<div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#111827;"><h1 style="font-size:1.5rem;color:#111827;margin:0 0 0.5rem;">Hello {{USER_NAME}},</h1><p style="color:#374151;margin:0 0 1.5rem;">Here are your top matches for this week on {{SITE_NAME}}. Each one is scored against your preferences.</p>{{MATCH_CARDS_HTML}}<p style="text-align:center;margin:2rem 0;"><a href="{{MATCHES_URL}}" style="display:inline-block;padding:12px 32px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">See All Your Matches</a></p><p style="color:#374151;margin:1.5rem 0 0;">Log in regularly for fresh recommendations — we update matches as new members join.</p><p style="color:#374151;">Warm regards,<br>The {{SITE_NAME}} Team</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;"><p style="font-size:0.75rem;color:#6b7280;text-align:center;">Don\'t want weekly match emails? <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe here</a>.</p></div>',
                 'variables' => ['USER_NAME', 'MATCH_COUNT', 'MATCH_CARDS_HTML', 'MATCHES_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME'],
             ],
+
+            // ── Reminders added October 2026 (email benchmark) ──
+            [
+                'slug' => 'interest-reminder',
+                'name' => 'Reminder — interests waiting for a reply',
+                'subject' => '{{WAITING_LINE}}',
+                'body_html' => EmailTemplateBodies::INTEREST_REMINDER,
+                'variables' => ['USER_NAME', 'WAITING_LINE', 'PENDING_LIST_HTML', 'INBOX_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME'],
+            ],
+            [
+                'slug' => 'payment-reminder',
+                'name' => 'Reminder — unfinished payment',
+                'subject' => 'Complete your {{PLAN_NAME}} membership',
+                'body_html' => EmailTemplateBodies::PAYMENT_REMINDER,
+                'variables' => ['USER_NAME', 'PLAN_NAME', 'PLANS_URL', 'HELP_LINE', 'UNSUBSCRIBE_URL', 'SITE_NAME'],
+            ],
+            [
+                'slug' => 'membership-expiring-tomorrow',
+                'name' => 'Membership Ends Tomorrow',
+                'subject' => 'Your {{PLAN_NAME}} plan ends tomorrow',
+                'body_html' => EmailTemplateBodies::MEMBERSHIP_ENDING_TOMORROW,
+                'variables' => ['USER_NAME', 'PLAN_NAME', 'EXPIRY_DATE', 'ACTION_URL', 'SITE_NAME'],
+            ],
+            [
+                'slug' => 'membership-expired',
+                'name' => 'Membership Ended',
+                'subject' => 'Your {{PLAN_NAME}} plan has ended',
+                'body_html' => EmailTemplateBodies::MEMBERSHIP_EXPIRED,
+                'variables' => ['USER_NAME', 'PLAN_NAME', 'ACTION_URL', 'SITE_NAME'],
+            ],
         ];
 
         // Only ADD missing templates — never overwrite an existing one. Admins
@@ -190,6 +229,8 @@ class EmailTemplateSeeder extends Seeder
         // seeder is re-run on live databases to add new templates; updating
         // existing rows would silently undo their changes.
         foreach ($templates as $template) {
+            $template['preheader'] ??= EmailPreheaders::DEFAULTS[$template['slug']] ?? null;
+
             EmailTemplate::firstOrCreate(
                 ['slug' => $template['slug']],
                 $template,

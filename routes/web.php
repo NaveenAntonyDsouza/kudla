@@ -291,5 +291,13 @@ Route::get('/unsubscribe/{user}/{preference}', \App\Http\Controllers\Unsubscribe
     ->middleware('signed')
     ->name('unsubscribe');
 
+// One-tap unsubscribe from the List-Unsubscribe header (RFC 8058): the mail
+// app POSTs to the same signed URL. CSRF-exempt in bootstrap/app.php.
+Route::post('/unsubscribe/{user}/{preference}', [\App\Http\Controllers\UnsubscribeController::class, 'oneClick'])
+    ->middleware('signed')
+    ->name('unsubscribe.one-click');
+
+// Signed too, so nobody can switch emails back on for another member
 Route::get('/resubscribe/{user}/{preference}', [\App\Http\Controllers\UnsubscribeController::class, 'resubscribe'])
+    ->middleware('signed')
     ->name('unsubscribe.resubscribe');

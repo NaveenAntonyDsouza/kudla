@@ -3,10 +3,18 @@
 namespace App\Mail;
 
 use App\Models\Interest;
+use App\Models\User;
 
 class InterestAcceptedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'interest-accepted';
+
+    protected ?string $unsubscribePreference = 'email_accepted';
+
+    protected function recipient(): ?User
+    {
+        return $this->interest->senderProfile?->user;
+    }
 
     public function __construct(public Interest $interest) {}
 

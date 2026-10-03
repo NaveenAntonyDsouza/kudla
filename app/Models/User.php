@@ -58,6 +58,8 @@ class User extends Authenticatable implements FilamentUser
             'last_weekly_match_sent_at' => 'datetime',
             'nudges_sent_count' => 'integer',
             'last_nudge_sent_at' => 'datetime',
+            'last_interest_reminder_at' => 'datetime',
+            'last_payment_reminder_at' => 'datetime',
             'notification_preferences' => 'array',
         ];
     }

@@ -8,6 +8,13 @@ class Reengagement30DayMail extends DatabaseMailable
 {
     protected string $templateSlug = 'reengagement-30day';
 
+    protected ?string $unsubscribePreference = 'email_reengagement';
+
+    protected function recipient(): ?User
+    {
+        return $this->user;
+    }
+
     public function __construct(public User $user) {}
 
     protected function templateVariables(): array

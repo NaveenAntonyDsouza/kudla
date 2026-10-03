@@ -6,7 +6,10 @@ use App\Mail\InterestAcceptedMail;
 use App\Mail\InterestDeclinedMail;
 use App\Mail\InterestReceivedMail;
 use App\Mail\MembershipActivatedMail;
+use App\Mail\MembershipEndingTomorrowMail;
+use App\Mail\MembershipExpiredMail;
 use App\Mail\MembershipExpiringMail;
+use App\Mail\PasswordChangedMail;
 use App\Mail\PhotoAddedMail;
 use App\Mail\PhotoApprovedMail;
 use App\Mail\PhotoRejectedMail;
@@ -132,6 +135,46 @@ class MemberEmailService
                 $membership->ends_at?->format('d M Y') ?? '',
             ));
         });
+    }
+
+    public function membershipEndingTomorrow(UserMembership $membership): void
+    {
+        $this->attempt('membershipEndingTomorrow', function () use ($membership) {
+            $user = $membership->user;
+            if (! $user) {
+                return;
+            }
+
+            $this->deliver($user, new MembershipEndingTomorrowMail(
+                $user,
+                $membership->plan?->plan_name ?? 'Premium',
+                $membership->ends_at?->format('d M Y') ?? '',
+            ));
+        });
+    }
+
+    public function membershipExpired(UserMembership $membership): void
+    {
+        $this->attempt('membershipExpired', function () use ($membership) {
+            $user = $membership->user;
+            if (! $user) {
+                return;
+            }
+
+            $this->deliver($user, new MembershipExpiredMail($user, $membership->plan?->plan_name ?? 'Premium'));
+        });
+    }
+
+    /**
+     * Security alert after a password change. Always sent (no preference):
+     * if someone else changed it, this is how the member finds out.
+     */
+    public function passwordChanged(User $user): void
+    {
+        $this->attempt('passwordChanged', fn () => $this->deliver(
+            $user,
+            new PasswordChangedMail($user, now()->format('j M Y, g:i A T')),
+        ));
     }
 
     public function interestReceived(User $receiver, Interest $interest): void

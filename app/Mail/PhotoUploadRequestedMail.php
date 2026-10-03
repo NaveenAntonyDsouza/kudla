@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\PhotoRequest;
+use App\Models\User;
 
 /**
  * "<MATRI_ID> would like you to add a photo." — the no-photo version of a
@@ -12,6 +13,13 @@ use App\Models\PhotoRequest;
 class PhotoUploadRequestedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-upload-requested';
+
+    protected ?string $unsubscribePreference = 'email_interest';
+
+    protected function recipient(): ?User
+    {
+        return $this->photoRequest->targetProfile?->user;
+    }
 
     public function __construct(public PhotoRequest $photoRequest) {}
 

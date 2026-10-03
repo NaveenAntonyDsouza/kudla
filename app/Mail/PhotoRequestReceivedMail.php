@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\PhotoRequest;
+use App\Models\User;
 
 /**
  * "<MATRI_ID> has requested to see your photos." — to the member whose
@@ -12,6 +13,13 @@ use App\Models\PhotoRequest;
 class PhotoRequestReceivedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-request-received';
+
+    protected ?string $unsubscribePreference = 'email_interest';
+
+    protected function recipient(): ?User
+    {
+        return $this->photoRequest->targetProfile?->user;
+    }
 
     public function __construct(public PhotoRequest $photoRequest) {}
 

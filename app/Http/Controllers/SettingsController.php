@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MemberEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -81,6 +82,7 @@ class SettingsController extends Controller
         }
 
         $user->update(['password' => Hash::make($request->new_password)]);
+        app(MemberEmailService::class)->passwordChanged($user);
 
         return back()->with('success', 'Password changed successfully.');
     }
