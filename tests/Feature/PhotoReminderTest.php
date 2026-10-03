@@ -27,6 +27,8 @@ beforeEach(function () {
         $t->unsignedBigInteger('staff_role_id')->nullable();
         $t->boolean('is_active')->default(true);
         $t->json('notification_preferences')->nullable();
+        $t->timestamp('last_registration_reminder_at')->nullable();
+        $t->timestamp('last_photo_reminder_at')->nullable();
         $t->timestamps();
     });
     Schema::create('profiles', function (Blueprint $t) {

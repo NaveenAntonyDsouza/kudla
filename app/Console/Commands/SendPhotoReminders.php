@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -46,7 +45,7 @@ class SendPhotoReminders extends Command
             ->get()
             ->filter(fn (User $u) => $u->blockedStatus() === null
                 && $u->wantsNotification('email_reengagement')
-                && ! Cache::has($this->sentKey($u)))
+                && ($u->last_photo_reminder_at === null || $u->last_photo_reminder_at->lt(now()->subDays(self::REPEAT_AFTER_DAYS))))
             ->values();
 
         if ($limit > 0) {
@@ -71,7 +70,7 @@ class SendPhotoReminders extends Command
             }
             try {
                 Mail::to($user->email)->send(new PhotoReminderMail($user));
-                Cache::put($this->sentKey($user), now()->toDateTimeString(), now()->addDays(self::REPEAT_AFTER_DAYS));
+                User::whereKey($user->id)->toBase()->update(['last_photo_reminder_at' => now()]);
                 $sent[] = $user->profile->matri_id;
                 $this->line("sent   {$user->profile->matri_id}");
             } catch (\Throwable $e) {
@@ -99,10 +98,6 @@ class SendPhotoReminders extends Command
         return $failed ? self::FAILURE : self::SUCCESS;
     }
 
-    private function sentKey(User $user): string
-    {
-        return "photo_reminder_sent:{$user->id}";
-    }
 
     /** a***@gmail.com — enough to recognise, without printing addresses in full. */
     private function mask(string $email): string

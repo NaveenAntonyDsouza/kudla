@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -42,7 +41,8 @@ class SendRegistrationReminders extends Command
             ->get()
             ->filter(fn (User $u) => $u->blockedStatus() === null              // not deactivated / deleted / suspended
                 && $u->wantsNotification('email_reengagement')                  // not unsubscribed
-                && ! Cache::has($this->sentKey($u)))                            // not reminded recently
+                // not reminded recently
+                && ($u->last_registration_reminder_at === null || $u->last_registration_reminder_at->lt(now()->subDays(self::REPEAT_AFTER_DAYS))))
             ->values();
 
         $this->table(['Matri ID', 'Name', 'Stopped after step', 'Email'], $recipients->map(fn (User $u) => [
@@ -63,7 +63,7 @@ class SendRegistrationReminders extends Command
             }
             try {
                 Mail::to($user->email)->send(new RegistrationReminderMail($user));
-                Cache::put($this->sentKey($user), now()->toDateTimeString(), now()->addDays(self::REPEAT_AFTER_DAYS));
+                User::whereKey($user->id)->toBase()->update(['last_registration_reminder_at' => now()]);
                 $sent[] = $user->profile->matri_id;
                 $this->line("sent   {$user->profile->matri_id}");
             } catch (\Throwable $e) {
@@ -91,10 +91,6 @@ class SendRegistrationReminders extends Command
         return $failed ? self::FAILURE : self::SUCCESS;
     }
 
-    private function sentKey(User $user): string
-    {
-        return "registration_reminder_sent:{$user->id}";
-    }
 
     /** a***@gmail.com — enough to recognise, without printing addresses in full. */
     private function mask(string $email): string
