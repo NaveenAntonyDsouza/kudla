@@ -21,7 +21,7 @@
     $sitePhone    = \App\Models\SiteSetting::getValue('phone', '');
     $siteWhatsApp = \App\Models\SiteSetting::getValue('whatsapp', '');
     $phoneDigits  = preg_replace('/\D/', '', (string) $sitePhone);
-    $waDigits     = preg_replace('/\D/', '', (string) $siteWhatsApp);
+    $waDigits     = \App\Support\WhatsApp::digits($siteWhatsApp) ?? ''; // with country code (wa.me needs it)
 
     // Plan-model convention: 0 = unlimited.
     $fmtLimit = fn ($v) => ((int) $v) === 0 ? 'Unlimited' : number_format((int) $v);

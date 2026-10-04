@@ -593,5 +593,6 @@
     @endif
 
     @livewireScripts
+    <x-whatsapp-button />
 </body>
 </html>

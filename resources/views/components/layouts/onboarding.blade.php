@@ -124,5 +124,6 @@
     </footer>
 
     @livewireScripts
+    <x-whatsapp-button />
 </body>
 </html>

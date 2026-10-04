@@ -21,7 +21,7 @@
     ];
 
     // Helpers — tel:/mailto:/wa.me clickable links
-    $whatsappDigits = preg_replace('/\D/', '', (string) $siteWhatsApp);
+    $whatsappDigits = \App\Support\WhatsApp::digits($siteWhatsApp) ?? ''; // with country code (wa.me needs it)
     $phoneDigits = preg_replace('/\D/', '', (string) $sitePhone);
 @endphp
 <!DOCTYPE html>
@@ -235,5 +235,6 @@
     </footer>
 
     @livewireScripts
+    <x-whatsapp-button />
 </body>
 </html>

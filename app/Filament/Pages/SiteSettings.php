@@ -55,6 +55,7 @@ class SiteSettings extends Page implements HasForms
             'email' => $settings['email'] ?? '',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
+            'whatsapp_button_enabled' => ($settings['whatsapp_button_enabled'] ?? '0') === '1',
             'address' => $settings['address'] ?? '',
             'copyright_year_start' => $settings['copyright_year_start'] ?? date('Y'),
             'google_maps_embed_url' => $settings['google_maps_embed_url'] ?? '',
@@ -134,7 +135,11 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('whatsapp')
                             ->label('WhatsApp Number')
                             ->tel()
-                            ->helperText('WhatsApp chat link on contact page'),
+                            ->helperText('WhatsApp chat link on contact page, footer and the chat button. Indian numbers work with or without +91.'),
+
+                        Forms\Components\Toggle::make('whatsapp_button_enabled')
+                            ->label('WhatsApp chat button')
+                            ->helperText('Green chat button at the bottom-right of every page. The chat opens with the page the visitor is on and their member ID.'),
 
                         Forms\Components\Textarea::make('address')
                             ->label('Office Address')
@@ -364,6 +369,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_profiles', 'auto_approve_profile_photos',
             'auto_approve_album_photos', 'auto_approve_family_photos',
             'auto_approve_documents',
+            'whatsapp_button_enabled',
         ];
 
         $jsonFields = ['canned_responses'];
