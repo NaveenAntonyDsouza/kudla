@@ -46,3 +46,21 @@ it('handles a flat list as one unlabelled group', function () {
     expect($html)->not->toContain('<optgroup')
         ->and($html)->toContain('<option value="B &amp; C" selected');
 });
+
+it('puts extra attributes on the native select so a parent form can bind it', function () {
+    $html = Blade::render('<x-searchable-select name="working_country" label="Country" :options="$o" x-model="workingCountry" x-on:change="fetchWorkingStates()" />',
+        ['o' => config('reference_data.country_list')]);
+
+    expect($html)->toMatch('/<select name="working_country"[^>]*x-model="workingCountry"[^>]*x-on:change="fetchWorkingStates\(\)"/')
+        ->and($html)->toContain('<optgroup label="Frequently Used">');
+});
+
+it('offers every country as a searchable dropdown wherever a member picks one', function () {
+    $files = ['auth/register-step4', 'onboarding/step2', 'profile/sections/location-edit', 'profile/sections/education-edit'];
+    $source = collect($files)->map(fn ($f) => file_get_contents(resource_path("views/{$f}.blade.php")))->implode("\n");
+
+    foreach (['working_country', 'native_country', 'residing_country'] as $field) {
+        expect($source)->not->toMatch('/<(select|input)[^>]*name="'.$field.'"/');
+    }
+    expect(substr_count($source, "config('reference_data.country_list', [])"))->toBe(6);
+});

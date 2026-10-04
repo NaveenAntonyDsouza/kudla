@@ -2,23 +2,13 @@
 <form method="POST" action="{{ route('profile.update', 'location') }}" x-data="{ submitting: false, residingCountry: @js($l?->residing_country ?? '') }" @submit="submitting = true">
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div class="float-field"><input type="text" name="native_country" value="{{ $l?->native_country ?? '' }}" maxlength="100" placeholder=" "><label>Native Country</label></div>
+        <x-searchable-select name="native_country" label="Native Country" :options="config('reference_data.country_list', [])" :selected="$l?->native_country" />
         <div class="float-field"><input type="text" name="native_state" value="{{ $l?->native_state ?? '' }}" maxlength="100" placeholder=" "><label>Native State</label></div>
         <div class="float-field"><input type="text" name="native_district" value="{{ $l?->native_district ?? '' }}" maxlength="100" placeholder=" "><label>Native District</label></div>
         <div class="float-field"><input type="text" name="native_place" value="{{ $l?->native_place ?? '' }}" maxlength="100" placeholder=" "><label>Native Place / Town / Village</label></div>
         <div class="float-field"><input type="text" name="pin_zip_code" value="{{ $l?->pin_zip_code ?? '' }}" maxlength="10" placeholder=" "><label>PIN / ZIP Code</label></div>
-        <div class="float-field">
-            <select name="residing_country" x-model="residingCountry">
-                <option value="">Select</option>
-                @foreach(config('reference_data.country_list') as $group => $countries)
-                    <optgroup label="{{ $group }}">
-                        @foreach($countries as $c)
-                            <option value="{{ $c }}">{{ $c }}</option>
-                        @endforeach
-                    </optgroup>
-                @endforeach
-            </select><label>Residing Country</label>
-        </div>
+        <x-searchable-select name="residing_country" label="Residing Country" :options="config('reference_data.country_list', [])"
+            :selected="$l?->residing_country" x-model="residingCountry" />
         <div x-show="residingCountry && residingCountry !== 'India'" class="float-field">
             <select name="residency_status"><option value="">Select</option>
                 @foreach(config('reference_data.residency_status_list', []) as $opt)

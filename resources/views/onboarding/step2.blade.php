@@ -34,20 +34,11 @@
 
         <div class="space-y-5 mb-10">
             {{-- Residing Country --}}
-            <div class="float-field">
-                <select name="residing_country" id="residing_country" x-model="residingCountry">
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.country_list') as $group => $countries)
-                        <optgroup label="{{ $group }}">
-                            @foreach($countries as $c)
-                                <option value="{{ $c }}">{{ $c }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-                <label for="residing_country">Residing Country <span class="text-red-500">*</span></label>
+            <x-searchable-select name="residing_country" :options="config('reference_data.country_list', [])"
+                :selected="old('residing_country', $defaultResidingCountry)" x-model="residingCountry"
+                label='Residing Country <span class="text-red-500">*</span>'>
                 @error('residing_country') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            </x-searchable-select>
 
             {{-- Residency Status (conditional: show if residing country != India) --}}
             <div x-show="residingCountry && residingCountry !== 'India'" x-transition class="float-field">

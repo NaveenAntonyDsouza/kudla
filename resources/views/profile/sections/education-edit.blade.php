@@ -15,7 +15,7 @@
                 @endforeach
             </select><label>Annual Income</label>
         </div>
-        <div class="float-field"><input type="text" name="working_country" value="{{ $e?->working_country ?? '' }}" maxlength="100" placeholder=" "><label>Working Country</label></div>
+        <x-searchable-select name="working_country" label="Working Country" :options="config('reference_data.country_list', [])" :selected="$e?->working_country" />
         <div class="float-field"><input type="text" name="working_state" value="{{ $e?->working_state ?? '' }}" maxlength="100" placeholder=" "><label>Working State</label></div>
         <div class="float-field"><input type="text" name="working_district" value="{{ $e?->working_district ?? '' }}" maxlength="100" placeholder=" "><label>Working District</label></div>
         <div class="float-field"><input type="text" name="working_city" value="{{ $e?->working_city ?? '' }}" maxlength="100" placeholder=" "><label>Working City / Town</label></div>

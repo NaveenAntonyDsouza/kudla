@@ -132,20 +132,12 @@
         <div class="space-y-5">
             {{-- ── Working location (moved here from step 3) ── --}}
             {{-- Working Country (grouped) --}}
-            <div class="float-field">
-                <select name="working_country" id="working_country" x-model="workingCountry" @change="fetchWorkingStates(); workingDistricts=[]; workingState=''; workingDistrict='';" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.country_list') as $group => $countries)
-                        <optgroup label="{{ $group }}">
-                            @foreach($countries as $country)
-                                <option value="{{ $country }}" {{ old('working_country', $educationDetail?->working_country ?? '') === $country ? 'selected' : '' }}>{{ $country }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-                <label for="working_country">Working Country <span class="text-red-500">*</span></label>
+            <x-searchable-select name="working_country" :options="config('reference_data.country_list', [])"
+                :selected="old('working_country', $educationDetail?->working_country ?? '')" required
+                label='Working Country <span class="text-red-500">*</span>'
+                x-model="workingCountry" x-on:change="fetchWorkingStates(); workingDistricts=[]; workingState=''; workingDistrict='';">
                 @error('working_country') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            </x-searchable-select>
 
             {{-- Working State --}}
             <div x-show="workingCountry" x-transition class="float-field">
@@ -210,20 +202,12 @@
 
             {{-- ── Native location ── --}}
             {{-- Native Country --}}
-            <div class="float-field">
-                <select name="native_country" id="native_country" x-model="nativeCountry" @change="fetchNativeStates(); nativeState=''; nativeDistrict=''; nativeDistricts=[]; nativePlaces=[];" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.country_list') as $group => $countries)
-                        <optgroup label="{{ $group }}">
-                            @foreach($countries as $c)
-                                <option value="{{ $c }}" {{ old('native_country', $locationInfo?->native_country ?? '') === $c ? 'selected' : '' }}>{{ $c }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-                <label for="native_country">Native Country <span class="text-red-500">*</span></label>
+            <x-searchable-select name="native_country" :options="config('reference_data.country_list', [])"
+                :selected="old('native_country', $locationInfo?->native_country ?? '')" required
+                label='Native Country <span class="text-red-500">*</span>'
+                x-model="nativeCountry" x-on:change="fetchNativeStates(); nativeState=''; nativeDistrict=''; nativeDistricts=[]; nativePlaces=[];">
                 @error('native_country') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            </x-searchable-select>
 
             {{-- Native State --}}
             <div x-show="nativeCountry" x-transition class="float-field">
