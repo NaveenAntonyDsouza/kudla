@@ -166,6 +166,22 @@ it('unsubscribes with a one-tap POST to the signed link, without a login', funct
     $this->post($url . 'tampered')->assertForbidden();
 });
 
+it('only asks on the email link; the confirm button unsubscribes', function () {
+    $user = efMember();
+    $url = $user->unsubscribeUrl('email_weekly_matches');
+
+    // Mail scanners open every link (HEAD + GETs) — that must change nothing
+    $this->call('HEAD', $url)->assertOk();
+    $this->get($url)->assertOk()->assertSee('Yes, unsubscribe me')->assertSee('action="'.e($url).'"', false);
+    expect($user->fresh()->wantsNotification('email_weekly_matches'))->toBeTrue();
+
+    // The button posts back to the same signed URL
+    $this->post($url)->assertOk()->assertSee("You've been unsubscribed", false);
+    expect($user->fresh()->wantsNotification('email_weekly_matches'))->toBeFalse();
+
+    $this->get($url)->assertOk()->assertSee('already unsubscribed');
+});
+
 it('needs a signed link to switch emails back on', function () {
     $user = efMember();
 

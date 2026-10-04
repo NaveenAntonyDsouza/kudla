@@ -18,6 +18,12 @@
 
                     <form method="POST" action="{{ route('contact.submit') }}">
                         @csrf
+                        {{-- Spam guard: people never see or fill "website"; the timestamp
+                             shows how long the form was open (ContactController) --}}
+                        <div style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;" aria-hidden="true">
+                            <label>Website <input type="text" name="website" value="" tabindex="-1" autocomplete="off"></label>
+                        </div>
+                        <input type="hidden" name="form_ts" value="{{ encrypt(now()->timestamp) }}">
                         <div class="space-y-5">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div class="float-field">

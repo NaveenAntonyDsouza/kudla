@@ -34,34 +34,35 @@ class UnsubscribeController extends Controller
     ];
 
     /**
-     * Show unsubscribe confirmation + apply the change (1-click).
+     * The link in the email: shows a "Confirm unsubscribe" button and changes
+     * nothing. Mail security scanners open every link in a message (HEAD +
+     * GETs, seen on kudla 4 Oct 2026 from a .gov.in gateway); unsubscribing on
+     * GET let them switch members off. The button POSTs to the same URL.
      *
      * The signature is validated by Laravel's 'signed' middleware on the route.
      */
     public function __invoke(User $user, string $preference, Request $request)
     {
-        $allowed = self::PREFERENCES;
-        if (!isset($allowed[$preference])) {
+        if (!isset(self::PREFERENCES[$preference])) {
             abort(404);
         }
 
-        $this->switchOff($user, $preference);
-
-        return view('unsubscribe.success', [
-            'user' => $user,
-            'preference' => $preference,
-            'preferenceLabel' => $allowed[$preference],
-            'allPreferences' => $allowed,
+        return view('unsubscribe.confirm', [
+            'preferenceLabel' => self::PREFERENCES[$preference],
+            'alreadyOff' => ($user->notification_preferences[$preference] ?? true) === false,
+            'action' => $request->fullUrl(),
         ]);
     }
 
     /**
-     * One-tap unsubscribe (RFC 8058): Gmail, Yahoo and others POST
-     * "List-Unsubscribe=One-Click" to the URL in the List-Unsubscribe header
-     * when a member presses their Unsubscribe button. Same signed URL as the
-     * link in the email; no login and no CSRF token (exempted in bootstrap/app.php).
+     * POST to the signed URL, from either:
+     *  - the mail app's one-tap Unsubscribe (RFC 8058): Gmail, Yahoo and others
+     *    send body "List-Unsubscribe=One-Click" when the member presses their
+     *    Unsubscribe button → plain 200;
+     *  - the Confirm button on our page → the "you've been unsubscribed" page.
+     * No login and no CSRF token (exempted in bootstrap/app.php).
      */
-    public function oneClick(User $user, string $preference)
+    public function oneClick(User $user, string $preference, Request $request)
     {
         if (!isset(self::PREFERENCES[$preference])) {
             abort(404);
@@ -69,7 +70,16 @@ class UnsubscribeController extends Controller
 
         $this->switchOff($user, $preference);
 
-        return response('Unsubscribed.', 200)->header('Content-Type', 'text/plain');
+        if ($request->input('List-Unsubscribe') === 'One-Click') {
+            return response('Unsubscribed.', 200)->header('Content-Type', 'text/plain');
+        }
+
+        return view('unsubscribe.success', [
+            'user' => $user,
+            'preference' => $preference,
+            'preferenceLabel' => self::PREFERENCES[$preference],
+            'allPreferences' => self::PREFERENCES,
+        ]);
     }
 
     private function switchOff(User $user, string $preference): void
