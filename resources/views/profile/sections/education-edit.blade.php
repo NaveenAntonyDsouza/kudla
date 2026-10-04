@@ -2,30 +2,10 @@
 <form method="POST" action="{{ route('profile.update', 'education') }}" x-data="{ submitting: false }" @submit="submitting = true">
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <div class="float-field">
-            <select name="highest_education"><option value="">Select</option>
-                @foreach(config('reference_data.educational_qualifications_list', []) as $group => $items)
-                    <optgroup label="{{ $group }}">
-                        @foreach($items as $opt)
-                            <option value="{{ $opt }}" {{ ($e?->highest_education ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </optgroup>
-                @endforeach
-            </select><label>Highest Education</label>
-        </div>
+        <x-searchable-select name="highest_education" label="Highest Education" :options="config('reference_data.educational_qualifications_list', [])" :selected="$e?->highest_education" />
         <div class="float-field"><input type="text" name="education_detail" value="{{ $e?->education_detail ?? '' }}" maxlength="200" placeholder=" "><label>Education Detail</label></div>
         <div class="float-field"><input type="text" name="college_name" value="{{ $e?->college_name ?? '' }}" maxlength="100" placeholder=" "><label>College / University</label></div>
-        <div class="float-field">
-            <select name="occupation"><option value="">Select</option>
-                @foreach(config('reference_data.occupation_category_list', []) as $group => $items)
-                    <optgroup label="{{ $group }}">
-                        @foreach($items as $opt)
-                            <option value="{{ $opt }}" {{ ($e?->occupation ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </optgroup>
-                @endforeach
-            </select><label>Occupation</label>
-        </div>
+        <x-searchable-select name="occupation" label="Occupation" :options="config('reference_data.occupation_category_list', [])" :selected="$e?->occupation" />
         <div class="float-field"><input type="text" name="occupation_detail" value="{{ $e?->occupation_detail ?? '' }}" maxlength="200" placeholder=" "><label>Occupation Detail</label></div>
         <div class="float-field"><input type="text" name="employer_name" value="{{ $e?->employer_name ?? '' }}" maxlength="100" placeholder=" "><label>Employer Name</label></div>
         <div class="float-field">

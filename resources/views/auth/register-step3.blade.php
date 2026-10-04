@@ -34,20 +34,11 @@
             </div>
 
             {{-- Educational Qualifications (grouped) --}}
-            <div class="float-field">
-                <select name="highest_education" id="highest_education" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.educational_qualifications_list') as $category => $options)
-                        <optgroup label="{{ $category }}">
-                            @foreach($options as $opt)
-                                <option value="{{ $opt }}" {{ old('highest_education', $educationDetail?->highest_education ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-                <label for="highest_education">Educational Qualifications <span class="text-red-500">*</span></label>
+            <x-searchable-select name="highest_education" :options="config('reference_data.educational_qualifications_list', [])"
+                :selected="old('highest_education', $educationDetail?->highest_education ?? '')" required
+                label='Educational Qualifications <span class="text-red-500">*</span>'>
                 @error('highest_education') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            </x-searchable-select>
 
             {{-- Education Detail --}}
             <div class="float-field">
@@ -64,20 +55,11 @@
             </div>
 
             {{-- Occupation Category (grouped) --}}
-            <div class="float-field">
-                <select name="occupation" id="occupation" required>
-                    <option value="">Select</option>
-                    @foreach(config('reference_data.occupation_category_list') as $category => $options)
-                        <optgroup label="{{ $category }}">
-                            @foreach($options as $opt)
-                                <option value="{{ $opt }}" {{ old('occupation', $educationDetail?->occupation ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-                <label for="occupation">Occupation Category <span class="text-red-500">*</span></label>
+            <x-searchable-select name="occupation" :options="config('reference_data.occupation_category_list', [])"
+                :selected="old('occupation', $educationDetail?->occupation ?? '')" required
+                label='Occupation Category <span class="text-red-500">*</span>'>
                 @error('occupation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            </x-searchable-select>
 
             {{-- Occupation Detail --}}
             <div class="float-field">
