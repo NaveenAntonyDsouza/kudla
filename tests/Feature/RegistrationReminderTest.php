@@ -29,6 +29,7 @@ beforeEach(function () {
         $t->json('notification_preferences')->nullable();
         $t->timestamp('last_registration_reminder_at')->nullable();
         $t->timestamp('last_photo_reminder_at')->nullable();
+        $t->unsignedTinyInteger('registration_reminders_sent')->default(0);
         $t->timestamps();
     });
     Schema::create('profiles', function (Blueprint $t) {
@@ -149,4 +150,62 @@ it('writes the right status line, first name, ID and help phone', function () {
 
     expect((new RegistrationReminderMail($verify))->render())->toContain('you just need to verify your email address');
     expect((new RegistrationReminderMail($stuck))->envelope()->subject)->toContain('Naveen, your');
+});
+
+it('sends at most 3 reminders, 1, 4 and 10 days apart, then never again', function () {
+    $member = rrMember('KM20', 2, joined: '-2 days');
+    $run = fn () => $this->artisan('members:remind-incomplete', ['--delay' => 0])->assertSuccessful();
+    $count = fn () => Mail::sent(RegistrationReminderMail::class)->count();
+
+    $run();
+    expect($count())->toBe(1); // 1st: a day after signing up
+
+    $this->travel(3)->days(); $run();
+    expect($count())->toBe(1); // 2nd waits 4 days
+    $this->travel(1)->days(); $run();
+    expect($count())->toBe(2);
+
+    $this->travel(9)->days(); $run();
+    expect($count())->toBe(2); // 3rd waits 10 days
+    $this->travel(1)->days(); $run();
+    expect($count())->toBe(3);
+
+    $this->travel(60)->days(); $run();
+    expect($count())->toBe(3)
+        ->and($member->fresh()->registration_reminders_sent)->toBe(3);
+});
+
+it('counts members reminded by hand before the schedule existed', function () {
+    // As the 2 Oct hand runs left them (the migration counts those as 1)
+    foreach (['KM21' => 2, 'KM22' => 5] as $matri => $daysAgo) {
+        $u = rrMember($matri, 1, joined: '-10 days');
+        DB::table('users')->where('id', $u->id)->update(['registration_reminders_sent' => 1, 'last_registration_reminder_at' => now()->subDays($daysAgo)]);
+    }
+
+    $this->artisan('members:remind-incomplete', ['--delay' => 0])->assertSuccessful();
+
+    Mail::assertSent(RegistrationReminderMail::class, 1);
+    Mail::assertSent(RegistrationReminderMail::class, fn (Mailable $m) => $m->hasTo('km22@site.test'));
+});
+
+it('runs daily only where switched on, and at most the daily cap', function () {
+    foreach (['KM31', 'KM32', 'KM33'] as $matri) {
+        rrMember($matri, 2);
+    }
+
+    $this->artisan('members:remind-incomplete', ['--scheduled' => true, '--delay' => 0])->expectsOutputToContain('are off')->assertSuccessful();
+    Mail::assertNothingSent();
+
+    SiteSetting::setValue('registration_reminders_enabled', '1');
+    SiteSetting::setValue('registration_reminders_daily_cap', '2');
+    $this->artisan('members:remind-incomplete', ['--scheduled' => true, '--delay' => 0])->assertSuccessful();
+    Mail::assertSent(RegistrationReminderMail::class, 2);
+
+    $this->travel(1)->days();
+    $this->artisan('members:remind-incomplete', ['--scheduled' => true, '--delay' => 0])->assertSuccessful();
+    Mail::assertSent(RegistrationReminderMail::class, 3); // the one left over goes the next day
+
+    $event = collect(app(Illuminate\Console\Scheduling\Schedule::class)->events())
+        ->first(fn ($e) => str_contains($e->command, 'members:remind-incomplete'));
+    expect($event?->expression)->toBe('0 18 * * *');
 });

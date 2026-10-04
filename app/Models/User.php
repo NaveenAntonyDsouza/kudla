@@ -63,6 +63,7 @@ class User extends Authenticatable implements FilamentUser
             'last_registration_reminder_at' => 'datetime',
             'last_photo_reminder_at' => 'datetime',
             'email_undeliverable_at' => 'datetime',
+            'registration_reminders_sent' => 'integer',
             'notification_preferences' => 'array',
         ];
     }
