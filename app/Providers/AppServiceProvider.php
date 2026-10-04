@@ -18,6 +18,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Bounce notices are read from the site mailbox with the same login the
+        // site sends with (smtp.x → imap.x unless bounce_imap_host is set)
+        $this->app->bind(\App\Support\Bounces\BounceSource::class, function () {
+            $smtpHost = (string) config('mail.mailers.smtp.host');
+
+            return new \App\Support\Bounces\ImapMailbox(
+                \App\Models\SiteSetting::getValue('bounce_imap_host') ?: preg_replace('/^smtp\./', 'imap.', $smtpHost),
+                (string) config('mail.mailers.smtp.username'),
+                (string) config('mail.mailers.smtp.password'),
+            );
+        });
+
         // Payment-gateway registry. Bound as a singleton so the same
         // instance services every controller call. New gateways
         // (Stripe, PayPal, Paytm, PhonePe) are registered here in

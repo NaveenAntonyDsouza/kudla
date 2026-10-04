@@ -30,6 +30,10 @@ Schedule::command('engagement:send-payment-reminders')->hourly()->between('9:00'
 // Email Activity log: keep 180 days (EmailLog::prunable)
 Schedule::command('model:prune', ['--model' => [\App\Models\EmailLog::class]])->dailyAt('03:30');
 
+// Read bounce notices in the site mailbox; stop emailing dead addresses
+// (only where SiteSetting bounce_processing_enabled = 1)
+Schedule::command('email:process-bounces')->dailyAt('02:45')->withoutOverlapping();
+
 // Profile completion nudges — daily 19:00 (evening, when users check phones)
 // Master switch: SiteSetting `profile_nudges_enabled`. Threshold: `profile_nudges_threshold_pct` (default 80).
 Schedule::command('engagement:send-profile-nudges')->dailyAt('19:00')->withoutOverlapping();
