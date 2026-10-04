@@ -58,7 +58,7 @@ class ReferenceDataEditor extends Page implements HasForms
             'movies_list' => ['label' => 'Movies Preferences', 'grouped' => false],
             'sports_list' => ['label' => 'Sports & Fitness', 'grouped' => false],
             'cuisine_list' => ['label' => 'Cuisine Preferences', 'grouped' => false],
-            'how_did_you_hear_list' => ['label' => 'How Did You Hear Options', 'grouped' => false],
+            'how_did_you_hear_list' => ['label' => 'How Did You Hear Options', 'grouped' => true],
             'height_list' => ['label' => 'Height Options', 'grouped' => false],
             'weight_list' => ['label' => 'Weight Options', 'grouped' => false],
             'country_list' => ['label' => 'Countries', 'grouped' => true],

@@ -266,17 +266,17 @@ return [
         '20. Top Management' => ['CXO/President/Director/Chairman', 'Entrepreneur'],
     ],
 
+    // Short and channel-level, so the answers are usable for marketing
+    // decisions. Replaced a Kerala-media list (Oct 2026) whose first option
+    // ("Auto") drew far more picks than it could have earned. Keeps the old
+    // spellings of Google Search, Facebook, Instagram, YouTube, Friends,
+    // Family and Others so earlier answers still match. Per-site override:
+    // Reference Data editor (site_settings.ref_data_how_did_you_hear_list).
     'how_did_you_hear_list' => [
-        'Branding' => ['Auto', 'Bill Board', 'Boat', 'Bus', 'Metro'],
-        'Event/Activity' => ['Carnival', 'Consumer Fair', 'Conventions'],
-        'Magazine Ads' => ['College Magazines', 'Community Magazines', 'Other Magazines', 'Parish Bulletins'],
-        'Newspaper Ads' => ['Deepika', 'Deshabhimani', 'Janapraksham', 'Keralasabha'],
-        'Others' => ['Hoarding', 'Notice/Pamphlet', 'Others', 'Tele-In', 'Telemarketing'],
-        'Radio' => ['Aakashavani', 'Club FM', 'Local Radios', 'Radio Mango', 'Radio Mirchi', 'Red FM'],
-        'Referral' => ['Church', 'Family', 'Family Marriage', 'Friends'],
-        'Search Engine' => ['Bing', 'DuckDuckGo', 'Google Search', 'Yahoo', 'Yandex'],
-        'Social Media' => ['Facebook', 'Instagram', 'LinkedIn', 'Pinterest', 'Snapchat', 'YouTube'],
-        'TV Ads' => ['24news', 'Asianet', 'Asianet Movies', 'Asianet News', 'Flowers'],
+        'Online' => ['Google Search', 'Instagram', 'Facebook', 'YouTube', 'WhatsApp', 'ChatGPT / AI Assistant', 'Another Website'],
+        'People' => ['Friends', 'Family', 'Church / Parish', 'A Couple Who Met Here', 'Our Office / Phone Call'],
+        'Advertising' => ['Newspaper', 'Parish Bulletin / Magazine', 'Poster / Banner', 'Auto / Bus Advertisement', 'Radio', 'TV', 'Event / Exhibition'],
+        'Other' => ['Others'],
     ],
 
     // Mother tongue / Languages known. Flat list so all existing consumers

@@ -1465,7 +1465,16 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('children_not_with_me')->label('Children Not Living With Me')->numeric()->minValue(0)->maxValue(20),
                         Forms\Components\Select::make('how_did_you_hear_about_us')->label('How Did You Hear About Us')
                             // how_did_you_hear_list is GROUPED (optgroups) — must use grouped options.
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.how_did_you_hear_list', [])))
+                            ->options(function (?string $state) {
+                                $options = self::listToGroupedOptions(config('reference_data.how_did_you_hear_list', []));
+                                // Answers from an older list stay visible and saveable
+                                $known = collect($options)->flatMap(fn ($o, $k) => is_array($o) ? array_keys($o) : [$k]);
+                                if (filled($state) && ! $known->contains($state)) {
+                                    $options['Earlier answer'] = [$state => $state];
+                                }
+
+                                return $options;
+                            })
                             ->searchable(),
                         // Profile photo — CREATE only. On edit, the Photos relation
                         // manager (tab below the form) handles all photo management,
