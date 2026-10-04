@@ -193,6 +193,15 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['USER_NAME', 'MATRI_ID', 'MEMBER_ID_LABEL', 'STILL_LOOKING_URL', 'FOUND_MATCH_URL', 'HIDE_URL', 'HELP_LINE', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
             ],
 
+            // ── Weekly: who viewed your profile (engagement:send-profile-views-digest) ──
+            [
+                'slug' => 'profile-views-digest',
+                'name' => 'Weekly — who viewed your profile',
+                'subject' => '{{VIEW_HEADLINE}}',
+                'body_html' => EmailTemplateBodies::PROFILE_VIEWS_DIGEST,
+                'variables' => ['USER_NAME', 'MATRI_ID', 'VIEW_HEADLINE', 'VIEWER_CARDS_HTML', 'VIEWS_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
+            ],
+
             // ── No photo yet (members:remind-photo) ──
             [
                 'slug' => 'photo-reminder',

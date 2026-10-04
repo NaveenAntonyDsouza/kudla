@@ -46,3 +46,7 @@ Schedule::command('email:process-bounces')->dailyAt('02:45')->withoutOverlapping
 // Profile completion nudges — daily 19:00 (evening, when users check phones)
 // Master switch: SiteSetting `profile_nudges_enabled`. Threshold: `profile_nudges_threshold_pct` (default 80).
 Schedule::command('engagement:send-profile-nudges')->dailyAt('19:00')->withoutOverlapping();
+
+// Weekly "N members viewed your profile" — Wednesdays 19:00 (weekly matches go Sundays);
+// only where profile_views_digest_enabled = 1
+Schedule::command('engagement:send-profile-views-digest', ['--scheduled'])->weeklyOn(3, '19:00')->withoutOverlapping();

@@ -108,6 +108,16 @@ final class EmailTemplateBodies
         . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
         . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. Didn\'t sign up? Someone may have typed your address by mistake — you can ignore this email. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
 
+    /** Weekly "who viewed your profile" (engagement:send-profile-views-digest). */
+    public const PROFILE_VIEWS_DIGEST = '<h1>{{VIEW_HEADLINE}}</h1>'
+        . '<p>Hi {{USER_NAME}}, here\'s who has been looking at your profile ({{MATRI_ID}}) on {{SITE_NAME}}.</p>'
+        . '{{VIEWER_CARDS_HTML}}'
+        . '<p>If someone catches your eye, send them an interest — replying to a profile visit is often how a conversation starts.</p>'
+        . '<p style="text-align:center;margin:2rem 0;"><a href="{{VIEWS_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">See everyone who viewed me</a></p>'
+        . '<p>Warm regards,<br>Team {{SITE_NAME}}</p>'
+        . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
+        . '<p style="font-size:0.75rem;color:#6b7280;">You get this once a week when members view your profile. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from profile-view emails</a>.</p>';
+
     /** To members inactive 90+ days (members:dormant). Answers go through StillLookingController. */
     public const STILL_LOOKING = '<h1>{{USER_NAME}}, are you still looking for your partner?</h1>'
         . '<p>We haven\'t seen you on {{SITE_NAME}} for a while, so we wanted to check in. Your profile ({{MATRI_ID}}) is still shown to members who are looking for a match.</p>'
