@@ -6,6 +6,7 @@ use App\Http\Controllers\UnsubscribeController;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\SiteSetting;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -73,6 +74,8 @@ class EmailActivityReport
             'byType' => $byType,
             'daily' => $daily,
             'unsubscribes' => $unsubscribes,
+            'suppressed' => EmailLog::where('event', 'suppressed')->where('created_at', '>=', $since)->count(),
+            'undeliverable' => $this->undeliverable(),
             'failures' => EmailLog::where('event', 'failed')->latest('created_at')->limit(20)->get()
                 ->map(fn (EmailLog $log) => [
                     'when' => $log->created_at?->format('j M, g:i A'),
@@ -81,6 +84,26 @@ class EmailActivityReport
                     'error' => $log->error,
                 ])->all(),
         ];
+    }
+
+    /** Members we no longer email because their address bounced (EmailSuppression) — for staff to phone. */
+    private function undeliverable(): array
+    {
+        try {
+            return User::whereNotNull('email_undeliverable_at')
+                ->whereRaw('LOWER(email) = LOWER(email_undeliverable_address)')
+                ->with('profile:id,user_id,matri_id')
+                ->orderByDesc('email_undeliverable_at')->limit(200)->get()
+                ->map(fn (User $u) => [
+                    'matri_id' => $u->profile?->matri_id,
+                    'user_id' => $u->id,
+                    'email' => $u->email,
+                    'reason' => $u->email_undeliverable_reason,
+                    'since' => $u->email_undeliverable_at?->format('j M Y'),
+                ])->all();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /** slug => admin template name, plus names for the non-template emails. */

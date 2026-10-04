@@ -78,6 +78,24 @@
         </div>
     </div>
 
+    {{-- Addresses that bounced permanently --}}
+    <div style="{{ $box }}">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Members we stopped emailing ({{ count($report['undeliverable']) }})</div>
+        <p style="font-size: 12px; opacity: 0.6; margin: 0 0 12px;">Their email address bounced (it doesn't exist or was closed), so the site no longer emails it. Phone them for the right address; once the email on their profile is changed, emails start again by themselves.@if($report['suppressed']) {{ $report['suppressed'] }} {{ \Illuminate\Support\Str::plural('email', $report['suppressed']) }} skipped in this period.@endif</p>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                <thead><tr style="border-bottom: 1px solid rgba(128,128,128,0.2);"><th style="{{ $th }}">Member</th><th style="{{ $th }}">Email</th><th style="{{ $th }}">Reason</th><th style="{{ $th }}">Since</th></tr></thead>
+                <tbody>
+                @forelse($report['undeliverable'] as $member)
+                    <tr style="{{ $row }}"><td style="{{ $td }} white-space: nowrap;">{{ $member['matri_id'] ?? '—' }}</td><td style="{{ $td }}">{{ $member['email'] }}</td><td style="{{ $td }} opacity: 0.8;">{{ $member['reason'] }}</td><td style="{{ $td }} white-space: nowrap;">{{ $member['since'] }}</td></tr>
+                @empty
+                    <tr><td colspan="4" style="padding: 12px; text-align: center; opacity: 0.5;">None</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     {{-- Recent failures --}}
     <div style="{{ $box }}">
         <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Latest failed attempts</div>

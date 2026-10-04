@@ -46,6 +46,12 @@ class AppServiceProvider extends ServiceProvider
             [\App\Support\EmailLogger::class, 'sent'],
         );
 
+        // Addresses that bounced permanently are not emailed again (returns false = don't send)
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Mail\Events\MessageSending::class,
+            [\App\Support\EmailSuppression::class, 'check'],
+        );
+
         // Carbon ->displayTz() macro: convert a UTC-stored timestamp to
         // the configured display timezone (Asia/Kolkata by default) for
         // rendering. Storage stays UTC; this is display-only.
