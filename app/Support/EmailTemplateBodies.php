@@ -91,4 +91,26 @@ final class EmailTemplateBodies
         . '<p><a href="{{FORGOT_URL}}" style="display:inline-block;padding:10px 24px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;">Reset your password</a></p>'
         . '<p>{{HELP_LINE}}</p>'
         . '<p>Regards,<br>Team {{SITE_NAME}}</p>';
+
+    /**
+     * Reminder #1, an hour after someone stops registering (registration-started).
+     * Also reaches people whose address was typed by mistake — hence the line
+     * telling them they can ignore it.
+     */
+    public const REGISTRATION_STARTED = '<h1>Thank you for joining {{SITE_NAME}}, {{USER_NAME}}</h1>'
+        . '<p>Your profile has been created. Your {{MEMBER_ID_LABEL}} is <strong>{{MATRI_ID}}</strong> — keep it handy, you can log in with it.</p>'
+        . '<p>{{STATUS_LINE}}</p>'
+        . '<p style="text-align:center;margin:2rem 0;"><a href="{{LOGIN_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Continue my profile</a></p>'
+        . '{{CONFIRM_EMAIL_HTML}}'
+        . '<p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p>'
+        . '<p>{{HELP_LINE}}</p>'
+        . '<p>Warm regards,<br>Team {{SITE_NAME}}</p>'
+        . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
+        . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. Didn\'t sign up? Someone may have typed your address by mistake — you can ignore this email. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
+
+    /** The hand-sent reminder of 2 Oct 2026 (mentions "recently fixed" registration problems). */
+    public const REGISTRATION_REMINDER_V1 = '<h1>Hi {{USER_NAME}},</h1><p>Thank you for registering on {{SITE_NAME}}. {{STATUS_LINE}}</p><p>Completed profiles are shown first in search, so finishing yours helps the right people find you. It only takes a few minutes, and you\'ll continue right where you left off.</p><p style="text-align:center;margin:2rem 0;"><a href="{{LOGIN_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Complete my profile</a></p><p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} (<strong>{{MATRI_ID}}</strong>) and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p><p>If something didn\'t work while you were filling in the form, we\'re sorry — we\'ve recently fixed some problems on our registration pages, so please give it another try. {{HELP_LINE}}</p><p>Warm regards,<br>Team {{SITE_NAME}}</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;"><p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
+
+    /** Reminders #2 and #3 (automatic): confirm-email button, no one-off apology. */
+    public const REGISTRATION_REMINDER = '<h1>Hi {{USER_NAME}},</h1><p>Thank you for registering on {{SITE_NAME}}. {{STATUS_LINE}}</p><p>Completed profiles are shown first in search, so finishing yours helps the right people find you. It only takes a few minutes, and you\'ll continue right where you left off.</p><p style="text-align:center;margin:2rem 0;"><a href="{{LOGIN_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Complete my profile</a></p>{{CONFIRM_EMAIL_HTML}}<p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} (<strong>{{MATRI_ID}}</strong>) and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p><p>If something doesn\'t work while you\'re filling in the form, tell us and we\'ll help. {{HELP_LINE}}</p><p>Warm regards,<br>Team {{SITE_NAME}}</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;"><p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
 }

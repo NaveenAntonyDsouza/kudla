@@ -17,14 +17,15 @@ use Illuminate\Support\Facades\Mail;
     {--also=* : Matri IDs to include even if they joined in the last 24 hours}
     {--delay=10 : Seconds to wait between emails (protects the mailbox sending limit)}
     {--scheduled : The daily run: only where registration_reminders_enabled = 1, at most registration_reminders_daily_cap emails}')]
-#[Description('Email members who started registering but did not finish (template "registration-reminder"): at most 3 times, 1, 4 and 10 days apart.')]
+#[Description('Email members who started registering but did not finish: at most 3 times — an hour after they stop ("registration-started"), then 4 and 10 days later ("registration-reminder").')]
 class SendRegistrationReminders extends Command
 {
     /**
-     * Reminder n is due this many days after the previous one (the first:
-     * after signing up). After the last one, never again.
+     * Reminder n is due this many minutes after the previous one (the first:
+     * after signing up — most people who finish do so within 15 minutes).
+     * After the last one, never again.
      */
-    public const GAPS_DAYS = [1 => 1, 2 => 4, 3 => 10];
+    public const GAPS_MINUTES = [1 => 60, 2 => 4 * 1440, 3 => 10 * 1440];
 
     public function handle(): int
     {
@@ -38,7 +39,9 @@ class SendRegistrationReminders extends Command
 
                 return self::SUCCESS;
             }
-            $cap = max(0, (int) SiteSetting::getValue('registration_reminders_daily_cap', '60'));
+            // The cap is per day; the schedule runs hourly
+            $sentToday = User::where('last_registration_reminder_at', '>=', now()->startOfDay())->count();
+            $cap = max(0, (int) SiteSetting::getValue('registration_reminders_daily_cap', '60') - $sentToday);
         }
 
         $recipients = User::query()
@@ -47,8 +50,8 @@ class SendRegistrationReminders extends Command
             ->where('is_active', true)
             ->where('email', 'like', '%@%.%')
             ->whereHas('profile', fn ($q) => $q->where('onboarding_completed', false))
-            // Not someone who signed up in the last day (they may still be at it)
-            ->where(fn ($q) => $q->where('created_at', '<', now()->subDay())
+            // Not someone who signed up in the last hour (they may still be at it)
+            ->where(fn ($q) => $q->where('created_at', '<=', now()->subMinutes(self::GAPS_MINUTES[1]))
                 ->orWhereHas('profile', fn ($p) => $p->whereIn('matri_id', $also ?: ['']))
             )
             ->with('profile')
@@ -58,7 +61,7 @@ class SendRegistrationReminders extends Command
                 && $u->wantsNotification('email_reengagement')                  // not unsubscribed
                 && $this->due($u, in_array(strtoupper((string) $u->profile->matri_id), $also, true)))
             ->values()
-            ->take($cap); // the rest are still due tomorrow
+            ->take($cap); // the rest are still due next time
 
         $this->table(['Matri ID', 'Name', 'Stopped after step', 'Email'], $recipients->map(fn (User $u) => [
             $u->profile->matri_id, $u->name, $u->profile->onboarding_step_completed, $this->mask($u->email),
@@ -77,7 +80,7 @@ class SendRegistrationReminders extends Command
                 sleep($delay);
             }
             try {
-                Mail::to($user->email)->send(new RegistrationReminderMail($user));
+                Mail::to($user->email)->send(new RegistrationReminderMail($user, first: (int) $user->registration_reminders_sent === 0));
                 User::whereKey($user->id)->toBase()->update([
                     'last_registration_reminder_at' => now(),
                     'registration_reminders_sent' => (int) $user->registration_reminders_sent + 1,
@@ -92,6 +95,9 @@ class SendRegistrationReminders extends Command
         }
 
         try { // audit record — must never undo a run whose emails already went out
+            if (! $sent && ! $failed) {
+                return self::SUCCESS; // hourly runs with nobody due leave no record
+            }
             AdminActivityLog::create([
                 'admin_user_id' => DB::table('users')->where('role', 'admin')->orderBy('id')->value('id'),
                 'action' => 'registration_reminders_sent',
@@ -114,16 +120,16 @@ class SendRegistrationReminders extends Command
     private function due(User $user, bool $named): bool
     {
         $next = (int) $user->registration_reminders_sent + 1;
-        if (! isset(self::GAPS_DAYS[$next])) {
-            return false; // had them all
+        if (! isset(self::GAPS_MINUTES[$next])) {
+            return false;
         }
         if ($next === 1) {
-            return $named || $user->created_at?->lt(now()->subDays(self::GAPS_DAYS[1]));
+            return $named || $user->created_at?->lte(now()->subMinutes(self::GAPS_MINUTES[1]));
         }
 
         $last = $user->last_registration_reminder_at;
 
-        return $last === null || $last->lte(now()->subDays(self::GAPS_DAYS[$next]));
+        return $last === null || $last->lte(now()->subMinutes(self::GAPS_MINUTES[$next]));
     }
 
     /** a***@gmail.com — enough to recognise, without printing addresses in full. */

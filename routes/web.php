@@ -301,3 +301,12 @@ Route::post('/unsubscribe/{user}/{preference}', [\App\Http\Controllers\Unsubscri
 Route::get('/resubscribe/{user}/{preference}', [\App\Http\Controllers\UnsubscribeController::class, 'resubscribe'])
     ->middleware('signed')
     ->name('unsubscribe.resubscribe');
+
+// "Confirm my email" from the registration emails: the link shows a button,
+// the button POSTs here (mail scanners open links, so GET changes nothing)
+Route::get('/confirm-email/{user}', [\App\Http\Controllers\EmailConfirmLinkController::class, 'show'])
+    ->middleware('signed')
+    ->name('email.confirm-link');
+Route::post('/confirm-email/{user}', [\App\Http\Controllers\EmailConfirmLinkController::class, 'confirm'])
+    ->middleware(['signed', 'throttle:10,1'])
+    ->name('email.confirm-link.store');

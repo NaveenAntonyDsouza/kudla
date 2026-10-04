@@ -30,6 +30,10 @@ beforeEach(function () {
         $t->timestamp('last_registration_reminder_at')->nullable();
         $t->timestamp('last_photo_reminder_at')->nullable();
         $t->unsignedTinyInteger('registration_reminders_sent')->default(0);
+        $t->timestamp('email_verified_at')->nullable();
+        $t->timestamp('phone_verified_at')->nullable();
+        $t->timestamp('email_undeliverable_at')->nullable();
+        $t->string('email_undeliverable_address')->nullable();
         $t->timestamps();
     });
     Schema::create('profiles', function (Blueprint $t) {
@@ -110,7 +114,7 @@ it('reminds only unfinished, settled, reachable members — once a week at most'
     rrMember('KM1', 3);                                                   // ✓ stuck at step 4
     rrMember('KM2', 5);                                                   // ✓ only email verification left
     rrMember('KM3', 5, done: true);                                       // finished
-    rrMember('KM4', 2, joined: '-2 hours');                               // joined today
+    rrMember('KM4', 2, joined: '-30 minutes');                            // may still be at it
     rrMember('KM5', 1, profile: ['is_active' => false]);                 // deactivated
     rrMember('KM6', 1, profile: ['deleted_at' => now()]);                // deleted
     rrMember('KM7', 2, user: ['notification_preferences' => ['email_reengagement' => false]]); // unsubscribed
@@ -152,13 +156,13 @@ it('writes the right status line, first name, ID and help phone', function () {
     expect((new RegistrationReminderMail($stuck))->envelope()->subject)->toContain('Naveen, your');
 });
 
-it('sends at most 3 reminders, 1, 4 and 10 days apart, then never again', function () {
-    $member = rrMember('KM20', 2, joined: '-2 days');
+it('sends at most 3 reminders: an hour after signing up, then 4 and 10 days later', function () {
+    $member = rrMember('KM20', 2, joined: '-61 minutes');
     $run = fn () => $this->artisan('members:remind-incomplete', ['--delay' => 0])->assertSuccessful();
     $count = fn () => Mail::sent(RegistrationReminderMail::class)->count();
 
     $run();
-    expect($count())->toBe(1); // 1st: a day after signing up
+    expect($count())->toBe(1); // 1st: an hour after signing up
 
     $this->travel(3)->days(); $run();
     expect($count())->toBe(1); // 2nd waits 4 days
@@ -201,11 +205,97 @@ it('runs daily only where switched on, and at most the daily cap', function () {
     $this->artisan('members:remind-incomplete', ['--scheduled' => true, '--delay' => 0])->assertSuccessful();
     Mail::assertSent(RegistrationReminderMail::class, 2);
 
+    $this->travel(1)->hours(); // hourly: the cap counts the whole day
+    $this->artisan('members:remind-incomplete', ['--scheduled' => true, '--delay' => 0])->assertSuccessful();
+    Mail::assertSent(RegistrationReminderMail::class, 2);
+
     $this->travel(1)->days();
     $this->artisan('members:remind-incomplete', ['--scheduled' => true, '--delay' => 0])->assertSuccessful();
     Mail::assertSent(RegistrationReminderMail::class, 3); // the one left over goes the next day
 
     $event = collect(app(Illuminate\Console\Scheduling\Schedule::class)->events())
         ->first(fn ($e) => str_contains($e->command, 'members:remind-incomplete'));
-    expect($event?->expression)->toBe('0 18 * * *');
+    expect($event?->expression)->toBe('0 * * * *')
+        ->and($event->filtersPass(app()))->toBeBool();
+});
+
+it('makes the first reminder a "thank you for joining" email, with a confirm-email button until confirmed', function () {
+    $new = rrMember('KM40', 1, joined: '-2 hours');
+    $old = rrMember('KM41', 1, joined: '-20 days');
+
+    $first = new RegistrationReminderMail($new, first: true);
+    $html = html_entity_decode($first->render(), ENT_QUOTES);
+    expect($first->envelope()->subject)->toContain('Thank you for joining')
+        ->and($html)->toContain('Your profile has been created')
+        ->and($html)->toContain('KM40')
+        ->and($html)->toContain('7760020186')
+        ->and($html)->toContain('Confirm my email')
+        ->and($html)->toContain('/confirm-email/'.$new->id)
+        ->and($html)->toContain('typed your address by mistake');
+
+    // Someone who signed up weeks ago gets the plain reminder, not "thanks for joining"
+    expect((new RegistrationReminderMail($old, first: true))->envelope()->subject)->not->toContain('Thank you for joining');
+
+    DB::table('users')->where('id', $new->id)->update(['email_verified_at' => now()]);
+    expect((new RegistrationReminderMail($new->fresh(), first: true))->render())->not->toContain('Confirm my email');
+});
+
+it('sends the "thank you for joining" email as the first scheduled reminder', function () {
+    rrMember('KM42', 2, joined: '-70 minutes');
+
+    $this->artisan('members:remind-incomplete', ['--delay' => 0])->assertSuccessful();
+
+    Mail::assertSent(RegistrationReminderMail::class, fn (RegistrationReminderMail $m) => str_contains($m->envelope()->subject, 'Thank you for joining'));
+});
+
+describe('the confirm-email link', function () {
+    it('only asks on GET (mail scanners open links), and confirms on the button', function () {
+        $user = rrMember('KM50', 2);
+        $url = $user->confirmEmailUrl();
+
+        $this->call('HEAD', $url)->assertOk();
+        $this->get($url)->assertOk()->assertSee('Yes, this is my email')->assertSee($user->email);
+        expect($user->fresh()->email_verified_at)->toBeNull();
+
+        $this->post($url)->assertOk()->assertSee('your email is confirmed');
+        expect($user->fresh()->email_verified_at)->not->toBeNull()
+            ->and((bool) $user->profile->fresh()->onboarding_completed)->toBeFalse(); // steps still to do
+
+        $this->get($url)->assertOk()->assertSee('already confirmed');
+    });
+
+    it('finishes the registration of a member who was only waiting on it', function () {
+        $user = rrMember('KM51', 5);
+
+        $this->post($user->confirmEmailUrl())->assertOk()->assertSee('Your profile is ready');
+
+        expect((bool) $user->profile->fresh()->onboarding_completed)->toBeTrue();
+    });
+
+    it('stops working once the email is changed, and needs a valid signature', function () {
+        $user = rrMember('KM52', 2);
+        $url = $user->confirmEmailUrl();
+        DB::table('users')->where('id', $user->id)->update(['email' => 'new@site.test']);
+
+        $this->post($url)->assertOk()->assertSee('has been changed');
+        expect($user->fresh()->email_verified_at)->toBeNull();
+
+        $this->get(str_replace('signature=', 'signature=x', $url))->assertForbidden();
+    });
+});
+
+it('adds the new email on existing sites and upgrades the old reminder, keeping an admin\'s own wording', function () {
+    $migration = require database_path('migrations/2026_10_04_000008_add_registration_started_email.php');
+
+    DB::table('email_templates')->where('slug', 'registration-started')->delete();
+    DB::table('email_templates')->where('slug', 'registration-reminder')->update(['body_html' => App\Support\EmailTemplateBodies::REGISTRATION_REMINDER_V1]);
+    $migration->up();
+
+    expect(DB::table('email_templates')->where('slug', 'registration-started')->value('preheader'))->not->toBeEmpty()
+        ->and(DB::table('email_templates')->where('slug', 'registration-reminder')->value('body_html'))->toBe(App\Support\EmailTemplateBodies::REGISTRATION_REMINDER);
+
+    DB::table('email_templates')->where('slug', 'registration-reminder')->update(['body_html' => '<p>Our own words</p>']);
+    $migration->up();
+    expect(DB::table('email_templates')->where('slug', 'registration-reminder')->value('body_html'))->toBe('<p>Our own words</p>')
+        ->and(DB::table('email_templates')->where('slug', 'registration-started')->count())->toBe(1);
 });

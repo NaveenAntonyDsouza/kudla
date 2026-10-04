@@ -30,9 +30,10 @@ Schedule::command('engagement:send-payment-reminders')->hourly()->between('9:00'
 // Email Activity log: keep 180 days (EmailLog::prunable)
 Schedule::command('model:prune', ['--model' => [\App\Models\EmailLog::class]])->dailyAt('03:30');
 
-// "Finish your registration": at most 3 per member, 1 / 4 / 10 days apart;
-// only where registration_reminders_enabled = 1, max registration_reminders_daily_cap a day
-Schedule::command('members:remind-incomplete', ['--scheduled', '--delay' => 3])->dailyAt('18:00')->withoutOverlapping();
+// "Finish your registration": at most 3 per member — an hour after they stop,
+// then 4 and 10 days later. Hourly in the daytime only; only where
+// registration_reminders_enabled = 1, max registration_reminders_daily_cap a day
+Schedule::command('members:remind-incomplete', ['--scheduled', '--delay' => 3])->hourly()->between('8:00', '21:00')->withoutOverlapping();
 
 // Read bounce notices in the site mailbox; stop emailing dead addresses
 // (only where SiteSetting bounce_processing_enabled = 1)

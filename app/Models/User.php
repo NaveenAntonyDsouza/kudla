@@ -180,6 +180,25 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Generate a signed, one-click unsubscribe URL for a specific preference.
      */
+    /**
+     * "Confirm my email" link for emails sent before the member has verified
+     * (EmailConfirmLinkController). Tied to the current address, so it stops
+     * working if the email is changed; valid 30 days.
+     */
+    public function confirmEmailUrl(): string
+    {
+        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'email.confirm-link',
+            now()->addDays(30),
+            ['user' => $this->id, 'e' => self::emailFingerprint((string) $this->email)]
+        );
+    }
+
+    public static function emailFingerprint(string $email): string
+    {
+        return substr(hash('sha256', strtolower(trim($email))), 0, 16);
+    }
+
     public function unsubscribeUrl(string $preference): string
     {
         return \Illuminate\Support\Facades\URL::signedRoute(
