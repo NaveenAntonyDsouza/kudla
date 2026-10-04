@@ -39,6 +39,7 @@ final class EmailPreheaders
         'reengagement-30day' => 'Your matches are still here. Log in to see who has joined.',
         'registration-reminder' => 'Finish your profile in a few minutes and start seeing matches.',
         'registration-started' => 'Your {{MEMBER_ID_LABEL}}, a link to continue, and help if you need it.',
+        'still-looking' => 'One tap to tell us: keep your profile visible, or hide it if you\'ve found your match.',
         'photo-reminder' => 'Add a photo so the right people notice your profile.',
         'weekly-match-suggestions' => 'This week\'s matches, picked for your preferences.',
     ];

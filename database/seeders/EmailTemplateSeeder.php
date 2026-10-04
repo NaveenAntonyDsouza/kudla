@@ -184,6 +184,15 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['USER_NAME', 'MATRI_ID', 'MEMBER_ID_LABEL', 'STATUS_LINE', 'CONFIRM_EMAIL_HTML', 'HELP_LINE', 'LOGIN_URL', 'FORGOT_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
             ],
 
+            // ── Members inactive 90+ days (members:dormant) ──
+            [
+                'slug' => 'still-looking',
+                'name' => 'Still looking? (members inactive 90+ days)',
+                'subject' => '{{USER_NAME}}, are you still looking?',
+                'body_html' => EmailTemplateBodies::STILL_LOOKING,
+                'variables' => ['USER_NAME', 'MATRI_ID', 'MEMBER_ID_LABEL', 'STILL_LOOKING_URL', 'FOUND_MATCH_URL', 'HIDE_URL', 'HELP_LINE', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
+            ],
+
             // ── No photo yet (members:remind-photo) ──
             [
                 'slug' => 'photo-reminder',

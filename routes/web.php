@@ -310,3 +310,12 @@ Route::get('/confirm-email/{user}', [\App\Http\Controllers\EmailConfirmLinkContr
 Route::post('/confirm-email/{user}', [\App\Http\Controllers\EmailConfirmLinkController::class, 'confirm'])
     ->middleware(['signed', 'throttle:10,1'])
     ->name('email.confirm-link.store');
+
+// Answers to the "Are you still looking?" email (?answer=looking|found|hide):
+// the link shows a confirm button, the button POSTs here
+Route::get('/still-looking/{user}', [\App\Http\Controllers\StillLookingController::class, 'show'])
+    ->middleware('signed')
+    ->name('still-looking.show');
+Route::post('/still-looking/{user}', [\App\Http\Controllers\StillLookingController::class, 'store'])
+    ->middleware(['signed', 'throttle:10,1'])
+    ->name('still-looking.store');

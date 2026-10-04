@@ -108,6 +108,19 @@ final class EmailTemplateBodies
         . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
         . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. Didn\'t sign up? Someone may have typed your address by mistake — you can ignore this email. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
 
+    /** To members inactive 90+ days (members:dormant). Answers go through StillLookingController. */
+    public const STILL_LOOKING = '<h1>{{USER_NAME}}, are you still looking for your partner?</h1>'
+        . '<p>We haven\'t seen you on {{SITE_NAME}} for a while, so we wanted to check in. Your profile ({{MATRI_ID}}) is still shown to members who are looking for a match.</p>'
+        . '<p>Please tell us with one tap:</p>'
+        . '<p style="text-align:center;margin:1.5rem 0 0.75rem;"><a href="{{STILL_LOOKING_URL}}" style="display:inline-block;min-width:240px;padding:12px 28px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Yes, I\'m still looking</a></p>'
+        . '<p style="text-align:center;margin:0 0 0.75rem;"><a href="{{FOUND_MATCH_URL}}" style="display:inline-block;min-width:240px;padding:10px 28px;border:2px solid {{PRIMARY_COLOR}};color:{{PRIMARY_COLOR}};text-decoration:none;border-radius:6px;font-weight:600;">I found my match</a></p>'
+        . '<p style="text-align:center;margin:0 0 1.75rem;"><a href="{{HIDE_URL}}" style="color:#6b7280;">Hide my profile for now</a></p>'
+        . '<p>If you stay away much longer, we\'ll hide your profile from search so members only see people who are active. It comes back as soon as you log in.</p>'
+        . '<p>{{HELP_LINE}}</p>'
+        . '<p>Warm regards,<br>Team {{SITE_NAME}}</p>'
+        . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
+        . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you have a profile on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
+
     /** The hand-sent reminder of 2 Oct 2026 (mentions "recently fixed" registration problems). */
     public const REGISTRATION_REMINDER_V1 = '<h1>Hi {{USER_NAME}},</h1><p>Thank you for registering on {{SITE_NAME}}. {{STATUS_LINE}}</p><p>Completed profiles are shown first in search, so finishing yours helps the right people find you. It only takes a few minutes, and you\'ll continue right where you left off.</p><p style="text-align:center;margin:2rem 0;"><a href="{{LOGIN_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Complete my profile</a></p><p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} (<strong>{{MATRI_ID}}</strong>) and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p><p>If something didn\'t work while you were filling in the form, we\'re sorry — we\'ve recently fixed some problems on our registration pages, so please give it another try. {{HELP_LINE}}</p><p>Warm regards,<br>Team {{SITE_NAME}}</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;"><p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
 

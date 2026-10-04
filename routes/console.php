@@ -35,6 +35,10 @@ Schedule::command('model:prune', ['--model' => [\App\Models\EmailLog::class]])->
 // registration_reminders_enabled = 1, max registration_reminders_daily_cap a day
 Schedule::command('members:remind-incomplete', ['--scheduled', '--delay' => 3])->hourly()->between('8:00', '21:00')->withoutOverlapping();
 
+// "Are you still looking?" to members inactive 90+ days; hide from search those
+// inactive 180+ days who didn't answer (only where dormant_profiles_enabled = 1)
+Schedule::command('members:dormant', ['--scheduled'])->dailyAt('10:30')->withoutOverlapping();
+
 // Read bounce notices in the site mailbox; stop emailing dead addresses
 // (only where SiteSetting bounce_processing_enabled = 1)
 Schedule::command('email:process-bounces')->dailyAt('02:45')->withoutOverlapping();

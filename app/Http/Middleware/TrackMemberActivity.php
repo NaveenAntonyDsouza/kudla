@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\DormantProfiles;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,10 +46,20 @@ class TrackMemberActivity
                 return $response;
             }
 
+            // A profile hidden for inactivity comes back on the member's first
+            // visit (once per session; logins already refreshed last_login_at,
+            // so this can't wait for the throttled update below)
+            if ($request->hasSession() && ! $request->session()->has('dormant_restore_checked')) {
+                DormantProfiles::restore($user->id);
+                $request->session()->put('dormant_restore_checked', true);
+            }
+
             $last = $user->last_login_at;
             if ($last && $last->greaterThan(now()->subMinutes(self::THROTTLE_MINUTES))) {
                 return $response;
             }
+
+            DormantProfiles::restore($user->id); // app (no session)
 
             DB::table('users')->where('id', $user->id)->update([
                 'last_login_at' => now(),
