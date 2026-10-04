@@ -74,6 +74,15 @@ class ReengagementService
             }
 
             $daysInactive = $user->daysInactive();
+
+            // From 90 days the "Are you still looking?" email (members:dormant)
+            // takes over — one check-in, not a "we miss you" in the same week
+            if ($daysInactive >= DormantProfiles::CHECKIN_AFTER_DAYS
+                || ($user->dormant_checkin_at && $user->dormant_checkin_at->gt(now()->subDays(30)))) {
+                $skipped++;
+                continue;
+            }
+
             $targetLevel = $this->levelForDays($daysInactive, $thresholds);
 
             // Don't send the same (or lower) level again

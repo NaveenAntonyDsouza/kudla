@@ -201,22 +201,86 @@ class Profile extends Model
     }
 
     /**
-     * THE default listing order (owner's choice 2026-10-02) — search (web
-     * + app), public search results, Discover, homepage showcase:
+     * THE default listing order (owner's choices 2026-10-02 and 2026-10-05) —
+     * search (web + app), public search results, Discover, homepage showcase:
+     *   0. the viewer's community: their caste, then their religion
+     *      (communityFirst; members only — guests skip it)
      *   1. paid boosts  2. finished registration  3. with a photo
      *   4. recently active  5. newest
      * When a member picks a sort themselves (newest / age / recently
      * active) the listing uses completedFirst() + their choice instead.
      */
-    public function scopeDefaultOrder(Builder $query): Builder
+    public function scopeDefaultOrder(Builder $query, ?Profile $viewer = null): Builder
     {
+        $viewer ??= auth()->user()?->profile;
+
         return $query
+            ->communityFirst($viewer)
             ->paidBoostsFirst()
             ->completedFirst()
             ->photoFirst()
             ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
             ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
             ->orderBy('profiles.created_at', 'desc');
+    }
+
+    /** A partner preference listing this many castes or more means "any caste". */
+    public const BROAD_COMMUNITY_PREFERENCE = 10;
+
+    /** Answers that are not a real community, so never grouped on. */
+    private const NOT_A_COMMUNITY = ['', 'Any', 'Other', 'Other / Not Listed', 'Not Specified', "Doesn't Matter"];
+
+    /**
+     * Same community first (owner's choice 2026-10-05): profiles in the
+     * viewer's community, then the rest of their religion, then everyone.
+     * Nobody is filtered out — only ordered.
+     *
+     * "Community" = the castes the viewer asked for in partner preferences
+     * (if they picked a handful), else their own caste. Christians have no
+     * caste here, so their denomination plays that part (e.g. Roman Catholic).
+     */
+    public function scopeCommunityFirst(Builder $query, ?Profile $viewer): Builder
+    {
+        if (! $viewer) {
+            return $query;
+        }
+
+        [$column, $values] = self::communityOf($viewer);
+        if ($column !== null && $values !== []) {
+            $marks = implode(',', array_fill(0, count($values), '?'));
+            $query->orderByRaw("EXISTS(SELECT 1 FROM religious_info ri WHERE ri.profile_id = profiles.id AND ri.{$column} IN ({$marks})) DESC", $values);
+        }
+
+        $religion = trim((string) $viewer->religiousInfo?->religion);
+        if ($religion !== '' && ! in_array($religion, self::NOT_A_COMMUNITY, true)) {
+            $query->orderByRaw('EXISTS(SELECT 1 FROM religious_info ri WHERE ri.profile_id = profiles.id AND ri.religion = ?) DESC', [$religion]);
+        }
+
+        return $query;
+    }
+
+    /** @return array{0: ?string, 1: list<string>} religious_info column and the values that count as "same community" */
+    public static function communityOf(Profile $viewer): array
+    {
+        $info = $viewer->religiousInfo;
+        $prefs = $viewer->partnerPreference;
+        $clean = fn ($values) => array_values(array_unique(array_filter(
+            array_map(fn ($v) => trim((string) $v), (array) $values),
+            fn ($v) => ! in_array($v, self::NOT_A_COMMUNITY, true)
+        )));
+
+        [$column, $own, $wanted] = strcasecmp((string) $info?->religion, 'Christian') === 0
+            ? ['denomination', $info?->denomination, $prefs?->denomination]
+            : ['caste', $info?->caste, $prefs?->caste];
+
+        $wanted = $clean($wanted);
+        if ($wanted !== [] && count($wanted) < self::BROAD_COMMUNITY_PREFERENCE) {
+            return [$column, $wanted];
+        }
+
+        $own = $clean([$own]);
+
+        return $own === [] ? [null, []] : [$column, $own];
     }
 
     /**

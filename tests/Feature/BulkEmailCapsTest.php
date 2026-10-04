@@ -193,3 +193,13 @@ it('applies the same standing rule to weekly matches and nudges', function () {
         ->and($off->fresh()->canReceiveWeeklyMatches())->toBeFalse()
         ->and($off->fresh()->canReceiveNudge())->toBeFalse();
 });
+
+it('leaves members away 90+ days to the "Are you still looking?" email', function () {
+    inactiveUser('month@site.test', 40);
+    inactiveUser('long-gone@site.test', 120);
+
+    app(ReengagementService::class)->run();
+
+    Mail::assertSent(fn (Mailable $m) => $m->hasTo('month@site.test'));
+    Mail::assertNotSent(fn (Mailable $m) => $m->hasTo('long-gone@site.test'));
+});
