@@ -193,6 +193,7 @@ it('counts members reminded by hand before the schedule existed', function () {
 });
 
 it('runs daily only where switched on, and at most the daily cap', function () {
+    $this->travelTo(now()->setTime(10, 0)); // the cap is per day: keep the test clear of midnight
     foreach (['KM31', 'KM32', 'KM33'] as $matri) {
         rrMember($matri, 2);
     }

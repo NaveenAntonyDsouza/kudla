@@ -200,6 +200,7 @@ class InterestController extends Controller
                 $request->custom_message,
                 $request->boolean('silent')
             );
+            Analytics::track('interest_declined', ['silent' => $request->boolean('silent')]);
             return back()->with('success', 'Interest declined.');
         } catch (\Exception $e) {
             return back()->withErrors(['interest' => $e->getMessage()]);

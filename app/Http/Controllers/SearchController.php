@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Profile;
+use App\Support\Analytics;
 use App\Traits\ProfileQueryFilters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -47,6 +48,7 @@ class SearchController extends Controller
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
+            $this->trackSearch('filters', $request, $results);
             return view('search.results', compact('profile', 'results', 'currentSort'));
         }
 
@@ -65,6 +67,7 @@ class SearchController extends Controller
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
+            $this->trackSearch('keyword', $request, $results);
             return view('search.results', compact('profile', 'results', 'currentSort'));
         }
 
@@ -74,6 +77,7 @@ class SearchController extends Controller
             $idResult = $this->baseQuery($profile)
                 ->where('matri_id', strtoupper($request->matri_id))
                 ->first();
+            Analytics::track('search_performed', ['search_type' => 'id', 'results' => $idResult ? 1 : 0]);
         }
 
         return view('search.index', compact(
@@ -256,6 +260,31 @@ class SearchController extends Controller
     /**
      * Map PartnerPreference fields to search form parameter names.
      */
+    /**
+     * "search_performed" for analytics (GA4 + PostHog): which filters were
+     * used and how many results — never the values or the keyword typed.
+     * First page only, so paging through results isn't counted again.
+     */
+    private function trackSearch(string $type, Request $request, $results): void
+    {
+        if ($results->currentPage() !== 1) {
+            return;
+        }
+
+        $filters = collect($request->except(['search', 'sort', 'page', 'tab', '_token', 'keyword']))
+            ->filter(fn ($v) => filled($v) && $v !== 'Any' && $v !== ['Any'])
+            ->keys()->sort()->values();
+
+        Analytics::track('search_performed', array_filter([
+            'search_type' => $type,
+            'tab' => $type === 'filters' ? $request->get('tab', 'partner') : null,
+            'filters' => $filters->implode(','),
+            'filter_count' => $filters->count(),
+            'results' => $results->total(),
+            'sort' => $request->get('sort', 'relevance'),
+        ], fn ($v) => $v !== null && $v !== ''));
+    }
+
     private function prefsToSearchParams($prefs): array
     {
         $params = [];

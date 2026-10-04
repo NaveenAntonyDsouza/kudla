@@ -57,6 +57,32 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         mask_all_element_attributes: true,
         session_recording: { maskAllInputs: true, maskTextSelector: '*' }
     });
+@php
+    // Signed-in member → their Matri ID, so a member's searches, views and
+    // interests join up across visits and devices. Pseudonymous: no name,
+    // phone, email, religion or caste. Staff are never identified.
+    $phMember = null;
+    try {
+        $phUser = auth()->user();
+        if ($phUser && $phUser->staff_role_id === null && $phUser->role !== 'admin' && $phUser->profile?->matri_id) {
+            $phMember = ['id' => $phUser->profile->matri_id, 'props' => [
+                'gender' => $phUser->profile->gender,
+                'member_type' => $phUser->activeMembership() ? 'paid' : 'free', // an actual plan, not free-membership mode
+                'registration_complete' => (bool) $phUser->profile->onboarding_completed,
+                'joined' => $phUser->created_at?->format('Y-m'),
+            ]];
+        }
+    } catch (\Throwable) {
+        $phMember = null;
+    }
+@endphp
+@if($phMember)
+    posthog.identify(@js($phMember['id']), @js($phMember['props']));
+    try { localStorage.setItem('ph_member', '1'); } catch (e) {}
+@else
+    // Signed out on this device: stop counting what follows as that member
+    try { if (localStorage.getItem('ph_member')) { posthog.reset(); localStorage.removeItem('ph_member'); } } catch (e) {}
+@endif
 </script>
 @endif
 {{-- Key moments (App\Support\Analytics — registration steps, photo added,

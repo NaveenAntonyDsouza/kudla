@@ -38,6 +38,8 @@ class StillLookingController extends Controller
             'hide' => $this->hideProfile($user, null),
         };
 
+        \App\Support\Analytics::track('still_looking_answered', ['answer' => $answer]);
+
         try {
             AdminActivityLog::create([
                 'action' => 'still_looking_answered',

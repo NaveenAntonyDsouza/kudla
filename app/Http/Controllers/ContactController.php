@@ -50,6 +50,7 @@ class ContactController extends Controller
         ]);
 
         RateLimiter::hit($key, self::WINDOW_SECONDS);
+        \App\Support\Analytics::track('contact_message_sent', ['subject' => $validated['subject'], 'member' => auth()->check()]);
 
         // Save to database
         ContactSubmission::create([

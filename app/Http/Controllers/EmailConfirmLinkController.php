@@ -28,6 +28,7 @@ class EmailConfirmLinkController extends Controller
         if ($state['status'] === 'ready') {
             User::whereKey($user->id)->toBase()->update(['email_verified_at' => now()]);
             $user->refresh();
+            Analytics::track('email_verified', ['via' => 'email_link']);
 
             $profile = $user->profile;
             if ($profile && ! $profile->onboarding_completed && $profile->onboarding_step_completed >= 5) {

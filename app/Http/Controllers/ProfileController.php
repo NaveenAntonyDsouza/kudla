@@ -103,6 +103,13 @@ class ProfileController extends Controller
         // Track profile view
         if (! $isOwn) {
             ProfileViewController::track(auth()->user()->profile->id, $profile->id);
+            try { // analytics must never break the profile page
+                \App\Support\Analytics::track('profile_viewed', [
+                    'viewer_type' => auth()->user()->activeMembership() ? 'paid' : 'free',
+                    'has_photo' => $profile->profilePhotos->contains(fn ($p) => $p->is_primary),
+                ]);
+            } catch (\Throwable) {
+            }
         }
 
         // Match score breakdown
