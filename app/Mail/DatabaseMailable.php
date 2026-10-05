@@ -13,6 +13,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 abstract class DatabaseMailable extends Mailable
 {
@@ -30,6 +31,20 @@ abstract class DatabaseMailable extends Mailable
      * security alerts.
      */
     protected ?string $unsubscribePreference = null;
+
+    /**
+     * Links back to the site sign the recipient member in (EmailSignInController).
+     * Off for password / account-security emails; only ever for members, never staff.
+     */
+    protected bool $signInLinks = true;
+
+    public const SIGN_IN_LINK_DAYS = 7;
+
+    /** Links that must never sign anyone in. */
+    private const NO_SIGN_IN_PATHS = [
+        '/unsubscribe', '/resubscribe', '/confirm-email', '/still-looking', '/go/',
+        '/forgot-password', '/reset-password', '/password', '/register', '/console',
+    ];
 
     /**
      * Variables to substitute in the template.
@@ -119,6 +134,14 @@ abstract class DatabaseMailable extends Mailable
         return null;
     }
 
+    /** The member links in this email may sign in, if any: members only, never staff or admin. */
+    private function signInMember(): ?User
+    {
+        $user = $this->signInLinks ? $this->recipient() : null;
+
+        return $user && $user->id && $user->staff_role_id === null && $user->role !== 'admin' ? $user : null;
+    }
+
     protected function oneClickUnsubscribeUrl(): ?string
     {
         if ($this->unsubscribePreference === null) {
@@ -196,11 +219,23 @@ abstract class DatabaseMailable extends Mailable
             }
 
             $query += ['utm_source' => 'email', 'utm_medium' => 'email', 'utm_campaign' => $this->templateSlug];
+            $path = $parts['path'] ?? '/';
             $tagged = ($parts['scheme'] ?? 'https') . '://' . $parts['host']
                 . (isset($parts['port']) ? ':' . $parts['port'] : '')
-                . ($parts['path'] ?? '/')
+                . $path
                 . '?' . http_build_query($query)
                 . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
+
+            // One tap from the email signs the member in (owner's choice, 5 Oct 2026:
+            // 37 of 43 members who tapped an email link gave up at the login page)
+            $member = $this->signInMember();
+            if ($member && ! Str::startsWith($path, self::NO_SIGN_IN_PATHS)) {
+                $target = ($path === '/login' ? '/' : $path) . '?' . http_build_query($query)
+                    . (isset($parts['fragment']) ? '#' . $parts['fragment'] : '');
+                $tagged = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'email.sign-in', now()->addDays(self::SIGN_IN_LINK_DAYS), ['user' => $member->id, 'to' => $target]
+                );
+            }
 
             return 'href=' . $m[1] . e($tagged) . $m[1];
         }, $html) ?? $html;

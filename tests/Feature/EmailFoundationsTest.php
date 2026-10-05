@@ -30,6 +30,15 @@ use Illuminate\Support\Facades\Schema;
 */
 
 beforeEach(function () {
+    Schema::create('login_history', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->string('login_method', 20);
+        $t->string('ip_address', 45)->nullable();
+        $t->string('user_agent', 500)->nullable();
+        $t->timestamp('logged_in_at')->nullable();
+        $t->timestamps();
+    });
     Schema::create('users', function (Blueprint $t) {
         $t->id();
         $t->string('name')->nullable();
@@ -86,6 +95,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    Schema::dropIfExists('login_history');
     foreach (['theme_settings', 'site_settings', 'email_templates', 'profiles', 'users'] as $table) {
         Schema::dropIfExists($table);
     }
@@ -148,9 +158,13 @@ it('renders the preview text and tags site links for GA4, but not signed or outs
 
     $html = (new WeeklyMatchSuggestionsMail($user, collect()))->render();
 
+    // Site links become one-tap sign-in links that open the page with the campaign tags
+    preg_match('/href="([^"]*\/go\/[^"]*)"/', $html, $go);
+    parse_str(parse_url(html_entity_decode($go[1] ?? ''), PHP_URL_QUERY) ?? '', $goQuery);
     expect($html)->toContain('Matches for Naveen')
-        ->toContain('/matches?utm_source=email&amp;utm_medium=email&amp;utm_campaign=weekly-match-suggestions')
-        ->toContain('href="https://example.org/x"');
+        ->toContain('href="https://example.org/x"')
+        ->and($go[1] ?? '')->toContain("/go/{$user->id}?")->toContain('signature=')
+        ->and($goQuery['to'] ?? null)->toBe('/matches?utm_source=email&utm_medium=email&utm_campaign=weekly-match-suggestions');
 
     preg_match('/href="([^"]*unsubscribe[^"]*)"/', $html, $unsubscribe);
     expect($unsubscribe[1])->toContain('signature=')->not->toContain('utm_');
@@ -239,4 +253,59 @@ it('seeds every template with preview text, only known placeholders, and no real
     }
 
     expect(array_diff(EmailTemplate::pluck('slug')->all(), array_keys(EmailPreheaders::DEFAULTS)))->toBe([]);
+});
+
+describe('one-tap sign-in from email links', function () {
+    function efGoUrl(User $user, string $to = '/matches?utm_campaign=x'): string
+    {
+        return Illuminate\Support\Facades\URL::temporarySignedRoute('email.sign-in', now()->addDays(7), ['user' => $user->id, 'to' => $to]);
+    }
+
+    it('signs the member in and opens the page the email pointed at', function () {
+        $user = efMember();
+
+        $this->get(efGoUrl($user))->assertRedirect('/matches?utm_campaign=x');
+        $this->assertAuthenticatedAs($user);
+        expect(DB::table('login_history')->where('user_id', $user->id)->value('login_method'))->toBe('email_link');
+    });
+
+    it('refuses tampered or expired links, and never signs in staff', function () {
+        $user = efMember();
+        $this->get(str_replace('signature=', 'signature=x', efGoUrl($user)))->assertForbidden();
+
+        $url = efGoUrl($user);
+        $this->travel(8)->days();
+        $this->get($url)->assertForbidden();
+        $this->travelBack();
+
+        $staff = efMember('staff@example.test');
+        DB::table('users')->where('id', $staff->id)->update(['role' => 'admin']);
+        $this->get(efGoUrl($staff->fresh()))->assertRedirect(route('login'));
+        $this->assertGuest();
+    });
+
+    it('never switches away from someone already signed in, and only opens pages on this site', function () {
+        $me = efMember();
+        $other = efMember('other@example.test');
+
+        $this->actingAs($other)->get(efGoUrl($me, '/dashboard'))->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($other);
+
+        Illuminate\Support\Facades\Auth::logout();
+        $this->get(efGoUrl($me, '//evil.example/x'))->assertRedirect('/');
+        $this->get(efGoUrl($me, 'https://evil.example/x'))->assertRedirect('/');
+    });
+
+    it('sends a member who has not finished registering back to their step', function () {
+        $user = efMember();
+        DB::table('profiles')->where('user_id', $user->id)->update(['onboarding_completed' => false, 'onboarding_step_completed' => 2]);
+
+        $this->get(efGoUrl($user))->assertRedirect(route('register.step3'));
+    });
+
+    it('keeps password emails free of sign-in links', function () {
+        $user = efMember();
+
+        expect((new PasswordChangedMail($user, 'now'))->render())->not->toContain('/go/');
+    });
 });

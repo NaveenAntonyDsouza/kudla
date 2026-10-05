@@ -311,6 +311,11 @@ Route::post('/confirm-email/{user}', [\App\Http\Controllers\EmailConfirmLinkCont
     ->middleware(['signed', 'throttle:10,1'])
     ->name('email.confirm-link.store');
 
+// One tap from a member email signs them in (links built by DatabaseMailable::tagLinks)
+Route::get('/go/{user}', \App\Http\Controllers\EmailSignInController::class)
+    ->middleware(['signed', 'throttle:20,1'])
+    ->name('email.sign-in');
+
 // Answers to the "Are you still looking?" email (?answer=looking|found|hide):
 // the link shows a confirm button, the button POSTs here
 Route::get('/still-looking/{user}', [\App\Http\Controllers\StillLookingController::class, 'show'])

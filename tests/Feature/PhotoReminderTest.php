@@ -29,6 +29,7 @@ beforeEach(function () {
         $t->json('notification_preferences')->nullable();
         $t->timestamp('last_registration_reminder_at')->nullable();
         $t->timestamp('last_photo_reminder_at')->nullable();
+        $t->unsignedTinyInteger('photo_reminders_sent')->default(0);
         $t->timestamps();
     });
     Schema::create('profiles', function (Blueprint $t) {
@@ -152,7 +153,43 @@ it('writes the name, ID, photos link, privacy choices and help phone', function 
 
     expect($html)->toContain('Hi Naveen,')
         ->and($html)->toContain('(KM10)')
-        ->and($html)->toContain('/manage-photos')
+        ->and(urldecode(html_entity_decode($html)))->toContain('to=/manage-photos') // a one-tap sign-in link
         ->and($html)->toContain('Only after interest accepted')
         ->and($html)->toContain('7760020186');
+});
+
+it('sends at most 3 photo reminders, 2, 7 and 21 days apart, then never again', function () {
+    $member = prMember('KM60', joined: '-3 days');
+    $run = fn () => $this->artisan('members:remind-photo', ['--delay' => 0])->assertSuccessful();
+    $count = fn () => Mail::sent(PhotoReminderMail::class)->count();
+
+    $run();
+    expect($count())->toBe(1);
+    $this->travel(6)->days(); $run();
+    expect($count())->toBe(1);
+    $this->travel(1)->days(); $run();
+    expect($count())->toBe(2);
+    $this->travel(21)->days(); $run();
+    expect($count())->toBe(3);
+    $this->travel(90)->days(); $run();
+    expect($count())->toBe(3)
+        ->and($member->fresh()->photo_reminders_sent)->toBe(3);
+});
+
+it('runs daily only where switched on, within the daily cap', function () {
+    $this->travelTo(now()->setTime(18, 30));
+    foreach (['KM61', 'KM62', 'KM63'] as $matri) {
+        prMember($matri);
+    }
+
+    $this->artisan('members:remind-photo', ['--scheduled' => true, '--delay' => 0])->expectsOutputToContain('are off')->assertSuccessful();
+    Mail::assertNothingSent();
+
+    SiteSetting::setValue('photo_reminders_enabled', '1');
+    SiteSetting::setValue('photo_reminders_daily_cap', '2');
+    $this->artisan('members:remind-photo', ['--scheduled' => true, '--delay' => 0])->assertSuccessful();
+    Mail::assertSent(PhotoReminderMail::class, 2);
+
+    $event = collect(app(Illuminate\Console\Scheduling\Schedule::class)->events())->first(fn ($e) => str_contains($e->command, 'members:remind-photo'));
+    expect($event?->expression)->toBe('30 18 * * *');
 });

@@ -6,6 +6,9 @@ class PasswordResetMail extends DatabaseMailable
 {
     protected string $templateSlug = 'password-reset';
 
+    /** Account-security email: its links never sign anyone in. */
+    protected bool $signInLinks = false;
+
     public function __construct(
         public string $userName,
         public string $resetUrl,

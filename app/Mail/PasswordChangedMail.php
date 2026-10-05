@@ -15,6 +15,9 @@ class PasswordChangedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'password-changed';
 
+    /** Account-security email: its links never sign anyone in. */
+    protected bool $signInLinks = false;
+
     public function __construct(public User $user, public string $changedAt) {}
 
     protected function templateVariables(): array

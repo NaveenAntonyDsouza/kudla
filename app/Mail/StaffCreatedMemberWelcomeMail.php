@@ -8,6 +8,9 @@ class StaffCreatedMemberWelcomeMail extends DatabaseMailable
 {
     protected string $templateSlug = 'staff_created_member_welcome';
 
+    /** Account-security email: its links never sign anyone in. */
+    protected bool $signInLinks = false;
+
     public function __construct(public User $user, public string $tempPassword) {}
 
     protected function templateVariables(): array

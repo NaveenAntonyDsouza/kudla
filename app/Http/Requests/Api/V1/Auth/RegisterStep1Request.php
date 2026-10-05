@@ -26,7 +26,7 @@ class RegisterStep1Request extends ApiFormRequest
             'gender' => 'required|in:male,female',
             'date_of_birth' => 'required|date|before:-18 years',
             'phone' => 'required|digits:10|unique:users,phone',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => 'required|string|min:6|max:64',
             'ref' => 'nullable|string|max:20',  // optional affiliate code
         ];

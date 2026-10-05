@@ -50,3 +50,11 @@ Schedule::command('engagement:send-profile-nudges')->dailyAt('19:00')->withoutOv
 // Weekly "N members viewed your profile" — Wednesdays 19:00 (weekly matches go Sundays);
 // only where profile_views_digest_enabled = 1
 Schedule::command('engagement:send-profile-views-digest', ['--scheduled'])->weeklyOn(3, '19:00')->withoutOverlapping();
+
+// "Add a photo": at most 3 per member — 2, 7 and 21 days apart; daily 18:30;
+// only where photo_reminders_enabled = 1, max photo_reminders_daily_cap a day
+Schedule::command('members:remind-photo', ['--scheduled', '--delay' => 3])->dailyAt('18:30')->withoutOverlapping();
+
+// Interests unanswered for 30 days expire; each sender gets one in-app note
+// (only where interest_expiry_enabled = 1)
+Schedule::command('interests:expire', ['--scheduled'])->dailyAt('07:30')->withoutOverlapping();
