@@ -203,3 +203,17 @@ it('leaves members away 90+ days to the "Are you still looking?" email', functio
     Mail::assertSent(fn (Mailable $m) => $m->hasTo('month@site.test'));
     Mail::assertNotSent(fn (Mailable $m) => $m->hasTo('long-gone@site.test'));
 });
+
+it('previews the first run before the start date, but never sends early', function () {
+    SiteSetting::setValue('reengagement_start_date', now()->addDays(4)->toDateString());
+    inactiveUser('away@site.test', 20);
+
+    $service = app(ReengagementService::class);
+    expect($service->isEnabled())->toBeFalse()
+        ->and($service->isSwitchedOn())->toBeTrue()
+        ->and(array_sum($service->run(true, ignoreStartDate: true)['sent_by_level']))->toBe(1)
+        ->and($service->run(true)['disabled'] ?? false)->toBeTrue();
+
+    $service->run(false, ignoreStartDate: true); // only a preview may look past the date
+    Mail::assertNothingSent();
+});

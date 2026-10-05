@@ -31,11 +31,14 @@ class ReengagementDashboard extends Page
         $service = app(ReengagementService::class);
         $thresholds = $service->getThresholds();
 
-        // Who would the dry run target?
-        $dryRun = $service->run(true);
+        // Who would the dry run target? Before the start date: who the first run would target
+        $dryRun = $service->run(true, ignoreStartDate: true);
 
         return [
             'enabled' => $service->isEnabled(),
+            'switched_on' => $service->isSwitchedOn(),
+            'start_date' => $service->isBeforeStartDate() ? $service->getStartDate() : null,
+            'handoff_days' => \App\Services\DormantProfiles::CHECKIN_AFTER_DAYS,
             'thresholds' => $thresholds,
             'stats' => [
                 'sent_today' => User::whereDate('last_reengagement_sent_at', today())->count(),

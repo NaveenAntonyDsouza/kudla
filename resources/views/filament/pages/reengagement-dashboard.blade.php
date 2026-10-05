@@ -5,6 +5,12 @@
             <span style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></span>
             Re-engagement is ENABLED · Scheduled daily at 9:00 AM
         </div>
+    @elseif($switched_on && $start_date)
+        <div style="padding: 1rem 1.25rem; background: #fef3c7; color: #92400e; border-radius: 0.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="width: 10px; height: 10px; background: #f59e0b; border-radius: 50%; flex-shrink: 0;"></span>
+            <span>Re-engagement is switched ON · first emails go out on {{ $start_date->format('D j M Y') }} at 9:00 AM, then daily
+                <span style="display: block; font-weight: 400; font-size: 0.85rem; margin-top: 2px;">Start date setting: <code>reengagement_start_date</code>. It waits until last-visit tracking has a week of data, so active members don't get "we miss you".</span></span>
+        </div>
     @else
         <div style="padding: 1rem 1.25rem; background: #fee2e2; color: #991b1b; border-radius: 0.5rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
             <span style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%;"></span>
@@ -38,7 +44,14 @@
         {{-- Next run forecast --}}
         <div style="padding: 1.25rem; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
             <h3 style="font-weight: 600; font-size: 1rem; color: #111827; margin: 0 0 1rem;">Next Scheduled Run — Forecast</h3>
-            <p style="font-size: 0.875rem; color: #6b7280; margin: 0 0 1rem;">If the command ran right now, it would send:</p>
+            <p style="font-size: 0.875rem; color: #6b7280; margin: 0 0 1rem;">
+                @if($start_date)
+                    The first run on {{ $start_date->format('j M') }} would send about this many (counted as of now):
+                @else
+                    If the command ran right now, it would send:
+                @endif
+                <span style="display: block; margin-top: 4px;">Members away {{ $handoff_days }}+ days get the "Are you still looking?" email instead.</span>
+            </p>
 
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: #f9fafb; border-radius: 0.375rem;">

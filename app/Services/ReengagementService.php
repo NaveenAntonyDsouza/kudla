@@ -37,9 +37,11 @@ class ReengagementService
      * @param  bool  $dryRun  If true, doesn't send emails or update DB — just returns who would be sent
      * @return array{eligible: int, sent_by_level: array<int, int>, skipped: int, recipients: array}
      */
-    public function run(bool $dryRun = false): array
+    public function run(bool $dryRun = false, bool $ignoreStartDate = false): array
     {
-        if (!$this->isEnabled()) {
+        // A preview may look past the start date (admin forecast); sending never does
+        $previewBeforeStart = $dryRun && $ignoreStartDate && $this->isSwitchedOn();
+        if (!$this->isEnabled() && !$previewBeforeStart) {
             return [
                 'eligible' => 0,
                 'sent_by_level' => [1 => 0, 2 => 0, 3 => 0],
@@ -143,8 +145,13 @@ class ReengagementService
      */
     public function isEnabled(): bool
     {
-        return SiteSetting::getValue('reengagement_enabled', '1') === '1'
-            && ! $this->isBeforeStartDate();
+        return $this->isSwitchedOn() && ! $this->isBeforeStartDate();
+    }
+
+    /** The master switch alone (it may still be waiting for reengagement_start_date). */
+    public function isSwitchedOn(): bool
+    {
+        return SiteSetting::getValue('reengagement_enabled', '1') === '1';
     }
 
     /**
