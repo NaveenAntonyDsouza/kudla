@@ -1,11 +1,13 @@
 @props(['profile'])
 
-<div x-data="{ showModal: false, selectedTemplate: 'msg_suitable', customMessage: '', submitting: false }">
+<div x-data="{ showModal: false, source: 'profile', selectedTemplate: 'msg_suitable', customMessage: '', submitting: false }"
+     x-on:open-interest-modal.window="source = $event.detail?.source || 'profile'; showModal = true"
+     x-effect="document.documentElement.classList.toggle('interest-modal-open', showModal)">
     {{-- Trigger Button --}}
-    <button @click="showModal = true" type="button"
+    <button @click="source = 'profile'; showModal = true" type="button"
         class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
         </svg>
         Send Interest
     </button>
@@ -29,6 +31,7 @@
             {{-- Body --}}
             <form method="POST" action="{{ route('interests.send', $profile) }}" @submit="submitting = true">
                 @csrf
+                <input type="hidden" name="source" :value="source">
                 <div class="px-6 py-4 max-h-[60vh] overflow-y-auto">
                     <div class="space-y-3">
                         @foreach([
@@ -79,3 +82,9 @@
         </div>
     </div>
 </div>
+{{-- The modal sits inside the profile panel's sticky box, so fixed items
+     elsewhere (phone action bar, WhatsApp button) would cover its Send
+     button — hide them while it's open. --}}
+@once
+    <style>.interest-modal-open .pv-action-bar, .interest-modal-open .wa-fab { display: none !important; }</style>
+@endonce

@@ -43,16 +43,25 @@
         ! $isGuest && ! $isOwnCard => 'request_photo', // no photo yet
         default => null,
     };
+
+    // Send Interest from the card (owner's choice, Oct 2026): where this
+    // member already stands with the profile decides what the card offers.
+    $cardInterest = null;
+    $canSendFromCard = false;
+    if ($viewerProfile && ! $isOwnCard) {
+        $cardInterest = \App\Support\InterestStatusMap::for($viewerProfile)[$p->id] ?? null;
+        $canSendFromCard = ! $cardInterest && (! $p->gender || ! $viewerProfile->gender || $p->gender !== $viewerProfile->gender);
+    }
 @endphp
 
 <div class="relative rounded-lg border border-gray-200 overflow-hidden hover:shadow-md hover:border-(--color-primary)/30 transition-all group bg-white">
-    {{-- Shortlist heart (logged-in only) --}}
+    {{-- Shortlist star (logged-in only) — the heart now means Send Interest --}}
     @if(!$isGuest)
         <form method="POST" action="{{ route('shortlist.toggle', $p) }}" class="absolute top-2 right-2 z-10" @click.stop>
             @csrf
-            <button type="submit" class="p-1.5 rounded-full {{ $isShortlisted ? 'text-pink-500' : 'text-white/80 hover:text-pink-400' }} transition-colors" style="background: rgba(0,0,0,0.3);">
+            <button type="submit" title="{{ $isShortlisted ? 'Shortlisted' : 'Add to shortlist' }}" aria-label="{{ $isShortlisted ? 'Remove from shortlist' : 'Add to shortlist' }}" class="p-1.5 rounded-full {{ $isShortlisted ? 'text-amber-400' : 'text-white/80 hover:text-amber-300' }} transition-colors" style="background: rgba(0,0,0,0.3);">
                 <svg class="w-4 h-4" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
                 </svg>
             </button>
         </form>
@@ -190,5 +199,50 @@
             </div>
         </div>
     </a>
+
+    {{-- Interest: sent in place (no page reload) with the standard
+         message, so the member keeps their place in the results --}}
+    @if($isGuest)
+        <div style="padding: 0 12px 12px;">
+            <a href="{{ route('login') }}" class="pc-interest-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                Send Interest
+            </a>
+        </div>
+    @elseif($canSendFromCard)
+        <div style="padding: 0 12px 12px;" x-data="{ state: 'idle', error: '' }">
+            <button type="button" class="pc-interest-btn" x-show="state !== 'sent'" :disabled="state === 'sending'"
+                @click="state = 'sending'; error = '';
+                    fetch(@js(route('interests.send', $p)), { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': @js(csrf_token()) }, body: JSON.stringify({ template_id: 'msg_suitable', source: 'card' }) })
+                        .then(r => r.json().then(d => ({ ok: r.ok && d.ok, d })))
+                        .then(({ ok, d }) => { if (ok) { state = 'sent'; } else { state = 'idle'; error = d.message || 'Could not send. Please try again.'; } })
+                        .catch(() => { state = 'idle'; error = 'Could not send. Please try again.'; })">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                <span x-text="state === 'sending' ? 'Sending…' : 'Send Interest'">Send Interest</span>
+            </button>
+            <p x-show="state === 'sent'" x-cloak class="pc-interest-done">&#10003; Interest sent</p>
+            <p x-show="error" x-cloak x-text="error" style="margin-top: 6px; font-size: 11px; line-height: 1.3; color: #dc2626;"></p>
+        </div>
+    @elseif($cardInterest)
+        <div style="padding: 0 12px 12px;">
+            @if($cardInterest['direction'] === 'received' && $cardInterest['status'] === 'pending')
+                <a href="{{ route('interests.show', $cardInterest['interest_id']) }}" class="pc-interest-btn" style="background: #16a34a;">Respond to Interest</a>
+            @elseif($cardInterest['status'] === 'accepted')
+                <a href="{{ route('interests.show', $cardInterest['interest_id']) }}" class="pc-interest-done" style="display: block; color: #16a34a;">&#10003; Connected · Chat</a>
+            @elseif($cardInterest['direction'] === 'sent' && $cardInterest['status'] === 'pending')
+                <p class="pc-interest-done">&#10003; Interest sent</p>
+            @else
+                <p class="pc-interest-done" style="color: #9ca3af;">Interest declined</p>
+            @endif
+        </div>
+    @endif
 </div>
+@once
+    <style>
+        .pc-interest-btn { display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; padding: 7px 8px; border-radius: 8px; border: 0; background: var(--color-primary, #8B1D91); color: #fff; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
+        .pc-interest-btn:hover { filter: brightness(1.08); }
+        .pc-interest-btn:disabled { opacity: .6; cursor: wait; }
+        .pc-interest-done { margin: 0; padding: 7px 0; text-align: center; font-size: 12px; font-weight: 600; color: var(--color-primary, #8B1D91); text-decoration: none; }
+    </style>
+@endonce
 @endif

@@ -134,6 +134,7 @@ class InterestController extends Controller
         $request->validate([
             'template_id' => 'nullable|string|max:30',
             'custom_message' => 'nullable|string|max:500',
+            'source' => 'nullable|in:profile,card,mobile_bar',
         ]);
 
         $sender = auth()->user()->profile;
@@ -146,9 +147,20 @@ class InterestController extends Controller
                 $request->custom_message
             );
 
-            Analytics::track('interest_sent', [], 'InterestSent');
+            Analytics::track('interest_sent', ['source' => $request->input('source', 'profile')], 'InterestSent');
+
+            // Cards in search/matches send in place, so the member keeps their
+            // place in the list.
+            if ($request->expectsJson()) {
+                return response()->json(['ok' => true, 'message' => 'Interest sent']);
+            }
+
             return back()->with('success', 'Interest sent successfully!');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+            }
+
             return back()->withErrors(['interest' => $e->getMessage()]);
         }
     }

@@ -347,6 +347,58 @@
                                 </div>
                             @endif
 
+                            {{-- Send Interest right under the name (it used to be 5th in this panel,
+                                 below the fold on most screens) --}}
+                            @if(!($isOwn ?? false))
+                                <div class="mt-4 space-y-2" id="profile-actions">
+                                    @php
+                                        $interestStatus = app(\App\Services\InterestService::class)->getStatus(auth()->user()->profile, $profile);
+                                    @endphp
+
+                                    @if(!$interestStatus)
+                                        <x-send-interest-modal :profile="$profile" />
+                                    @elseif($interestStatus['direction'] === 'sent' && $interestStatus['status'] === 'pending')
+                                        <div class="text-center py-2">
+                                            <span class="inline-flex items-center gap-1 text-sm text-amber-600 font-medium">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                Interest Sent — Awaiting Response
+                                            </span>
+                                        </div>
+                                    @elseif($interestStatus['direction'] === 'received' && $interestStatus['status'] === 'pending')
+                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-green-500 rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
+                                            Respond to Interest
+                                        </a>
+                                    @elseif($interestStatus['status'] === 'accepted')
+                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-(--color-primary) rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                                            Continue Chat
+                                        </a>
+                                    @elseif($interestStatus['status'] === 'declined')
+                                        <div class="text-center py-2">
+                                            <span class="text-sm text-gray-500">Interest was declined</span>
+                                        </div>
+                                    @endif
+
+                                    {{-- Shortlist (star) --}}
+                                    @php
+                                        $isShortlisted = \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->where('shortlisted_profile_id', $profile->id)->exists();
+                                    @endphp
+                                    <form method="POST" action="{{ route('shortlist.toggle', $profile) }}">
+                                        @csrf
+                                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border rounded-lg transition-colors {{ $isShortlisted ? 'border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                                            <svg class="w-4 h-4" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
+                                            </svg>
+                                            {{ $isShortlisted ? 'Shortlisted' : 'Add to Shortlist' }}
+                                        </button>
+                                    </form>
+
+                                </div>
+                            @endif
+
                             <div class="mt-4 space-y-2 text-left">
                                 @php
                                     $phoneVerificationEnabled = \App\Models\SiteSetting::getValue('phone_verification_enabled', '0') === '1';
@@ -381,10 +433,9 @@
                             </div>
 
                             {{-- Print Profile (available for all) --}}
-                            <div class="mt-4 pt-4 border-t border-gray-100">
-                                <a href="{{ route('profile.print', $profile) }}" target="_blank"
-                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:border-(--color-primary) hover:text-(--color-primary) transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"/></svg>
+                            <div class="mt-4 pt-3 border-t border-gray-100 text-center">
+                                <a href="{{ route('profile.print', $profile) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-(--color-primary)">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"/></svg>
                                     Print Profile
                                 </a>
                             </div>
@@ -392,51 +443,6 @@
                             @if(!($isOwn ?? false))
                                 {{-- Action buttons for other users' profiles --}}
                                 <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                                    {{-- Shortlist heart --}}
-                                    @php
-                                        $isShortlisted = \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->where('shortlisted_profile_id', $profile->id)->exists();
-                                    @endphp
-                                    <form method="POST" action="{{ route('shortlist.toggle', $profile) }}">
-                                        @csrf
-                                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border rounded-lg transition-colors {{ $isShortlisted ? 'border-pink-300 text-pink-600 bg-pink-50 hover:bg-pink-100' : 'border-gray-300 text-gray-600 hover:bg-gray-50' }}">
-                                            <svg class="w-4 h-4" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
-                                            </svg>
-                                            {{ $isShortlisted ? 'Shortlisted' : 'Add to Shortlist' }}
-                                        </button>
-                                    </form>
-
-                                    @php
-                                        $interestStatus = app(\App\Services\InterestService::class)->getStatus(auth()->user()->profile, $profile);
-                                    @endphp
-
-                                    @if(!$interestStatus)
-                                        <x-send-interest-modal :profile="$profile" />
-                                    @elseif($interestStatus['direction'] === 'sent' && $interestStatus['status'] === 'pending')
-                                        <div class="text-center py-2">
-                                            <span class="inline-flex items-center gap-1 text-sm text-amber-600 font-medium">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                Interest Sent — Awaiting Response
-                                            </span>
-                                        </div>
-                                    @elseif($interestStatus['direction'] === 'received' && $interestStatus['status'] === 'pending')
-                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
-                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-green-500 rounded-lg">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75"/></svg>
-                                            Respond to Interest
-                                        </a>
-                                    @elseif($interestStatus['status'] === 'accepted')
-                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
-                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-(--color-primary) rounded-lg">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
-                                            Continue Chat
-                                        </a>
-                                    @elseif($interestStatus['status'] === 'declined')
-                                        <div class="text-center py-2">
-                                            <span class="text-sm text-gray-500">Interest was declined</span>
-                                        </div>
-                                    @endif
-
                                     {{-- Report & Block --}}
                                     <div class="flex items-center gap-1 mt-2">
                                         <a href="{{ route('report.create', $profile) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-400 hover:text-amber-600 transition-colors">
@@ -523,4 +529,45 @@
             </div>
         </div>
     </div>
+
+    {{-- Phones: Send Interest + Shortlist stay at the bottom of the screen
+         while the member reads the details (the panel above scrolls away) --}}
+    @if(!($isOwn ?? false) && auth()->check())
+        <div class="pv-action-bar" role="region" aria-label="Profile actions">
+            @if(!$interestStatus)
+                <button type="button" class="pv-bar-main" x-data @click.stop="$dispatch('open-interest-modal', { source: 'mobile_bar' })">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                    Send Interest
+                </button>
+            @elseif($interestStatus['direction'] === 'received' && $interestStatus['status'] === 'pending')
+                <a href="{{ route('interests.show', $interestStatus['interest']) }}" class="pv-bar-main" style="background: #16a34a;">Respond to Interest</a>
+            @elseif($interestStatus['status'] === 'accepted')
+                <a href="{{ route('interests.show', $interestStatus['interest']) }}" class="pv-bar-main">Continue Chat</a>
+            @elseif($interestStatus['direction'] === 'sent' && $interestStatus['status'] === 'pending')
+                <span class="pv-bar-note">&#10003; Interest sent — awaiting response</span>
+            @else
+                <span class="pv-bar-note" style="color: #6b7280;">Interest was declined</span>
+            @endif
+            <form method="POST" action="{{ route('shortlist.toggle', $profile) }}">
+                @csrf
+                <button type="submit" class="pv-bar-star" title="{{ $isShortlisted ? 'Shortlisted' : 'Add to shortlist' }}" aria-label="{{ $isShortlisted ? 'Remove from shortlist' : 'Add to shortlist' }}"
+                        style="{{ $isShortlisted ? 'color: #d97706; border-color: #fcd34d; background: #fffbeb;' : '' }}">
+                    <svg width="20" height="20" fill="{{ $isShortlisted ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                </button>
+            </form>
+        </div>
+        <div class="pv-action-bar-spacer" aria-hidden="true"></div>
+        <style>
+            .pv-action-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; display: flex; align-items: center; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 1px solid #e5e7eb; box-shadow: 0 -4px 14px rgba(0,0,0,.08); }
+            .pv-action-bar form { margin: 0; }
+            .pv-bar-main { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 10px; border: 0; background: var(--color-primary, #8B1D91); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; }
+            .pv-bar-note { flex: 1; text-align: center; font-size: 14px; font-weight: 600; color: #d97706; }
+            .pv-bar-star { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 10px; border: 1px solid #d1d5db; background: #fff; color: #4b5563; cursor: pointer; }
+            .pv-action-bar-spacer { height: 76px; }
+            /* the WhatsApp button sits above the bar instead of on it */
+            .wa-fab { bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
+            @media (min-width: 1024px) { .pv-action-bar, .pv-action-bar-spacer { display: none; } .wa-fab { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important; } }
+            @media print { .pv-action-bar, .pv-action-bar-spacer { display: none; } }
+        </style>
+    @endif
 </x-layouts.app>
