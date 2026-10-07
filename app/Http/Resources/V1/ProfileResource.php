@@ -15,7 +15,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *   - GET /api/v1/profile/me         — own profile (viewer == owner, all sections incl. contact)
  *   - GET /api/v1/profiles/{matriId} — other profile (contact gated by ProfileAccessService)
  *
- * The contact section is nullable by design:
+ * The contact and social sections are nullable by design (social handles
+ * are a way to reach someone too, so they follow the contact rule):
  *   - If caller passes `includeContact: true` (default false), contact is populated
  *   - If false, contact is explicitly null in the response (NOT omitted) so the
  *     Flutter DTO shape stays stable — user.contact?.phone handles the null cleanly.
@@ -87,7 +88,10 @@ class ProfileResource extends JsonResource
                 'location'   => $this->locationSection($profile),
                 'contact'    => $this->includeContact ? $this->contactSection($profile) : null,
                 'hobbies'    => $this->hobbiesSection($profile),
-                'social'     => $this->socialSection($profile),
+                // Social handles open with the contact (Oct 2026): an Instagram
+                // or Facebook link is a way to message someone too, so it stays
+                // locked until an accepted interest, same as phone / WhatsApp.
+                'social'     => $this->includeContact ? $this->socialSection($profile) : null,
                 'partner'    => $this->partnerSection($profile),
             ],
 

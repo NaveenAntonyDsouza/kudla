@@ -15,11 +15,16 @@
     $hasPhone = filled($c?->primary_phone) || filled($user?->phone);
     $hasWhatsApp = filled($c?->whatsapp_number) || $hasPhone;
     $pendingInterest = ($interestStatus ?? null)['interest'] ?? null;
+    // Social handles are a way to message someone too, so they open with the
+    // contact (Oct 2026) — locked, only the names show as "opens once
+    // connected". Plain web links only (http/https).
     $socialLinks = collect([
-        ['label' => 'Facebook', 'url' => $s?->facebook_url],
         ['label' => 'Instagram', 'url' => $s?->instagram_url],
+        ['label' => 'Facebook', 'url' => $s?->facebook_url],
         ['label' => 'LinkedIn', 'url' => $s?->linkedin_url],
-    ])->filter(fn ($l) => $l['url']);
+        ['label' => 'YouTube', 'url' => $s?->youtube_url],
+        ['label' => 'Website', 'url' => $s?->website_url],
+    ])->filter(fn ($l) => is_string($l['url']) && preg_match('#^https?://#i', trim($l['url'])));
 @endphp
 
 @if(!$isOwn)
@@ -63,11 +68,13 @@
                 </h3>
                 <p class="ct-text">{{ \App\Support\ContactAccess::lockedReason((string) $state) }}</p>
 
-                @if(in_array($state, [$ca::NO_INTEREST, $ca::SENT_PENDING, $ca::RECEIVED_PENDING, $ca::NEEDS_PLAN], true) && ($hasPhone || $hasWhatsApp))
+                @if(in_array($state, [$ca::NO_INTEREST, $ca::SENT_PENDING, $ca::RECEIVED_PENDING, $ca::NEEDS_PLAN], true) && ($hasPhone || $hasWhatsApp || $socialLinks->isNotEmpty()))
                     <div class="ct-chips" aria-label="Available once connected">
                         @if($hasPhone)<span class="ct-chip">&#128222; Mobile number</span>@endif
                         @if($hasWhatsApp)<span class="ct-chip">&#128172; WhatsApp</span>@endif
                         @if(filled($c?->preferred_call_time))<span class="ct-chip">&#128336; Best time to call</span>@endif
+                        {{-- names only — the links open once connected --}}
+                        @foreach($socialLinks as $social)<span class="ct-chip">&#128279; {{ $social['label'] }}</span>@endforeach
                     </div>
                 @endif
 
@@ -89,21 +96,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Social Media (public) --}}
-    @if($socialLinks->isNotEmpty())
-    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-        <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Social Media Information</h3>
-        <div class="space-y-3">
-            @foreach($socialLinks as $social)
-                <div class="flex items-center gap-3 py-2">
-                    <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
-                    <a href="{{ $social['url'] }}" target="_blank" rel="noopener" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 @elseif(!$isOwn)
     {{-- Open: talk on WhatsApp or call, with who answers and when --}}
     @php $k = $access['contact']; @endphp
@@ -145,6 +137,15 @@
                     <div><div class="ct-label">Email</div><a href="mailto:{{ $k['email'] }}" class="ct-value">{{ $k['email'] }}</a></div>
                 </div>
             @endif
+            {{-- social handles open together with the phone / WhatsApp --}}
+            @foreach($socialLinks as $social)
+                <div class="ct-row">
+                    <div style="min-width: 0;"><div class="ct-label">{{ $social['label'] }}</div>
+                        <a href="{{ $social['url'] }}" target="_blank" rel="noopener nofollow" class="ct-value" style="font-size: 14px; font-weight: 500;"
+                           onclick="cbTrack('contact_social_click', @js(strtolower($social['label'])))">{{ preg_replace('#^https?://(www\.)?#i', '', rtrim($social['url'], '/')) }}</a>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
         <div class="ct-safety">
@@ -153,20 +154,6 @@
         </div>
     </div>
 
-    {{-- Social Media --}}
-    @if($socialLinks->isNotEmpty())
-    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-        <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Social Media</h3>
-        <div class="space-y-3">
-            @foreach($socialLinks as $social)
-                <div class="flex items-center gap-3 py-2">
-                    <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
-                    <a href="{{ $social['url'] }}" target="_blank" rel="noopener" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 @else
     {{-- Own profile — show all contact details --}}
 
@@ -233,7 +220,7 @@
                     <span class="text-sm font-medium text-gray-600 w-20 shrink-0">{{ $social['label'] }}</span>
                     <p class="text-sm font-medium text-gray-900 truncate">
                         @if($social['url'])
-                            <a href="{{ $social['url'] }}" target="_blank" class="text-(--color-primary) hover:underline">{{ $social['url'] }}</a>
+                            <a href="{{ $social['url'] }}" target="_blank" rel="noopener" class="text-(--color-primary) hover:underline">{{ $social['url'] }}</a>
                         @else
                             Not Mentioned
                         @endif

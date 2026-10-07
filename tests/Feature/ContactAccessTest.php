@@ -155,6 +155,10 @@ it('renders the Contact tab locked with one next step, and open with WhatsApp fi
     $me = caProfile(1, 'KM100001');
     Auth::setUser($me->user->setRelation('profile', $me));
     $them = caProfile(2, 'KM100002', ['primary_phone' => '9876543210', 'whatsapp_number' => '9988776655', 'preferred_call_time' => 'Evening']);
+    $them->setRelation('socialMediaLink', new App\Models\SocialMediaLink([
+        'instagram_url' => 'https://www.instagram.com/asha.k/',
+        'linkedin_url' => 'javascript:alert(1)', // never rendered as a link
+    ]));
     $vars = ['profile' => $them, 'user' => $them->user, 'isOwn' => false, 'interestStatus' => null];
 
     $locked = Blade::render("@include('profile.preview.contact')", $vars);
@@ -167,7 +171,12 @@ it('renders the Contact tab locked with one next step, and open with WhatsApp fi
         ->toContain("open-interest-modal', { source: 'contact_tab' }")
         ->toContain('Mobile number')->toContain('Best time to call')
         ->not->toContain('9876543210')->not->toContain('98765')->not->toContain('wa.me/91998')
-        ->and($open)->toContain('https://wa.me/919988776655?text=')
+        // social handles: only the name while locked, the link once connected
+        ->toContain('&#128279; Instagram')->not->toContain('instagram.com/asha')
+        ->not->toContain('javascript:')->not->toContain('LinkedIn')
+        ->and($open)->toContain('href="https://www.instagram.com/asha.k/"')->toContain('>instagram.com/asha.k</a>')
+        ->not->toContain('javascript:')
+        ->toContain('https://wa.me/919988776655?text=')
         ->toContain('tel:+919876543210')
         ->toContain('Best time to call: <strong>Evening</strong>')
         ->toContain('Report a concern')

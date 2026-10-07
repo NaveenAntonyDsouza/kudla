@@ -191,3 +191,15 @@ it('photos block has stable shape even when no photos', function () {
     expect($data['photos']['family'])->toBeArray()->toBeEmpty();
     expect($data['photos']['photo_privacy'])->toBeNull();
 });
+
+it('keeps social handles locked with the contact (Oct 2026), open together with it', function () {
+    $profile = buildFullProfile();
+    $profile->setRelation('socialMediaLink', new \App\Models\SocialMediaLink(['instagram_url' => 'https://instagram.com/asha', 'website_url' => 'https://asha.example']));
+
+    $locked = (new ProfileResource($profile))->resolve();
+    $open = (new ProfileResource($profile, includeContact: true))->resolve();
+
+    expect($locked['sections']['social'])->toBeNull()
+        ->and(json_encode($locked))->not->toContain('instagram.com/asha')
+        ->and($open['sections']['social'])->toMatchArray(['instagram_url' => 'https://instagram.com/asha', 'website_url' => 'https://asha.example']);
+});

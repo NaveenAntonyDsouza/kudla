@@ -164,7 +164,7 @@ class ProfileController extends BaseApiController
      * @response 200 scenario="success" {
      *   "success": true,
      *   "data": {
-     *     "profile": {"matri_id": "AM100042", "full_name": "Priya Rani", "sections": {"contact": null}},
+     *     "profile": {"matri_id": "AM100042", "full_name": "Priya Rani", "sections": {"contact": null, "social": null}},
      *     "match_score": {"score": 85, "badge": "great", "breakdown": []},
      *     "interest_status": "sent",
      *     "is_shortlisted": false,
