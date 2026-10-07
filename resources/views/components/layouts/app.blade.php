@@ -254,8 +254,21 @@
                             </div>
                         </div>
 
-                        {{-- Messages --}}
-                        <a href="{{ route('interests.inbox') }}" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50">Messages</a>
+                        {{-- Interests (requests) and Chats (accepted conversations) — Oct 2026 --}}
+                        @php
+                            $navMe = auth()->user()?->profile;
+                            $navPending = $navMe ? \App\Support\Chats::pendingInterestsCount($navMe) : 0;
+                            $navUnread = $navMe ? \App\Support\Chats::unreadCount($navMe) : 0;
+                        @endphp
+                        <a href="{{ route('interests.inbox', $navPending ? ['tab' => 'received'] : []) }}" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50" style="display: inline-flex; align-items: center; gap: 6px;">
+                            Interests
+                            @if($navPending)<span class="nav-count-badge" aria-label="{{ $navPending }} waiting for your reply">{{ $navPending > 99 ? '99+' : $navPending }}</span>@endif
+                        </a>
+                        <a href="{{ route('chats.index') }}" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-50" style="display: inline-flex; align-items: center; gap: 6px;">
+                            Chats
+                            @if($navUnread)<span class="nav-count-badge" aria-label="{{ $navUnread }} with new messages">{{ $navUnread > 99 ? '99+' : $navUnread }}</span>@endif
+                        </a>
+                        <style>.nav-count-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9999px; background: var(--color-primary, #8B1D91); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }</style>
 
                         {{-- Activity --}}
                         <div x-data="{ open: false }" @click.outside="open = false" class="relative">
@@ -364,8 +377,13 @@
                         </div>
 
                         <!-- Mobile hamburger -->
-                        <button x-data x-on:click="$dispatch('toggle-mobile-menu')" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
+                        <button x-data x-on:click="$dispatch('toggle-mobile-menu')" class="md:hidden p-2 rounded-lg hover:bg-gray-100" style="position: relative;"
+                                @if(($navPending ?? 0) || ($navUnread ?? 0)) aria-label="Menu — new interests or chats" @endif>
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            {{-- something new under Interests / Chats --}}
+                            @if(($navPending ?? 0) || ($navUnread ?? 0))
+                                <span style="position: absolute; top: 4px; right: 4px; width: 9px; height: 9px; border-radius: 9999px; background: var(--color-primary, #8B1D91); box-shadow: 0 0 0 2px #fff;"></span>
+                            @endif
                         </button>
                     </div>
                 </div>
@@ -397,9 +415,21 @@
                     <a href="{{ route('matches.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Matches</a>
                     <a href="{{ route('matches.mutual') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Mutual Matches</a>
 
-                    {{-- Messages --}}
+                    {{-- Interests + Chats --}}
+                    @php
+                        $navMe = auth()->user()?->profile;
+                        $navPending = $navMe ? \App\Support\Chats::pendingInterestsCount($navMe) : 0;
+                        $navUnread = $navMe ? \App\Support\Chats::unreadCount($navMe) : 0;
+                    @endphp
                     <div class="border-t border-gray-100 my-1"></div>
-                    <a href="{{ route('interests.inbox') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Messages</a>
+                    <a href="{{ route('interests.inbox', $navPending ? ['tab' => 'received'] : []) }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100" style="display: flex; align-items: center; justify-content: space-between;">
+                        Interests
+                        @if($navPending)<span class="nav-count-badge">{{ $navPending > 99 ? '99+' : $navPending }}</span>@endif
+                    </a>
+                    <a href="{{ route('chats.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100" style="display: flex; align-items: center; justify-content: space-between;">
+                        Chats
+                        @if($navUnread)<span class="nav-count-badge">{{ $navUnread > 99 ? '99+' : $navUnread }}</span>@endif
+                    </a>
 
                     {{-- Activity --}}
                     <div class="border-t border-gray-100 my-1"></div>

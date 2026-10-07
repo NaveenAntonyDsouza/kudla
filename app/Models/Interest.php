@@ -6,6 +6,8 @@ use App\Support\PhotoVisibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class Interest extends Model
 {
@@ -28,6 +30,8 @@ class Interest extends Model
         'is_trashed_by_sender',
         'is_trashed_by_receiver',
         'cancelled_at',
+        'sender_last_read_at',
+        'receiver_last_read_at',
     ];
 
     protected function casts(): array
@@ -38,6 +42,8 @@ class Interest extends Model
             'is_trashed_by_sender' => 'boolean',
             'is_trashed_by_receiver' => 'boolean',
             'cancelled_at' => 'datetime',
+            'sender_last_read_at' => 'datetime',
+            'receiver_last_read_at' => 'datetime',
         ];
     }
 
@@ -54,5 +60,34 @@ class Interest extends Model
     public function replies(): HasMany
     {
         return $this->hasMany(InterestReply::class);
+    }
+
+    /** The newest reply (accept, decline or chat message) — the Chats list preview. */
+    public function latestReply(): HasOne
+    {
+        return $this->hasOne(InterestReply::class)->latestOfMany();
+    }
+
+    /**
+     * This member has now seen the conversation (Chats unread counts).
+     * Written straight to the table so updated_at — the inbox's date — is
+     * left alone; never fails the page if the column isn't there yet.
+     */
+    public function markReadBy(Profile $profile): void
+    {
+        $column = match ($profile->id) {
+            $this->sender_profile_id => 'sender_last_read_at',
+            $this->receiver_profile_id => 'receiver_last_read_at',
+            default => null,
+        };
+        if (! $column) {
+            return;
+        }
+
+        try {
+            DB::table('interests')->where('id', $this->id)->update([$column => now()]);
+        } catch (\Throwable) {
+            // before the migration has run
+        }
     }
 }

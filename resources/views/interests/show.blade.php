@@ -14,9 +14,10 @@
 
         {{-- Header --}}
         <div class="flex items-center justify-between mb-6">
-            <a href="{{ route('interests.inbox') }}" class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
+            {{-- an accepted interest is a chat: back to Chats; otherwise to Interests --}}
+            <a href="{{ $interest->status === 'accepted' ? route('chats.index') : route('interests.inbox') }}" class="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
-                Back
+                {{ $interest->status === 'accepted' ? 'Chats' : 'Interests' }}
             </a>
             <div class="flex items-center gap-2">
                 {{-- Star --}}

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CascadeController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
@@ -240,6 +241,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::get('/matches/mutual', [MatchController::class, 'mutual'])->name('matches.mutual');
 
     // Interests (specific routes first, parameterized last)
+    Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
     Route::get('/interests', [InterestController::class, 'inbox'])->name('interests.inbox');
     Route::post('/interests/send/{profile}', [InterestController::class, 'send'])->name('interests.send');
     Route::get('/interests/{interest}', [InterestController::class, 'show'])->name('interests.show')->whereNumber('interest');

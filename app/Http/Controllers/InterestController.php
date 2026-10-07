@@ -123,6 +123,9 @@ class InterestController extends Controller
         $isSender = $interest->sender_profile_id === $profile->id;
         $otherProfile = $isSender ? $interest->receiverProfile : $interest->senderProfile;
 
+        // Opening the conversation reads it (Chats unread counts)
+        $interest->markReadBy($profile);
+
         return view('interests.show', compact('interest', 'profile', 'isSender', 'otherProfile'));
     }
 

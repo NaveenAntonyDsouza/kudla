@@ -1,11 +1,11 @@
-<x-layouts.app title="Interest Messages">
+<x-layouts.app title="Interests">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
         <p class="text-sm text-gray-500 mb-6">
             <a href="{{ route('dashboard') }}" class="hover:text-(--color-primary)">My Home</a>
             <span class="mx-1">/</span>
-            <span class="text-gray-700 font-medium">Interest Messages</span>
+            <span class="text-gray-700 font-medium">Interests</span>
         </p>
 
         @if(session('success'))
@@ -22,12 +22,25 @@
             </div>
         @endif
 
+        {{-- Phones: the tab sidebar below is desktop-only (lg:block), so
+             Received / Sent / Starred / Trash get a chip row here --}}
+        <style>.inbox-mobile-tabs{display:flex}@media (min-width:1024px){.inbox-mobile-tabs{display:none}}</style>
+        <nav class="inbox-mobile-tabs" aria-label="Interest tabs" style="flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+            @foreach(['all' => 'All', 'received' => 'Received', 'sent' => 'Sent', 'starred' => 'Starred', 'trash' => 'Trash'] as $key => $label)
+                <a href="{{ route('interests.inbox', ['tab' => $key]) }}"
+                   style="padding: 7px 13px; border-radius: 9999px; font-size: 13px; font-weight: 500; text-decoration: none; border: 1px solid {{ $tab === $key ? 'var(--color-primary, #8B1D91)' : '#d1d5db' }}; background: {{ $tab === $key ? 'var(--color-primary, #8B1D91)' : '#fff' }}; color: {{ $tab === $key ? '#fff' : '#374151' }};"
+                   @if($tab === $key) aria-current="page" @endif>{{ $label }} <span style="opacity: .7;">{{ $counts[$key] ?? 0 }}</span></a>
+            @endforeach
+            <a href="{{ route('chats.index') }}" style="padding: 7px 13px; border-radius: 9999px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid var(--color-primary, #8B1D91); color: var(--color-primary, #8B1D91); background: #fff;">Chats &rarr;</a>
+        </nav>
+
         <div class="flex flex-col lg:flex-row gap-8">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
             <div class="hidden lg:block lg:w-56 shrink-0">
                 <div class="sticky top-24 space-y-1">
-                    <h2 class="text-base font-semibold text-gray-900 mb-3">Interest Messages</h2>
+                    <h2 class="text-base font-semibold text-gray-900 mb-1">Interests</h2>
+                    <a href="{{ route('chats.index') }}" class="block text-xs text-(--color-primary) hover:underline mb-3">Your conversations are under Chats &rarr;</a>
 
                     {{-- Tabs --}}
                     @foreach([
