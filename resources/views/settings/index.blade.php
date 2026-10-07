@@ -20,6 +20,24 @@
             </div>
         @endif
 
+        {{-- Phones: the sidebar below is desktop-only, so without this members on
+             a phone could never reach Hide / Delete / Change Password (kudla
+             contact messages, May–Sep 2026: "no delete account option"). --}}
+        @php
+            $mobileSections = [
+                'search_visibility' => 'Who Can See My Profile', 'manage_alerts' => 'Manage Alerts',
+                'hide_profile' => 'Hide Profile', 'delete_profile' => 'Delete Profile', 'change_password' => 'Change Password',
+            ];
+        @endphp
+        <style>.settings-mobile-nav{display:flex}@media (min-width:1024px){.settings-mobile-nav{display:none}}</style>
+        <nav class="settings-mobile-nav" aria-label="Settings sections" style=" flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+            @foreach($mobileSections as $key => $label)
+                <a href="{{ route('settings.index', ['section' => $key]) }}"
+                   style="padding: 8px 14px; border-radius: 9999px; font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid {{ $section === $key ? 'var(--color-primary, #8B1D91)' : '#d1d5db' }}; background: {{ $section === $key ? 'var(--color-primary, #8B1D91)' : '#fff' }}; color: {{ $section === $key ? '#fff' : '#374151' }};"
+                   @if($section === $key) aria-current="page" @endif>{{ $label }}</a>
+            @endforeach
+        </nav>
+
         <div class="flex flex-col lg:flex-row gap-8">
             {{-- Left Sidebar --}}
             <div class="hidden lg:block lg:w-56 shrink-0">

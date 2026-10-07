@@ -437,6 +437,9 @@ class RegisterController extends Controller
     {
         // No-op on data — just route on. Profile remains photo-less; the
         // "Add a photo" nudge banner on the dashboard will keep prompting.
+        // Counted so the weekly review can see the skip rate next to
+        // photo_upload (source=registration).
+        Analytics::track('photo_skipped', ['source' => 'registration']);
         return $this->redirectAfterPhotoStep();
     }
 

@@ -103,6 +103,7 @@
                                     };
                                 @endphp
 
+                                <div>
                                 <a href="{{ route('interests.show', $interest) }}"
                                     class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
                                     {{-- Star --}}
@@ -140,6 +141,26 @@
                                     {{-- Date --}}
                                     <p class="text-xs text-gray-400 shrink-0 hidden sm:block">{{ $interest->updated_at->displayTz()->format('d M, h:i A') }}</p>
                                 </a>
+
+                                {{-- Answer from the list: pending interests sat unanswered
+                                     until they expired (464 on kudla, Oct 2026). --}}
+                                @if(! $isSender && $interest->status === 'pending')
+                                    <div class="interest-quick-reply" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 20px 14px 76px;">
+                                        <form method="POST" action="{{ route('interests.accept', $interest) }}">
+                                            @csrf
+                                            <input type="hidden" name="template_id" value="reply_accept_1">
+                                            <button type="submit" style="padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff; background: #16a34a; border: 0; cursor: pointer;">Accept</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('interests.decline', $interest) }}"
+                                              onsubmit="return confirm('Decline this interest? They will get a polite reply saying you may not be the right match.');">
+                                            @csrf
+                                            <input type="hidden" name="template_id" value="decline_standard">
+                                            <button type="submit" style="padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #374151; background: #fff; border: 1px solid #d1d5db; cursor: pointer;">Decline</button>
+                                        </form>
+                                        <a href="{{ route('interests.show', $interest) }}" style="font-size: 13px; color: var(--color-primary, #8B1D91);">Reply with a message</a>
+                                    </div>
+                                @endif
+                                </div>
                             @endforeach
                         </div>
 

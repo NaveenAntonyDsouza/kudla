@@ -260,3 +260,12 @@ it('skip endpoint creates no photo row and redirects to verify-email', function 
     expect(\DB::table('profile_photos')->where('profile_id', $user->profile->id)->count())
         ->toBe(0);
 });
+
+it('counts a skipped photo step for the weekly review', function () {
+    actingAsRegistrationUser(userId: 6006, profileId: 6006);
+
+    $this->post('/register/photo/skip');
+
+    expect(array_column((array) session(\App\Support\Analytics::SESSION_KEY, []), 'name'))
+        ->toContain('photo_skipped');
+});
