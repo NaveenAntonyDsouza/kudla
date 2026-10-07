@@ -67,6 +67,7 @@ class Interest extends Model
         'profile' => 'Profile page',
         'card' => 'Profile card',
         'mobile_bar' => 'Phone action bar',
+        'contact_tab' => 'Contact tab',
         'app' => 'Mobile app',
     ];
 

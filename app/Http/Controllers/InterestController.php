@@ -137,7 +137,7 @@ class InterestController extends Controller
         $request->validate([
             'template_id' => 'nullable|string|max:30',
             'custom_message' => 'nullable|string|max:500',
-            'source' => 'nullable|in:profile,card,mobile_bar',
+            'source' => 'nullable|in:profile,card,mobile_bar,contact_tab',
         ]);
 
         $sender = auth()->user()->profile;

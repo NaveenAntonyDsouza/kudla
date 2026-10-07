@@ -115,6 +115,25 @@
                     </form>
                 @endif
             </div>
+
+            {{-- Accepted: carry on over WhatsApp or a call (owner's preferred
+                 channel); this page's chat stays below for anyone who'd rather
+                 not share numbers yet --}}
+            @if($interest->status === 'accepted' && $otherProfile)
+                @php $chatContact = \App\Support\ContactAccess::for($profile, $otherProfile); @endphp
+                @if($chatContact['state'] === \App\Support\ContactAccess::OPEN)
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+                        <p style="margin: 0 0 10px; font-size: 13px; color: #4b5563;">
+                            You're connected. Talk on WhatsApp or call{{ $chatContact['contact']['person'] ? ' — '.$chatContact['contact']['person'].($chatContact['contact']['relationship'] && strcasecmp($chatContact['contact']['relationship'], 'self') !== 0 ? ' ('.$chatContact['contact']['relationship'].')' : '').' will answer' : '' }}{{ $chatContact['contact']['best_time'] ? ', best time: '.$chatContact['contact']['best_time'] : '' }}.
+                        </p>
+                        <x-contact-buttons :contact="$chatContact['contact']" source="chat_page" />
+                    </div>
+                @elseif($chatContact['state'] === \App\Support\ContactAccess::NEEDS_PLAN)
+                    <div style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #fffbeb; border: 1px solid #fde68a; font-size: 13px; color: #92400e;">
+                        Want to call or WhatsApp instead? <a href="{{ route('membership.index') }}" style="font-weight: 600; color: #92400e; text-decoration: underline;">Upgrade to see their phone and WhatsApp</a>
+                    </div>
+                @endif
+            @endif
         </div>
 
         {{-- ── Conversation Thread ── --}}
@@ -127,7 +146,7 @@
                         <span class="text-xs font-semibold text-(--color-primary)">Interest message sent</span>
                         <span class="text-xs text-gray-400 ml-auto">{{ $interest->created_at->displayTz()->format('d M Y, h:i A') }}</span>
                     </div>
-                    <p class="text-sm text-gray-700">{{ $interest->custom_message ?? ($templateTexts[$interest->template_id] ?? $interest->template_id ?? '') }}</p>
+                    <p class="text-sm text-gray-700">{{ $interest->custom_message ?: ($templateTexts[$interest->template_id] ?? 'Sent an interest.') }}</p>
                 </div>
             </div>
 
@@ -158,7 +177,8 @@
                             @if($reply->custom_message)
                                 <p class="text-sm text-gray-700">{{ $reply->custom_message }}</p>
                             @elseif($reply->template_id)
-                                <p class="text-sm text-gray-700">{{ ($templateTexts[$reply->template_id] ?? $reply->template_id ?? '') }}</p>
+                                {{-- a "write my own" choice sent without text left its code (reply_accept_custom) showing --}}
+                                <p class="text-sm text-gray-700">{{ $templateTexts[$reply->template_id] ?? match ($reply->reply_type) { 'accept' => 'Accepted your interest.', 'decline' => 'Declined the interest.', default => '' } }}</p>
                             @endif
                         </div>
                     </div>

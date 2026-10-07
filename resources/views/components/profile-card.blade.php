@@ -228,7 +228,8 @@
             @if($cardInterest['direction'] === 'received' && $cardInterest['status'] === 'pending')
                 <a href="{{ route('interests.show', $cardInterest['interest_id']) }}" class="pc-interest-btn" style="background: #16a34a;">Respond to Interest</a>
             @elseif($cardInterest['status'] === 'accepted')
-                <a href="{{ route('interests.show', $cardInterest['interest_id']) }}" class="pc-interest-done" style="display: block; color: #16a34a;">&#10003; Connected · Chat</a>
+                {{-- connected: straight to their phone / WhatsApp (Contact tab) --}}
+                <a href="{{ route('profile.view', ['profile' => $p, 'tab' => 'contact']) }}" class="pc-interest-done" style="display: block; color: #16a34a;">&#10003; Connected · Contact</a>
             @elseif($cardInterest['direction'] === 'sent' && $cardInterest['status'] === 'pending')
                 <p class="pc-interest-done">&#10003; Interest sent</p>
             @else

@@ -24,11 +24,16 @@
             </div>
         @endif
 
-        <div class="flex flex-col lg:flex-row gap-8" x-data="{ activeTab: @js($activeTab) }">
+        {{-- showContactTab(): "View Contact" (panel, phone bar) jumps straight to the Contact tab --}}
+        <div class="flex flex-col lg:flex-row gap-8"
+             x-data="{ activeTab: @js($activeTab), showContactTab() { this.activeTab = 'contact'; this.$nextTick(() => document.getElementById('profile-tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); } }"
+             x-on:show-contact-tab.window="showContactTab()">
 
             {{-- ══ LEFT SIDEBAR ══ --}}
             <div class="w-full shrink-0 mx-auto lg:mx-0" style="max-width: 256px;">
-                <div class="sticky top-24">
+                {{-- z-index: the Send Interest picker lives in here; without it the
+                     tabs further down (positioned) painted over the picker on phones --}}
+                <div class="sticky top-24" style="z-index: 10;">
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                         {{-- Photo with privacy enforcement --}}
                         @php
@@ -353,6 +358,8 @@
                                 <div class="mt-4 space-y-2" id="profile-actions">
                                     @php
                                         $interestStatus = app(\App\Services\InterestService::class)->getStatus(auth()->user()->profile, $profile);
+                                        $contactAccess = \App\Support\ContactAccess::for(auth()->user()->profile, $profile);
+                                        $contactOpen = $contactAccess['state'] === \App\Support\ContactAccess::OPEN;
                                     @endphp
 
                                     @if(!$interestStatus)
@@ -371,15 +378,38 @@
                                             Respond to Interest
                                         </a>
                                     @elseif($interestStatus['status'] === 'accepted')
-                                        <a href="{{ route('interests.show', $interestStatus['interest']) }}"
-                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-(--color-primary) rounded-lg">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
-                                            Continue Chat
-                                        </a>
+                                        @if($contactOpen)
+                                            {{-- Connected: WhatsApp / Call lead, the site chat stays as an option --}}
+                                            <p class="pv-connected">&#10003; You're connected</p>
+                                            <x-contact-buttons :contact="$contactAccess['contact']" source="profile_panel" />
+                                            <a href="{{ route('interests.show', $interestStatus['interest']) }}"
+                                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                                                Chat here instead
+                                            </a>
+                                        @else
+                                            <a href="{{ route('interests.show', $interestStatus['interest']) }}"
+                                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-(--color-primary) rounded-lg">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                                                Continue Chat
+                                            </a>
+                                        @endif
                                     @elseif($interestStatus['status'] === 'declined')
                                         <div class="text-center py-2">
                                             <span class="text-sm text-gray-500">Interest was declined</span>
                                         </div>
+                                    @endif
+
+                                    {{-- View Contact: open (without an accepted interest, e.g. a plan
+                                         that shows contact to all) → the buttons; locked → explains
+                                         what's needed on the Contact tab --}}
+                                    @if($contactOpen && ($interestStatus['status'] ?? null) !== 'accepted')
+                                        <x-contact-buttons :contact="$contactAccess['contact']" source="profile_panel" />
+                                    @elseif(in_array($contactAccess['state'], [\App\Support\ContactAccess::NO_INTEREST, \App\Support\ContactAccess::SENT_PENDING, \App\Support\ContactAccess::RECEIVED_PENDING, \App\Support\ContactAccess::NEEDS_PLAN], true))
+                                        <button type="button" class="pv-view-contact" @click="showContactTab()">
+                                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                                            View Contact
+                                        </button>
                                     @endif
 
                                     {{-- Shortlist (star) --}}
@@ -494,21 +524,48 @@
 
             {{-- ══ RIGHT: TABBED CONTENT ══ --}}
             <div class="flex-1 min-w-0">
-                {{-- Tab Navigation --}}
-                <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+                {{-- Tab Navigation — on phones all four fit as equal columns (short
+                     labels, icon on top); they used to scroll sideways and
+                     "Contact Details" sat off-screen --}}
+                @php
+                    $tabContactState = ($contactAccess ?? null)['state'] ?? null;
+                @endphp
+                <style>
+                    .pv-tab-short { display: none; }
+                    .pv-tab-open { width: 7px; height: 7px; border-radius: 9999px; background: #22c55e; flex-shrink: 0; }
+                    .pv-tab-lock { color: #9ca3af; flex-shrink: 0; }
+                    @media (max-width: 639px) {
+                        .pv-tabs { overflow: visible; }
+                        .pv-tab { position: relative; flex: 1 1 0; min-width: 0; flex-direction: column; gap: 4px; padding: 10px 2px 9px; font-size: 12.5px; }
+                        .pv-tab svg:first-child { width: 20px; height: 20px; }
+                        .pv-tab-long { display: none; }
+                        .pv-tab-short { display: inline; }
+                        .pv-tab .pv-tab-open, .pv-tab .pv-tab-lock { position: absolute; top: 7px; left: calc(50% + 10px); }
+                    }
+                    .pv-connected { margin: 0 0 2px; text-align: center; font-size: 13px; font-weight: 600; color: #16a34a; }
+                    .pv-view-contact { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; font-size: 14px; font-weight: 500; color: #374151; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; }
+                    .pv-view-contact:hover { background: #f9fafb; }
+                </style>
+                <div id="profile-tabs" class="pv-tabs flex border-b border-gray-200 mb-6 overflow-x-auto" style="scroll-margin-top: 80px;">
                     @foreach([
-                        ['key' => 'personal', 'label' => 'Personal Details', 'icon' => 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0'],
-                        ['key' => 'partner', 'label' => 'Partner Preferences', 'icon' => 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z'],
-                        ['key' => 'family', 'label' => 'Family Details', 'icon' => 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197'],
-                        ['key' => 'contact', 'label' => 'Contact Details', 'icon' => 'M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z'],
+                        ['key' => 'personal', 'label' => 'Personal Details', 'short' => 'Personal', 'icon' => 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0'],
+                        ['key' => 'partner', 'label' => 'Partner Preferences', 'short' => 'Partner', 'icon' => 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z'],
+                        ['key' => 'family', 'label' => 'Family Details', 'short' => 'Family', 'icon' => 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197'],
+                        ['key' => 'contact', 'label' => 'Contact Details', 'short' => 'Contact', 'icon' => 'M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z'],
                     ] as $tab)
                         <button @click="activeTab = '{{ $tab['key'] }}'"
                             :class="activeTab === '{{ $tab['key'] }}' ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                            class="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors">
+                            class="pv-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $tab['icon'] }}"/>
                             </svg>
-                            {{ $tab['label'] }}
+                            <span class="pv-tab-long">{{ $tab['label'] }}</span>
+                            <span class="pv-tab-short">{{ $tab['short'] }}</span>
+                            @if($tab['key'] === 'contact' && $tabContactState === \App\Support\ContactAccess::OPEN)
+                                <span class="pv-tab-open" title="Phone and WhatsApp available"></span>
+                            @elseif($tab['key'] === 'contact' && $tabContactState && $tabContactState !== \App\Support\ContactAccess::OWN)
+                                <svg class="pv-tab-lock" width="11" height="11" fill="currentColor" viewBox="0 0 20 20" aria-label="locked"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
+                            @endif
                         </button>
                     @endforeach
                 </div>
@@ -534,7 +591,26 @@
          while the member reads the details (the panel above scrolls away) --}}
     @if(!($isOwn ?? false) && auth()->check())
         <div class="pv-action-bar" role="region" aria-label="Profile actions">
-            @if(!$interestStatus)
+            @php $barContact = ($contactOpen ?? false) ? $contactAccess['contact'] : null; @endphp
+            @if($barContact && $barContact['whatsapp_link'])
+                {{-- Connected: WhatsApp first (the owner's preferred channel), then call / chat here --}}
+                <a href="{{ $barContact['whatsapp_link'] }}" target="_blank" rel="noopener" class="pv-bar-main" style="background: #25D366;"
+                   onclick="cbTrack('contact_whatsapp_click', 'mobile_bar')">
+                    <x-icons.whatsapp :size="19" />
+                    WhatsApp
+                </a>
+                @if($barContact['tel'])
+                    <a href="{{ $barContact['tel'] }}" class="pv-bar-star" aria-label="Call" title="Call" style="color: #166534; border-color: #86efac;"
+                       onclick="cbTrack('contact_call_click', 'mobile_bar')">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+                    </a>
+                @endif
+                @if(($interestStatus['status'] ?? null) === 'accepted')
+                    <a href="{{ route('interests.show', $interestStatus['interest']) }}" class="pv-bar-star" aria-label="Chat here" title="Chat here">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                    </a>
+                @endif
+            @elseif(!$interestStatus)
                 <button type="button" class="pv-bar-main" x-data @click.stop="$dispatch('open-interest-modal', { source: 'mobile_bar' })">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
                     Send Interest

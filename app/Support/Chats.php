@@ -38,7 +38,11 @@ class Chats
             ->where(fn ($q) => $q
                 ->where(fn ($q) => $q->where('sender_profile_id', $me->id)->where('is_trashed_by_sender', false))
                 ->orWhere(fn ($q) => $q->where('receiver_profile_id', $me->id)->where('is_trashed_by_receiver', false)))
-            ->with(['senderProfile.primaryPhoto', 'receiverProfile.primaryPhoto', 'latestReply'])
+            ->with([
+                'senderProfile.primaryPhoto', 'receiverProfile.primaryPhoto', 'latestReply',
+                // the Chats list offers WhatsApp / Call where contact is open
+                'senderProfile.contactInfo', 'receiverProfile.contactInfo', 'senderProfile.user', 'receiverProfile.user',
+            ])
             ->orderByDesc('last_activity_at')
             ->orderByDesc('interests.id')
             ->paginate($perPage);

@@ -22,6 +22,20 @@ beforeEach(function () {
         $t->softDeletes();
         $t->timestamps();
     });
+    // the Chats list also loads each member's contact (WhatsApp shortcut)
+    Schema::create('users', function (Blueprint $t) {
+        $t->id();
+        $t->string('name')->nullable();
+        $t->string('phone')->nullable();
+        $t->timestamps();
+    });
+    Schema::create('contact_info', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id');
+        $t->string('primary_phone')->nullable();
+        $t->string('whatsapp_number')->nullable();
+        $t->timestamps();
+    });
     Schema::create('profile_photos', function (Blueprint $t) {
         $t->id();
         $t->unsignedBigInteger('profile_id');
@@ -85,7 +99,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (['interest_replies', 'interests', 'profile_photos', 'profiles'] as $table) {
+    foreach (['interest_replies', 'interests', 'profile_photos', 'contact_info', 'users', 'profiles'] as $table) {
         Schema::dropIfExists($table);
     }
 });
@@ -199,6 +213,6 @@ it('shows chats and where interests were sent from on the admin engagement repor
         'members_chatting' => 4,   // profiles 1, 2, 5, 6
         'sent_total' => 3,
     ])->and($page->chatStats['by_source'])->toBe([
-        'Profile page' => 0, 'Profile card' => 1, 'Phone action bar' => 1, 'Mobile app' => 0, 'Before tracking' => 1,
+        'Profile page' => 0, 'Profile card' => 1, 'Phone action bar' => 1, 'Contact tab' => 0, 'Mobile app' => 0, 'Before tracking' => 1,
     ]);
 });

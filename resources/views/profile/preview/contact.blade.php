@@ -6,113 +6,163 @@
 @endphp
 
 @php
-    $canViewContact = false;
-    $isPremium = false;
-    $interestAccepted = false;
-    if (!$isOwn && auth()->check() && auth()->user()->profile) {
-        $myProfileId = auth()->user()->profile->id;
-        $isPremium = auth()->user()->isPremium();
-        $interestAccepted = \App\Models\Interest::where('status', 'accepted')
-            ->where(fn($q) => $q
-                ->where(fn($q2) => $q2->where('sender_profile_id', $myProfileId)->where('receiver_profile_id', $profile->id))
-                ->orWhere(fn($q2) => $q2->where('sender_profile_id', $profile->id)->where('receiver_profile_id', $myProfileId))
-            )->exists();
-        // Both conditions required: must be premium AND interest accepted
-        $canViewContact = $isPremium && $interestAccepted;
-    }
+    // Who may see this member's phone / WhatsApp, and if not, why — the same
+    // answer as the profile panel and phone bar (App\Support\ContactAccess).
+    // Numbers are only in $access['contact'] when it's open.
+    $access = $isOwn ? null : \App\Support\ContactAccess::for(auth()->user()?->profile, $profile);
+    $state = $access['state'] ?? null;
+    $ca = \App\Support\ContactAccess::class;
+    $hasPhone = filled($c?->primary_phone) || filled($user?->phone);
+    $hasWhatsApp = filled($c?->whatsapp_number) || $hasPhone;
+    $pendingInterest = ($interestStatus ?? null)['interest'] ?? null;
+    $socialLinks = collect([
+        ['label' => 'Facebook', 'url' => $s?->facebook_url],
+        ['label' => 'Instagram', 'url' => $s?->instagram_url],
+        ['label' => 'LinkedIn', 'url' => $s?->linkedin_url],
+    ])->filter(fn ($l) => $l['url']);
 @endphp
 
-@if(!$isOwn && !$canViewContact)
-    {{-- Contact details locked --}}
-    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6 mb-6">
-        <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Contact Details</h3>
-        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-                </svg>
-                <div>
-                    <p class="text-sm font-medium text-amber-800">Contact details are locked</p>
-                    @if(!$isPremium && !$interestAccepted)
-                        <p class="text-xs text-amber-600 mt-1">Upgrade to a paid plan and send an interest to view contact details.</p>
-                    @elseif($isPremium && !$interestAccepted)
-                        <p class="text-xs text-amber-600 mt-1">Send an interest and wait for acceptance to view contact details.</p>
-                    @elseif(!$isPremium && $interestAccepted)
-                        <p class="text-xs text-amber-600 mt-1">Upgrade to a paid plan to view contact details.</p>
+@if(!$isOwn)
+    <style>
+        .ct-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px; margin-bottom: 24px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+        .ct-head { display: flex; align-items: flex-start; gap: 14px; }
+        .ct-icon { flex-shrink: 0; width: 44px; height: 44px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; }
+        .ct-title { margin: 0; font-size: 17px; font-weight: 600; color: #111827; }
+        .ct-text { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: #4b5563; }
+        .ct-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .ct-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 9999px; background: #f3f4f6; color: #374151; font-size: 12px; font-weight: 500; }
+        .ct-cta { display: inline-flex; align-items: center; justify-content: center; gap: 7px; margin-top: 16px; min-height: 44px; padding: 0 20px; border-radius: 10px; border: 0; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+        .ct-cta-primary { background: var(--color-primary, #8B1D91); color: #fff; }
+        .ct-cta-green { background: #16a34a; color: #fff; }
+        .ct-link { display: inline-block; margin-top: 10px; margin-left: 4px; font-size: 13px; color: var(--color-primary, #8B1D91); }
+        .ct-rows { margin-top: 18px; border-top: 1px solid #f3f4f6; }
+        .ct-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+        .ct-label { font-size: 12px; color: #6b7280; }
+        .ct-value { font-size: 15px; font-weight: 600; color: #111827; text-decoration: none; word-break: break-all; }
+        .ct-value:hover { color: var(--color-primary, #8B1D91); }
+        .ct-safety { display: flex; gap: 8px; margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #f9fafb; font-size: 12.5px; line-height: 1.5; color: #4b5563; }
+    </style>
+@endif
+
+@if(!$isOwn && $state !== $ca::OPEN)
+    {{-- Locked: what's needed, and the one thing to do next --}}
+    <div class="ct-card">
+        <div class="ct-head">
+            <span class="ct-icon" style="background: #fef3c7; color: #b45309;">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+            </span>
+            <div style="flex: 1; min-width: 0;">
+                <h3 class="ct-title">
+                    @switch($state)
+                        @case($ca::NO_INTEREST) Want to talk? Send an interest first @break
+                        @case($ca::SENT_PENDING) Waiting for their reply @break
+                        @case($ca::RECEIVED_PENDING) They're interested in you @break
+                        @case($ca::NEEDS_PLAN) You're connected — upgrade to call or WhatsApp @break
+                        @default Contact details not available
+                    @endswitch
+                </h3>
+                <p class="ct-text">{{ \App\Support\ContactAccess::lockedReason((string) $state) }}</p>
+
+                @if(in_array($state, [$ca::NO_INTEREST, $ca::SENT_PENDING, $ca::RECEIVED_PENDING, $ca::NEEDS_PLAN], true) && ($hasPhone || $hasWhatsApp))
+                    <div class="ct-chips" aria-label="Available once connected">
+                        @if($hasPhone)<span class="ct-chip">&#128222; Mobile number</span>@endif
+                        @if($hasWhatsApp)<span class="ct-chip">&#128172; WhatsApp</span>@endif
+                        @if(filled($c?->preferred_call_time))<span class="ct-chip">&#128336; Best time to call</span>@endif
+                    </div>
+                @endif
+
+                @if($state === $ca::NO_INTEREST)
+                    <button type="button" class="ct-cta ct-cta-primary" x-data @click.stop="$dispatch('open-interest-modal', { source: 'contact_tab' })">
+                        <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                        Send Interest
+                    </button>
+                @elseif($state === $ca::RECEIVED_PENDING && $pendingInterest)
+                    <a href="{{ route('interests.show', $pendingInterest) }}" class="ct-cta ct-cta-green">Accept or reply</a>
+                @elseif($state === $ca::NEEDS_PLAN)
+                    <a href="{{ route('membership.index') }}" class="ct-cta ct-cta-primary">View membership plans</a>
+                    @if($pendingInterest)
+                        <div><a href="{{ route('interests.show', $pendingInterest) }}" class="ct-link">Or chat here meanwhile &rarr;</a></div>
                     @endif
-                    @if(!$isPremium)
-                        <a href="{{ route('membership.index') }}" class="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-(--color-primary) hover:underline">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                            View Membership Plans
-                        </a>
-                    @endif
-                </div>
+                @elseif($state === $ca::SENT_PENDING)
+                    <div><a href="{{ route('matches.index') }}" class="ct-link">Meanwhile, see more matches &rarr;</a></div>
+                @endif
             </div>
         </div>
     </div>
 
     {{-- Social Media (public) --}}
-    @if($s && ($s->facebook_url || $s->instagram_url || $s->linkedin_url))
+    @if($socialLinks->isNotEmpty())
     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
         <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Social Media Information</h3>
         <div class="space-y-3">
-            @foreach([
-                ['label' => 'Facebook', 'url' => $s->facebook_url],
-                ['label' => 'Instagram', 'url' => $s->instagram_url],
-                ['label' => 'LinkedIn', 'url' => $s->linkedin_url],
-            ] as $social)
-                @if($social['url'])
-                    <div class="flex items-center gap-3 py-2">
-                        <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
-                        <a href="{{ $social['url'] }}" target="_blank" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
-                    </div>
-                @endif
+            @foreach($socialLinks as $social)
+                <div class="flex items-center gap-3 py-2">
+                    <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
+                    <a href="{{ $social['url'] }}" target="_blank" rel="noopener" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
+                </div>
             @endforeach
         </div>
     </div>
     @endif
-@elseif(!$isOwn && $canViewContact)
-    {{-- Premium member or interest accepted — show contact details --}}
-    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6 mb-6">
-        <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Contact Details</h3>
-        @if($c)
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                @foreach([
-                    'Contact Person' => $c->contact_person,
-                    'Relationship' => $c->contact_relationship,
-                    'Phone' => $c->primary_phone,
-                    'WhatsApp' => $c->whatsapp_number,
-                    'Email' => $c->email,
-                ] as $label => $value)
-                    @if($value)
-                        <div>
-                            <p class="text-xs text-gray-500">{{ $label }}</p>
-                            <p class="text-sm font-medium text-gray-900">{{ $value }}</p>
-                        </div>
-                    @endif
-                @endforeach
+@elseif(!$isOwn)
+    {{-- Open: talk on WhatsApp or call, with who answers and when --}}
+    @php $k = $access['contact']; @endphp
+    <div class="ct-card">
+        <div class="ct-head" style="margin-bottom: 16px;">
+            <span class="ct-icon" style="background: #dcfce7; color: #16a34a;">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+            </span>
+            <div style="flex: 1; min-width: 0;">
+                <h3 class="ct-title">Contact {{ $profile->matri_id }}</h3>
+                @if($k['person'] || $k['relationship'])
+                    <p class="ct-text">You'll be talking to <strong>{{ $k['person'] ?: 'the family' }}</strong>@if($k['relationship'] && strcasecmp($k['relationship'], 'self') !== 0) ({{ $k['relationship'] }})@elseif($k['relationship']) (the member)@endif</p>
+                @endif
+                @if($k['best_time'])
+                    <p class="ct-text">&#128336; Best time to call: <strong>{{ $k['best_time'] }}</strong></p>
+                @endif
             </div>
-        @else
-            <p class="text-sm text-gray-500">Contact details not provided by this user.</p>
-        @endif
+        </div>
+
+        <x-contact-buttons :contact="$k" source="contact_tab" />
+
+        <div class="ct-rows">
+            @if($k['phone_display'])
+                <div class="ct-row">
+                    <div><div class="ct-label">Mobile</div>
+                        @if($k['tel'])<a href="{{ $k['tel'] }}" class="ct-value" onclick="cbTrack('contact_call_click', 'contact_tab_number')">{{ $k['phone_display'] }}</a>@else<span class="ct-value">{{ $k['phone_display'] }}</span>@endif
+                    </div>
+                </div>
+            @endif
+            @if($k['whatsapp_display'])
+                <div class="ct-row">
+                    <div><div class="ct-label">WhatsApp{{ $k['whatsapp_is_phone'] ? ' (same as mobile)' : '' }}</div>
+                        <a href="{{ $k['whatsapp_link'] }}" target="_blank" rel="noopener" class="ct-value" onclick="cbTrack('contact_whatsapp_click', 'contact_tab_number')">{{ $k['whatsapp_display'] }}</a>
+                    </div>
+                </div>
+            @endif
+            @if($k['email'])
+                <div class="ct-row">
+                    <div><div class="ct-label">Email</div><a href="mailto:{{ $k['email'] }}" class="ct-value">{{ $k['email'] }}</a></div>
+                </div>
+            @endif
+        </div>
+
+        <div class="ct-safety">
+            <span aria-hidden="true">&#128737;&#65039;</span>
+            <span>Stay safe: involve your family, meet in public places, and never send money. <a href="{{ route('report.create', $profile) }}" style="color: var(--color-primary, #8B1D91);">Report a concern</a></span>
+        </div>
     </div>
 
     {{-- Social Media --}}
-    @if($s && ($s->facebook_url || $s->instagram_url || $s->linkedin_url))
+    @if($socialLinks->isNotEmpty())
     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
         <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Social Media</h3>
         <div class="space-y-3">
-            @foreach([
-                ['label' => 'Facebook', 'url' => $s->facebook_url],
-                ['label' => 'Instagram', 'url' => $s->instagram_url],
-                ['label' => 'LinkedIn', 'url' => $s->linkedin_url],
-            ] as $social)
-                @if($social['url'])
-                    <div class="flex items-center gap-3 py-2">
-                        <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
-                        <a href="{{ $social['url'] }}" target="_blank" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
-                    </div>
-                @endif
+            @foreach($socialLinks as $social)
+                <div class="flex items-center gap-3 py-2">
+                    <span class="text-sm font-medium text-gray-600">{{ $social['label'] }}:</span>
+                    <a href="{{ $social['url'] }}" target="_blank" rel="noopener" class="text-sm text-(--color-primary) hover:underline truncate">{{ $social['url'] }}</a>
+                </div>
             @endforeach
         </div>
     </div>

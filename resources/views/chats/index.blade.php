@@ -23,7 +23,13 @@
                             $unread = (int) $chat->unread_count;
                             $at = $chat->last_activity_at ? \Illuminate\Support\Carbon::parse($chat->last_activity_at) : $chat->updated_at;
                         @endphp
-                        <a href="{{ route('interests.show', $chat) }}" class="chat-row" style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; text-decoration: none;">
+                        @php
+                            $rowContact = $other ? \App\Support\ContactAccess::for($profile, $other) : null;
+                            $rowWhatsApp = ($rowContact['state'] ?? null) === \App\Support\ContactAccess::OPEN ? ($rowContact['contact']['whatsapp_link'] ?? null) : null;
+                            $anyRowWhatsApp = ($anyRowWhatsApp ?? false) || (bool) $rowWhatsApp;
+                        @endphp
+                        <div style="display: flex; align-items: center;">
+                        <a href="{{ route('interests.show', $chat) }}" class="chat-row" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 14px 18px; text-decoration: none;">
                             <div style="width: 48px; height: 48px; border-radius: 9999px; overflow: hidden; flex-shrink: 0; background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
                                 @if($other && ($__photoUrl = \App\Support\PhotoVisibility::urlForCurrentViewer($other)))
                                     <img src="{{ $__photoUrl }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
@@ -46,6 +52,14 @@
                                 </div>
                             </div>
                         </a>
+                        @if($rowWhatsApp)
+                            <a href="{{ $rowWhatsApp }}" target="_blank" rel="noopener" aria-label="Continue on WhatsApp" title="Continue on WhatsApp"
+                               onclick="var p = { source: 'chats_list' }; if (window.gtag) { gtag('event', 'contact_whatsapp_click', p); } if (window.posthog) { posthog.capture('contact_whatsapp_click', p); }"
+                               style="flex-shrink: 0; margin-right: 14px; width: 42px; height: 42px; border-radius: 9999px; background: #25D366; color: #fff; display: flex; align-items: center; justify-content: center;">
+                                <x-icons.whatsapp :size="21" />
+                            </a>
+                        @endif
+                        </div>
                     @endforeach
                 </div>
                 @if($chats->hasPages())
@@ -61,5 +75,9 @@
             @endif
         </div>
     </div>
-    <style>.chat-row:hover { background: #f9fafb; }</style>
+    <style>
+        .chat-row:hover { background: #f9fafb; }
+        /* members' WhatsApp buttons are on this list: hide the site's help button so they aren't confused */
+        @if($anyRowWhatsApp ?? false) .wa-fab { display: none !important; } @endif
+    </style>
 </x-layouts.app>
