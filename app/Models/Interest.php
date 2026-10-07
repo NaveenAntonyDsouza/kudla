@@ -62,6 +62,31 @@ class Interest extends Model
         return $this->hasMany(InterestReply::class);
     }
 
+    /** Where an interest can be sent from (interests.source) → admin label. */
+    public const SOURCES = [
+        'profile' => 'Profile page',
+        'card' => 'Profile card',
+        'mobile_bar' => 'Phone action bar',
+        'app' => 'Mobile app',
+    ];
+
+    /**
+     * Note where a just-sent interest came from. Best-effort, straight to
+     * the table: never fails the send, and skips anything not saved.
+     */
+    public static function recordSource(?self $interest, string $source): void
+    {
+        if (! $interest?->exists || ! array_key_exists($source, self::SOURCES)) {
+            return;
+        }
+
+        try {
+            DB::table('interests')->where('id', $interest->id)->update(['source' => $source]);
+        } catch (\Throwable) {
+            // before the migration has run
+        }
+    }
+
     /** The newest reply (accept, decline or chat message) — the Chats list preview. */
     public function latestReply(): HasOne
     {

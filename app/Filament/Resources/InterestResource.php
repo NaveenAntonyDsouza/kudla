@@ -101,6 +101,14 @@ class InterestResource extends Resource
                     ->sortable()
                     ->color('gray'),
 
+                // Where it was sent from (Oct 2026; earlier interests are blank)
+                Tables\Columns\TextColumn::make('source')
+                    ->label('Sent from')
+                    ->formatStateUsing(fn (?string $state): string => \App\Models\Interest::SOURCES[$state] ?? '—')
+                    ->placeholder('—')
+                    ->color('gray')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Sent')
                     ->since()
@@ -115,6 +123,9 @@ class InterestResource extends Resource
                         'cancelled' => 'Cancelled',
                         'expired' => 'Expired',
                     ]),
+                Tables\Filters\SelectFilter::make('source')
+                    ->label('Sent from')
+                    ->options(\App\Models\Interest::SOURCES),
                 Tables\Filters\Filter::make('date_range')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('from')->label('From'),
@@ -153,6 +164,9 @@ class InterestResource extends Resource
                             default => 'gray',
                         }),
                     Infolists\Components\TextEntry::make('created_at')->label('Sent At')->dateTime('d M Y, h:i A'),
+                    Infolists\Components\TextEntry::make('source')->label('Sent from')
+                        ->formatStateUsing(fn (?string $state): string => \App\Models\Interest::SOURCES[$state] ?? '—')
+                        ->placeholder('— (before Oct 2026)'),
                     Infolists\Components\TextEntry::make('custom_message')->label('Message')->default('(Standard template used)')
                         ->columnSpanFull(),
                 ])

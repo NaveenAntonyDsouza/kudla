@@ -36,6 +36,7 @@ beforeEach(function () {
         $t->unsignedBigInteger('receiver_profile_id');
         $t->string('template_id')->nullable();
         $t->text('custom_message')->nullable();
+        $t->string('source', 20)->nullable();
         $t->string('status')->default('pending');
         $t->boolean('is_starred_by_sender')->default(false);
         $t->boolean('is_starred_by_receiver')->default(false);
@@ -149,4 +150,55 @@ it('splits the menu into Interests and Chats, with phone tabs in the inbox', fun
         ->and($inbox)->toContain('class="inbox-mobile-tabs"')
         ->toContain("@media (min-width:1024px){.inbox-mobile-tabs{display:none}}")
         ->and($show)->toContain("\$interest->status === 'accepted' ? route('chats.index') : route('interests.inbox')");
+});
+
+it('gives the app the same chats list and badge counts', function () {
+    DB::table('profiles')->whereIn('id', [2, 3])->delete(); // cards need many tables; covered elsewhere
+    $user = new App\Models\User(['name' => 'Me']);
+    $user->id = 11;
+    $user->setRelation('profile', chatsMe());
+    $request = Request::create('/api/v1/chats');
+    app()->instance('request', $request);
+    Illuminate\Support\Facades\Auth::setUser($user);
+    $api = new App\Http\Controllers\Api\V1\ChatController();
+
+    $list = $api->index($request)->getData(true);
+    $badges = $api->badges($request)->getData(true);
+
+    expect(array_column($list['data'], 'interest_id'))->toBe([2, 1])
+        ->and($list['data'][1])->toMatchArray(['last_message' => 'Shall our parents talk on Sunday?', 'last_message_from' => 'them', 'unread_count' => 1])
+        ->and($list['data'][0])->toMatchArray(['last_message_from' => 'me', 'unread_count' => 0])
+        ->and($list['data'][0]['last_message'])->not->toStartWith('You:')
+        ->and($list['meta']['total'])->toBe(2)
+        ->and($badges['data'])->toBe(['interests_pending' => 1, 'chats_unread' => 1]);
+});
+
+it('records where an interest was sent from, ignoring unknown places and unsaved interests', function () {
+    Interest::recordSource(Interest::find(3), 'card');
+    Interest::recordSource(Interest::find(4), 'somewhere');
+    Interest::recordSource(new Interest(), 'app');
+
+    expect(DB::table('interests')->where('id', 3)->value('source'))->toBe('card')
+        ->and(DB::table('interests')->where('id', 4)->value('source'))->toBeNull()
+        ->and(DB::table('interests')->whereNotNull('source')->count())->toBe(1);
+});
+
+it('shows chats and where interests were sent from on the admin engagement report', function () {
+    $this->travelTo('2026-10-08 09:00:00');
+    DB::table('interests')->where('id', 3)->update(['source' => 'card', 'created_at' => '2026-10-07 09:00:00']);
+    DB::table('interests')->where('id', 1)->update(['source' => 'mobile_bar', 'created_at' => '2026-10-07 09:00:00']);
+    DB::table('interests')->where('id', 2)->update(['created_at' => '2026-10-07 09:00:00']); // before tracking
+
+    $page = new App\Filament\Pages\EngagementReports();
+    (new ReflectionMethod($page, 'loadChatStats'))->invoke($page);
+
+    expect($page->chatStats)->toMatchArray([
+        'new_chats' => 2,          // two accept replies
+        'active_chats' => 3,       // interests 1, 4, 5 have messages
+        'messages' => 4,
+        'members_chatting' => 4,   // profiles 1, 2, 5, 6
+        'sent_total' => 3,
+    ])->and($page->chatStats['by_source'])->toBe([
+        'Profile page' => 0, 'Profile card' => 1, 'Phone action bar' => 1, 'Mobile app' => 0, 'Before tracking' => 1,
+    ]);
 });

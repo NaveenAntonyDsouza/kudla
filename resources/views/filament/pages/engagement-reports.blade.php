@@ -15,6 +15,32 @@
         @endforeach
     </div>
 
+    {{-- Chats & where interests are sent from — last 30 days (Oct 2026) --}}
+    @if(!empty($chatStats))
+    <div style="font-size: 14px; font-weight: 600; margin: 4px 0 10px;">Last 30 days — chats and interest buttons</div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr) 2fr; gap: 16px; margin-bottom: 24px;">
+        @foreach([
+            ['label' => 'New chats (accepted)', 'value' => $chatStats['new_chats'], 'color' => '#10B981'],
+            ['label' => 'Chats with messages', 'value' => $chatStats['active_chats'], 'color' => '#8B1D91'],
+            ['label' => 'Chat messages', 'value' => $chatStats['messages'], 'color' => '#3B82F6'],
+            ['label' => 'Members chatting', 'value' => $chatStats['members_chatting'], 'color' => '#6366F1'],
+        ] as $stat)
+        <div style="background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.2); border-radius: 8px; padding: 16px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 700; color: {{ $stat['color'] }};">{{ number_format($stat['value']) }}</div>
+            <div style="font-size: 12px; opacity: 0.6; margin-top: 4px;">{{ $stat['label'] }}</div>
+        </div>
+        @endforeach
+        <div style="background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.2); border-radius: 8px; padding: 12px 16px;">
+            <div style="font-size: 12px; opacity: 0.6; margin-bottom: 6px;">Interests sent from ({{ number_format($chatStats['sent_total']) }})</div>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                @foreach($chatStats['by_source'] as $label => $count)
+                    <tr><td style="padding: 2px 0;">{{ $label }}</td><td style="padding: 2px 0; text-align: right; font-weight: 600;">{{ number_format($count) }}</td></tr>
+                @endforeach
+            </table>
+        </div>
+    </div>
+    @endif
+
     {{-- Charts Row --}}
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px;">
         <div style="background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.2); border-radius: 8px; padding: 16px;">

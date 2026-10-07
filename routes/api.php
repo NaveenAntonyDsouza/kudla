@@ -188,6 +188,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/interests/{interest}/messages', [\App\Http\Controllers\Api\V1\InterestController::class, 'messages'])
             ->middleware('throttle:120,1');
 
+        // Chats (Oct 2026) — accepted interests as conversations, plus the
+        // tab-badge counts (read on every screen, so 60/min like notifications).
+        Route::get('/chats', [\App\Http\Controllers\Api\V1\ChatController::class, 'index']);
+        Route::get('/chats/badges', [\App\Http\Controllers\Api\V1\ChatController::class, 'badges'])
+            ->middleware('throttle:60,1');
+
         // Membership read-side (week 4 step 3). /me returns viewer's
         // active membership + today's usage. /coupon/validate runs the
         // canonical Coupon::validateFor logic — auth-required because

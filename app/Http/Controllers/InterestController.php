@@ -143,14 +143,16 @@ class InterestController extends Controller
         $sender = auth()->user()->profile;
 
         try {
-            $this->interestService->send(
+            $interest = $this->interestService->send(
                 $sender,
                 $profile,
                 $request->template_id,
                 $request->custom_message
             );
 
-            Analytics::track('interest_sent', ['source' => $request->input('source', 'profile')], 'InterestSent');
+            $source = $request->input('source', 'profile');
+            Interest::recordSource($interest, $source);
+            Analytics::track('interest_sent', ['source' => $source], 'InterestSent');
 
             // Cards in search/matches send in place, so the member keeps their
             // place in the list.

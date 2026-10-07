@@ -70,7 +70,7 @@ class Chats
     }
 
     /** One line for the Chats list: what was last said, and by whom. */
-    public static function preview(Interest $chat, Profile $me): string
+    public static function preview(Interest $chat, Profile $me, bool $withYouPrefix = true): string
     {
         $reply = $chat->latestReply;
         $text = match ($reply?->reply_type) {
@@ -79,7 +79,7 @@ class Chats
             default => 'Interest accepted — say hello',
         };
         $text = trim(preg_replace('/\s+/', ' ', $text));
-        if ($reply && $reply->replier_profile_id === $me->id) {
+        if ($withYouPrefix && $reply && $reply->replier_profile_id === $me->id) {
             $text = 'You: '.$text;
         }
 

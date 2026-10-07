@@ -25,6 +25,7 @@ class EngagementReports extends Page
     public array $mostViewed = [];
     public array $mostShortlisted = [];
     public array $mostActiveSenders = [];
+    public array $chatStats = [];
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -48,6 +49,45 @@ class EngagementReports extends Page
         $this->loadMostViewed();
         $this->loadMostShortlisted();
         $this->loadMostActiveSenders();
+        $this->loadChatStats();
+    }
+
+    /**
+     * Last 30 days: chats (accepted interests with messages) and where
+     * interests were sent from — profile page, card, phone bar, app
+     * (interests.source, recorded from Oct 2026).
+     */
+    private function loadChatStats(): void
+    {
+        $since = Carbon::now()->subDays(30);
+
+        try {
+            $messages = fn () => DB::table('interest_replies')->where('reply_type', 'message')->where('created_at', '>=', $since);
+            $bySource = Interest::where('created_at', '>=', $since)
+                ->select('source', DB::raw('COUNT(*) as total'))
+                ->groupBy('source')
+                ->pluck('total', 'source');
+
+            $sources = [];
+            foreach (Interest::SOURCES as $key => $label) {
+                $sources[$label] = (int) ($bySource[$key] ?? 0);
+            }
+            $untracked = (int) $bySource->filter(fn ($n, $key) => ! array_key_exists((string) $key, Interest::SOURCES))->sum();
+            if ($untracked > 0) {
+                $sources['Before tracking'] = $untracked;
+            }
+
+            $this->chatStats = [
+                'new_chats' => DB::table('interest_replies')->where('reply_type', 'accept')->where('created_at', '>=', $since)->count(),
+                'active_chats' => $messages()->distinct()->count('interest_id'),
+                'messages' => $messages()->count(),
+                'members_chatting' => $messages()->distinct()->count('replier_profile_id'),
+                'by_source' => $sources,
+                'sent_total' => array_sum($sources),
+            ];
+        } catch (\Throwable) {
+            $this->chatStats = [];
+        }
     }
 
     private function loadStats(): void

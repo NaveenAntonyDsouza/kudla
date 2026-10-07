@@ -243,6 +243,9 @@ class InterestController extends BaseApiController
 
         $interest->loadMissing(['senderProfile.user', 'receiverProfile.user', 'replies']);
 
+        // Reading the thread in the app clears it on the website's Chats too
+        $interest->markReadBy($viewer);
+
         return ApiResponse::ok($this->toCard($interest, $viewer));
     }
 
@@ -296,6 +299,7 @@ class InterestController extends BaseApiController
             return $this->serviceError($e);
         }
 
+        Interest::recordSource($interest, 'app');
         $interest->loadMissing(['senderProfile.user', 'receiverProfile.user', 'replies']);
 
         return ApiResponse::created($this->toCard($interest, $sender));
@@ -693,6 +697,9 @@ class InterestController extends BaseApiController
         // each poll.
         $threadStatus = (string) (Interest::whereKey($interest->id)->value('status')
             ?? $interest->status);
+
+        // The chat screen is open and polling: everything shown is read
+        $interest->markReadBy($viewer);
 
         return ApiResponse::ok([
             'replies' => $replies
