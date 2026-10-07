@@ -94,7 +94,8 @@ explicitly enable email OTP login via site_settings).</a>
 by phone OTP (single source of truth for the 3 purpose branches).</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="authentication-POSTapi-v1-auth-login-password">
-                                <a href="#authentication-POSTapi-v1-auth-login-password">Log in with email + password. Primary login flow for existing users.</a>
+                                <a href="#authentication-POSTapi-v1-auth-login-password">Log in with email, mobile number or Matri ID + password. Primary login
+flow for existing users. Same matching rules as the website login.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="authentication-POSTapi-v1-auth-password-forgot">
                                 <a href="#authentication-POSTapi-v1-auth-password-forgot">Send a password reset email via Laravel's Password broker.</a>
@@ -143,6 +144,20 @@ a partial state isn't visible to other requests.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="block-POSTapi-v1-profiles--matriId--unblock">
                                 <a href="#block-POSTapi-v1-profiles--matriId--unblock">Unblock a target profile. Idempotent — no-op when no block exists.</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
+                    <ul id="tocify-header-chats" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="chats">
+                    <a href="#chats">Chats</a>
+                </li>
+                                    <ul id="tocify-subheader-chats" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="chats-GETapi-v1-chats">
+                                <a href="#chats-GETapi-v1-chats">Accepted conversations, newest activity first.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="chats-GETapi-v1-chats-badges">
+                                <a href="#chats-GETapi-v1-chats-badges">Counts for the app's tab badges: interests waiting for a reply, and
+conversations with something unread.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -592,7 +607,7 @@ approval gates publication.</a>
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: April 26, 2026</li>
+        <li>Last updated: October 7, 2026</li>
     </ul>
 </div>
 
@@ -864,7 +879,7 @@ Must be one of:
                value="choose-a-password"
                data-component="body">
     <br>
-<p>6-14 characters. Hashed with bcrypt before storage. Must be at least 6 characters. Must not be greater than 14 characters. Example: <code>choose-a-password</code></p>
+<p>6-64 characters. Hashed with bcrypt before storage. Must be at least 6 characters. Must not be greater than 64 characters. Example: <code>choose-a-password</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>ref</code></b>&nbsp;&nbsp;
@@ -1714,7 +1729,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
         </div>
         </form>
 
-                    <h2 id="authentication-POSTapi-v1-auth-login-password">Log in with email + password. Primary login flow for existing users.</h2>
+                    <h2 id="authentication-POSTapi-v1-auth-login-password">Log in with email, mobile number or Matri ID + password. Primary login
+flow for existing users. Same matching rules as the website login.</h2>
 
 <p>
 </p>
@@ -1731,6 +1747,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
+    \"login\": \"KM100123\",
     \"email\": \"gbailey@example.net\",
     \"password\": \"|]|{+-\",
     \"device_name\": \"architecto\"
@@ -1749,6 +1766,7 @@ const headers = {
 };
 
 let body = {
+    "login": "KM100123",
     "email": "gbailey@example.net",
     "password": "|]|{+-",
     "device_name": "architecto"
@@ -1797,7 +1815,7 @@ fetch(url, {
     &quot;success&quot;: false,
     &quot;error&quot;: {
         &quot;code&quot;: &quot;UNAUTHENTICATED&quot;,
-        &quot;message&quot;: &quot;Invalid email or password.&quot;
+        &quot;message&quot;: &quot;Invalid login details or password.&quot;
     }
 }</code>
  </pre>
@@ -1812,7 +1830,7 @@ fetch(url, {
         &quot;code&quot;: &quot;VALIDATION_FAILED&quot;,
         &quot;message&quot;: &quot;...&quot;,
         &quot;fields&quot;: {
-            &quot;email&quot;: [
+            &quot;login&quot;: [
                 &quot;...&quot;
             ]
         }
@@ -1906,16 +1924,28 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                                 <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
         <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>login</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="login"                data-endpoint="POSTapi-v1-auth-login-password"
+               value="KM100123"
+               data-component="body">
+    <br>
+<p>Email, 10-digit mobile number (country code / spaces allowed) or Matri ID (e.g. KM100123). Required unless <code>email</code> is sent. Example: <code>KM100123</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>email</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
- &nbsp;
+<i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="email"                data-endpoint="POSTapi-v1-auth-login-password"
                value="gbailey@example.net"
                data-component="body">
     <br>
-<p>Registered email address. Example: <code>gbailey@example.net</code></p>
+<p>Older field name — still accepted (any of the three identifiers). Example: <code>gbailey@example.net</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password</code></b>&nbsp;&nbsp;
@@ -2318,7 +2348,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="|]|{+-"
                data-component="body">
     <br>
-<p>New password (6-14 chars). Example: <code>|]|{+-</code></p>
+<p>New password (6-64 chars). Example: <code>|]|{+-</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>password_confirmation</code></b>&nbsp;&nbsp;
@@ -2350,38 +2380,34 @@ You can check the Dev Tools console for debugging information.</code></pre>
     <pre><code class="language-bash">curl --request POST \
     "http://localhost:8000/api/v1/auth/register/step-2" \
     --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
-    --header "Content-Type: multipart/form-data" \
+    --header "Content-Type: application/json" \
     --header "Accept: application/json" \
-    --form "height=170 cm - 5 ft 07 inch"\
-    --form "complexion=Wheatish"\
-    --form "body_type=Average"\
-    --form "physical_status=Normal"\
-    --form "da_category=architecto"\
-    --form "da_category_other=n"\
-    --form "da_description=g"\
-    --form "marital_status=Never Married"\
-    --form "children_with_me=0"\
-    --form "children_not_with_me=0"\
-    --form "family_status=Middle Class"\
-    --form "religion=Hindu"\
-    --form "denomination=architecto"\
-    --form "diocese=architecto"\
-    --form "diocese_name=architecto"\
-    --form "parish_name_place=architecto"\
-    --form "caste=Brahmin"\
-    --form "sub_caste=architecto"\
-    --form "time_of_birth=06:30"\
-    --form "place_of_birth=architecto"\
-    --form "rashi=architecto"\
-    --form "nakshatra=architecto"\
-    --form "gotra=architecto"\
-    --form "manglik=architecto"\
-    --form "muslim_sect=architecto"\
-    --form "muslim_community=architecto"\
-    --form "religious_observance=architecto"\
-    --form "jain_sect=architecto"\
-    --form "other_religion_name=architecto"\
-    --form "jathakam=@C:\Users\Lenovo\AppData\Local\Temp\php9394.tmp" </code></pre></div>
+    --data "{
+    \"height\": \"170 cm - 5 ft 07 inch\",
+    \"weight_kg\": \"bngzmiyvdljnikhw\",
+    \"marital_status\": \"Never Married\",
+    \"children_with_me\": 0,
+    \"children_not_with_me\": 0,
+    \"mother_tongue\": \"Tulu\",
+    \"languages_known\": [
+        \"a\"
+    ],
+    \"religion\": \"Hindu\",
+    \"denomination\": \"architecto\",
+    \"other_denomination_name\": \"n\",
+    \"diocese\": \"architecto\",
+    \"diocese_name\": \"architecto\",
+    \"parish_name_place\": \"architecto\",
+    \"caste\": \"Brahmin\",
+    \"other_caste_name\": \"n\",
+    \"sub_caste\": \"architecto\",
+    \"muslim_sect\": \"architecto\",
+    \"muslim_community\": \"architecto\",
+    \"religious_observance\": \"architecto\",
+    \"jain_sect\": \"architecto\",
+    \"other_religion_name\": \"architecto\"
+}"
+</code></pre></div>
 
 
 <div class="javascript-example">
@@ -2391,46 +2417,40 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 const headers = {
     "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
-    "Content-Type": "multipart/form-data",
+    "Content-Type": "application/json",
     "Accept": "application/json",
 };
 
-const body = new FormData();
-body.append('height', '170 cm - 5 ft 07 inch');
-body.append('complexion', 'Wheatish');
-body.append('body_type', 'Average');
-body.append('physical_status', 'Normal');
-body.append('da_category', 'architecto');
-body.append('da_category_other', 'n');
-body.append('da_description', 'g');
-body.append('marital_status', 'Never Married');
-body.append('children_with_me', '0');
-body.append('children_not_with_me', '0');
-body.append('family_status', 'Middle Class');
-body.append('religion', 'Hindu');
-body.append('denomination', 'architecto');
-body.append('diocese', 'architecto');
-body.append('diocese_name', 'architecto');
-body.append('parish_name_place', 'architecto');
-body.append('caste', 'Brahmin');
-body.append('sub_caste', 'architecto');
-body.append('time_of_birth', '06:30');
-body.append('place_of_birth', 'architecto');
-body.append('rashi', 'architecto');
-body.append('nakshatra', 'architecto');
-body.append('gotra', 'architecto');
-body.append('manglik', 'architecto');
-body.append('muslim_sect', 'architecto');
-body.append('muslim_community', 'architecto');
-body.append('religious_observance', 'architecto');
-body.append('jain_sect', 'architecto');
-body.append('other_religion_name', 'architecto');
-body.append('jathakam', document.querySelector('input[name="jathakam"]').files[0]);
+let body = {
+    "height": "170 cm - 5 ft 07 inch",
+    "weight_kg": "bngzmiyvdljnikhw",
+    "marital_status": "Never Married",
+    "children_with_me": 0,
+    "children_not_with_me": 0,
+    "mother_tongue": "Tulu",
+    "languages_known": [
+        "a"
+    ],
+    "religion": "Hindu",
+    "denomination": "architecto",
+    "other_denomination_name": "n",
+    "diocese": "architecto",
+    "diocese_name": "architecto",
+    "parish_name_place": "architecto",
+    "caste": "Brahmin",
+    "other_caste_name": "n",
+    "sub_caste": "architecto",
+    "muslim_sect": "architecto",
+    "muslim_community": "architecto",
+    "religious_observance": "architecto",
+    "jain_sect": "architecto",
+    "other_religion_name": "architecto"
+};
 
 fetch(url, {
     method: "POST",
     headers,
-    body,
+    body: JSON.stringify(body),
 }).then(response =&gt; response.json());</code></pre></div>
 
 </span>
@@ -2489,7 +2509,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <form id="form-POSTapi-v1-auth-register-step-2" data-method="POST"
       data-path="api/v1/auth/register/step-2"
       data-authed="1"
-      data-hasfiles="1"
+      data-hasfiles="0"
       data-isarraybody="0"
       autocomplete="off"
       onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-auth-register-step-2', this);">
@@ -2537,10 +2557,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="Content-Type"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="multipart/form-data"
+               value="application/json"
                data-component="header">
     <br>
-<p>Example: <code>multipart/form-data</code></p>
+<p>Example: <code>application/json</code></p>
             </div>
                                 <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
@@ -2568,76 +2588,16 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Free-form height label (e.g. "170 cm - 5 ft 07 inch"). Stored as written. Example: <code>170 cm - 5 ft 07 inch</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>complexion</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="complexion"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="Wheatish"
-               data-component="body">
-    <br>
-<p>Self-described complexion. Reference list at GET /reference/complexions. Example: <code>Wheatish</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>body_type</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="body_type"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="Average"
-               data-component="body">
-    <br>
-<p>Body type. Reference list at GET /reference/body-types. Example: <code>Average</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>physical_status</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="physical_status"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="Normal"
-               data-component="body">
-    <br>
-<p>Physical status. "Differently Abled" requires da_category + da_description. Example: <code>Normal</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>da_category</code></b>&nbsp;&nbsp;
+            <b style="line-height: 2;"><code>weight_kg</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="da_category"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="architecto"
+                              name="weight_kg"                data-endpoint="POSTapi-v1-auth-register-step-2"
+               value="bngzmiyvdljnikhw"
                data-component="body">
     <br>
-<p>Differently-abled category. Required when physical_status="Differently Abled". "Other" requires da_category_other. This field is required when <code>physical_status</code> is <code>Differently Abled</code>. Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>da_category_other</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="da_category_other"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="n"
-               data-component="body">
-    <br>
-<p>Free-text DA category when da_category="Other". Max 50. This field is required when <code>da_category</code> is <code>Other</code>. Must not be greater than 50 characters. Example: <code>n</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>da_description</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="da_description"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="g"
-               data-component="body">
-    <br>
-<p>Free-text DA description. Required when physical_status="Differently Abled". Max 500. This field is required when <code>physical_status</code> is <code>Differently Abled</code>. Must not be greater than 500 characters. Example: <code>g</code></p>
+<p>Must not be greater than 20 characters. Example: <code>bngzmiyvdljnikhw</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>marital_status</code></b>&nbsp;&nbsp;
@@ -2676,16 +2636,30 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Children not currently living with the user. 0+. Must be at least 0. Example: <code>0</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>family_status</code></b>&nbsp;&nbsp;
+            <b style="line-height: 2;"><code>mother_tongue</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
  &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="family_status"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="Middle Class"
+                              name="mother_tongue"                data-endpoint="POSTapi-v1-auth-register-step-2"
+               value="Tulu"
                data-component="body">
     <br>
-<p>Family status. Reference list at GET /reference/family-statuses. Example: <code>Middle Class</code></p>
+<p>Mother tongue (required). Core match field. Reference list at GET /reference/languages. Must not be greater than 50 characters. Example: <code>Tulu</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>languages_known</code></b>&nbsp;&nbsp;
+<small>string[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="languages_known[0]"                data-endpoint="POSTapi-v1-auth-register-step-2"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="languages_known[1]"                data-endpoint="POSTapi-v1-auth-register-step-2"
+               data-component="body">
+    <br>
+<p>Must not be greater than 50 characters.</p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>religion</code></b>&nbsp;&nbsp;
@@ -2710,6 +2684,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Christian denomination. Required when religion="Christian". This field is required when <code>religion</code> is <code>Christian</code>. Example: <code>architecto</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>other_denomination_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="other_denomination_name"                data-endpoint="POSTapi-v1-auth-register-step-2"
+               value="n"
+               data-component="body">
+    <br>
+<p>Typed denomination when denomination="Other" (covers rare Eastern Catholic rites and breakaway groups in either Catholic or Non-Catholic). This field is required when <code>denomination</code> is <code>Other</code>. Must not be greater than 100 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>diocese</code></b>&nbsp;&nbsp;
@@ -2757,7 +2743,19 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="Brahmin"
                data-component="body">
     <br>
-<p>Caste. Required when religion="Hindu" or "Jain". This field is required when <code>religion</code> is <code>Hindu</code>. This field is required when <code>religion</code> is <code>Jain</code>. Example: <code>Brahmin</code></p>
+<p>Caste. Required when religion="Hindu" or "Jain". This field is required when <code>religion</code> is <code>Hindu</code>. Example: <code>Brahmin</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>other_caste_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="other_caste_name"                data-endpoint="POSTapi-v1-auth-register-step-2"
+               value="n"
+               data-component="body">
+    <br>
+<p>Typed caste when caste="Other (not listed)" or "Other". Must not be greater than 100 characters. Example: <code>n</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>sub_caste</code></b>&nbsp;&nbsp;
@@ -2770,90 +2768,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Sub-caste (Hindu/Jain). Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>time_of_birth</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="time_of_birth"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="06:30"
-               data-component="body">
-    <br>
-<p>Time of birth (HH:MM, optional, used for jathakam matching). Example: <code>06:30</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>place_of_birth</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="place_of_birth"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Place of birth (free-text). Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>rashi</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="rashi"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Rashi / moon sign. Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>nakshatra</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="nakshatra"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Nakshatra / birth star. Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>gotra</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="gotra"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Gotra (Hindu). Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>manglik</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="manglik"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value="architecto"
-               data-component="body">
-    <br>
-<p>Manglik status (Yes / No / Partial). Example: <code>architecto</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>jathakam</code></b>&nbsp;&nbsp;
-<small>file</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="file" style="display: none"
-                              name="jathakam"                data-endpoint="POSTapi-v1-auth-register-step-2"
-               value=""
-               data-component="body">
-    <br>
-<p>Jathakam document (jpg/jpeg/png/pdf, max 2 MB). NOTE: API flow uploads jathakam via POST /api/v1/profile/me/jathakam separately — this field is accepted but optional here. Must be a file. Must not be greater than 2048 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php9394.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>muslim_sect</code></b>&nbsp;&nbsp;
@@ -2944,10 +2858,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"occupation_detail\": \"n\",
     \"employment_category\": \"Private Sector\",
     \"employer_name\": \"g\",
-    \"annual_income\": \"5-10 LPA\",
-    \"working_country\": \"India\",
-    \"working_state\": \"z\",
-    \"working_district\": \"m\"
+    \"annual_income\": \"5-10 LPA\"
 }"
 </code></pre></div>
 
@@ -2972,10 +2883,7 @@ let body = {
     "occupation_detail": "n",
     "employment_category": "Private Sector",
     "employer_name": "g",
-    "annual_income": "5-10 LPA",
-    "working_country": "India",
-    "working_state": "z",
-    "working_district": "m"
+    "annual_income": "5-10 LPA"
 };
 
 fetch(url, {
@@ -3214,42 +3122,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
     <br>
 <p>Annual income bucket. Reference list at GET /reference/income-ranges. Must not be greater than 50 characters. Example: <code>5-10 LPA</code></p>
         </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>working_country</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="working_country"                data-endpoint="POSTapi-v1-auth-register-step-3"
-               value="India"
-               data-component="body">
-    <br>
-<p>Country where the user works currently. Must not be greater than 100 characters. Example: <code>India</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>working_state</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="working_state"                data-endpoint="POSTapi-v1-auth-register-step-3"
-               value="z"
-               data-component="body">
-    <br>
-<p>Working state (free-text). Must not be greater than 100 characters. Example: <code>z</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>working_district</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="working_district"                data-endpoint="POSTapi-v1-auth-register-step-3"
-               value="m"
-               data-component="body">
-    <br>
-<p>Working district (free-text). Must not be greater than 100 characters. Example: <code>m</code></p>
-        </div>
         </form>
 
                     <h2 id="authentication-POSTapi-v1-auth-register-step-4">Register step 4: location + contact.</h2>
@@ -3274,12 +3146,17 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"native_country\": \"India\",
     \"native_state\": \"Karnataka\",
     \"native_district\": \"Dakshina Kannada\",
-    \"whatsapp_number\": \"b\",
+    \"native_place\": \"b\",
+    \"working_country\": \"n\",
+    \"working_state\": \"g\",
+    \"working_district\": \"z\",
+    \"working_city\": \"m\",
+    \"whatsapp_number\": \"i\",
     \"mobile_number\": \"9876543210\",
-    \"custodian_name\": \"n\",
-    \"custodian_relation\": \"g\",
-    \"communication_address\": \"123 Main Street, Mangalore\",
-    \"pin_zip_code\": \"575001\"
+    \"created_by\": \"y\",
+    \"creator_name\": \"v\",
+    \"creator_contact_number\": \"d\",
+    \"how_did_you_hear_about_us\": \"l\"
 }"
 </code></pre></div>
 
@@ -3299,12 +3176,17 @@ let body = {
     "native_country": "India",
     "native_state": "Karnataka",
     "native_district": "Dakshina Kannada",
-    "whatsapp_number": "b",
+    "native_place": "b",
+    "working_country": "n",
+    "working_state": "g",
+    "working_district": "z",
+    "working_city": "m",
+    "whatsapp_number": "i",
     "mobile_number": "9876543210",
-    "custodian_name": "n",
-    "custodian_relation": "g",
-    "communication_address": "123 Main Street, Mangalore",
-    "pin_zip_code": "575001"
+    "created_by": "y",
+    "creator_name": "v",
+    "creator_contact_number": "d",
+    "how_did_you_hear_about_us": "l"
 };
 
 fetch(url, {
@@ -3472,16 +3354,76 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Native district. Required when native_country="India". This field is required when <code>native_country</code> is <code>India</code>. Must not be greater than 100 characters. Example: <code>Dakshina Kannada</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>native_place</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="native_place"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="b"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>b</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>working_country</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="working_country"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="n"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>n</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>working_state</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="working_state"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="g"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>g</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>working_district</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="working_district"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="z"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>z</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>working_city</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="working_city"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="m"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>m</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>whatsapp_number</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
                               name="whatsapp_number"                data-endpoint="POSTapi-v1-auth-register-step-4"
-               value="b"
+               value="i"
                data-component="body">
     <br>
-<p>WhatsApp number for follow-up. Up to 15 chars (international tolerant). Must not be greater than 15 characters. Example: <code>b</code></p>
+<p>WhatsApp number for follow-up. Up to 15 chars (international tolerant). Must not be greater than 15 characters. Example: <code>i</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>mobile_number</code></b>&nbsp;&nbsp;
@@ -3496,52 +3438,52 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Primary mobile number for the profile. Up to 15 chars. Must not be greater than 15 characters. Example: <code>9876543210</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>custodian_name</code></b>&nbsp;&nbsp;
+            <b style="line-height: 2;"><code>created_by</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="created_by"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="y"
+               data-component="body">
+    <br>
+<p>Must not be greater than 50 characters. Example: <code>y</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>creator_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="creator_name"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="v"
+               data-component="body">
+    <br>
+<p>Must not be greater than 100 characters. Example: <code>v</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>creator_contact_number</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="creator_contact_number"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="d"
+               data-component="body">
+    <br>
+<p>Must not be greater than 15 characters. Example: <code>d</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>how_did_you_hear_about_us</code></b>&nbsp;&nbsp;
 <small>string</small>&nbsp;
 <i>optional</i> &nbsp;
  &nbsp;
                 <input type="text" style="display: none"
-                              name="custodian_name"                data-endpoint="POSTapi-v1-auth-register-step-4"
-               value="n"
+                              name="how_did_you_hear_about_us"                data-endpoint="POSTapi-v1-auth-register-step-4"
+               value="l"
                data-component="body">
     <br>
-<p>Profile custodian (parent/sibling/relative) handling enquiries. Must not be greater than 100 characters. Example: <code>n</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>custodian_relation</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="custodian_relation"                data-endpoint="POSTapi-v1-auth-register-step-4"
-               value="g"
-               data-component="body">
-    <br>
-<p>Relationship of custodian to the candidate (e.g. Father, Mother, Brother). Must not be greater than 100 characters. Example: <code>g</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>communication_address</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="communication_address"                data-endpoint="POSTapi-v1-auth-register-step-4"
-               value="123 Main Street, Mangalore"
-               data-component="body">
-    <br>
-<p>Postal address for communication. Up to 200 chars. Must not be greater than 200 characters. Example: <code>123 Main Street, Mangalore</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>pin_zip_code</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="pin_zip_code"                data-endpoint="POSTapi-v1-auth-register-step-4"
-               value="575001"
-               data-component="body">
-    <br>
-<p>PIN / ZIP code. Up to 10 chars. Must not be greater than 10 characters. Example: <code>575001</code></p>
+<p>Must not be greater than 100 characters. Example: <code>l</code></p>
         </div>
         </form>
 
@@ -4654,6 +4596,335 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Target's matri_id. Example: <code>architecto</code></p>
             </div>
                     </form>
+
+                <h1 id="chats">Chats</h1>
+
+    
+
+                                <h2 id="chats-GETapi-v1-chats">Accepted conversations, newest activity first.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-chats">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8000/api/v1/chats?page=1" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8000/api/v1/chats"
+);
+
+const params = {
+    "page": "1",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-chats">
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: [
+        {
+            &quot;interest_id&quot;: 42,
+            &quot;other_profile&quot;: {
+                &quot;matri_id&quot;: &quot;KM100512&quot;
+            },
+            &quot;last_message&quot;: &quot;Shall our parents talk on Sunday?&quot;,
+            &quot;last_message_from&quot;: &quot;them&quot;,
+            &quot;last_activity_at&quot;: &quot;2026-10-07T11:00:00Z&quot;,
+            &quot;unread_count&quot;: 1
+        }
+    ],
+    &quot;meta&quot;: {
+        &quot;page&quot;: 1,
+        &quot;per_page&quot;: 20,
+        &quot;total&quot;: 1,
+        &quot;last_page&quot;: 1
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422, no-profile):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: false,
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;PROFILE_REQUIRED&quot;,
+        &quot;message&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-chats" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-chats"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-chats"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-chats" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-chats">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-chats" data-method="GET"
+      data-path="api/v1/chats"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-chats', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-chats"
+                    onclick="tryItOut('GETapi-v1-chats');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-chats"
+                    onclick="cancelTryOut('GETapi-v1-chats');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-chats"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/chats</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-chats"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-chats"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-chats"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-v1-chats"
+               value="1"
+               data-component="query">
+    <br>
+<p>Page number. Example: <code>1</code></p>
+            </div>
+                </form>
+
+                    <h2 id="chats-GETapi-v1-chats-badges">Counts for the app&#039;s tab badges: interests waiting for a reply, and
+conversations with something unread.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-chats-badges">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8000/api/v1/chats/badges" \
+    --header "Authorization: Bearer Bearer {YOUR_SANCTUM_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8000/api/v1/chats/badges"
+);
+
+const headers = {
+    "Authorization": "Bearer Bearer {YOUR_SANCTUM_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-chats-badges">
+            <blockquote>
+            <p>Example response (200, success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;interests_pending&quot;: 3,
+        &quot;chats_unread&quot;: 1
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-chats-badges" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-chats-badges"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-chats-badges"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-chats-badges" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-chats-badges">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-chats-badges" data-method="GET"
+      data-path="api/v1/chats/badges"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-chats-badges', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-chats-badges"
+                    onclick="tryItOut('GETapi-v1-chats-badges');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-chats-badges"
+                    onclick="cancelTryOut('GETapi-v1-chats-badges');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-chats-badges"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/chats/badges</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-chats-badges"
+               value="Bearer Bearer {YOUR_SANCTUM_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer Bearer {YOUR_SANCTUM_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-chats-badges"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-chats-badges"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
 
                 <h1 id="configuration">Configuration</h1>
 
@@ -6522,7 +6793,7 @@ admin reviews from scratch.</p>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "document_type=architecto"\
-    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\php9665.tmp" </code></pre></div>
+    --form "document=@C:\Users\Lenovo\AppData\Local\Temp\php5E3A.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -6694,7 +6965,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php9665.tmp</code></p>
+<p>JPG/PNG/PDF/WEBP, max 5 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php5E3A.tmp</code></p>
         </div>
         </form>
 
@@ -11828,8 +12099,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"location\": {
         \"residing_country\": \"b\",
         \"residency_status\": \"n\",
-        \"outstation_leave_date_from\": \"2026-04-26T20:07:30\",
-        \"outstation_leave_date_to\": \"2052-05-19\"
+        \"outstation_leave_date_from\": \"2026-10-07T22:43:47\",
+        \"outstation_leave_date_to\": \"2052-10-30\"
     },
     \"contact\": {
         \"residential_phone_number\": \"ngzmiyvdljnikhwa\",
@@ -11839,11 +12110,11 @@ You can check the Dev Tools console for debugging information.</code></pre>
         \"reference_name\": \"p\",
         \"reference_relationship\": \"w\",
         \"reference_mobile\": \"l\",
-        \"present_address_same_as_comm\": true,
+        \"present_address_same_as_comm\": false,
         \"present_address\": \"v\",
         \"present_pin_zip_code\": \"qwrsit\",
-        \"permanent_address_same_as_comm\": true,
-        \"permanent_address_same_as_present\": false,
+        \"permanent_address_same_as_comm\": false,
+        \"permanent_address_same_as_present\": true,
         \"permanent_address\": \"c\",
         \"permanent_pin_zip_code\": \"pscqld\"
     }
@@ -11866,8 +12137,8 @@ let body = {
     "location": {
         "residing_country": "b",
         "residency_status": "n",
-        "outstation_leave_date_from": "2026-04-26T20:07:30",
-        "outstation_leave_date_to": "2052-05-19"
+        "outstation_leave_date_from": "2026-10-07T22:43:47",
+        "outstation_leave_date_to": "2052-10-30"
     },
     "contact": {
         "residential_phone_number": "ngzmiyvdljnikhwa",
@@ -11877,11 +12148,11 @@ let body = {
         "reference_name": "p",
         "reference_relationship": "w",
         "reference_mobile": "l",
-        "present_address_same_as_comm": true,
+        "present_address_same_as_comm": false,
         "present_address": "v",
         "present_pin_zip_code": "qwrsit",
-        "permanent_address_same_as_comm": true,
-        "permanent_address_same_as_present": false,
+        "permanent_address_same_as_comm": false,
+        "permanent_address_same_as_present": true,
         "permanent_address": "c",
         "permanent_pin_zip_code": "pscqld"
     }
@@ -12048,10 +12319,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="location.outstation_leave_date_from"                data-endpoint="POSTapi-v1-onboarding-step-2"
-               value="2026-04-26T20:07:30"
+               value="2026-10-07T22:43:47"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-04-26T20:07:30</code></p>
+<p>Must be a valid date. Example: <code>2026-10-07T22:43:47</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>outstation_leave_date_to</code></b>&nbsp;&nbsp;
@@ -12060,10 +12331,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="location.outstation_leave_date_to"                data-endpoint="POSTapi-v1-onboarding-step-2"
-               value="2052-05-19"
+               value="2052-10-30"
                data-component="body">
     <br>
-<p>Must be a valid date. Must be a date after or equal to <code>location.outstation_leave_date_from</code>. Example: <code>2052-05-19</code></p>
+<p>Must be a valid date. Must be a date after or equal to <code>location.outstation_leave_date_from</code>. Example: <code>2052-10-30</code></p>
                     </div>
                                     </details>
         </div>
@@ -12181,7 +12452,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>present_address</code></b>&nbsp;&nbsp;
@@ -12227,7 +12498,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>permanent_address_same_as_present</code></b>&nbsp;&nbsp;
@@ -12249,7 +12520,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>permanent_address</code></b>&nbsp;&nbsp;
@@ -15235,7 +15506,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "photo_type=album"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php98BB.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\phpE020.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -15423,7 +15694,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 30 MB. Must be a file. Must be an image. Must not be greater than 30720 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php98BB.tmp</code></p>
+<p>Image file to upload. Allowed formats: jpg, jpeg, png, gif, webp. Max size: 5 MB. Must be a file. Must be an image. Must not be greater than 5120 kilobytes. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\phpE020.tmp</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>photo_type</code></b>&nbsp;&nbsp;
@@ -15658,7 +15929,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="visible_to_all"
                data-component="body">
     <br>
-<p>Legacy field — applies the same privacy level to every photo type. One of: visible_to_all | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>visible_to_all</code></p>
+<p>Legacy field — applies the same privacy level to every photo type. One of: visible_to_all | interest_accepted | hidden (premium_only is per-type only). Example: <code>visible_to_all</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
         </div>
@@ -15672,9 +15943,9 @@ Must be one of:
                value="visible_to_all"
                data-component="body">
     <br>
-<p>Per-type override for the profile (primary) photo. One of: visible_to_all | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>visible_to_all</code></p>
+<p>Per-type override for the profile (primary) photo. One of: visible_to_all | premium_only | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>visible_to_all</code></p>
 Must be one of:
-<ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
+<ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>premium_only</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>album_photos_privacy</code></b>&nbsp;&nbsp;
@@ -15686,9 +15957,9 @@ Must be one of:
                value="interest_accepted"
                data-component="body">
     <br>
-<p>Per-type override for album photos. One of: visible_to_all | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>interest_accepted</code></p>
+<p>Per-type override for album photos. One of: visible_to_all | premium_only | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>interest_accepted</code></p>
 Must be one of:
-<ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
+<ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>premium_only</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>family_photos_privacy</code></b>&nbsp;&nbsp;
@@ -15700,9 +15971,9 @@ Must be one of:
                value="interest_accepted"
                data-component="body">
     <br>
-<p>Per-type override for family photos. One of: visible_to_all | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>interest_accepted</code></p>
+<p>Per-type override for family photos. One of: visible_to_all | premium_only | interest_accepted | hidden. Send at least one privacy field per request. Example: <code>interest_accepted</code></p>
 Must be one of:
-<ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
+<ul style="list-style-type: square;"><li><code>visible_to_all</code></li> <li><code>premium_only</code></li> <li><code>interest_accepted</code></li> <li><code>hidden</code></li></ul>
         </div>
         </form>
 
@@ -21414,7 +21685,7 @@ approval gates publication.</h2>
     --form "story=architecto"\
     --form "wedding_date=architecto"\
     --form "location=architecto"\
-    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php9687.tmp" </code></pre></div>
+    --form "photo=@C:\Users\Lenovo\AppData\Local\Temp\php7E29.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -21608,7 +21879,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php9687.tmp</code></p>
+<p>Optional. JPG/PNG/WEBP, max 3 MB. Example: <code>C:\Users\Lenovo\AppData\Local\Temp\php7E29.tmp</code></p>
         </div>
         </form>
 
