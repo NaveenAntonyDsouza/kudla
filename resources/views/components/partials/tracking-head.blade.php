@@ -92,10 +92,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script>
 (function (events) {
     events.forEach(function (e) {
-        @if($gaId) if (window.gtag) { gtag('event', e.name, e.params); } @endif
-        @if($gtmId) window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: e.name }, e.params)); @endif
-        @if($fbPixelId) if (window.fbq && e.meta) { fbq(e.meta_standard ? 'track' : 'trackCustom', e.meta, e.params); } @endif
-        @if($posthogKey) if (window.posthog) { posthog.capture(e.name, e.params); } @endif
+        // An event with no details arrives as [] (an empty PHP array) and GA4
+        // silently drops events whose parameters are an array — registration
+        // complete, interest sent/accepted and email verified never reached it.
+        var p = (e.params && !Array.isArray(e.params)) ? e.params : {};
+        @if($gaId) if (window.gtag) { gtag('event', e.name, p); } @endif
+        @if($gtmId) window.dataLayer = window.dataLayer || []; window.dataLayer.push(Object.assign({ event: e.name }, p)); @endif
+        @if($fbPixelId) if (window.fbq && e.meta) { fbq(e.meta_standard ? 'track' : 'trackCustom', e.meta, p); } @endif
+        @if($posthogKey) if (window.posthog) { posthog.capture(e.name, p); } @endif
     });
 })(@js($analyticsEvents));
 </script>

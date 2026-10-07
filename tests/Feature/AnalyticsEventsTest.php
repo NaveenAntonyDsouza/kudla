@@ -77,8 +77,8 @@ it('queues events and the next page sends them once, to the switched-on tools', 
 
     $html = renderTracking(['gaId' => 'G-TEST123', 'fbPixelId' => '123456']);
 
-    expect($html)->toContain("gtag('event', e.name, e.params)")
-        ->and($html)->toContain("fbq(e.meta_standard ? 'track' : 'trackCustom', e.meta, e.params)")
+    expect($html)->toContain("gtag('event', e.name, p)")
+        ->and($html)->toContain("fbq(e.meta_standard ? 'track' : 'trackCustom', e.meta, p)")
         ->and($html)->toContain('interest_sent')
         ->and($html)->toContain('InterestSent')
         ->and($html)->not->toContain('posthog.capture(e.name')   // PostHog not switched on

@@ -95,3 +95,18 @@ it('records which search filters were used, not their values', function () {
         ->and($events[0]['params'])->toBe(['search_type' => 'filters', 'tab' => 'partner', 'filters' => 'age_from,caste', 'filter_count' => 2, 'results' => 37, 'sort' => 'relevance'])
         ->and(json_encode($events))->not->toContain('Billava')->not->toContain('secret');
 });
+
+it('sends events without details as an object, which GA4 accepts', function () {
+    SiteSetting::setValue('google_analytics_id', 'G-TEST');
+    $request = Request::create('/register/complete');
+    $request->setLaravelSession(app('session.store'));
+    app()->instance('request', $request);
+    Analytics::track('registration_complete', [], 'CompleteRegistration');
+
+    $html = Blade::render("@include('components.partials.tracking-head')");
+
+    // GA4 drops events whose parameters are an array; the page normalises [] to {}
+    expect($html)->toContain("var p = (e.params && !Array.isArray(e.params)) ? e.params : {};")
+        ->toContain("gtag('event', e.name, p)")
+        ->toContain('registration_complete');
+});
