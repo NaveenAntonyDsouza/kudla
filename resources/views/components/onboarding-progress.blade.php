@@ -1,20 +1,28 @@
 @props(['step' => 1])
 
 @php
-    // Onboarding funnel: 4 data-entry steps + 1 photo step (added 2026-04-30).
-    // Step 5 lives at /onboarding/photo (OnboardingController::showPhoto)
-    // and is reached automatically after Lifestyle's Save or Skip — see
-    // OnboardingController::storeLifestyle for the redirect chain.
+    // Onboarding funnel: 4 data-entry steps + 1 photo step. Order (Oct 2026):
+    // everything about YOU first (About You, Contact, Lifestyle), then the
+    // PARTNER you're looking for, then photos — Lifestyle used to come right
+    // after Partner, so members answered diet / drinking for their partner.
+    // Step 5 lives at /onboarding/photo (OnboardingController::showPhoto).
     $steps = [
-        1 => 'Additional Info',
-        2 => 'More Details',
-        3 => 'Preferences',
-        4 => 'Lifestyle',
-        5 => 'Manage Photos',
+        1 => 'About You',
+        2 => 'Contact',
+        3 => 'Lifestyle',
+        4 => 'Partner',
+        5 => 'Photos',
     ];
 @endphp
 
-<div class="flex items-center justify-center mb-8 px-2 overflow-x-auto">
+{{-- Phones: five steps with 48px connectors didn't fit, and centring an
+     overflowing row cut "About You" off on the left. Shorter connectors,
+     and "safe" centring falls back to the start if it ever overflows. --}}
+<style>
+    .ob-progress { justify-content: safe center; }
+    @media (max-width: 639px) { .ob-progress .ob-line { width: 22px; margin-left: 2px; margin-right: 2px; } }
+</style>
+<div class="ob-progress flex items-center justify-center mb-8 px-2 overflow-x-auto">
     @foreach($steps as $num => $label)
         <div class="flex items-center shrink-0">
             <div class="flex flex-col items-center">
@@ -33,7 +41,7 @@
                 <span class="text-[10px] sm:text-xs mt-1 font-medium whitespace-nowrap {{ $num <= $step ? 'text-(--color-primary)' : 'text-gray-400' }}">{{ $label }}</span>
             </div>
             @if($num < count($steps))
-                <div class="w-12 sm:w-16 md:w-20 h-0.5 mx-1 mt-[-18px] {{ $num < $step ? 'bg-(--color-primary)' : 'bg-gray-300' }}"></div>
+                <div class="ob-line w-12 sm:w-16 md:w-20 h-0.5 mx-1 mt-[-18px] {{ $num < $step ? 'bg-(--color-primary)' : 'bg-gray-300' }}"></div>
             @endif
         </div>
     @endforeach

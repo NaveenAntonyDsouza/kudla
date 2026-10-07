@@ -13,12 +13,14 @@ use Illuminate\Http\Request;
  *
  *   POST /api/v1/onboarding/step-1                Personal + Professional + Family
  *   POST /api/v1/onboarding/step-2                Location + Contact
- *   POST /api/v1/onboarding/partner-preferences   Partner prefs
  *   POST /api/v1/onboarding/lifestyle             Lifestyle + Social
+ *   POST /api/v1/onboarding/partner-preferences   Partner prefs (final step)
  *   POST /api/v1/onboarding/finish                Skip-to-dashboard sentinel
  *
  * Each step is independently idempotent — Flutter can re-submit without
- * undoing earlier progress. The final step (lifestyle) AND finish both
+ * undoing earlier progress. Order (Oct 2026, same as the website): every
+ * "about you" step first, then the partner — step-1 → step-2 → lifestyle →
+ * partner-preferences. The final step (partner-preferences) AND finish both
  * set onboarding_completed=true so the dashboard banner stops showing.
  *
  * Request shape per the design doc uses NESTED objects (e.g. step-1 has
@@ -119,7 +121,7 @@ class OnboardingController extends BaseApiController
      * @bodyParam location object Location extras (residing_country, residency_status, outstation_leave_date_from/to).
      * @bodyParam contact object Extended contact (residential_phone_number, secondary_phone, alternate_email, reference_*, present_address, permanent_address, …).
      *
-     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 78, "next_step": "onboarding.partner-preferences"}}
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 78, "next_step": "onboarding.lifestyle"}}
      * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function step2(Request $request): JsonResponse
@@ -160,7 +162,7 @@ class OnboardingController extends BaseApiController
 
         return ApiResponse::ok([
             'profile_completion_pct' => $this->completion->recalculate($profile),
-            'next_step' => 'onboarding.partner-preferences',
+            'next_step' => 'onboarding.lifestyle',
         ]);
     }
 
@@ -169,7 +171,8 @@ class OnboardingController extends BaseApiController
      | ================================================================== */
 
     /**
-     * Onboarding partner-preferences — multi-select arrays drive the partner-search filters.
+     * Final onboarding step: partner preferences — multi-select arrays drive the
+     * partner-search filters. Also flips onboarding_completed=true.
      *
      * @authenticated
      *
@@ -190,7 +193,7 @@ class OnboardingController extends BaseApiController
      * @bodyParam native_countries string[] Preferred native countries.
      * @bodyParam about_partner string Free-text "about the partner" (max 5000 chars).
      *
-     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 90, "next_step": "onboarding.lifestyle"}}
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 100, "next_step": "dashboard", "onboarding_finished": true}}
      * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
     public function partnerPrefs(Request $request): JsonResponse
@@ -235,9 +238,12 @@ class OnboardingController extends BaseApiController
 
         $this->onboarding->updatePartnerPrefs($profile, $data);
 
+        $profile->update(['onboarding_completed' => true]);
+
         return ApiResponse::ok([
             'profile_completion_pct' => $this->completion->recalculate($profile),
-            'next_step' => 'onboarding.lifestyle',
+            'next_step' => 'dashboard',
+            'onboarding_finished' => true,
         ]);
     }
 
@@ -246,7 +252,7 @@ class OnboardingController extends BaseApiController
      | ================================================================== */
 
     /**
-     * Final onboarding step — also flips onboarding_completed=true.
+     * Onboarding step 3: the member's own lifestyle and social links.
      *
      * @authenticated
      *
@@ -255,7 +261,7 @@ class OnboardingController extends BaseApiController
      * @bodyParam lifestyle object Lifestyle (diet, drinking, smoking, cultural_background, hobbies[], favorite_music[], …).
      * @bodyParam social object Social-media URLs (facebook_url, instagram_url, linkedin_url, youtube_url, website_url).
      *
-     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 100, "next_step": "dashboard", "onboarding_finished": true}}
+     * @response 200 scenario="success" {"success": true, "data": {"profile_completion_pct": 90, "next_step": "onboarding.partner-preferences"}}
      * @response 422 scenario="invalid-url" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"social.facebook_url": ["The social.facebook url field must be a valid URL."]}}}
      * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
      */
@@ -292,12 +298,9 @@ class OnboardingController extends BaseApiController
             $data['social'] ?? [],
         );
 
-        $profile->update(['onboarding_completed' => true]);
-
         return ApiResponse::ok([
             'profile_completion_pct' => $this->completion->recalculate($profile),
-            'next_step' => 'dashboard',
-            'onboarding_finished' => true,
+            'next_step' => 'onboarding.partner-preferences',
         ]);
     }
 

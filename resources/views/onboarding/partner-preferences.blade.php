@@ -1,4 +1,4 @@
-<x-layouts.onboarding title="Partner Preferences" :step="3" :completionPct="$completionPct">
+<x-layouts.onboarding title="Partner Preferences" :step="4" :completionPct="$completionPct">
 
     @if (session('success'))
         <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -43,11 +43,15 @@
 
         {{-- Page heading — the partner-preference step had no top-level title
              (it jumped straight to "Primary Requirements"). --}}
+        {{-- Step 4 of 5 (Oct 2026): the one page about the PARTNER, after all
+             the "about you" pages, so the switch is clear. --}}
         <div class="flex items-center justify-between mb-2">
             <h1 class="text-xl font-bold text-gray-900">Partner Preferences</h1>
-            <a href="{{ route('onboarding.lifestyle') }}" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
+            <a href="{{ route('onboarding.photo') }}" class="text-sm text-(--color-primary) hover:underline font-medium">Skip for now &rarr;</a>
         </div>
-        <p class="text-sm text-gray-500 mb-6">Tell us what you're looking for in a partner — these guide your match suggestions.</p>
+        <p class="text-sm text-gray-600 mb-6" style="padding: 10px 12px; border-radius: 8px; background: var(--color-primary-light, #F3E8F7);">
+            <strong>Now, the partner you're looking for.</strong> Everything on this page is about them, not you — it guides your match suggestions.
+        </p>
 
         {{-- ── Primary Requirements ──────────────────────────── --}}
         <div class="mb-6">
@@ -283,12 +287,12 @@
 
         {{-- Navigation --}}
         <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-6 border-t border-gray-200">
-            <a href="{{ route('onboarding.step2') }}"
+            <a href="{{ route('onboarding.lifestyle') }}"
                 class="w-full sm:w-auto text-center border border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 rounded-lg px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors">
                 Back
             </a>
             <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                <a href="{{ route('onboarding.lifestyle') }}" class="text-sm text-(--color-primary) hover:underline font-medium order-2 sm:order-1">Skip for now</a>
+                <a href="{{ route('onboarding.photo') }}" class="text-sm text-(--color-primary) hover:underline font-medium order-2 sm:order-1">Skip for now</a>
                 <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"
                     class="w-full sm:w-auto bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors order-1 sm:order-2">
                     <span x-show="!submitting">Save</span>

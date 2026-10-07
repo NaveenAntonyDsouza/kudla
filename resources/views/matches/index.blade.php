@@ -8,6 +8,13 @@
             <span class="text-gray-700 font-medium">My Matches</span>
         </p>
 
+        {{-- e.g. "Partner preferences saved — your matches are updated." --}}
+        @if(session('success'))
+            <div class="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
+            </div>
+        @endif
+
         {{-- Tabs --}}
         <div class="flex items-center gap-6 border-b border-gray-200 mb-6">
             <a href="{{ route('matches.index') }}"

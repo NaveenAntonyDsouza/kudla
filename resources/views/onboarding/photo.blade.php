@@ -48,7 +48,7 @@
          and lands on the dashboard. Single CTA whose label reflects whether
          a profile photo is on file — no separate Skip button needed. --}}
     <div class="flex items-center justify-between mt-8 gap-3">
-        <a href="{{ route('onboarding.lifestyle') }}"
+        <a href="{{ route('onboarding.preferences') }}"
             class="border border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 rounded-lg px-6 py-3 font-semibold text-sm uppercase tracking-wider transition-colors">
             Back
         </a>

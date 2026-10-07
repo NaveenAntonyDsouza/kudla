@@ -1,4 +1,4 @@
-<x-layouts.onboarding title="Lifestyle & Social Media" :step="4" :completionPct="$completionPct">
+<x-layouts.onboarding title="Lifestyle & Social Media" :step="3" :completionPct="$completionPct">
 
     @if (session('success'))
         <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -20,14 +20,18 @@
     <form method="POST" action="{{ route('onboarding.storeLifestyle') }}" x-data="{ submitting: false }" @submit="submitting = true">
         @csrf
 
+        {{-- Step 3 of 5 (Oct 2026: moved before Partner Preferences, so every
+             "about you" page comes first and these answers aren't mistaken
+             for what the member wants in a partner). --}}
+        <p class="text-sm text-gray-600 mb-6" style="padding: 10px 12px; border-radius: 8px; background: var(--color-primary-light, #F3E8F7);">
+            <strong>About you</strong> — your own habits and interests. You'll tell us about the partner you're looking for on the next step.
+        </p>
+
         {{-- ── Lifestyle & Habits ────────────────────────────── --}}
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-lg font-semibold text-gray-900">Lifestyle & Habits</h2>
-            {{-- Same target as the bottom Skip button (see below). The
-                 hidden form previously triggered onboarding.finish; that
-                 hidden form was removed in 65756d2 when Skip became a
-                 direct link to /manage-photos as the new Step 5. --}}
-            <a href="{{ route('onboarding.photo') }}"
+            <h2 class="text-lg font-semibold text-gray-900">Your Lifestyle & Habits</h2>
+            {{-- Same target as the bottom Skip button: on to Partner Preferences --}}
+            <a href="{{ route('onboarding.preferences') }}"
                 class="text-sm text-(--color-primary) hover:underline font-medium">
                 Skip for now &rarr;
             </a>
@@ -150,16 +154,15 @@
 
         {{-- Navigation --}}
         <div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-6 border-t border-gray-200">
-            <a href="{{ route('onboarding.preferences') }}"
+            <a href="{{ route('onboarding.step2') }}"
                 class="w-full sm:w-auto text-center border border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 rounded-lg px-8 py-3 font-semibold text-sm uppercase tracking-wider transition-colors">
                 Back
             </a>
             <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                {{-- Skip jumps to /manage-photos (the new Step 5) WITHOUT saving
-                     Lifestyle data. Onboarding isn't marked complete here —
-                     that happens when the user clicks "Done & finish setup"
-                     on the photo step. --}}
-                <a href="{{ route('onboarding.photo') }}"
+                {{-- Skip goes on to Partner Preferences (step 4) WITHOUT saving
+                     Lifestyle data. Onboarding is only marked complete on
+                     the photo step (step 5). --}}
+                <a href="{{ route('onboarding.preferences') }}"
                     class="order-2 sm:order-1 text-sm text-(--color-primary) hover:underline font-medium">
                     Skip for now
                 </a>

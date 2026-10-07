@@ -273,7 +273,8 @@ class OnboardingController extends Controller
         $profile->refresh();
         $profile->update(['profile_completion_pct' => $profile->calculateCompletion()]);
 
-        return redirect()->route('onboarding.preferences')->with('success', 'Profile details saved successfully!');
+        // Order (Oct 2026): About You → Contact → Lifestyle → Partner → Photos
+        return redirect()->route('onboarding.lifestyle')->with('success', 'Profile details saved successfully!');
     }
 
     // ── Partner Preferences ──────────────────────────────────────
@@ -389,7 +390,14 @@ class OnboardingController extends Controller
         $profile->refresh();
         $profile->update(['profile_completion_pct' => $profile->calculateCompletion()]);
 
-        return redirect()->route('onboarding.lifestyle')->with('success', 'Partner preferences saved successfully!');
+        // Members who finished setup and came from "Set your preferences" on
+        // the Matches page go back to their (now updated) matches; during
+        // setup, partner preferences are step 4 → photos.
+        if ($profile->onboarding_completed) {
+            return redirect()->route('matches.index')->with('success', 'Partner preferences saved — your matches are updated.');
+        }
+
+        return redirect()->route('onboarding.photo')->with('success', 'Partner preferences saved. One last step — add your photos.');
     }
 
     // ── Lifestyle & Social Media ─────────────────────────────────
@@ -470,8 +478,8 @@ class OnboardingController extends Controller
         ]);
 
         return redirect()
-            ->route('onboarding.photo')
-            ->with('success', 'Lifestyle & social media saved. One last step — add your photos.');
+            ->route('onboarding.preferences')
+            ->with('success', 'Lifestyle saved. Next: the partner you\'re looking for.');
     }
 
     // ── Step 5: Optional Photo Upload ────────────────────────────

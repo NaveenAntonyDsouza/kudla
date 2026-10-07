@@ -258,7 +258,7 @@ it('step2 dispatches location + contact groups', function () {
     ], '/api/v1/onboarding/step-2'));
 
     expect($response->getStatusCode())->toBe(200);
-    expect($response->getData(true)['data']['next_step'])->toBe('onboarding.partner-preferences');
+    expect($response->getData(true)['data']['next_step'])->toBe('onboarding.lifestyle'); // Oct 2026 order: about you first
     expect($svc->calls[0]['method'])->toBe('updateStep2');
     expect($svc->calls[0]['args']['location']['residing_country'])->toBe('India');
     expect($svc->calls[0]['args']['contact']['alternate_email'])->toBe('alt@example.com');
@@ -287,7 +287,7 @@ it('step2 rejects outstation_to before outstation_from', function () {
  |  partner-preferences
  | ================================================================== */
 
-it('partnerPrefs dispatches the flat partner preferences payload', function () {
+it('partnerPrefs (the final step) dispatches the flat payload and flips onboarding_completed', function () {
     $user = buildOnboardingUser();
     $svc = new FakeOnboardingService();
 
@@ -301,7 +301,9 @@ it('partnerPrefs dispatches the flat partner preferences payload', function () {
     ], '/api/v1/onboarding/partner-preferences'));
 
     expect($response->getStatusCode())->toBe(200);
-    expect($response->getData(true)['data']['next_step'])->toBe('onboarding.lifestyle');
+    expect($response->getData(true)['data']['next_step'])->toBe('dashboard');
+    expect($response->getData(true)['data']['onboarding_finished'])->toBeTrue();
+    expect($user->profile->fresh()->onboarding_completed)->toBeTrue();
     expect($svc->calls[0]['method'])->toBe('updatePartnerPrefs');
     expect($svc->calls[0]['args']['age_from'])->toBe(22);
     expect($svc->calls[0]['args']['religions'])->toBe(['Hindu']);
@@ -325,10 +327,10 @@ it('partnerPrefs rejects age outside 18-70', function () {
 });
 
 /* ==================================================================
- |  lifestyle — final onboarding step
+ |  lifestyle — step 3 (the member's own habits; partner preferences come next)
  | ================================================================== */
 
-it('lifestyle dispatches lifestyle + social groups + flips onboarding_completed', function () {
+it('lifestyle dispatches lifestyle + social groups and moves on to partner preferences', function () {
     $user = buildOnboardingUser();
     $svc = new FakeOnboardingService();
 
@@ -344,13 +346,13 @@ it('lifestyle dispatches lifestyle + social groups + flips onboarding_completed'
     $data = $response->getData(true)['data'];
 
     expect($response->getStatusCode())->toBe(200);
-    expect($data['next_step'])->toBe('dashboard');
-    expect($data['onboarding_finished'])->toBeTrue();
+    expect($data['next_step'])->toBe('onboarding.partner-preferences');
+    expect($data)->not->toHaveKey('onboarding_finished');
     expect($svc->calls[0]['method'])->toBe('updateLifestyle');
     expect($svc->calls[0]['args']['lifestyle']['diet'])->toBe('Vegetarian');
     expect($svc->calls[0]['args']['social']['instagram_url'])->toBe('https://instagram.com/anita');
 
-    expect($user->profile->fresh()->onboarding_completed)->toBeTrue();
+    expect((bool) $user->profile->fresh()->onboarding_completed)->toBeFalse();
 });
 
 it('lifestyle rejects invalid social URL', function () {
