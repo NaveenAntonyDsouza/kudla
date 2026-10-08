@@ -644,6 +644,8 @@
             .wa-fab { bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
             @media (min-width: 1024px) { .pv-action-bar, .pv-action-bar-spacer { display: none; } .wa-fab { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important; } }
             @media print { .pv-action-bar, .pv-action-bar-spacer { display: none; } }
+            /* this page's own action bar replaces the phone bottom menu */
+            .mnav, .mnav-spacer { display: none !important; }
         </style>
     @endif
 </x-layouts.app>

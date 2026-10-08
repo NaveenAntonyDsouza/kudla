@@ -556,6 +556,9 @@
                 </div>
             </div>
         </footer>
+
+        {{-- Phones: Home · Matches · Interests · Chats · Profile --}}
+        <x-mobile-bottom-nav />
     @else
         {{-- ══ FOOTER AD BANNER ══ --}}
         <x-ad-slot position="footer_banner" />

@@ -1,4 +1,6 @@
-@props(['maxWidth' => 'md'])
+{{-- title must be a prop: as a plain attribute it never reached <title>,
+     so the login tab read "| Site name" --}}
+@props(['maxWidth' => 'md', 'title' => null])
 @php
     $theme = \App\Models\ThemeSetting::getTheme();
     $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');

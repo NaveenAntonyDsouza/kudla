@@ -15,6 +15,20 @@
             <span class="text-gray-700 font-medium">Search</span>
         </p>
 
+        {{-- Phones: the search-type menu below is desktop-only (lg:block), so
+             Keyword Search and Search by ID couldn't be reached on a phone --}}
+        <style>
+            .srch-mtabs { display: flex; gap: 6px; padding: 4px; margin-bottom: 16px; border-radius: 12px; background: #f3f4f6; }
+            .srch-mtabs button { flex: 1 1 0; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: #4b5563; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+            .srch-mtabs button.on { background: #fff; color: var(--color-primary, #8B1D91); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+            @media (min-width: 1024px) { .srch-mtabs { display: none; } }
+        </style>
+        <div class="srch-mtabs" role="tablist" aria-label="Search type">
+            <button type="button" role="tab" @click="activeTab = 'partner'" :class="activeTab === 'partner' && 'on'" :aria-selected="activeTab === 'partner'">Preferences</button>
+            <button type="button" role="tab" @click="activeTab = 'keyword'" :class="activeTab === 'keyword' && 'on'" :aria-selected="activeTab === 'keyword'">Keyword</button>
+            <button type="button" role="tab" @click="activeTab = 'byid'" :class="activeTab === 'byid' && 'on'" :aria-selected="activeTab === 'byid'">By ID</button>
+        </div>
+
         <div class="flex flex-col lg:flex-row gap-8">
 
             {{-- ══ LEFT NAV ══ --}}
