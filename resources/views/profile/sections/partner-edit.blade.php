@@ -63,6 +63,10 @@
         <x-multi-select name="native_districts" label="Preferred Native District(s)" :options="config('locations.state_district_map', [])" :selected="$pp?->native_districts ?? []" :searchable="true" :grouped="true" />
     </div>
 
+    <div class="mt-5">
+        <x-same-gotra-checkbox :checked="(bool) ($pp?->exclude_same_gotra ?? false)" />
+    </div>
+
     <div class="mt-5 float-field">
         <textarea name="about_partner" rows="4" maxlength="5000" placeholder=" " class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">{{ $pp?->about_partner ?? '' }}</textarea>
         <label>About Partner Expectations</label>

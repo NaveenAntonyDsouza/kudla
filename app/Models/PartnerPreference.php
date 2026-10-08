@@ -57,11 +57,13 @@ class PartnerPreference extends Model
         'drinking',
         'communities',
         'about_partner',
+        'exclude_same_gotra',
     ];
 
     protected function casts(): array
     {
         return [
+            'exclude_same_gotra' => 'boolean',
             'age_from' => 'integer',
             'age_to' => 'integer',
             'height_from_cm' => 'string',

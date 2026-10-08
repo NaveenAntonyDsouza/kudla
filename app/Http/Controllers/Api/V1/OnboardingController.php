@@ -234,6 +234,7 @@ class OnboardingController extends BaseApiController
             'working_countries' => 'nullable|array',
             'native_countries' => 'nullable|array',
             'about_partner' => 'nullable|string|max:5000',
+            'exclude_same_gotra' => 'nullable|boolean',
         ]);
 
         $this->onboarding->updatePartnerPrefs($profile, $data);

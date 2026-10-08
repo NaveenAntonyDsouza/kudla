@@ -52,6 +52,8 @@
         $cardInterest = \App\Support\InterestStatusMap::for($viewerProfile)[$p->id] ?? null;
         $canSendFromCard = ! $cardInterest && (! $p->gender || ! $viewerProfile->gender || $p->gender !== $viewerProfile->gender);
     }
+    // Same gotra / bari as the viewer: a gentle flag on the photo (Oct 2026)
+    $sameLineage = ($viewerProfile && ! $isOwnCard) ? \App\Support\GotraBari::shared($viewerProfile, $p) : null;
 @endphp
 
 <div class="relative rounded-lg border border-gray-200 overflow-hidden hover:shadow-md hover:border-(--color-primary)/30 transition-all group bg-white">
@@ -70,6 +72,10 @@
     <a href="{{ $profileUrl }}" class="block">
         {{-- Photo --}}
         <div class="aspect-[3/4] bg-gray-100 relative overflow-hidden">
+            @if($sameLineage)
+                <span title="Same {{ $sameLineage['kind'] }} as you ({{ $sameLineage['value'] }}) — families traditionally do not marry within the same {{ $sameLineage['kind'] }}."
+                      style="position: absolute; top: 8px; left: 8px; z-index: 5; padding: 3px 8px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 700;">Same {{ $sameLineage['kind'] }}</span>
+            @endif
             @if($showPhoto && $hasPhoto)
                 <img src="{{ $p->primaryPhoto->full_url }}" alt="{{ $p->matri_id }}"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">

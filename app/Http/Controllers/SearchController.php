@@ -74,7 +74,8 @@ class SearchController extends Controller
         // Search by ID
         $idResult = null;
         if ($request->filled('matri_id')) {
-            $idResult = $this->baseQuery($profile)
+            // a search for one Matri ID shows it even when it's the same gotra / bari
+            $idResult = $this->baseQuery($profile, respectLineagePreference: false)
                 ->where('matri_id', strtoupper($request->matri_id))
                 ->first();
             Analytics::track('search_performed', ['search_type' => 'id', 'results' => $idResult ? 1 : 0]);

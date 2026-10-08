@@ -197,6 +197,7 @@ class OnboardingService
                 'working_countries' => $data['working_countries'] ?? null,
                 'native_countries' => $data['native_countries'] ?? null,
                 'about_partner' => $data['about_partner'] ?? null,
+                'exclude_same_gotra' => (bool) ($data['exclude_same_gotra'] ?? false),
             ],
         );
     }

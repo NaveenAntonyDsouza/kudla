@@ -1033,7 +1033,7 @@ class UserResource extends Resource
                                     Infolists\Components\TextEntry::make('religiousInfo.caste')->label('Caste / Community')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.other_caste_name')->label('Caste (specified)')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.sub_caste')->label('Sub-Caste')->default('-'),
-                                    Infolists\Components\TextEntry::make('religiousInfo.gotra')->label('Gotra / Gothram')->default('-'),
+                                    Infolists\Components\TextEntry::make('religiousInfo.gotra')->label('Gotra / Bari')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.nakshatra')->label('Nakshatra (Star)')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.rashi')->label('Rashi (Zodiac)')->default('-'),
                                     Infolists\Components\TextEntry::make('religiousInfo.dosh')->label('Manglik / Dosh')->default('-'),
@@ -1610,8 +1610,9 @@ class UserResource extends Resource
                             ))
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
-                        Forms\Components\Select::make('rel_gotra')->label('Gotra / Gothram')
-                            ->options(fn () => self::optionsPlusExisting(config('reference_data.gothram_list', []), 'religious_info', 'gotra'))
+                        Forms\Components\Select::make('rel_gotra')->label('Gotra / Bari')
+                            // flat: the list may be grouped (bari groups + Brahmin gotras)
+                            ->options(fn () => self::optionsPlusExisting(\App\Support\GotraBari::flatOptions(), 'religious_info', 'gotra'))
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_nakshatra')->label('Nakshatra (Star)')

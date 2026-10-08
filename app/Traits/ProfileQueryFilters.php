@@ -10,10 +10,14 @@ trait ProfileQueryFilters
     /**
      * Base query with all common filters: active, hidden, blocked, visibility prefs.
      * Used by SearchController, DashboardController, MatchingService.
+     *
+     * $respectLineagePreference: honour "Don't show profiles with my gotra /
+     * bari" — off for a search by Matri ID, where the member asked for that
+     * one profile.
      */
-    protected function baseQuery(Profile $profile): Builder
+    protected function baseQuery(Profile $profile, bool $respectLineagePreference = true): Builder
     {
-        return Profile::query()
+        $query = Profile::query()
             ->where('id', '!=', $profile->id)
             ->where('is_active', true)
             ->approved()
@@ -54,5 +58,33 @@ trait ProfileQueryFilters
                 });
             })
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo', 'user.userMemberships', 'photoPrivacySetting']);
+
+        if ($respectLineagePreference) {
+            $this->excludeSameGotra($query, $profile);
+        }
+
+        return $query;
+    }
+
+    /**
+     * "Don't show profiles with my gotra / bari" (partner preference, Oct 2026):
+     * the same gotra or bari counts as brother and sister. Only when the
+     * member chose it and has a real gotra / bari of their own.
+     */
+    protected function excludeSameGotra(Builder $query, Profile $profile): void
+    {
+        try {
+            if (! $profile->partnerPreference?->exclude_same_gotra) {
+                return;
+            }
+            $mine = \App\Support\GotraBari::normalize($profile->religiousInfo?->gotra);
+        } catch (\Throwable) {
+            return;
+        }
+        if ($mine === null) {
+            return;
+        }
+
+        $query->whereDoesntHave('religiousInfo', fn ($q) => $q->whereRaw('LOWER(TRIM(gotra)) = ?', [$mine]));
     }
 }

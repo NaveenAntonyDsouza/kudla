@@ -228,6 +228,8 @@
             <x-multi-select name="languages_known" label="Partner Should Know Languages"
                 :options="config('reference_data.language_list')" :searchable="true"
                 :selected="$pref?->languages_known ?? []" />
+
+            <x-same-gotra-checkbox :checked="(bool) ($pref?->exclude_same_gotra ?? false)" />
         </div>
 
         {{-- ── Education & Professional Requirements ─────────── --}}

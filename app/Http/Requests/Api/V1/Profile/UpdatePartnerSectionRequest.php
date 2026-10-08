@@ -65,6 +65,7 @@ class UpdatePartnerSectionRequest extends ApiFormRequest
             'native_districts' => 'nullable|array',
             'native_districts.*' => 'string|max:100',
             'about_partner' => 'nullable|string|max:5000',
+            'exclude_same_gotra' => 'nullable|boolean',
         ];
     }
 }

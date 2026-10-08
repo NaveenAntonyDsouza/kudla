@@ -106,7 +106,7 @@
             'Sub Caste' => $profile->religiousInfo->sub_caste,
             'Diocese' => $profile->religiousInfo->diocese_name ?? $profile->religiousInfo->diocese,
             'Parish' => $profile->religiousInfo->parish_name_place,
-            'Gotra' => $profile->religiousInfo->gotra,
+            'Gotra / Bari' => $profile->religiousInfo->gotra,
             'Nakshatra' => $profile->religiousInfo->nakshatra,
             'Rashi' => $profile->religiousInfo->rashi,
         ] as $label => $value)

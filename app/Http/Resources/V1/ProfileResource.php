@@ -317,6 +317,8 @@ class ProfileResource extends JsonResource
             'smoking'             => $this->arrayField($p->smoking ?? null),
             'manglik'             => $p->manglik ?? null,
             'about_partner'       => $p->about_partner ?? null,
+            // hide profiles of my own gotra / bari (Oct 2026)
+            'exclude_same_gotra'  => (bool) ($p->exclude_same_gotra ?? false),
         ];
     }
 

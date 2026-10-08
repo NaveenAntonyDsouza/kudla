@@ -352,6 +352,15 @@
                                 </div>
                             @endif
 
+                            {{-- Same gotra / bari: families treat it as brother and sister, so
+                                 say so gently before any interest is sent (Oct 2026) --}}
+                            @if(!($isOwn ?? false) && ($sameLineage = \App\Support\GotraBari::shared(auth()->user()?->profile, $profile)))
+                                <p class="pv-same-bari" title="Families traditionally do not marry within the same {{ $sameLineage['kind'] }}.">
+                                    Same {{ $sameLineage['kind'] }} as you ({{ $sameLineage['value'] }})
+                                </p>
+                                <style>.pv-same-bari { margin: 10px auto 0; display: table; padding: 4px 12px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 12.5px; font-weight: 600; }</style>
+                            @endif
+
                             {{-- Send Interest right under the name (it used to be 5th in this panel,
                                  below the fold on most screens) --}}
                             @if(!($isOwn ?? false))

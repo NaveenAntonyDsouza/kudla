@@ -190,14 +190,9 @@
                     <label for="nakshatra">Nakshatra (Star)</label>
                     @error('nakshatra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
-                <div class="float-field">
-                    <select name="gotra" id="gotra">
-                        <option value="">Select</option>
-                        @foreach(config('reference_data.gothram_list') as $opt)
-                            <option value="{{ $opt }}" {{ old('gotra', $religiousInfo?->gotra ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </select>
-                    <label for="gotra">Gothram</label>
+                <div>
+                    {{-- Gotra (Brahmins) or bari (Tulu families): one field, searchable --}}
+                    <x-gotra-bari-select :value="old('gotra', $religiousInfo?->gotra ?? '')" />
                     @error('gotra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div class="float-field">

@@ -383,6 +383,7 @@ class OnboardingController extends Controller
                 'working_countries' => $validated['working_countries'] ?? null,
                 'native_countries' => $validated['native_countries'] ?? null,
                 'about_partner' => $validated['about_partner'] ?? null,
+                'exclude_same_gotra' => $request->boolean('exclude_same_gotra'),
             ]
         );
 

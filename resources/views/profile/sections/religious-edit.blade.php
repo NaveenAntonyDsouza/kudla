@@ -229,16 +229,10 @@
                         </template>
                     </div>
                 </template>
-                <div class="float-field">
-                    @php $gotraOpts = config('reference_data.gothram_list', []); @endphp
-                    <select name="gotra"><option value="">Select</option>
-                        @foreach($gotraOpts as $opt)
-                            <option value="{{ $opt }}" {{ ($r?->gotra ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                        @if(($r?->gotra ?? '') !== '' && ! in_array($r?->gotra, $gotraOpts, true))
-                            <option value="{{ $r->gotra }}" selected>{{ $r->gotra }}</option>
-                        @endif
-                    </select><label>Gotra / Gothram</label>
+                <div>
+                    {{-- Gotra (Brahmins) or bari (Tulu families): one field, searchable;
+                         a value typed earlier stays selected --}}
+                    <x-gotra-bari-select :value="$r?->gotra" />
                 </div>
                 <div class="float-field">
                     <select name="nakshatra"><option value="">Select</option>

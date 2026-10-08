@@ -398,6 +398,8 @@ class ProfileController extends Controller
             array_merge($validated, [
                 'height_from_cm' => $validated['height_from'] ?? null,
                 'height_to_cm' => $validated['height_to'] ?? null,
+                // a checkbox: absent when unticked
+                'exclude_same_gotra' => $request->boolean('exclude_same_gotra'),
             ])
         );
     }
