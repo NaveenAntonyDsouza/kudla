@@ -11,6 +11,11 @@ class DiscoverController extends Controller
 {
     use ProfileQueryFilters;
 
+    /** Old slug => new slug for communities that were renamed (Oct 2026 caste-list update). */
+    private const RENAMED_SLUGS = [
+        'gowda-tulu' => 'gowda-tulu-arebhashe',
+    ];
+
     /**
      * Level 1: Category hub — grid of all browsing categories.
      */
@@ -70,6 +75,10 @@ class DiscoverController extends Controller
         $subcategory = collect($subcategories)->firstWhere('slug', $slug);
 
         if (!$subcategory) {
+            // A community that was renamed keeps its old address working
+            if (($renamed = self::RENAMED_SLUGS[$slug] ?? null) && collect($subcategories)->firstWhere('slug', $renamed)) {
+                return redirect()->route('discover.results', [$category, $renamed], 301);
+            }
             abort(404, 'Subcategory not found.');
         }
 

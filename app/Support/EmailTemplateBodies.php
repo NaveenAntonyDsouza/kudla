@@ -131,6 +131,21 @@ final class EmailTemplateBodies
         . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
         . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you have a profile on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
 
+    /**
+     * One-off ask (Oct 2026): the member's caste is a value that isn't a
+     * community — "Salian" (a bari) or "Konkani" (a language) — so matches
+     * can't tell their community. Sent by `communities:tulu-nadu-update --ask`.
+     */
+    public const COMMUNITY_UPDATE = '<h1>Hi {{USER_NAME}}, please check your community</h1>'
+        . '<p>We\'ve updated the list of communities on {{SITE_NAME}} so members can find the right matches more easily.</p>'
+        . '<p>On your profile ({{MATRI_ID}}) your caste / community is <strong>{{CURRENT_VALUE}}</strong>. {{REASON_LINE}}</p>'
+        . '<p>Please choose your community from the updated list. It takes less than a minute, and it helps the right people find you in search.</p>'
+        . '<p style="text-align:center;margin:2rem 0;"><a href="{{EDIT_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Update my community</a></p>'
+        . '<p>{{HELP_LINE}}</p>'
+        . '<p>Warm regards,<br>Team {{SITE_NAME}}</p>'
+        . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
+        . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this one-time message because you have a profile on {{SITE_NAME}}.</p>';
+
     /** The hand-sent reminder of 2 Oct 2026 (mentions "recently fixed" registration problems). */
     public const REGISTRATION_REMINDER_V1 = '<h1>Hi {{USER_NAME}},</h1><p>Thank you for registering on {{SITE_NAME}}. {{STATUS_LINE}}</p><p>Completed profiles are shown first in search, so finishing yours helps the right people find you. It only takes a few minutes, and you\'ll continue right where you left off.</p><p style="text-align:center;margin:2rem 0;"><a href="{{LOGIN_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Complete my profile</a></p><p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} (<strong>{{MATRI_ID}}</strong>) and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p><p>If something didn\'t work while you were filling in the form, we\'re sorry — we\'ve recently fixed some problems on our registration pages, so please give it another try. {{HELP_LINE}}</p><p>Warm regards,<br>Team {{SITE_NAME}}</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;"><p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because you started registering on {{SITE_NAME}}. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
 

@@ -42,6 +42,7 @@ final class EmailPreheaders
         'profile-views-digest' => 'See who visited your profile, and send an interest to anyone who catches your eye.',
         'still-looking' =>'One tap to tell us: keep your profile visible, or hide it if you\'ve found your match.',
         'photo-reminder' => 'Add a photo so the right people notice your profile.',
+        'community-update' => 'One quick update so the right matches can find you.',
         'weekly-match-suggestions' => 'This week\'s matches, picked for your preferences.',
     ];
 }
