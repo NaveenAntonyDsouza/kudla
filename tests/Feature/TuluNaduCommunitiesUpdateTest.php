@@ -120,6 +120,7 @@ beforeEach(function () {
     $member(10, 'Devadiga', 'Devadiga');
     $member(11, 'Other / Not Listed', null, 'Reddy');           // not on our list: stays as typed
     $member(12, null, null, null, 'Other', 'Muslim');
+    $member(13, 'Brahmin', 'Smartha bhramin');                   // typed before Smartha was listed
     DB::table('partner_preferences')->insert([
         ['profile_id' => 1, 'caste' => json_encode(['Billava', 'Tulu Gowda', 'Gowda - Tulu'])],
         ['profile_id' => 2, 'caste' => json_encode(['Devadiga', 'Bunts'])],
@@ -175,7 +176,9 @@ it('updates the list: new communities, Gowda for Tulu + Arebhashe, fixed sub-cas
         ->and(tnuSubs(Update::GOWDA))->toBe(['Tulu Gowda', 'Arebhashe Gowda', "Don't wish to specify"])
         ->and(tnuSubs('Bunts'))->toContain('Nadava')->not->toContain('Nadoja')
         ->and(tnuSubs('Mogaveera'))->toBe(['Mogaveera', 'Tulu Mogaveera', 'Kannada Mogaveera'])
-        ->and(tnuSubs('Brahmin'))->toContain('Koteshwara Brahmin')
+        ->and(tnuSubs('Brahmin'))->toContain('Koteshwara Brahmin', 'Madhwa Brahmin', 'Smartha Brahmin')
+        ->and(tnuSubs('Devadiga (Moily)'))->toBe(['Devadiga', 'Sherigar'])                  // Sapaliga is its own community now
+        ->and(tnuCaste(13))->toBe(['Hindu', 'Brahmin', 'Smartha Brahmin', null])
         ->and(Community::whereIn('community_name', ['Salian', 'Konkani'])->where('is_active', true)->count())->toBe(0)
         // "Other / Not Listed" stays at the end of the list
         ->and(Community::orderBy('sort_order')->get()->last()->community_name)->toBe('Other / Not Listed')

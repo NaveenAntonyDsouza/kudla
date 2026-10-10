@@ -56,6 +56,8 @@ class UpdateTuluNaduCommunities extends Command
         'Daivajna Brahmin' => [],
         'Rajapur Saraswat Brahmin (RSB)' => [],
         'Chitrapur Saraswat Brahmin' => [],
+        // 10 Oct 2026: its own community (Saphalya Seva Sangha; ChatGPT round 1, Gemini round 3), was a Devadiga sub-caste
+        'Sapaliga' => [],
     ];
 
     /** Existing communities => their sub-caste list from now on. */
@@ -63,12 +65,15 @@ class UpdateTuluNaduCommunities extends Command
         self::GOWDA => ['Tulu Gowda', 'Arebhashe Gowda', "Don't wish to specify"],
         'Bunts' => ['Bunt', 'Nadava', 'Parivara Bunt', 'Jain Bunt', 'Shetty'],
         'Mogaveera' => ['Mogaveera', 'Tulu Mogaveera', 'Kannada Mogaveera'],
-        'Brahmin' => ['Havyaka Brahmin', 'Kota Brahmin', 'Shivalli Brahmin', 'Sthanika Brahmin', 'Koteshwara Brahmin', 'Kandavara Brahmin', 'Chitpavan Brahmin', 'Karhade Brahmin'],
+        // + Madhwa / Smartha (10 Oct 2026): what members typed, and how the big matrimony sites list Brahmins
+        'Brahmin' => ['Havyaka Brahmin', 'Kota Brahmin', 'Shivalli Brahmin', 'Madhwa Brahmin', 'Smartha Brahmin', 'Sthanika Brahmin', 'Koteshwara Brahmin', 'Kandavara Brahmin', 'Chitpavan Brahmin', 'Karhade Brahmin'],
         'Kulal' => ['Kulal', 'Kulala', 'Moolya', 'Kumbara'],
-        'Devadiga (Moily)' => ['Devadiga', 'Sapaliga', 'Sherigar'],
+        'Devadiga (Moily)' => ['Devadiga', 'Sherigar'],
         'Padmashali' => ['Padmashali', 'Shettigar'],
         'Vishwakarma' => ['Achari', 'Vishwakarma', 'Akkasale (Goldsmith)', 'Kammara (Blacksmith)', 'Badagi (Carpenter)', 'Shilpi (Sculptor)'],
-        'Scheduled Caste (SC)' => ['Adi Dravida', 'Adi Karnataka', 'Mundala', 'Mera / Muggera', 'Manser / Mansa', 'Samagara', 'Bakuda', 'Raneyar', 'Chalavadi', 'Madiga', 'Bhovi', 'Holeya', 'Pambada', 'Paravan', 'Nalike', "Don't wish to specify"],
+        'Scheduled Caste (SC)' => ['Adi Dravida', 'Adi Karnataka', 'Mundala', 'Mera / Muggera', 'Manser / Mansa', 'Samagara', 'Bakuda', 'Raneyar', 'Chalavadi', 'Madiga', 'Bhovi', 'Holeya', 'Pambada', 'Paravan', 'Nalike',
+            // + coastal communities on the official Karnataka SC list (Constitution (SC) Order, 10 Oct 2026 check)
+            'Ager', 'Ajila', 'Baira', 'Bellara', 'Kotegar / Metri', 'Moger', 'Mukri', "Don't wish to specify"],
     ];
 
     /** Members' caste names that changed => current name (also in partner preferences). */
@@ -107,6 +112,11 @@ class UpdateTuluNaduCommunities extends Command
         ['Padmashali', 'padma shali shettigar', 'Shettigar'],
         ['Vishwakarma', 'gold smith', 'Akkasale (Goldsmith)'],
         ['Kulal', 'moolya', 'Moolya'],
+        ['Brahmin', 'madhwa', 'Madhwa Brahmin'],
+        ['Brahmin', 'madhva', 'Madhwa Brahmin'],
+        ['Brahmin', 'smartha', 'Smartha Brahmin'],
+        ['Brahmin', 'smartha brahmin', 'Smartha Brahmin'],
+        ['Brahmin', 'smartha bhramin', 'Smartha Brahmin'],
     ];
 
     /** Not communities: switched off for new members; --ask asks who chose them. */
