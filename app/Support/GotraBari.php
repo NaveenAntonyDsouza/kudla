@@ -42,7 +42,20 @@ final class GotraBari
         'bunt jain' => ['Bunt balis', 'Nadava balis'],
         'gowda (tulu / arebhashe)' => ['Gowda baris'],
         'tulu gowda' => ['Gowda baris'],
+        'devadiga (moily)' => ['Devadiga baris'],
+        'devadiga' => ['Devadiga baris'],
         'vishwakarma' => ['Vishwakarma gotras'],
+    ];
+
+    /**
+     * Names that are one bari within a caste, per a published source only
+     * (owner, 10 Oct 2026): Ramanath Kotekar (2012), via
+     * tulu-research.blogspot.com/2013/08/314-billava-community-significant.html,
+     * lists "Salian, Palan" and "Kirodian, Mabian" as one Billava bari each.
+     * Lower-case caste => sets of lower-case names.
+     */
+    public const SAME_BARI = [
+        'billava' => [['salian', 'palan'], ['kirodian', 'mabian']],
     ];
 
     /** Answers that say nothing about the lineage. */
@@ -73,6 +86,25 @@ final class GotraBari
         $c = self::casteKey($caste);
 
         return $c !== null && str_contains($c, 'brahmin') ? 'brahmin' : $c;
+    }
+
+    /**
+     * Every normalised name that counts as the same bari as $value for this
+     * caste (itself, plus its published pair in SAME_BARI).
+     */
+    public static function sameAs(?string $caste, string $value): array
+    {
+        $v = self::normalize($value);
+        if ($v === null) {
+            return [];
+        }
+        foreach (self::SAME_BARI[self::casteKey($caste)] ?? [] as $set) {
+            if (in_array($v, $set, true)) {
+                return $set;
+            }
+        }
+
+        return [$v];
     }
 
     /** 'bari', 'gotra', or null when the caste doesn't tell us. */
@@ -175,15 +207,19 @@ final class GotraBari
         }
 
         $n = self::normalize($mine);
-        if ($n === null || $n !== self::normalize($theirs)) {
+        $t = self::normalize($theirs);
+        $caste = self::matchKey($myCaste);
+        if ($n === null || $t === null || $caste === null || $caste !== self::matchKey($theirCaste)) {
             return null;
         }
-        $caste = self::matchKey($myCaste);
-        if ($caste === null || $caste !== self::matchKey($theirCaste)) {
+        if (! in_array($t, self::sameAs($myCaste, (string) $mine), true)) {
             return null;
         }
 
-        return ['value' => trim((string) $theirs), 'kind' => self::lineage($theirCaste) ?? self::kind((string) $theirs)];
+        // A published pair names both: "Palan / Salian"
+        $value = $n === $t ? trim((string) $theirs) : trim((string) $theirs).' / '.trim((string) $mine);
+
+        return ['value' => $value, 'kind' => self::lineage($theirCaste) ?? self::kind((string) $theirs)];
     }
 
     /** The list as it is: grouped (['Group' => [...]]) or flat. */

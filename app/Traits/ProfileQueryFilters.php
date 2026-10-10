@@ -79,16 +79,18 @@ trait ProfileQueryFilters
             if (! $profile->partnerPreference?->exclude_same_gotra) {
                 return;
             }
-            $mine = \App\Support\GotraBari::normalize($profile->religiousInfo?->gotra);
+            $same = \App\Support\GotraBari::sameAs($profile->religiousInfo?->caste, (string) $profile->religiousInfo?->gotra);
             $caste = \App\Support\GotraBari::matchKey($profile->religiousInfo?->caste);
         } catch (\Throwable) {
             return;
         }
-        if ($mine === null || $caste === null) {
+        if ($same === [] || $caste === null) {
             return;
         }
 
-        $query->whereDoesntHave('religiousInfo', fn ($q) => $q->whereRaw('LOWER(TRIM(gotra)) = ?', [$mine])
+        // the bari itself, plus its published pair (GotraBari::SAME_BARI)
+        $marks = implode(', ', array_fill(0, count($same), '?'));
+        $query->whereDoesntHave('religiousInfo', fn ($q) => $q->whereRaw("LOWER(TRIM(gotra)) IN ({$marks})", $same)
             ->when($caste === 'brahmin',
                 fn ($q) => $q->whereRaw('LOWER(caste) LIKE ?', ['%brahmin%']),
                 fn ($q) => $q->whereRaw('LOWER(TRIM(caste)) = ?', [$caste])));

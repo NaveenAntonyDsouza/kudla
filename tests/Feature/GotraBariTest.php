@@ -88,7 +88,7 @@ it('hides profiles of my own bari only when I ask for it', function () {
         $t->timestamps();
     });
     $rows = [2 => ['Billava', 'BANGERA'], 3 => ['Billava', 'Salian'], 4 => ['Billava', null], 5 => ['Billava', 'Bangera '], 6 => ['Bunts', 'Bangera'],
-        7 => ['Brahmin', 'Kashyapa'], 8 => ['Havyaka Brahmin', 'Kashyapa'], 9 => ['Vishwakarma', 'Kashyapa']];
+        7 => ['Brahmin', 'Kashyapa'], 8 => ['Havyaka Brahmin', 'Kashyapa'], 9 => ['Vishwakarma', 'Kashyapa'], 10 => ['Billava', 'Palan'], 11 => ['Bunts', 'Palan']];
     foreach ($rows as $id => [$caste, $gotra]) {
         DB::table('profiles')->insert(['id' => $id]);
         DB::table('religious_info')->insert(['profile_id' => $id, 'caste' => $caste, 'gotra' => $gotra]);
@@ -105,17 +105,20 @@ it('hides profiles of my own bari only when I ask for it', function () {
         }
     };
 
-    expect($filters->ids(gbProfile(1, 'Bangera', exclude: true)))->toBe([3, 4, 6, 7, 8, 9])       // the Bunt Bangera stays
-        ->and($filters->ids(gbProfile(1, 'Bangera', exclude: false)))->toBe([2, 3, 4, 5, 6, 7, 8, 9])
-        ->and($filters->ids(gbProfile(1, "Don't Know", exclude: true)))->toBe([2, 3, 4, 5, 6, 7, 8, 9])
-        ->and($filters->ids(gbProfile(1, 'Bangera', exclude: true, caste: 'Other / Not Listed')))->toBe([2, 3, 4, 5, 6, 7, 8, 9])
-        ->and($filters->ids(gbProfile(1, 'Kashyapa', exclude: true, caste: 'Shivalli Brahmin')))->toBe([2, 3, 4, 5, 6, 9]);   // every Brahmin community
+    $all = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    expect($filters->ids(gbProfile(1, 'Bangera', exclude: true)))->toBe([3, 4, 6, 7, 8, 9, 10, 11])       // the Bunt Bangera stays
+        ->and($filters->ids(gbProfile(1, 'Bangera', exclude: false)))->toBe($all)
+        ->and($filters->ids(gbProfile(1, "Don't Know", exclude: true)))->toBe($all)
+        ->and($filters->ids(gbProfile(1, 'Bangera', exclude: true, caste: 'Other / Not Listed')))->toBe($all)
+        ->and($filters->ids(gbProfile(1, 'Kashyapa', exclude: true, caste: 'Shivalli Brahmin')))->toBe([2, 3, 4, 5, 6, 9, 10, 11])   // every Brahmin community
+        ->and($filters->ids(gbProfile(1, 'Salian', exclude: true)))->toBe([2, 4, 5, 6, 7, 8, 9, 11]);   // Billava Salian hides Billava Salian + Palan, not the Bunt Palan
 
     Schema::dropIfExists('religious_info');
     Schema::dropIfExists('profiles');
 });
 
-it('adds the reviewed baris in groups, gotras after them, Don\'t Know / Other last, once', function () {
+function gbCreateListTables(): void
+{
     Schema::create('reference_data_options', function (Blueprint $t) {
         $t->id();
         $t->string('category', 50);
@@ -126,7 +129,19 @@ it('adds the reviewed baris in groups, gotras after them, Don\'t Know / Other la
         $t->integer('sort_order')->default(0);
         $t->boolean('is_active')->default(true);
         $t->timestamps();
+        $t->unique(['category', 'value']);
     });
+    Schema::create('religious_info', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id');
+        $t->string('caste')->nullable();
+        $t->string('gotra')->nullable();
+        $t->timestamps();
+    });
+}
+
+it('adds the reviewed baris in groups, gotras after them, Don\'t Know / Other last, once', function () {
+    gbCreateListTables();
     foreach (['Atri', 'Kashyapa', "Don't Know", 'Other'] as $i => $v) {
         ReferenceDataOption::create(['category' => 'gothram', 'value' => $v, 'sort_order' => $i * 10]);
     }
@@ -139,15 +154,52 @@ it('adds the reviewed baris in groups, gotras after them, Don\'t Know / Other la
         ->map(fn ($r) => ['value' => $r->value, 'group_label' => $r->group_label])->all();
     $list = ReferenceDataOption::assembleList($rows);
 
-    expect(array_keys($list))->toBe(['Common Tulu baris', 'Bunt balis', 'Nadava balis', 'Gowda baris', 'Brahmin gotras', 'Vishwakarma gotras', 'Not sure / not listed'])
+    expect(array_keys($list))->toBe(['Common Tulu baris', 'Bunt balis', 'Nadava balis', 'Gowda baris', 'Devadiga baris', 'Brahmin gotras', 'Vishwakarma gotras', 'Not sure / not listed'])
         ->and($list['Gowda baris'])->toContain('Balasanna')
-        ->and($list['Bunt balis'])->toContain('Karkatarannaya', 'Chalyannaya')
+        ->and($list['Bunt balis'])->toContain('Karkatarannaya', 'Chalyannaya', 'Kongannaya', 'Kundarannaya', 'Gujjarannaya')
+        ->and($list['Devadiga baris'])->toContain('Saliyannaya', 'Kochatabettannaya')->not->toContain('Kundarannaya')   // stored once, under Bunt
+        ->and($list['Common Tulu baris'])->toContain('Nayak', 'Naika', 'Kabera', 'Pulyatan')->not->toContain('Naik', 'Banjan')
         ->and($list['Brahmin gotras'])->toBe(['Atri', 'Kashyapa', 'Naidhruva', 'Angirasa'])
         ->and($list['Vishwakarma gotras'])->toBe(['Sanaga', 'Sanatana', 'Abhuvanasa', 'Pratnasa', 'Suparna'])
         ->and($list['Not sure / not listed'])->toBe(["Don't Know", 'Other'])
         ->and(DB::table('reference_data_options')->orderBy('id')->get()->toArray())->toEqual($after);   // second run: no change
 
     Schema::dropIfExists('reference_data_options');
+    Schema::dropIfExists('religious_info');
+});
+
+it('corrects a list that went live before the sources were checked (Naik → Nayak, Banjan off), once', function () {
+    gbCreateListTables();
+    // as on kudla after rel32: Common baris 1010+, Naik and Banjan among them
+    foreach (['Amin', 'Banjan', 'Bangera', 'Naik', 'Salian'] as $i => $v) {
+        ReferenceDataOption::create(['category' => 'gothram', 'group_label' => 'Common Tulu baris', 'value' => $v, 'sort_order' => 1010 + $i * 10]);
+    }
+    ReferenceDataOption::create(['category' => 'gothram', 'group_label' => 'Brahmin gotras', 'value' => 'Atri', 'sort_order' => 5000]);
+    DB::table('religious_info')->insert([['profile_id' => 1, 'caste' => 'Billava', 'gotra' => 'Naik'], ['profile_id' => 2, 'caste' => 'Billava', 'gotra' => 'Banjan']]);
+
+    $this->artisan('reference:add-tulu-baris')->expectsOutputToContain('renamed: 1 (members moved: 1); switched off: 1')->assertSuccessful();
+    $after = DB::table('reference_data_options')->orderBy('id')->get()->toArray();
+    $this->artisan('reference:add-tulu-baris')->expectsOutputToContain('names added: 0; baris put in place: 0; other options grouped: 0; renamed: 0')->assertSuccessful();
+
+    $active = ReferenceDataOption::where('category', 'gothram')->where('is_active', true)->orderBy('sort_order')->pluck('value')->all();
+    expect(DB::table('reference_data_options')->orderBy('id')->get()->toArray())->toEqual($after)
+        ->and(array_slice($active, 0, 4))->toBe(['Amin', 'Anchan', 'Banan', 'Bangera'])             // the list's own order
+        ->and($active)->toContain('Nayak')->not->toContain('Naik', 'Banjan')
+        ->and(ReferenceDataOption::where('value', 'Banjan')->value('is_active'))->toBeFalsy()
+        ->and(DB::table('religious_info')->orderBy('profile_id')->pluck('gotra')->all())->toBe(['Nayak', 'Banjan']);   // Banjan's member keeps it
+
+    Schema::dropIfExists('reference_data_options');
+    Schema::dropIfExists('religious_info');
+});
+
+it('counts a published Billava pair as the same bari, for Billavas only', function () {
+    expect(GotraBari::shared(gbProfile(1, 'Salian'), gbProfile(2, 'Palan')))->toBe(['value' => 'Palan / Salian', 'kind' => 'bari'])
+        ->and(GotraBari::shared(gbProfile(1, 'Mabian'), gbProfile(2, 'kirodian')))->toBe(['value' => 'kirodian / Mabian', 'kind' => 'bari'])
+        ->and(GotraBari::shared(gbProfile(1, 'Salian', caste: 'Bunts'), gbProfile(2, 'Palan', caste: 'Bunts')))->toBeNull()
+        ->and(GotraBari::shared(gbProfile(1, 'Salian'), gbProfile(2, 'Mabian')))->toBeNull()
+        ->and(GotraBari::sameAs('Billava', ' PALAN '))->toBe(['salian', 'palan'])
+        ->and(GotraBari::sameAs('Mogaveera', 'Palan'))->toBe(['palan'])
+        ->and(GotraBari::sameAs('Billava', "Don't Know"))->toBe([]);
 });
 
 it('offers a searchable, grouped picker that still submits one gotra value', function () {

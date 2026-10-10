@@ -49,11 +49,19 @@
             const rank = (g) => g.label === '' ? -1 : (first.indexOf(g.label) + 1 || first.length + 1);
             return [...this.ssGroups].sort((a, b) => rank(a) - rank(b));
         },
+        {{-- Forgiving about spelling, for search only: no accents, spaces,
+             dots, h or doubled letters, so Jattanna finds Jathanna and
+             Aryabannaya finds Aarya Bannaya (Oct 2026) --}}
+        ssLoose(s) {
+            return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').replace(/h/g, '').replace(/(.)\1+/g, '$1');
+        },
         get ssFiltered() {
             const q = this.ssSearch.trim().toLowerCase();
             if (!q) return this.ssOrdered;
+            const lq = this.ssLoose(q);
+            const hit = (s) => s.toLowerCase().includes(q) || (lq.length > 1 && this.ssLoose(s).includes(lq));
             return this.ssOrdered
-                .map(g => ({ label: g.label, items: g.label.toLowerCase().includes(q) ? g.items : g.items.filter(i => i.toLowerCase().includes(q)) }))
+                .map(g => ({ label: g.label, items: hit(g.label) ? g.items : g.items.filter(hit) }))
                 .filter(g => g.items.length);
         },
         ssShow() {

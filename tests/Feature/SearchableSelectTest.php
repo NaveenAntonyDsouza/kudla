@@ -64,3 +64,13 @@ it('offers every country as a searchable dropdown wherever a member picks one', 
     }
     expect(substr_count($source, "config('reference_data.country_list', [])"))->toBe(6);
 });
+
+it('searches forgivingly (no spaces, h or doubled letters), without changing the stored values', function () {
+    $html = Blade::render('<x-searchable-select name="g" label="Bari" :options="$o" />', ['o' => ['Jathanna', 'Aarya Bannaya']]);
+
+    expect($html)->toContain('ssLoose(s)')
+        ->toContain('.replace(/h/g, \'\').replace(/(.)\\1+/g, \'$1\')')
+        ->toContain('.replace(/[\\u0300-\\u036f]/g, \'\')')
+        ->toContain('<option value="Jathanna"')
+        ->toContain('<option value="Aarya Bannaya"');
+});
