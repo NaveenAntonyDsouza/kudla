@@ -68,7 +68,7 @@ class UpdateTuluNaduCommunities extends Command
         'Devadiga (Moily)' => ['Devadiga', 'Sapaliga', 'Sherigar'],
         'Padmashali' => ['Padmashali', 'Shettigar'],
         'Vishwakarma' => ['Achari', 'Vishwakarma', 'Akkasale (Goldsmith)', 'Kammara (Blacksmith)', 'Badagi (Carpenter)', 'Shilpi (Sculptor)'],
-        'Scheduled Caste (SC)' => ['Adi Dravida', 'Adi Karnataka', 'Mundala', 'Mera / Muggera', 'Manser / Mansa', 'Samagara', 'Bakuda', 'Raneyar', 'Chalavadi', 'Madiga', 'Bhovi', 'Holeya', 'Pambada', 'Paravan', "Don't wish to specify"],
+        'Scheduled Caste (SC)' => ['Adi Dravida', 'Adi Karnataka', 'Mundala', 'Mera / Muggera', 'Manser / Mansa', 'Samagara', 'Bakuda', 'Raneyar', 'Chalavadi', 'Madiga', 'Bhovi', 'Holeya', 'Pambada', 'Paravan', 'Nalike', "Don't wish to specify"],
     ];
 
     /** Members' caste names that changed => current name (also in partner preferences). */

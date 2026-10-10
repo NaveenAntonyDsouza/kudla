@@ -232,7 +232,7 @@
                 <div>
                     {{-- Gotra (Brahmins) or bari (Tulu families): one field, searchable;
                          a value typed earlier stays selected --}}
-                    <x-gotra-bari-select :value="$r?->gotra" />
+                    <x-gotra-bari-select :value="$r?->gotra" :caste="$r?->caste" />
                 </div>
                 <div class="float-field">
                     <select name="nakshatra"><option value="">Select</option>

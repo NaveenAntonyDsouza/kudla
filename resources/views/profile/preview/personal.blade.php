@@ -57,7 +57,7 @@
                 <div><p class="text-xs text-gray-500">Caste (specified)</p><p class="text-sm font-semibold text-gray-900">{{ $r->other_caste_name }}</p></div>
             @endif
             <div><p class="text-xs text-gray-500">Sub Caste</p><p class="text-sm font-semibold text-gray-900">{{ $nm($r->sub_caste) }}</p></div>
-            <div><p class="text-xs text-gray-500">Gotra / Bari</p><p class="text-sm font-semibold text-gray-900">{{ $nm($r->gotra) }}</p></div>
+            <div><p class="text-xs text-gray-500">{{ \App\Support\GotraBari::label($r->caste) }}</p><p class="text-sm font-semibold text-gray-900">{{ $nm($r->gotra) }}</p></div>
         @endif
         @if($r->religion === 'Muslim')
             <div><p class="text-xs text-gray-500">Muslim Sect</p><p class="text-sm font-semibold text-gray-900">{{ $nm($r->muslim_sect) }}</p></div>

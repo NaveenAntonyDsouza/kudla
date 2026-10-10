@@ -1,4 +1,4 @@
-@props(['name', 'label', 'options' => [], 'selected' => null, 'id' => null, 'required' => false])
+@props(['name', 'label', 'options' => [], 'selected' => null, 'id' => null, 'required' => false, 'firstGroups' => null])
 
 {{--
     Single-choice dropdown with a search box, for long lists (education,
@@ -13,6 +13,9 @@
     x-model="workingCountry" x-on:change="fetchWorkingStates()". Picking
     fires a real `change` event. State/refs are prefixed `ss` so they never
     shadow the parent's Alpine names.
+
+    first-groups="expr": a parent Alpine expression giving group labels to
+    show first in the panel (e.g. the member's own caste's baris).
 --}}
 @php
     $id ??= $name;
@@ -40,10 +43,16 @@
         ssSearch: '',
         ssValue: {{ Js::from($selected) }},
         ssGroups: {{ Js::from($groups) }},
+        get ssOrdered() {
+            const first = ({!! $firstGroups ?: '[]' !!}) || [];
+            if (!first.length) return this.ssGroups;
+            const rank = (g) => g.label === '' ? -1 : (first.indexOf(g.label) + 1 || first.length + 1);
+            return [...this.ssGroups].sort((a, b) => rank(a) - rank(b));
+        },
         get ssFiltered() {
             const q = this.ssSearch.trim().toLowerCase();
-            if (!q) return this.ssGroups;
-            return this.ssGroups
+            if (!q) return this.ssOrdered;
+            return this.ssOrdered
                 .map(g => ({ label: g.label, items: g.label.toLowerCase().includes(q) ? g.items : g.items.filter(i => i.toLowerCase().includes(q)) }))
                 .filter(g => g.items.length);
         },

@@ -22,7 +22,7 @@
             <div><p class="text-xs text-gray-500">Caste (specified)</p><p class="text-sm font-medium text-gray-900">{{ $r->other_caste_name }}</p></div>
         @endif
         <div><p class="text-xs text-gray-500">Sub Caste</p><p class="text-sm font-medium text-gray-900">{{ $r->sub_caste ?? 'Not Mentioned' }}</p></div>
-        <div><p class="text-xs text-gray-500">Gotra / Bari</p><p class="text-sm font-medium text-gray-900">{{ $r->gotra ?? 'Not Mentioned' }}</p></div>
+        <div><p class="text-xs text-gray-500">{{ \App\Support\GotraBari::label($r->caste) }}</p><p class="text-sm font-medium text-gray-900">{{ $r->gotra ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Nakshatra</p><p class="text-sm font-medium text-gray-900">{{ $r->nakshatra ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Rashi</p><p class="text-sm font-medium text-gray-900">{{ $r->rashi ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Manglik / Chovva Dosham</p><p class="text-sm font-medium text-gray-900">{{ $r->dosh ?? 'Not Mentioned' }}</p></div>

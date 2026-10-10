@@ -192,7 +192,7 @@
                 </div>
                 <div>
                     {{-- Gotra (Brahmins) or bari (Tulu families): one field, searchable --}}
-                    <x-gotra-bari-select :value="old('gotra', $religiousInfo?->gotra ?? '')" />
+                    <x-gotra-bari-select :value="old('gotra', $religiousInfo?->gotra ?? '')" :caste="$religiousInfo?->caste" />
                     @error('gotra') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div class="float-field">

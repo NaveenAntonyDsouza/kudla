@@ -5,6 +5,7 @@
             ['Sub-Caste',         $this->getUnlistedSubCastes(),     'Add as a sub-community under the right caste in Content Management → Communities.'],
             ['Religion',          $this->getUnlistedReligions(),     'Add to Content Management → Reference Data (religion list) if it should be offered.'],
             ['Denomination',      $this->getUnlistedDenominations(), 'Add to Content Management → Reference Data (denomination list).'],
+            ['Gotra / Bari',      $this->getUnlistedGotras(),        'Typed after "Other". When a name is real (ask the member or an elder if unsure), add it to Content Management → Reference Data (gothram) in the right group, e.g. "Common Tulu baris".'],
         ];
     @endphp
 
@@ -20,7 +21,7 @@
                 <div style="display:flex;align-items:flex-start;gap:1rem;padding:.6rem 0;{{ $loop->first ? '' : 'border-top:1px solid rgba(128,128,128,0.18);' }}">
                     <div style="flex:1;min-width:0;">
                         <span style="font-weight:600;">{{ $g->value }}</span>
-                        <span style="opacity:.6;margin-left:.4rem;font-size:.8125rem;">— {{ $g->count }} member{{ $g->count === 1 ? '' : 's' }}</span>
+                        <span style="opacity:.6;margin-left:.4rem;font-size:.8125rem;">— {{ $g->count }} member{{ $g->count === 1 ? '' : 's' }}@if(!empty($g->castes)) · {{ implode(', ', $g->castes) }}@endif</span>
                         <div style="margin-top:.3rem;display:flex;flex-wrap:wrap;gap:.3rem;">
                             @foreach($g->members as $m)
                                 @php $url = \App\Filament\Resources\UserResource::profileViewUrl($m); @endphp

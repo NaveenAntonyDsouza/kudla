@@ -69,7 +69,9 @@ trait ProfileQueryFilters
     /**
      * "Don't show profiles with my gotra / bari" (partner preference, Oct 2026):
      * the same gotra or bari counts as brother and sister. Only when the
-     * member chose it and has a real gotra / bari of their own.
+     * member chose it and has a real gotra / bari and caste of their own,
+     * and only within the same caste (every Brahmin community counts as one),
+     * as GotraBari::shared().
      */
     protected function excludeSameGotra(Builder $query, Profile $profile): void
     {
@@ -78,13 +80,17 @@ trait ProfileQueryFilters
                 return;
             }
             $mine = \App\Support\GotraBari::normalize($profile->religiousInfo?->gotra);
+            $caste = \App\Support\GotraBari::matchKey($profile->religiousInfo?->caste);
         } catch (\Throwable) {
             return;
         }
-        if ($mine === null) {
+        if ($mine === null || $caste === null) {
             return;
         }
 
-        $query->whereDoesntHave('religiousInfo', fn ($q) => $q->whereRaw('LOWER(TRIM(gotra)) = ?', [$mine]));
+        $query->whereDoesntHave('religiousInfo', fn ($q) => $q->whereRaw('LOWER(TRIM(gotra)) = ?', [$mine])
+            ->when($caste === 'brahmin',
+                fn ($q) => $q->whereRaw('LOWER(caste) LIKE ?', ['%brahmin%']),
+                fn ($q) => $q->whereRaw('LOWER(TRIM(caste)) = ?', [$caste])));
     }
 }

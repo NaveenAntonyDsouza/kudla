@@ -65,6 +65,35 @@ class UnlistedCommunities extends Page
 
     public function getUnlistedDenominations(): Collection { return $this->grouped('other_denomination_name'); }
 
+    /**
+     * Gotras / baris members typed that aren't in the list (Oct 2026: the
+     * bari list grows from what members write), with the castes they're in.
+     */
+    public function getUnlistedGotras(): Collection
+    {
+        $known = array_map(fn ($v) => \App\Support\GotraBari::normalize($v), \App\Support\GotraBari::flatOptions());
+
+        return ReligiousInfo::query()
+            ->whereNotNull('gotra')->where('gotra', '!=', '')
+            ->whereHas('profile')
+            ->with('profile:id,matri_id,full_name')
+            ->get()
+            ->filter(function ($ri) use ($known) {
+                $v = \App\Support\GotraBari::normalize($ri->gotra);
+
+                return $v !== null && ! in_array($v, $known, true);
+            })
+            ->groupBy(fn ($ri) => \App\Support\GotraBari::normalize($ri->gotra))
+            ->map(fn ($g) => (object) [
+                'value' => trim($g->first()->gotra),
+                'count' => $g->count(),
+                'members' => $g->pluck('profile')->filter()->values(),
+                'castes' => $g->map(fn ($ri) => $ri->display_caste)->filter()->unique()->values()->all(),
+            ])
+            ->sortByDesc('count')
+            ->values();
+    }
+
     /** Sub-castes typed by members that aren't in ANY community's sub_communities. */
     public function getUnlistedSubCastes(): Collection
     {
