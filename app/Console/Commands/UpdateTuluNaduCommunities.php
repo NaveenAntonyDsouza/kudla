@@ -197,8 +197,9 @@ class UpdateTuluNaduCommunities extends Command
         // Not communities: off for new members (existing members keep the value until they choose)
         $off = $hindu()->whereIn('community_name', self::ASK)->where('is_active', true)->pluck('community_name')->all();
         $this->report['switched off'] = $off;
-        if (! $dry) {
-            $hindu()->whereIn('community_name', self::ASK)->update(['is_active' => false]);
+        if (! $dry && $off) {
+            // only the ones still on, so a second run doesn't touch updated_at
+            $hindu()->whereIn('community_name', $off)->update(['is_active' => false]);
         }
     }
 

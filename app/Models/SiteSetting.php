@@ -14,13 +14,22 @@ class SiteSetting extends Model
         'value',
     ];
 
+    /** Cached in place of a setting that isn't saved, so the caller's default isn't. */
+    private const NOT_SET = "\0not-set";
+
     public static function getValue(string $key, $default = null): ?string
     {
-        return Cache::remember("site_setting.{$key}", 3600, function () use ($key, $default) {
+        // Cache what's stored, never the default: callers pass different
+        // defaults, and caching the first one gave everyone else that value
+        // for an hour (10 Oct 2026: a check script's "(default)" made the
+        // re-engagement cap read as 1).
+        $value = Cache::remember("site_setting.{$key}", 3600, function () use ($key) {
             $setting = static::where('key', $key)->first();
 
-            return $setting ? $setting->value : $default;
+            return $setting ? $setting->value : self::NOT_SET;
         });
+
+        return $value === self::NOT_SET ? $default : $value;
     }
 
     public static function setValue(string $key, string $value): void

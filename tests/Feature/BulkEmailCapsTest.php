@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Sleep;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,7 @@ beforeEach(function () {
         $t->timestamps();
     });
     Mail::fake();
+    Sleep::fake();
 });
 
 afterEach(function () {
@@ -115,6 +117,39 @@ it('sends at most the daily cap and defers the rest to the next run', function (
     // Next day's run picks up the two that were deferred.
     $next = app(ReengagementService::class)->run();
     expect(array_sum($next['sent_by_level']))->toBe(2);
+});
+
+it('pauses between re-engagement emails (Hostinger refused 1 in 8 sent back to back, 9–10 Oct 2026)', function () {
+    foreach (range(1, 3) as $i) {
+        inactiveUser("p{$i}@site.test", 8 + $i);
+    }
+
+    app(ReengagementService::class)->run();
+
+    Mail::assertSentCount(3);
+    Sleep::assertSleptTimes(2);
+    Sleep::assertSequence([Sleep::for(3)->seconds(), Sleep::for(3)->seconds()]);
+});
+
+it('pauses as long as the reengagement_send_delay setting says, and never in a dry run', function () {
+    SiteSetting::setValue('reengagement_send_delay', '0');
+    inactiveUser('a@site.test', 9);
+    inactiveUser('b@site.test', 10);
+
+    app(ReengagementService::class)->run();
+    app(ReengagementService::class)->run(true);
+
+    Mail::assertSentCount(2);
+    Sleep::assertNeverSlept();
+});
+
+it('never caches one caller\'s default for a setting that isn\'t saved', function () {
+    expect(SiteSetting::getValue('reengagement_daily_cap', '(default)'))->toBe('(default)')
+        ->and(SiteSetting::getValue('reengagement_daily_cap', '100'))->toBe('100')
+        ->and(app(ReengagementService::class)->getDailyCap())->toBe(100);
+
+    SiteSetting::setValue('reengagement_daily_cap', '40');
+    expect(SiteSetting::getValue('reengagement_daily_cap', '100'))->toBe('40');
 });
 
 it('sends to the most recently active members first when capped', function () {

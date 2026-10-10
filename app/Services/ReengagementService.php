@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Sleep;
 
 /**
  * ReengagementService — finds inactive members and emails them the appropriate
@@ -54,6 +55,8 @@ class ReengagementService
         $thresholds = $this->getThresholds();
         $candidates = $this->findCandidates($thresholds);
         $cap = $this->getDailyCap();
+        $delay = $this->getSendDelay();
+        $attempts = 0;
 
         $sentByLevel = [1 => 0, 2 => 0, 3 => 0];
         $skipped = 0;
@@ -102,6 +105,11 @@ class ReengagementService
             ];
 
             if (!$dryRun) {
+                // Pace the sends like the weekly matches: 100 back to back got
+                // "450 4.7.1 too much mail" from Hostinger for 1 in 8 (9–10 Oct 2026)
+                if ($attempts++ > 0 && $delay > 0) {
+                    Sleep::for($delay)->seconds();
+                }
                 try {
                     Mail::to($user->email)->send($this->mailForLevel($targetLevel, $user));
 
@@ -137,6 +145,15 @@ class ReengagementService
     public function getDailyCap(): int
     {
         return max(1, (int) SiteSetting::getValue('reengagement_daily_cap', '100'));
+    }
+
+    /**
+     * Seconds between emails (mailbox sending limits); the
+     * `reengagement_send_delay` setting (0 = no pause).
+     */
+    public function getSendDelay(): int
+    {
+        return max(0, (int) SiteSetting::getValue('reengagement_send_delay', '3'));
     }
 
     /**

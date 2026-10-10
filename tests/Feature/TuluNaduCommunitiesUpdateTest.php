@@ -206,6 +206,9 @@ it('can run again without changing anything twice', function () {
     $this->artisan('communities:tulu-nadu-update')->assertSuccessful();
     $snapshot = [DB::table('communities')->orderBy('id')->get()->toArray(), DB::table('religious_info')->orderBy('id')->get()->toArray(), DB::table('partner_preferences')->orderBy('id')->get()->toArray()];
 
+    // a later second, so a touched updated_at shows up every time, not only
+    // when the two runs straddle a second (it flaked once, 10 Oct 2026)
+    $this->travel(5)->seconds();
     $this->artisan('communities:tulu-nadu-update')->assertSuccessful();
 
     expect([DB::table('communities')->orderBy('id')->get()->toArray(), DB::table('religious_info')->orderBy('id')->get()->toArray(), DB::table('partner_preferences')->orderBy('id')->get()->toArray()])
