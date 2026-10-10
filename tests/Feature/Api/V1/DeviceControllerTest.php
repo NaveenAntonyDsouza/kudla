@@ -76,7 +76,10 @@ beforeEach(function () {
     }
 });
 
-afterAll(function () {
+// afterEach, not afterAll: afterAll runs once the app is torn down, so the
+// Schema facade has no container ("Target class [db.schema] does not exist")
+// and the whole suite exits with code 2 although every test passed.
+afterEach(function () {
     Schema::dropIfExists('devices');
 });
 
