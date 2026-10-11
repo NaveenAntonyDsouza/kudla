@@ -7,7 +7,14 @@
         $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
         $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
         $heroImageUrl = \App\Models\SiteSetting::getValue('hero_image_url', '');
+        // Optional skin from the "Tulu Nadu" / "Parish" designs (pages/home/tulunadu|parish)
+        $skin = in_array($skin ?? null, ['tulunadu', 'parish'], true) ? $skin : null;
     @endphp
+
+    @if($skin)
+        @include('pages.home.skins.style')
+        <div class="home-skin home-skin-{{ $skin }}">
+    @endif
 
     {{-- 1. Hero Banner with Registration Form --}}
     <style>
@@ -27,8 +34,11 @@
             .trust-signals { display: block !important; }
         }
     </style>
-    <section class="relative overflow-hidden py-10 sm:py-14 md:py-16" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%);">
-        @if($heroImageUrl)
+    <section class="relative overflow-hidden py-10 sm:py-14 md:py-16" style="background: {{ $skin ? 'var(--home-hero-bg)' : 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 50%, var(--brand-secondary) 100%)' }};">
+        @if($skin)
+            {{-- The skin's artwork takes the place of the uploaded hero photo --}}
+            <x-dynamic-component :component="'home-art.'.$skin.'-hero'" />
+        @elseif($heroImageUrl)
             <div class="absolute inset-0">
                 <img src="{{ $heroImageUrl }}" alt="" class="w-full h-full object-cover">
                 <div class="absolute inset-0" style="background: linear-gradient(135deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.05) 100%);"></div>
@@ -45,6 +55,9 @@
                         <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg mx-auto md:mx-0">{{ $heroSubheading }}</p>
                     @elseif($siteTagline)
                         <p class="mt-4 text-lg sm:text-xl text-white/90 max-w-lg mx-auto md:mx-0">{{ $siteTagline }}</p>
+                    @endif
+                    @if($skin === 'parish')
+                        <p class="parish-verse">“Love is patient, love is kind.” <span style="font-style: normal; font-size: 0.9rem; opacity: 0.85;">— 1 Corinthians 13:4</span></p>
                     @endif
 
                     {{-- Trust Signals --}}
@@ -214,7 +227,7 @@
     </section>
 
     {{-- 1b. Search Widget (moved below hero) --}}
-    <section class="py-6" style="background: linear-gradient(135deg, var(--brand-primary-hover) 0%, var(--brand-secondary) 100%);">
+    <section class="py-6" style="background: {{ $skin ? 'var(--home-band-bg)' : 'linear-gradient(135deg, var(--brand-primary-hover) 0%, var(--brand-secondary) 100%)' }};">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-white font-semibold text-center mb-4">{{ \App\Models\SiteSetting::getValue('search_heading', 'Search for Your Perfect Partner') }}</h2>
             <form action="/search" method="GET" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
@@ -321,6 +334,7 @@
     </section>
     @endif
 
+    @if($skin) <x-dynamic-component :component="'home-art.'.$skin.'-divider'" /> @endif
     {{-- 3. How It Works --}}
     <section class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -404,6 +418,7 @@
     </section>
     @endif
 
+    @if($skin) <x-dynamic-component :component="'home-art.'.$skin.'-divider'" /> @endif
     {{-- 5. Success Stories (Carousel) --}}
     @php
         $successStories = \App\Models\Testimonial::where('is_visible', true)->orderBy('display_order')->limit(8)->get();
@@ -507,6 +522,7 @@
     </section>
     @endif
 
+    @if($skin) <x-dynamic-component :component="'home-art.'.$skin.'-divider'" /> @endif
     {{-- 6. Community Browse --}}
     @if($showCommunities && $communities->count() > 0)
     <section class="py-16 bg-gray-50">
@@ -678,4 +694,7 @@
             </a>
         </div>
     </section>
+    @if($skin)
+        </div>
+    @endif
 </x-layouts.app>

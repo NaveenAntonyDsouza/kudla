@@ -129,6 +129,8 @@ class HomepageSettings extends Page implements HasForms
                                 'classic' => 'Classic — Traditional matrimony layout with hero + registration form side-by-side, counters, community browse, carousel testimonials. Safe default.',
                                 'modern' => 'Modern — Tech-startup aesthetic with split hero, profile card stack, compact registration, card grids, bottom CTA strip. Best for urban/premium brands.',
                                 'premium' => 'Premium — Editorial / magazine layout with cinematic hero, masonry featured profiles, long-form success stories, elegant serif headlines. Best for aspirational brands.',
+                                'tulunadu' => 'Tulu Nadu — The Classic layout with a coastal Tulu Nadu feel: mango-leaf thorana, mallige, kalasha and deepa, palms by the sea; maroon, turmeric and leaf-green colours on the homepage. Uses its own artwork instead of the hero photo.',
+                                'parish' => 'Parish — The Classic layout with a Catholic feel: stained-glass window and cross, dove and lilies, a short verse (1 Cor 13:4); blue, white and gold on the homepage. Uses its own artwork instead of the hero photo.',
                             ])
                             ->default('classic')
                             ->required()
