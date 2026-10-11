@@ -14,6 +14,18 @@ class DiscoverController extends Controller
     /** Old slug => new slug for communities that were renamed (Oct 2026 caste-list update). */
     private const RENAMED_SLUGS = [
         'gowda-tulu' => 'gowda-tulu-arebhashe',
+        // Kannada Dating, 11 Oct 2026 (communities:kannada-update)
+        'tulu-gowda' => 'gowda-tulu-arebhashe',
+        'devadiga' => 'devadiga-moily',
+        'kunchitiga' => 'vokkaliga',
+        'smartha-brahmin' => 'brahmin',
+        'madhwa-brahmin' => 'brahmin',
+        'havyaka-brahmin' => 'brahmin',
+        'shivalli-brahmin' => 'brahmin',
+        'kota-brahmin' => 'brahmin',
+        'sthanika-brahmin' => 'brahmin',
+        'hoysala-karnataka-brahmin' => 'brahmin',
+        'deshastha-brahmin' => 'brahmin',
     ];
 
     /**
