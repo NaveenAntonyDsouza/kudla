@@ -212,7 +212,7 @@ class HomepageSettings extends Page implements HasForms
                     ->schema([
                         Forms\Components\Toggle::make('show_stats_bar')
                             ->label('Show the stats strip and member counters')
-                            ->helperText('Turn OFF for a brand-new site — hides the stats strip plus the "X+ Members Online" badge and the marriages bubble, so visitors never see zeros. (Modern/Premium designs.)')
+                            ->helperText('Turn OFF for a brand-new site — hides the stats strip plus the "X+ Members Online" badge and the marriages bubble, so visitors never see zeros. (All designs.)')
                             ->columnSpanFull(),
 
                         Forms\Components\Toggle::make('stats_auto_compute')

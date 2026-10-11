@@ -264,6 +264,8 @@
     </section>
 
     {{-- 2. Stats Row (animated counters) --}}
+    {{-- Admin → Homepage Settings → "Show the stats strip" (off for new sites, so visitors never see 0+) --}}
+    @if(\App\Models\SiteSetting::getValue('show_stats_bar', '1') === '1')
     <section class="py-12 bg-white" x-data="{
         started: false,
         members: 0,
@@ -317,6 +319,7 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- 3. How It Works --}}
     <section class="py-16 bg-gray-50">
