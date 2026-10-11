@@ -54,7 +54,7 @@ it('keeps the Coastal design secular: sea, palms and a tiled house, no wedding o
     expect($art)->toContain('home-art-wide')->toContain('home-art-narrow')->toContain('href="#cs-palm"')
         ->not->toContain('tn-leaf')->not->toContain('ring')->not->toContain('cross')
         ->and($divider)->toContain('home-divider')->not->toContain('#f39c12')
-        ->and($style)->toContain('.home-skin-coastal {')->toContain('--color-primary: #8a1c2b')->not->toContain(':root');
+        ->and($style)->toContain('.home-skin-coastal {')->toContain('--color-primary: #b71c1c')->not->toContain(':root');
 });
 
 it('offers the Tulu Nadu design in the admin on Kudla Matrimony only', function () {

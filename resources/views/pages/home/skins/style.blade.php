@@ -3,7 +3,7 @@
     heading font change on the homepage only (.home-skin wraps it); the header,
     footer and every other page keep the site theme.
       tulunadu — kumkum maroon, turmeric gold, mango-leaf green, sandalwood cream
-      coastal  — maroon, orange and cream; secular sunset-over-the-sea artwork (Kudla, Oct 2026)
+      coastal  — red #B71C1C, orange #F57C00 and cream; secular sunset-over-the-sea artwork (Kudla, Oct 2026)
       parish   — Marian blue, white and gold
 --}}
 <style>
@@ -36,18 +36,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@600;700&display=swap" rel="stylesheet">
     <style>
         .home-skin-coastal {
-            --brand-primary: #8a1c2b; --brand-primary-hover: #6b1420; --brand-primary-light: #fbeee8;
-            --brand-secondary: #b85a14; --brand-secondary-hover: #9a4a10; --brand-secondary-light: #fdf1e2;
-            --color-primary: #8a1c2b; --color-primary-hover: #6b1420; --color-primary-light: #fbeee8;
-            --color-secondary: #b85a14; --color-secondary-hover: #9a4a10; --color-secondary-light: #fdf1e2;
+            --brand-primary: #b71c1c; --brand-primary-hover: #8e1515; --brand-primary-light: #ffebee;
+            --brand-secondary: #e65100; --brand-secondary-hover: #bf4300; --brand-secondary-light: #fff3e0;
+            --color-primary: #b71c1c; --color-primary-hover: #8e1515; --color-primary-light: #ffebee;
+            --color-secondary: #e65100; --color-secondary-hover: #bf4300; --color-secondary-light: #fff3e0;
             --font-serif: "Noto Serif Kannada", "Playfair Display", Georgia, serif;
             --brand-font-serif: "Noto Serif Kannada", "Playfair Display", Georgia, serif;
-            /* dusk over the Arabian Sea: deep maroon sky warming towards the horizon */
-            --home-hero-bg: linear-gradient(180deg, #4f0f19 0%, #6e1824 45%, #94392a 78%, #a8502c 100%);
-            --home-band-bg: linear-gradient(135deg, #6b1420 0%, #8a1c2b 100%);
+            /* dusk over the Arabian Sea: deep red sky warming towards the horizon */
+            --home-hero-bg: linear-gradient(180deg, #5a0e0e 0%, #7d1515 45%, #a63a1c 78%, #c05a22 100%);
+            --home-band-bg: linear-gradient(135deg, #8e1515 0%, #b71c1c 100%);
         }
         .home-skin-coastal .bg-gray-50 { background-color: #fbf6ec; }
-        .home-skin-coastal h2.font-serif { color: #5e111d; }
+        .home-skin-coastal h2.font-serif { color: #7f1414; }
     </style>
 @elseif($skin === 'parish')
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
