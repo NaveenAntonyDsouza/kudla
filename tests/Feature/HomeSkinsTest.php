@@ -9,16 +9,17 @@ use Illuminate\Support\Facades\Blade;
 */
 
 it('offers the two new designs in the admin and lets the homepage use them', function () {
-    expect(file_get_contents(app_path('Http/Controllers/HomeController.php')))->toContain("['classic', 'modern', 'premium', 'tulunadu', 'parish']")
-        ->and(file_get_contents(app_path('Filament/Pages/HomepageSettings.php')))->toContain("'tulunadu' => 'Tulu Nadu")->toContain("'parish' => 'Parish")
+    expect(file_get_contents(app_path('Http/Controllers/HomeController.php')))->toContain("['classic', 'modern', 'premium', 'tulunadu', 'parish', 'coastal']")
+        ->and(file_get_contents(app_path('Filament/Pages/HomepageSettings.php')))->toContain("'tulunadu' => 'Tulu Nadu")->toContain("'parish' => 'Parish")->toContain("'coastal' => 'Coastal")
         ->and(trim(file_get_contents(resource_path('views/pages/home/tulunadu.blade.php'))))->toEndWith("@include('pages.home.classic', ['skin' => 'tulunadu'])")
-        ->and(trim(file_get_contents(resource_path('views/pages/home/parish.blade.php'))))->toEndWith("@include('pages.home.classic', ['skin' => 'parish'])");
+        ->and(trim(file_get_contents(resource_path('views/pages/home/parish.blade.php'))))->toEndWith("@include('pages.home.classic', ['skin' => 'parish'])")
+        ->and(trim(file_get_contents(resource_path('views/pages/home/coastal.blade.php'))))->toEndWith("@include('pages.home.classic', ['skin' => 'coastal'])");
 });
 
 it('skins Classic only when a design asks for it: artwork instead of the photo, a wrapper, dividers', function () {
     $classic = file_get_contents(resource_path('views/pages/home/classic.blade.php'));
 
-    expect($classic)->toContain("\$skin = in_array(\$skin ?? null, ['tulunadu', 'parish'], true) ? \$skin : null;")
+    expect($classic)->toContain("\$skin = in_array(\$skin ?? null, ['tulunadu', 'parish', 'coastal'], true) ? \$skin : null;")
         ->toContain("<x-dynamic-component :component=\"'home-art.'.\$skin.'-hero'\" />")
         ->toContain('@elseif($heroImageUrl)')
         ->toContain('<div class="home-skin home-skin-{{ $skin }}">')
@@ -43,4 +44,15 @@ it('changes colours on the homepage only, inside the skin wrapper', function () 
 
     expect($tulu)->toContain('.home-skin-tulunadu {')->toContain('--color-primary: #8a1c2b')->toContain('Noto+Serif+Kannada')->not->toContain(':root')
         ->and($parish)->toContain('.home-skin-parish {')->toContain('--color-primary: #1f3a6b')->toContain('Cormorant+Garamond');
+});
+
+it('keeps the Coastal design secular: sea, palms and a tiled house, no wedding or religious symbols', function () {
+    $art = Blade::render('<x-home-art.coastal-hero />');
+    $divider = Blade::render('<x-home-art.coastal-divider />');
+    $style = view('pages.home.skins.style', ['skin' => 'coastal'])->render();
+
+    expect($art)->toContain('home-art-wide')->toContain('home-art-narrow')->toContain('href="#cs-palm"')
+        ->not->toContain('tn-leaf')->not->toContain('ring')->not->toContain('cross')
+        ->and($divider)->toContain('home-divider')->not->toContain('#f39c12')
+        ->and($style)->toContain('.home-skin-coastal {')->toContain('--color-primary: #8a1c2b')->not->toContain(':root');
 });

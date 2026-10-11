@@ -7,8 +7,8 @@
         $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
         $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
         $heroImageUrl = \App\Models\SiteSetting::getValue('hero_image_url', '');
-        // Optional skin from the "Tulu Nadu" / "Parish" designs (pages/home/tulunadu|parish)
-        $skin = in_array($skin ?? null, ['tulunadu', 'parish'], true) ? $skin : null;
+        // Optional skin from the "Tulu Nadu" / "Parish" / "Coastal" designs (pages/home/tulunadu|parish|coastal)
+        $skin = in_array($skin ?? null, ['tulunadu', 'parish', 'coastal'], true) ? $skin : null;
     @endphp
 
     @if($skin)

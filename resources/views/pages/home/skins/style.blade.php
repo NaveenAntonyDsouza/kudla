@@ -3,6 +3,7 @@
     heading font change on the homepage only (.home-skin wraps it); the header,
     footer and every other page keep the site theme.
       tulunadu — kumkum maroon, turmeric gold, mango-leaf green, sandalwood cream
+      coastal  — maroon, gold and cream; secular sunset-over-the-sea artwork (Kudla, Oct 2026)
       parish   — Marian blue, white and gold
 --}}
 <style>
@@ -30,6 +31,23 @@
         }
         .home-skin-tulunadu .bg-gray-50 { background-color: #fbf4e6; }
         .home-skin-tulunadu h2.font-serif { color: #5e111d; }
+    </style>
+@elseif($skin === 'coastal')
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        .home-skin-coastal {
+            --brand-primary: #8a1c2b; --brand-primary-hover: #6b1420; --brand-primary-light: #fbeee8;
+            --brand-secondary: #93500f; --brand-secondary-hover: #7a420c; --brand-secondary-light: #fdf1e2;
+            --color-primary: #8a1c2b; --color-primary-hover: #6b1420; --color-primary-light: #fbeee8;
+            --color-secondary: #93500f; --color-secondary-hover: #7a420c; --color-secondary-light: #fdf1e2;
+            --font-serif: "Noto Serif Kannada", "Playfair Display", Georgia, serif;
+            --brand-font-serif: "Noto Serif Kannada", "Playfair Display", Georgia, serif;
+            /* dusk over the Arabian Sea: deep maroon sky warming towards the horizon */
+            --home-hero-bg: linear-gradient(180deg, #4f0f19 0%, #6e1824 45%, #94392a 78%, #a8502c 100%);
+            --home-band-bg: linear-gradient(135deg, #6b1420 0%, #8a1c2b 100%);
+        }
+        .home-skin-coastal .bg-gray-50 { background-color: #fbf6ec; }
+        .home-skin-coastal h2.font-serif { color: #5e111d; }
     </style>
 @elseif($skin === 'parish')
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
