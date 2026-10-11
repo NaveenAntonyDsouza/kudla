@@ -16,6 +16,13 @@
                 <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                     <h2 class="text-lg font-semibold text-gray-900 mb-6">Send us a Message</h2>
 
+                    {{-- Most account questions here were "how do I delete my account?" (kudla, May–Sep 2026):
+                         answer it before the form --}}
+                    <p class="contact-delete-hint" style="margin: -8px 0 20px; padding: 12px 14px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; font-size: 13.5px; color: #374151;">
+                        <strong>Want to delete your account?</strong> You can do it yourself in a minute:
+                        <a href="{{ route('settings.index', ['section' => 'delete_profile']) }}" style="color: var(--color-primary, #8B1D91); font-weight: 600;">Settings &rarr; Delete Account</a>.
+                    </p>
+
                     <form method="POST" action="{{ route('contact.submit') }}">
                         @csrf
                         {{-- Spam guard: people never see or fill "website"; the timestamp

@@ -28,7 +28,7 @@
                     ["Who can see my profile?", "By default, all registered members of the opposite gender can see your profile. You can restrict visibility in Settings > Profile Settings."],
                     ["Can I hide my profile temporarily?", "Yes, go to Settings > Hide Profile. Your profile will be hidden from all search results until you unhide it."],
                     ["Can I block someone?", "Yes, click 'Block Profile' on any profile. You will no longer see each other in search results, and neither can send interests."],
-                    ["How do I delete my account?", "Go to Settings > Delete Profile. Select a reason and confirm. Your profile will be deactivated. Contact support if you need permanent deletion."],
+                    ["How do I delete my account?", "Go to Settings > Delete Account. Select a reason and confirm. Your profile will be deactivated. Contact support if you need permanent deletion."],
                 ],
                 'Membership & Payment' => [
                     ["Is registration free?", "Yes, registration and basic profile creation are completely free."],

@@ -26,7 +26,7 @@
         @php
             $mobileSections = [
                 'search_visibility' => 'Who Can See My Profile', 'manage_alerts' => 'Manage Alerts',
-                'hide_profile' => 'Hide Profile', 'delete_profile' => 'Delete Profile', 'change_password' => 'Change Password',
+                'hide_profile' => 'Hide Profile', 'delete_profile' => 'Delete Account', 'change_password' => 'Change Password',
             ];
         @endphp
         <style>.settings-mobile-nav{display:flex}@media (min-width:1024px){.settings-mobile-nav{display:none}}</style>
@@ -47,7 +47,7 @@
                         ['key' => 'search_visibility', 'label' => 'Who Can See My Profile', 'icon' => 'M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z'],
                         ['key' => 'manage_alerts', 'label' => 'Manage Alerts', 'icon' => 'M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0'],
                         ['key' => 'hide_profile', 'label' => 'Hide Profile', 'icon' => 'M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88'],
-                        ['key' => 'delete_profile', 'label' => 'Delete Profile', 'icon' => 'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0'],
+                        ['key' => 'delete_profile', 'label' => 'Delete Account', 'icon' => 'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0'],
                     ] as $item)
                         <a href="{{ route('settings.index', ['section' => $item['key']]) }}"
                             class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ $section === $item['key'] ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100' }}">
@@ -190,26 +190,7 @@
                         </form>
 
                     @elseif($section === 'delete_profile')
-                        <h2 class="text-lg font-semibold text-gray-900 mb-2">Delete Profile</h2>
-                        <p class="text-sm text-gray-500 mb-6">Choose the reason for deleting your profile.</p>
-                        <form method="POST" action="{{ route('settings.delete') }}" onsubmit="return confirm('Are you sure? This will deactivate your account.')" x-data="{ selectedReason: '' }">
-                            @csrf
-                            <div class="space-y-3">
-                                @foreach(['I am Married', 'My Marriage is Fixed', 'Other Reasons'] as $reason)
-                                    <label class="flex items-center justify-between p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-                                        :class="selectedReason === '{{ $reason }}' && 'border-(--color-primary) bg-(--color-primary-light)'">
-                                        <span class="text-sm text-gray-700">{{ $reason }}</span>
-                                        <input type="radio" name="reason" value="{{ $reason }}" required x-model="selectedReason"
-                                            class="text-(--color-primary) focus:ring-(--color-primary)">
-                                    </label>
-                                @endforeach
-                            </div>
-                            <div x-show="selectedReason === 'Other Reasons'" x-cloak class="mt-4">
-                                <textarea name="other_reason" rows="3" maxlength="500" placeholder="Please tell us why you are leaving..."
-                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)"></textarea>
-                            </div>
-                            <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-500/90 rounded-lg transition-colors">Delete Profile</button>
-                        </form>
+                        @include('settings.partials.delete-account')
 
                     @elseif($section === 'change_password')
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Change Password</h2>

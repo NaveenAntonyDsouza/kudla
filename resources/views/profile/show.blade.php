@@ -123,7 +123,10 @@
                 @endphp
 
                 @foreach($sections as $i => $sec)
-                    <div x-data="{ open: {{ $openSection === $sec['key'] ? 'true' : 'false' }}, editing: false }"
+                    {{-- ?section=x&edit=1 opens that section ready to edit (e.g. the dashboard's "Add your bari") --}}
+                    @php $secEditNow = $openSection === $sec['key'] && request()->boolean('edit'); @endphp
+                    <div x-data="{ open: {{ $openSection === $sec['key'] ? 'true' : 'false' }}, editing: {{ $secEditNow ? 'true' : 'false' }} }"
+                        @if($secEditNow) x-init="$nextTick(() => $el.scrollIntoView({ block: 'start', behavior: 'smooth' }))" @endif
                         class="bg-white rounded-lg border border-gray-200 shadow-xs overflow-hidden">
                         {{-- Section Header --}}
                         <button @click="if (!editing) open = !open"

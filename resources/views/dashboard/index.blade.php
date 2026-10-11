@@ -118,6 +118,9 @@
                     </a>
                 @endif
 
+                {{-- Members of a bari caste with no bari yet (Oct 2026) --}}
+                <x-bari-prompt :profile="$profile" />
+
                 {{-- ═══ INCOMPLETE PROFILE: CTA + Sections first ═══ --}}
                 @if($completionPct < 80)
                     {{-- Profile Completion CTA --}}

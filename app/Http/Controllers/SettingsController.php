@@ -89,29 +89,73 @@ class SettingsController extends Controller
 
     public function deleteProfile(Request $request)
     {
-        $request->validate([
-            'reason' => 'required|string|max:200',
-            'other_reason' => 'nullable|string|max:500',
+        $data = $request->validate([
+            'reason' => 'required|string|in:I am Married,My Marriage is Fixed,Other Reasons',
+            'met_via' => 'nullable|string|in:this_site,other_site,other',
+            'wedding_date' => 'nullable|date|after:2000-01-01|before:+3 years',
+            'partner_matri_id' => 'nullable|string|max:20',
+            'other_site' => 'nullable|string|max:60',
+            'other_reason' => 'nullable|string|max:190',
         ]);
 
         $user = auth()->user();
         $profile = $user->profile;
 
-        $reason = $request->reason === 'Other Reasons' && $request->other_reason
-            ? 'Other: ' . $request->other_reason
-            : $request->reason;
-
         $profile->update([
             'is_active' => false,
             'is_hidden' => true,
-            'deletion_reason' => $reason,
+            'deletion_reason' => self::deletionReason($data),
         ]);
+
+        // Met their partner here: a possible success story for staff to follow up (never published by itself)
+        if (($data['met_via'] ?? null) === 'this_site') {
+            try {
+                \App\Models\AdminActivityLog::create([
+                    'action' => 'married_through_site',
+                    'model_type' => \App\Models\Profile::class,
+                    'model_id' => $profile->id,
+                    'changes' => array_filter([
+                        'matri_id' => $profile->matri_id,
+                        'partner_matri_id' => isset($data['partner_matri_id']) ? strtoupper(trim($data['partner_matri_id'])) : null,
+                        'wedding_date' => $data['wedding_date'] ?? null,
+                        'reason' => $data['reason'],
+                    ]),
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Your profile has been deactivated. Contact support to reactivate.');
+    }
+
+    /**
+     * One line for profiles.deletion_reason (≤ 200 chars), e.g.
+     * "I am Married · met on Kudla Matrimony · wedding 2026-11-20 · partner KM100123".
+     */
+    public static function deletionReason(array $data): string
+    {
+        if (($data['reason'] ?? '') === 'Other Reasons') {
+            $text = trim((string) ($data['other_reason'] ?? ''));
+
+            return mb_substr($text !== '' ? 'Other: '.$text : 'Other Reasons', 0, 200);
+        }
+
+        $parts = [$data['reason'] ?? 'Unknown'];
+        $parts[] = match ($data['met_via'] ?? null) {
+            'this_site' => 'met on '.config('app.name'),
+            'other_site' => 'met on another site'.(trim((string) ($data['other_site'] ?? '')) !== '' ? ' ('.trim($data['other_site']).')' : ''),
+            'other' => 'met by other means',
+            default => null,
+        };
+        $parts[] = ! empty($data['wedding_date']) ? 'wedding '.$data['wedding_date'] : null;
+        $parts[] = ! empty($data['partner_matri_id']) ? 'partner '.strtoupper(trim($data['partner_matri_id'])) : null;
+
+        return mb_substr(implode(' · ', array_filter($parts)), 0, 200);
     }
 
     private function defaultPrefs(): array
