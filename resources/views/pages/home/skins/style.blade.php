@@ -3,7 +3,7 @@
     heading font change on the homepage only (.home-skin wraps it); the header,
     footer and every other page keep the site theme.
       tulunadu — kumkum maroon, turmeric gold, mango-leaf green, sandalwood cream
-      coastal  — maroon, gold and cream; secular sunset-over-the-sea artwork (Kudla, Oct 2026)
+      coastal  — maroon, orange and cream; secular sunset-over-the-sea artwork (Kudla, Oct 2026)
       parish   — Marian blue, white and gold
 --}}
 <style>
@@ -37,9 +37,9 @@
     <style>
         .home-skin-coastal {
             --brand-primary: #8a1c2b; --brand-primary-hover: #6b1420; --brand-primary-light: #fbeee8;
-            --brand-secondary: #93500f; --brand-secondary-hover: #7a420c; --brand-secondary-light: #fdf1e2;
+            --brand-secondary: #b85a14; --brand-secondary-hover: #9a4a10; --brand-secondary-light: #fdf1e2;
             --color-primary: #8a1c2b; --color-primary-hover: #6b1420; --color-primary-light: #fbeee8;
-            --color-secondary: #93500f; --color-secondary-hover: #7a420c; --color-secondary-light: #fdf1e2;
+            --color-secondary: #b85a14; --color-secondary-hover: #9a4a10; --color-secondary-light: #fdf1e2;
             --font-serif: "Noto Serif Kannada", "Playfair Display", Georgia, serif;
             --brand-font-serif: "Noto Serif Kannada", "Playfair Display", Georgia, serif;
             /* dusk over the Arabian Sea: deep maroon sky warming towards the horizon */
