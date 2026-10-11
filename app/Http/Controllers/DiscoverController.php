@@ -91,6 +91,10 @@ class DiscoverController extends Controller
             if (($renamed = self::RENAMED_SLUGS[$slug] ?? null) && collect($subcategories)->firstWhere('slug', $renamed)) {
                 return redirect()->route('discover.results', [$category, $renamed], 301);
             }
+            // "Other / Not Listed" is not a community, so it has no browse page (Oct 2026)
+            if (in_array($slug, array_map([\Illuminate\Support\Str::class, 'slug'], \App\Models\ReligiousInfo::OTHER_CASTE_VALUES), true)) {
+                return redirect()->route('discover.category', $category, 301);
+            }
             abort(404, 'Subcategory not found.');
         }
 

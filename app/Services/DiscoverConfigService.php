@@ -133,7 +133,7 @@ class DiscoverConfigService
     public function allCastes(): array
     {
         return collect(Community::getCasteList())
-            ->filter(fn ($c) => $c !== 'Other')
+            ->reject(fn ($c) => \App\Models\ReligiousInfo::isOtherCaste($c))
             ->map(fn ($c) => [
                 'label' => "$c Profiles",
                 'slug' => Str::slug($c),
@@ -147,7 +147,7 @@ class DiscoverConfigService
     public function hinduCastes(): array
     {
         return collect(Community::getCasteList('Hindu'))
-            ->filter(fn ($c) => $c !== 'Other')
+            ->reject(fn ($c) => \App\Models\ReligiousInfo::isOtherCaste($c))
             ->map(fn ($c) => [
                 'label' => "$c Profiles",
                 'slug' => Str::slug($c),

@@ -24,6 +24,8 @@ class HomeController extends Controller
             ->whereIn('religion', $homeReligions)
             ->orderBy('sort_order')
             ->get()
+            // "Other / Not Listed" stays in the sign-up form, but it is not a community to browse or search (Oct 2026)
+            ->reject(fn ($c) => \App\Models\ReligiousInfo::isOtherCaste($c->community_name))
             ->groupBy('religion')
             ->sortKeysUsing(fn ($a, $b) => array_search($a, $homeReligions) <=> array_search($b, $homeReligions));
 
