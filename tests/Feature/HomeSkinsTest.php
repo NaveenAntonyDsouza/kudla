@@ -56,3 +56,15 @@ it('keeps the Coastal design secular: sea, palms and a tiled house, no wedding o
         ->and($divider)->toContain('home-divider')->not->toContain('#f39c12')
         ->and($style)->toContain('.home-skin-coastal {')->toContain('--color-primary: #8a1c2b')->not->toContain(':root');
 });
+
+it('offers the Tulu Nadu design in the admin on Kudla Matrimony only', function () {
+    $offers = fn () => (fn () => static::offersTuluNadu())->call(new \App\Filament\Pages\HomepageSettings);
+
+    config(['app.url' => 'https://kudlamatrimony.com']);
+    expect($offers())->toBeTrue();
+
+    config(['app.url' => 'https://amchimatrimony.com']);
+    expect(file_get_contents(app_path('Filament/Pages/HomepageSettings.php')))
+        ->toContain("fn (\$design) => \$design !== 'tulunadu' || static::offersTuluNadu()")
+        ->toContain("str_contains((string) config('app.url'), 'kudlamatrimony')");
+});

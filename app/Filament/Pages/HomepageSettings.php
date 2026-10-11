@@ -125,14 +125,14 @@ class HomepageSettings extends Page implements HasForms
                     ->schema([
                         Forms\Components\Radio::make('homepage_template')
                             ->label('')
-                            ->options([
+                            ->options(array_filter([
                                 'classic' => 'Classic — Traditional matrimony layout with hero + registration form side-by-side, counters, community browse, carousel testimonials. Safe default.',
                                 'modern' => 'Modern — Tech-startup aesthetic with split hero, profile card stack, compact registration, card grids, bottom CTA strip. Best for urban/premium brands.',
                                 'premium' => 'Premium — Editorial / magazine layout with cinematic hero, masonry featured profiles, long-form success stories, elegant serif headlines. Best for aspirational brands.',
                                 'tulunadu' => 'Tulu Nadu — The Classic layout with a coastal Tulu Nadu feel: mango-leaf thorana, mallige, kalasha and deepa, palms by the sea; maroon, turmeric and leaf-green colours on the homepage. Uses its own artwork instead of the hero photo.',
                                 'coastal' => 'Coastal — The Classic layout with a simple, secular Mangalorean coastline: sunset over the Arabian Sea, coconut palms, a Mangalore-tiled house; no religious symbols. Maroon, gold and cream on the homepage. Uses its own artwork instead of the hero photo.',
                                 'parish' => 'Parish — The Classic layout with a Catholic feel: stained-glass window and cross, dove and lilies, a short verse (1 Cor 13:4); blue, white and gold on the homepage. Uses its own artwork instead of the hero photo.',
-                            ])
+                            ], fn ($design) => $design !== 'tulunadu' || static::offersTuluNadu(), ARRAY_FILTER_USE_KEY))
                             ->default('classic')
                             ->required()
                             ->inline(false)
@@ -470,5 +470,16 @@ class HomepageSettings extends Page implements HasForms
                 ->success()
                 ->send();
         }
+    }
+
+    /**
+     * "Tulu Nadu" (Tulu Hindu wedding artwork) is offered on Kudla Matrimony only
+     * (owner, 11 Oct 2026); a site already using it keeps seeing it so the
+     * admin never shows an unticked design.
+     */
+    protected static function offersTuluNadu(): bool
+    {
+        return str_contains((string) config('app.url'), 'kudlamatrimony')
+            || SiteSetting::getValue('homepage_template', 'classic') === 'tulunadu';
     }
 }
