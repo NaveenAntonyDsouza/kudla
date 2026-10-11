@@ -58,22 +58,30 @@ class UpdateTuluNaduCommunities extends Command
         'Chitrapur Saraswat Brahmin' => [],
         // 10 Oct 2026: its own community (Saphalya Seva Sangha; ChatGPT round 1, Gemini round 3), was a Devadiga sub-caste
         'Sapaliga' => [],
+        // 11 Oct 2026: a South Kanara caste in the District Gazetteer (1973, p. 113); a member typed it
+        'Kuruba' => [],
     ];
 
     /** Existing communities => their sub-caste list from now on. */
     public const SUBS = [
         self::GOWDA => ['Tulu Gowda', 'Arebhashe Gowda', "Don't wish to specify"],
-        'Bunts' => ['Bunt', 'Nadava', 'Parivara Bunt', 'Jain Bunt', 'Shetty'],
+        // South Kanara District Gazetteer (1973, pp. 108–113), checked 11 Oct 2026: Bunts' three principal
+        // sub-divisions Masadika / Nadava / Parivara; Halepaika = the Billavas of the north; 13 Brahmin
+        // sub-divisions (+ Deshastha, Padia, Saklapuri); Vishwakarma + Kanchugara
+        'Bunts' => ['Bunt', 'Masadika Bunt', 'Nadava', 'Parivara Bunt', 'Jain Bunt', 'Shetty'],
+        'Billava' => ['Poojary', 'Billava', 'Halepaika'],
         'Mogaveera' => ['Mogaveera', 'Tulu Mogaveera', 'Kannada Mogaveera'],
         // + Madhwa / Smartha (10 Oct 2026): what members typed, and how the big matrimony sites list Brahmins
-        'Brahmin' => ['Havyaka Brahmin', 'Kota Brahmin', 'Shivalli Brahmin', 'Madhwa Brahmin', 'Smartha Brahmin', 'Sthanika Brahmin', 'Koteshwara Brahmin', 'Kandavara Brahmin', 'Chitpavan Brahmin', 'Karhade Brahmin'],
+        'Brahmin' => ['Havyaka Brahmin', 'Kota Brahmin', 'Shivalli Brahmin', 'Madhwa Brahmin', 'Smartha Brahmin', 'Sthanika Brahmin', 'Koteshwara Brahmin', 'Kandavara Brahmin', 'Chitpavan Brahmin', 'Karhade Brahmin', 'Deshastha Brahmin', 'Padia Brahmin', 'Saklapuri Brahmin'],
         'Kulal' => ['Kulal', 'Kulala', 'Moolya', 'Kumbara'],
         'Devadiga (Moily)' => ['Devadiga', 'Sherigar'],
         'Padmashali' => ['Padmashali', 'Shettigar'],
-        'Vishwakarma' => ['Achari', 'Vishwakarma', 'Akkasale (Goldsmith)', 'Kammara (Blacksmith)', 'Badagi (Carpenter)', 'Shilpi (Sculptor)'],
+        'Vishwakarma' => ['Achari', 'Vishwakarma', 'Akkasale (Goldsmith)', 'Kammara (Blacksmith)', 'Badagi (Carpenter)', 'Shilpi (Sculptor)', 'Kanchugara (Bronzesmith)'],
         'Scheduled Caste (SC)' => ['Adi Dravida', 'Adi Karnataka', 'Mundala', 'Mera / Muggera', 'Manser / Mansa', 'Samagara', 'Bakuda', 'Raneyar', 'Chalavadi', 'Madiga', 'Bhovi', 'Holeya', 'Pambada', 'Paravan', 'Nalike',
-            // + coastal communities on the official Karnataka SC list (Constitution (SC) Order, 10 Oct 2026 check)
-            'Ager', 'Ajila', 'Baira', 'Bellara', 'Kotegar / Metri', 'Moger', 'Mukri', "Don't wish to specify"],
+            // + coastal communities on the official Karnataka SC list (Constitution (SC) Order, 10 Oct 2026 check).
+            // Not "Moger": in South Kanara the Gazetteer (1973, p. 112) means the Mogaveeras by it, and
+            // listing it under SC would invite Mogaveera members to choose SC by mistake
+            'Ager', 'Ajila', 'Baira', 'Bellara', 'Kotegar / Metri', 'Mukri', "Don't wish to specify"],
     ];
 
     /** Members' caste names that changed => current name (also in partner preferences). */
@@ -103,6 +111,7 @@ class UpdateTuluNaduCommunities extends Command
         'yadav' => ['Yadava (Maniyani)', null], 'yadava' => ['Yadava (Maniyani)', null], 'maniyani yadava' => ['Yadava (Maniyani)', null],
         'vokkaliga gowda' => ['Vokkaliga', null],
         'devnaga' => ['Devanga', null], 'devanga' => ['Devanga', null], 'devanga chettiyar' => ['Devanga', null],
+        'kuruba' => ['Kuruba', null],
     ];
 
     /** [caste, sub-caste as typed (lower-case)] => sub-caste from the list. */

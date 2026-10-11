@@ -121,6 +121,7 @@ beforeEach(function () {
     $member(11, 'Other / Not Listed', null, 'Reddy');           // not on our list: stays as typed
     $member(12, null, null, null, 'Other', 'Muslim');
     $member(13, 'Brahmin', 'Smartha bhramin');                   // typed before Smartha was listed
+    $member(14, 'Other / Not Listed', null, 'Kuruba');            // a caste since 11 Oct 2026
     DB::table('partner_preferences')->insert([
         ['profile_id' => 1, 'caste' => json_encode(['Billava', 'Tulu Gowda', 'Gowda - Tulu'])],
         ['profile_id' => 2, 'caste' => json_encode(['Devadiga', 'Bunts'])],
@@ -179,6 +180,13 @@ it('updates the list: new communities, Gowda for Tulu + Arebhashe, fixed sub-cas
         ->and(tnuSubs('Brahmin'))->toContain('Koteshwara Brahmin', 'Madhwa Brahmin', 'Smartha Brahmin')
         ->and(tnuSubs('Devadiga (Moily)'))->toBe(['Devadiga', 'Sherigar'])                  // Sapaliga is its own community now
         ->and(tnuCaste(13))->toBe(['Hindu', 'Brahmin', 'Smartha Brahmin', null])
+        // South Kanara District Gazetteer (1973), checked 11 Oct 2026
+        ->and(tnuSubs('Billava'))->toBe(['Poojary', 'Billava', 'Halepaika'])
+        ->and(tnuSubs('Bunts'))->toContain('Masadika Bunt')
+        ->and(tnuSubs('Brahmin'))->toContain('Deshastha Brahmin', 'Padia Brahmin', 'Saklapuri Brahmin')
+        ->and(tnuSubs('Vishwakarma'))->toContain('Kanchugara (Bronzesmith)')
+        ->and(tnuSubs('Scheduled Caste (SC)'))->toContain('Mukri')->not->toContain('Moger')   // Moger = Mogaveera in South Kanara
+        ->and(tnuCaste(14))->toBe(['Hindu', 'Kuruba', null, null])
         ->and(Community::whereIn('community_name', ['Salian', 'Konkani'])->where('is_active', true)->count())->toBe(0)
         // "Other / Not Listed" stays at the end of the list
         ->and(Community::orderBy('sort_order')->get()->last()->community_name)->toBe('Other / Not Listed')

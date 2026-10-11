@@ -134,8 +134,13 @@ final class GotraBari
     /** The line under the field. */
     public static function help(?string $caste): string
     {
+        // Gowdas: 18 balis, but not descent through the female line (South Kanara District Gazetteer, 1973, p. 111)
+        $gowda = in_array(self::casteKey($caste), ['gowda (tulu / arebhashe)', 'tulu gowda'], true);
+
         return match (self::lineage($caste)) {
-            'bari' => "Your bari is your mother's bari, the family line from her side (for example Bangera or Salian). Not sure? Ask an elder, or choose \"Don't Know\".",
+            'bari' => $gowda
+                ? "Your bari, your family line (for example Bangara or Nandara). Not sure? Ask an elder, or choose \"Don't Know\"."
+                : "Your bari is your mother's bari, the family line from her side (for example Bangera or Salian). Not sure? Ask an elder, or choose \"Don't Know\".",
             'gotra' => self::casteKey($caste) === 'vishwakarma'
                 ? "Your gotra, for example Sanaga or Suparna. Not sure? Choose \"Don't Know\"."
                 : "Your gotra, the family line from your father's side (for example Kashyapa or Bharadvaja). Not sure? Choose \"Don't Know\".",

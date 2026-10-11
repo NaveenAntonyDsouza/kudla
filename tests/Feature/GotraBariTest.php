@@ -60,6 +60,7 @@ it('labels the field by caste and puts that caste\'s groups first', function () 
         ->and(GotraBari::firstGroups('Havyaka Brahmin'))->toBe(['Brahmin gotras'])
         ->and(GotraBari::firstGroups('Billava'))->toBe([])
         ->and(GotraBari::help('Billava'))->toContain("your mother's bari")
+        ->and(GotraBari::help('Gowda (Tulu / Arebhashe)'))->toContain('Bangara')->not->toContain('mother')   // not the female line (Gazetteer 1973)
         ->and(GotraBari::help('Vishwakarma'))->toContain('Sanaga')
         ->and(GotraBari::casteHints())->toHaveKey('bunts')
         ->and(GotraBari::casteHints())->not->toHaveKey('ganiga');
