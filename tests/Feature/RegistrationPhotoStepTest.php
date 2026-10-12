@@ -331,3 +331,11 @@ it('offers sending the photo on WhatsApp only where the site has it switched on'
     Cache::put('site_setting.photo_via_whatsapp', '1', 3600);
     $this->get('/register/photo')->assertOk()->assertSee('Send photo on WhatsApp')->assertSee('wa.me/917760020186', false);
 });
+
+it('lets the admin switch "photo by WhatsApp" on and off in Site Settings', function () {
+    $page = file_get_contents(app_path('Filament/Pages/SiteSettings.php'));
+
+    expect($page)->toContain("Forms\Components\Toggle::make('photo_via_whatsapp')")
+        ->toContain("'photo_via_whatsapp' => (\$settings['photo_via_whatsapp'] ?? '0') === '1'")
+        ->toContain("'whatsapp_button_enabled', 'photo_via_whatsapp',");
+});

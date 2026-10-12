@@ -56,6 +56,7 @@ class SiteSettings extends Page implements HasForms
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
             'whatsapp_button_enabled' => ($settings['whatsapp_button_enabled'] ?? '0') === '1',
+            'photo_via_whatsapp' => ($settings['photo_via_whatsapp'] ?? '0') === '1',
             'address' => $settings['address'] ?? '',
             'copyright_year_start' => $settings['copyright_year_start'] ?? date('Y'),
             'google_maps_embed_url' => $settings['google_maps_embed_url'] ?? '',
@@ -140,6 +141,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('whatsapp_button_enabled')
                             ->label('WhatsApp chat button')
                             ->helperText('Green chat button at the bottom-right of every page. The chat opens with the page the visitor is on and their member ID.'),
+
+                        Forms\Components\Toggle::make('photo_via_whatsapp')
+                            ->label('Photo by WhatsApp at registration')
+                            ->helperText('The photo step offers "Send photo on WhatsApp" to the number above, with the member\'s Matri ID. Your team must then upload the photo from the member\'s profile.'),
 
                         Forms\Components\Textarea::make('address')
                             ->label('Office Address')
@@ -369,7 +374,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_profiles', 'auto_approve_profile_photos',
             'auto_approve_album_photos', 'auto_approve_family_photos',
             'auto_approve_documents',
-            'whatsapp_button_enabled',
+            'whatsapp_button_enabled', 'photo_via_whatsapp',
         ];
 
         $jsonFields = ['canned_responses'];
