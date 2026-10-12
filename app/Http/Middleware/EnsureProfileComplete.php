@@ -68,12 +68,8 @@ class EnsureProfileComplete
                 return $next($request);
             }
 
-            // Redirect to the next incomplete step
-            if ($step < 5) {
-                return redirect()->route('register.step' . ($step + 1));
-            }
-
-            return redirect()->route('register.verifyemail');
+            // Redirect to the next incomplete step (form steps, photo, email verification)
+            return redirect()->route(\App\Http\Controllers\Auth\RegisterController::resumeRoute($profile));
         }
 
         return $next($request);

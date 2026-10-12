@@ -21,6 +21,7 @@ class Profile extends Model
     protected $fillable = [
         'user_id',
         'matri_id',
+        'photo_step_skipped_at',
         'full_name',
         'gender',
         'date_of_birth',
@@ -72,6 +73,7 @@ class Profile extends Model
             'date_of_birth' => 'date',
             'profile_completion_pct' => 'integer',
             'onboarding_completed' => 'boolean',
+            'photo_step_skipped_at' => 'datetime',
             'onboarding_step_completed' => 'integer',
             'is_active' => 'boolean',
             'is_approved' => 'boolean',

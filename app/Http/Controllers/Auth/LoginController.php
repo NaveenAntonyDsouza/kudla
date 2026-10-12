@@ -85,13 +85,7 @@ class LoginController extends Controller
         Analytics::track('login', ['method' => 'password']);
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
-            $step = $user->profile->onboarding_step_completed;
-
-            if ($step >= 5) {
-                return redirect()->route('register.verifyemail');
-            }
-
-            return redirect()->route('register.step'.($step + 1));
+            return redirect()->route(\App\Http\Controllers\Auth\RegisterController::resumeRoute($user->profile));
         }
 
         return redirect()->intended('/dashboard');
@@ -153,13 +147,7 @@ class LoginController extends Controller
         Analytics::track('login', ['method' => 'mobile_otp']);
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
-            $step = $user->profile->onboarding_step_completed;
-
-            if ($step >= 5) {
-                return redirect()->route('register.verifyemail');
-            }
-
-            return redirect()->route('register.step'.($step + 1));
+            return redirect()->route(\App\Http\Controllers\Auth\RegisterController::resumeRoute($user->profile));
         }
 
         return redirect()->intended('/dashboard');
@@ -280,13 +268,7 @@ class LoginController extends Controller
         }
 
         if ($user->profile && ! $user->profile->onboarding_completed) {
-            $step = $user->profile->onboarding_step_completed;
-
-            if ($step >= 5) {
-                return redirect()->route('register.verifyemail');
-            }
-
-            return redirect()->route('register.step'.($step + 1));
+            return redirect()->route(\App\Http\Controllers\Auth\RegisterController::resumeRoute($user->profile));
         }
 
         return redirect()->intended('/dashboard');

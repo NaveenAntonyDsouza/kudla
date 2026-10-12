@@ -19,6 +19,21 @@
         </div>
         <h2 class="text-xl font-semibold text-gray-900">Add a profile photo</h2>
         <p class="text-sm text-gray-500 mt-1">Optional — but members with a photo get about 60% more profile views and interests.</p>
+
+        {{-- How the profile looks to others, without and with a photo (Oct 2026) --}}
+        <div class="mt-4 flex justify-center gap-4" aria-hidden="true">
+            @foreach ([false, true] as $withPhoto)
+                <div class="rounded-lg border {{ $withPhoto ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50' }} p-2 text-center" style="width: 8rem;">
+                    <div class="mx-auto h-20 w-16 rounded-md flex items-end justify-center overflow-hidden" style="background: {{ $withPhoto ? 'var(--color-primary-light)' : '#e5e7eb' }};">
+                        <svg viewBox="0 0 40 50" class="h-16 w-14" fill="{{ $withPhoto ? 'var(--color-primary)' : '#b8b8b8' }}">
+                            <circle cx="20" cy="17" r="10"/><path d="M2 50c0-12 8-19 18-19s18 7 18 19z"/>
+                        </svg>
+                    </div>
+                    <p class="mt-1 font-semibold {{ $withPhoto ? 'text-green-700' : 'text-gray-500' }}" style="font-size: 11px;">{{ $withPhoto ? 'With a photo' : 'Without a photo' }}</p>
+                    <p class="text-gray-500" style="font-size: 10px;">{{ $withPhoto ? 'Gets noticed' : 'Often scrolled past' }}</p>
+                </div>
+            @endforeach
+        </div>
     </div>
 
     @if ($errors->any())
@@ -121,6 +136,33 @@
                 <span class="font-medium">My Photos</span>.
             </p>
         </div>
+
+        {{-- Photo on WhatsApp instead (site setting photo_via_whatsapp, Kudla, Oct 2026):
+             the member sends it to the site's WhatsApp number; staff add it from the admin. --}}
+        @php
+            $waPhotoLink = \App\Models\SiteSetting::getValue('photo_via_whatsapp', '0') === '1'
+                ? \App\Support\WhatsApp::link('Hi, please add the photo I am sending to my profile '.$profile->matri_id.' ('.$profile->full_name.').')
+                : null;
+        @endphp
+        @if ($waPhotoLink)
+            <div x-show="!sourceImage" class="mt-4 p-4 rounded-lg border border-green-200 bg-green-50 text-center">
+                <p class="text-sm font-medium text-gray-800">Photo on WhatsApp? Send it to us instead.</p>
+                <p class="text-xs text-gray-600 mt-1">Our team adds it to your profile ({{ $profile->matri_id }}), usually within a day.</p>
+                <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <a href="{{ $waPhotoLink }}" target="_blank" rel="noopener"
+                       onclick="if (window.gtag) { gtag('event', 'photo_whatsapp_click', { source: 'registration' }); } if (window.posthog) { posthog.capture('photo_whatsapp_click', { source: 'registration' }); }"
+                       class="inline-flex items-center gap-2 rounded-lg text-white px-5 py-3 text-sm font-semibold" style="background: #25D366;">
+                        <svg viewBox="0 0 32 32" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M16 3C9 3 3.3 8.7 3.3 15.8c0 2.2.6 4.4 1.7 6.3L3.2 29l7-1.8c1.8 1 3.8 1.4 5.8 1.4 7 0 12.8-5.7 12.8-12.8S23.1 3 16 3zm5.9 17.5c-.3.8-1.6 1.5-2.2 1.5-.6.1-1.3.1-2-.1-.5-.2-1.1-.4-1.8-.7-3.2-1.4-5.3-4.6-5.5-4.8-.2-.2-1.3-1.7-1.3-3.3s.8-2.3 1.1-2.7c.3-.3.6-.4.9-.4h.6c.2 0 .5 0 .7.6.3.6.9 2.2 1 2.4.1.2.1.3 0 .6-.1.2-.2.3-.3.5-.2.2-.3.4-.5.6-.2.2-.3.3-.1.6.2.3.8 1.4 1.8 2.2 1.2 1.1 2.3 1.4 2.6 1.6.3.2.5.1.7-.1.2-.2.8-1 1-1.3.2-.3.4-.3.7-.2.3.1 1.9.9 2.2 1.1.3.2.5.2.6.4.1.1.1.8-.2 1.5z"/></svg>
+                        Send photo on WhatsApp
+                    </a>
+                    <button type="submit" formaction="{{ route('register.photo.skip', ['via' => 'whatsapp']) }}" formmethod="POST"
+                            formenctype="application/x-www-form-urlencoded" formnovalidate
+                            class="text-sm font-medium text-green-800 underline underline-offset-2 px-3 py-2">
+                        I've sent it, continue
+                    </button>
+                </div>
+            </div>
+        @endif
 
         {{-- Action row: Back ← left, Skip + Save → right.
              Back goes to the merged Step 4 (which holds all the previously-

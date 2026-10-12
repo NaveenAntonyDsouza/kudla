@@ -433,14 +433,39 @@ class RegisterController extends Controller
         return $this->redirectAfterPhotoStep();
     }
 
-    public function skipPhoto()
+    public function skipPhoto(Request $request)
     {
-        // No-op on data — just route on. Profile remains photo-less; the
-        // "Add a photo" nudge banner on the dashboard will keep prompting.
-        // Counted so the weekly review can see the skip rate next to
-        // photo_upload (source=registration).
-        Analytics::track('photo_skipped', ['source' => 'registration']);
+        // Profile stays photo-less; the dashboard nudge and reminders keep
+        // prompting. The choice is remembered so logging back in doesn't show
+        // this step again. "via=whatsapp": the member sent the photo to the
+        // office on WhatsApp (Kudla, Oct 2026) — counted separately.
+        if ($profile = auth()->user()->profile) {
+            \App\Models\Profile::whereKey($profile->id)->update(['photo_step_skipped_at' => now()]);
+            $profile->setAttribute('photo_step_skipped_at', now())->syncOriginalAttribute('photo_step_skipped_at');
+        }
+        if ($request->input('via') === 'whatsapp') {
+            Analytics::track('photo_via_whatsapp', ['source' => 'registration']);
+        } else {
+            Analytics::track('photo_skipped', ['source' => 'registration']);
+        }
         return $this->redirectAfterPhotoStep();
+    }
+
+    /**
+     * Where a member who left registration part-way continues (login, and
+     * pages that need a finished profile): the next form step; then the photo
+     * step if they have no photo and never skipped it; then email verification.
+     */
+    public static function resumeRoute(\App\Models\Profile $profile): string
+    {
+        $step = (int) $profile->onboarding_step_completed;
+        if ($step < 5) {
+            return 'register.step' . ($step + 1);
+        }
+
+        $hasPhoto = $profile->profilePhotos()->ofType('profile')->visible()->exists();
+
+        return (! $hasPhoto && ! $profile->photo_step_skipped_at) ? 'register.photo' : 'register.verifyemail';
     }
 
     // ── OTP Verification ─────────────────────────────────────────

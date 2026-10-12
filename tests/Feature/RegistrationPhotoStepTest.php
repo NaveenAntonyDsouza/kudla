@@ -192,6 +192,28 @@ function actingAsRegistrationUser(int $userId = 6001, int $profileId = 6001): Us
 
 beforeEach(function () {
     createProfilePhotosTableForRegistrationTest();
+    // Only what "Skip for now" writes: the member's choice is remembered (Oct 2026)
+    if (! Schema::hasTable('profiles')) {
+        Schema::create('profiles', function (Blueprint $t) {
+            $t->id();
+            $t->timestamp('photo_step_skipped_at')->nullable();
+            $t->timestamps();
+            $t->softDeletes();
+        });
+    }
+    if (! Schema::hasTable('users')) {
+        // the "last active" touch that runs once a profiles table exists
+        Schema::create('users', function (Blueprint $t) {
+            $t->id();
+            $t->timestamp('last_login_at')->nullable();
+            $t->unsignedTinyInteger('reengagement_level')->default(0);
+            $t->timestamps();
+        });
+    }
+    foreach ([6001, 6002, 6003, 6004, 6005, 6006, 6007, 6008, 6009, 6010] as $id) {
+        \DB::table('users')->insertOrIgnore(['id' => $id]);
+        \DB::table('profiles')->insertOrIgnore(['id' => $id]);
+    }
     bindFakeImageProcessorForRegistrationTest();
     bindFakeStorageServiceForRegistrationTest();
     seedSiteSettingsCacheForRegistrationTest();
@@ -268,4 +290,44 @@ it('counts a skipped photo step for the weekly review', function () {
 
     expect(array_column((array) session(\App\Support\Analytics::SESSION_KEY, []), 'name'))
         ->toContain('photo_skipped');
+});
+
+
+it('remembers "Skip for now", so logging back in does not show the photo step again', function () {
+    $user = actingAsRegistrationUser(userId: 6007, profileId: 6007);
+
+    expect(\App\Http\Controllers\Auth\RegisterController::resumeRoute($user->profile))->toBe('register.photo');
+
+    $this->post('/register/photo/skip');
+
+    expect(\DB::table('profiles')->where('id', 6007)->value('photo_step_skipped_at'))->not->toBeNull()
+        ->and(\App\Http\Controllers\Auth\RegisterController::resumeRoute($user->profile->forceFill(['photo_step_skipped_at' => \DB::table('profiles')->where('id', 6007)->value('photo_step_skipped_at')])))
+        ->toBe('register.verifyemail');
+});
+
+it('sends earlier steps back to their form, whatever the photo', function () {
+    $user = actingAsRegistrationUser(userId: 6008, profileId: 6008);
+    $user->profile->forceFill(['onboarding_step_completed' => 2]);
+
+    expect(\App\Http\Controllers\Auth\RegisterController::resumeRoute($user->profile))->toBe('register.step3');
+});
+
+it('counts "sent on WhatsApp" separately from a skip', function () {
+    actingAsRegistrationUser(userId: 6009, profileId: 6009);
+
+    $this->post('/register/photo/skip?via=whatsapp')->assertRedirect(route('register.verifyemail'));
+
+    $names = array_column((array) session(\App\Support\Analytics::SESSION_KEY, []), 'name');
+    expect($names)->toContain('photo_via_whatsapp')->not->toContain('photo_skipped');
+});
+
+it('offers sending the photo on WhatsApp only where the site has it switched on', function () {
+    actingAsRegistrationUser(userId: 6010, profileId: 6010);
+    Cache::put('site_setting.whatsapp', '+91 77600 20186', 3600);
+
+    Cache::put('site_setting.photo_via_whatsapp', '0', 3600);
+    $this->get('/register/photo')->assertOk()->assertDontSee('Send photo on WhatsApp');
+
+    Cache::put('site_setting.photo_via_whatsapp', '1', 3600);
+    $this->get('/register/photo')->assertOk()->assertSee('Send photo on WhatsApp')->assertSee('wa.me/917760020186', false);
 });
