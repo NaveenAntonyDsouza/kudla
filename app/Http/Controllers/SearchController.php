@@ -54,21 +54,19 @@ class SearchController extends Controller
 
         // Keyword search
         if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $query = $this->baseQuery($profile)
-                ->where(function ($q) use ($keyword) {
-                    $q->where('full_name', 'LIKE', "%{$keyword}%")
-                      ->orWhere('about_me', 'LIKE', "%{$keyword}%")
-                      ->orWhere('matri_id', 'LIKE', "%{$keyword}%")
-                      ->orWhereHas('educationDetail', fn($q2) => $q2->where('occupation_detail', 'LIKE', "%{$keyword}%")->orWhere('employer_name', 'LIKE', "%{$keyword}%")->orWhere('working_city', 'LIKE', "%{$keyword}%")->orWhere('working_district', 'LIKE', "%{$keyword}%"))
-                      ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'LIKE', "%{$keyword}%")->orWhere('denomination', 'LIKE', "%{$keyword}%")->orWhere('other_denomination_name', 'LIKE', "%{$keyword}%")->orWhere('caste', 'LIKE', "%{$keyword}%")->orWhere('other_caste_name', 'LIKE', "%{$keyword}%"))
-                      ->orWhereHas('locationInfo', fn($q2) => $q2->where('native_place', 'LIKE', "%{$keyword}%")->orWhere('native_district', 'LIKE', "%{$keyword}%")->orWhere('native_state', 'LIKE', "%{$keyword}%"));
-                });
+            $keyword = (string) $request->keyword;
+            $query = self::applyKeyword($this->baseQuery($profile), $keyword);
+            $searchNote = null;
+            // Nothing has every word? Show profiles that match any of them, and say so.
+            if (count(self::keywordWords($keyword)) > 1 && (clone $query)->count() === 0) {
+                $query = self::applyKeyword($this->baseQuery($profile), $keyword, matchAll: false);
+                $searchNote = 'No profile matched all your words, so these match at least one of them.';
+            }
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
             $this->trackSearch('keyword', $request, $results);
-            return view('search.results', compact('profile', 'results', 'currentSort'));
+            return view('search.results', compact('profile', 'results', 'currentSort', 'searchNote'));
         }
 
         // Search by ID
@@ -404,13 +402,7 @@ class SearchController extends Controller
             $query->whereIn('mother_tongue', $tongues);
         }
         if ($keyword = request('keyword')) {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('full_name', 'like', "%{$keyword}%")
-                  ->orWhere('about_me', 'like', "%{$keyword}%")
-                  ->orWhereHas('religiousInfo', fn($q2) => $q2->where('religion', 'like', "%{$keyword}%")->orWhere('caste', 'like', "%{$keyword}%")->orWhere('other_caste_name', 'like', "%{$keyword}%")->orWhere('denomination', 'like', "%{$keyword}%")->orWhere('other_denomination_name', 'like', "%{$keyword}%"))
-                  ->orWhereHas('educationDetail', fn($q2) => $q2->where('highest_education', 'like', "%{$keyword}%")->orWhere('occupation', 'like', "%{$keyword}%")->orWhere('working_city', 'like', "%{$keyword}%")->orWhere('working_district', 'like', "%{$keyword}%"))
-                  ->orWhereHas('locationInfo', fn($q2) => $q2->where('native_place', 'like', "%{$keyword}%")->orWhere('native_district', 'like', "%{$keyword}%")->orWhere('native_state', 'like', "%{$keyword}%"));
-            });
+            self::applyKeyword($query, (string) $keyword);
         }
         if ($matriId = request('matri_id')) {
             $query->where('matri_id', strtoupper($matriId));
@@ -498,5 +490,55 @@ class SearchController extends Controller
         };
 
         return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl'));
+    }
+
+    /**
+     * Keyword search (Oct 2026: 46% of typed searches found nothing).
+     * - A Matri ID typed any way ("km 100123", "KM-100123") finds that profile.
+     * - Several words: every word must match some field (name, caste, place,
+     *   job, education...), in any order; or any word, for the fallback.
+     */
+    public static function applyKeyword(Builder $query, string $keyword, bool $matchAll = true): Builder
+    {
+        $compact = strtoupper(preg_replace('/[\s\-_.]+/', '', trim($keyword)));
+        if (preg_match('/^[A-Z]{2,4}\d{3,}$/', $compact)) {
+            return $query->where('matri_id', 'like', '%' . $compact . '%');
+        }
+
+        $words = self::keywordWords($keyword);
+        if ($words === []) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($words, $matchAll) {
+            foreach ($words as $word) {
+                $like = '%' . addcslashes($word, '%_\\') . '%';
+                $match = function ($q) use ($like) {
+                    $q->where('full_name', 'like', $like)
+                        ->orWhere('about_me', 'like', $like)
+                        ->orWhere('matri_id', 'like', $like)
+                        ->orWhereHas('religiousInfo', fn ($r) => $r->where('religion', 'like', $like)->orWhere('caste', 'like', $like)
+                            ->orWhere('sub_caste', 'like', $like)->orWhere('other_caste_name', 'like', $like)
+                            ->orWhere('denomination', 'like', $like)->orWhere('other_denomination_name', 'like', $like))
+                        ->orWhereHas('educationDetail', fn ($e) => $e->where('highest_education', 'like', $like)->orWhere('occupation', 'like', $like)
+                            ->orWhere('occupation_detail', 'like', $like)->orWhere('employer_name', 'like', $like)
+                            ->orWhere('working_city', 'like', $like)->orWhere('working_district', 'like', $like))
+                        ->orWhereHas('locationInfo', fn ($l) => $l->where('native_place', 'like', $like)->orWhere('native_district', 'like', $like)
+                            ->orWhere('native_state', 'like', $like));
+                };
+                $matchAll ? $outer->where($match) : $outer->orWhere($match);
+            }
+        });
+    }
+
+    /** The words worth searching for: 2+ letters, no filler words, at most 6. */
+    public static function keywordWords(string $keyword): array
+    {
+        $skip = ['and', 'or', 'the', 'in', 'at', 'from', 'of', 'for', 'with', 'a', 'an', 'to'];
+
+        return array_slice(array_values(array_unique(array_filter(
+            preg_split('/[\s,;\/]+/', mb_strtolower(trim($keyword))) ?: [],
+            fn ($w) => mb_strlen($w) >= 2 && ! in_array($w, $skip, true)
+        ))), 0, 6);
     }
 }

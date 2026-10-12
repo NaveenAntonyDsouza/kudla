@@ -26,7 +26,8 @@ final class EmailLogger
                 'event' => 'sent',
                 'email_type' => self::typeOf($message, $event->data),
                 'subject' => Str::limit((string) $message->getSubject(), 250, ''),
-                'recipient' => ($message->getTo()[0] ?? null)?->getAddress(),
+                'recipient' => $to = ($message->getTo()[0] ?? null)?->getAddress(),
+                'user_id' => self::userIdFor($to),
             ]);
         });
     }
@@ -37,9 +38,19 @@ final class EmailLogger
         self::write(fn () => EmailLog::create([
             'event' => 'failed',
             'email_type' => $type,
-            'recipient' => $recipients[0]['address'] ?? null,
+            'recipient' => $to = $recipients[0]['address'] ?? null,
+            'user_id' => self::userIdFor($to),
             'error' => Str::limit($e->getMessage(), 500),
         ]));
+    }
+
+    /**
+     * The member an email went to, so each reminder can be measured
+     * (did the people who got it come back?). Null for non-members.
+     */
+    private static function userIdFor(?string $address): ?int
+    {
+        return $address ? User::where('email', $address)->value('id') : null;
     }
 
     /** A member switched an email category off (link in an email or one-tap button). */

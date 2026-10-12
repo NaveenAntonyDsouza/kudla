@@ -87,7 +87,11 @@ it('logs every sent email with its type', function () {
     Mail::raw('Your code is 123456', fn ($m) => $m->to('asha@example.test')->subject('Email Verification OTP - Kudla Matrimony'));
 
     expect(EmailLog::where('event', 'sent')->orderBy('id')->pluck('email_type')->all())->toBe(['password-changed', 'verification-code'])
-        ->and(EmailLog::first()->recipient)->toBe('asha@example.test');
+        ->and(EmailLog::first()->recipient)->toBe('asha@example.test')
+        ->and(EmailLog::pluck('user_id')->all())->toBe([$user->id, $user->id]);
+
+    Mail::raw('Hello', fn ($m) => $m->to('not-a-member@example.test')->subject('Hello'));
+    expect(EmailLog::orderByDesc('id')->value('user_id'))->toBeNull();
 });
 
 it('logs a failed send attempt with the reason, and still raises the error', function () {
@@ -110,6 +114,7 @@ it('logs a failed send attempt with the reason, and still raises the error', fun
     $log = EmailLog::where('event', 'failed')->first();
     expect($log->email_type)->toBe('password-changed')
         ->and($log->recipient)->toBe('asha@example.test')
+        ->and($log->user_id)->toBe($user->id)
         ->and($log->error)->toContain('Ratelimit');
 });
 

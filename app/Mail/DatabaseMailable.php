@@ -12,6 +12,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
 
@@ -101,12 +102,43 @@ abstract class DatabaseMailable extends Mailable
             return null;
         }
 
+        if (app()->runningInConsole() && ! app()->runningUnitTests()) {
+            self::paceBulkSending();
+        }
+
         try {
             return parent::send($mailer);
         } catch (\Throwable $e) {
             // For admin → Reports → Email Activity; the caller still sees the error
             EmailLogger::failed($this->templateSlug, $this->to, $e);
             throw $e;
+        }
+    }
+
+    /**
+     * Scheduled runs (weekly matches, reminders, digests, re-engagement) can
+     * overlap; each paces itself, but together they could still outrun the
+     * mailbox's limit ("450 too much mail", Oct 2026). One shared gap between
+     * any two emails sent from scheduled/queued work: `mail_min_gap_seconds`
+     * (default 2, 0 = off). Web requests (one email each) are never slowed.
+     */
+    private static function paceBulkSending(): void
+    {
+        $gap = (float) SiteSetting::getValue('mail_min_gap_seconds', '2');
+        if ($gap <= 0) {
+            return;
+        }
+
+        try {
+            Cache::lock('mail-pace', 30)->block(60, function () use ($gap) {
+                $wait = (float) Cache::get('mail-pace-last', 0) + $gap - microtime(true);
+                if ($wait > 0) {
+                    usleep((int) (min($wait, $gap) * 1_000_000));
+                }
+                Cache::put('mail-pace-last', microtime(true), 3600);
+            });
+        } catch (\Throwable) {
+            // Never block an email because pacing could not get its lock.
         }
     }
 
