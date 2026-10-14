@@ -121,25 +121,7 @@ class DiscoverController extends Controller
                 ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
         }
 
-        // Apply filters
-        foreach ($filter as $type => $value) {
-            match ($type) {
-                'religion' => $query->whereHas('religiousInfo', fn($q) => $q->where('religion', $value)),
-                'denomination' => $query->whereHas('religiousInfo', fn($q) => $q->where('denomination', $value)),
-                'caste' => $query->whereHas('religiousInfo', fn($q) => $q->where('caste', $value)),
-                'diocese' => $query->whereHas('religiousInfo', fn($q) => $q->where('diocese', $value)),
-                'muslim_sect' => $query->whereHas('religiousInfo', fn($q) => $q->where('muslim_sect', $value)),
-                'muslim_community' => $query->whereHas('religiousInfo', fn($q) => $q->where('muslim_community', $value)),
-                'jain_sect' => $query->whereHas('religiousInfo', fn($q) => $q->where('jain_sect', $value)),
-                'marital_status' => $query->where('marital_status', $value),
-                'mother_tongue' => $query->where('mother_tongue', $value),
-                'occupation' => $query->whereHas('educationDetail', fn($q) => $q->where('occupation', $value)),
-                'native_state' => $query->whereHas('locationInfo', fn($q) => $q->where('native_state', $value)),
-                'native_district' => $query->whereHas('locationInfo', fn($q) => $q->where('native_district', $value)),
-                'residing_country' => $query->whereHas('locationInfo', fn($q) => $q->where('residing_country', $value)),
-                default => null,
-            };
-        }
+        self::applyFilters($query, $filter);
 
         $sort = request()->get('sort', 'newest');
         $query = $this->applySortOrder($query, $sort);
@@ -180,6 +162,57 @@ class DiscoverController extends Controller
      *   2. method name string in 'subcategories_source' key (resolved via DiscoverConfigService)
      *   3. legacy callable in 'subcategories' key (kept for backwards compatibility)
      */
+    /** The Discover filters (religion, caste, country...) on a profile query. */
+    public static function applyFilters(Builder $query, array $filter): Builder
+    {
+        foreach ($filter as $type => $value) {
+            match ($type) {
+                'religion' => $query->whereHas('religiousInfo', fn($q) => $q->where('religion', $value)),
+                'denomination' => $query->whereHas('religiousInfo', fn($q) => $q->where('denomination', $value)),
+                'caste' => $query->whereHas('religiousInfo', fn($q) => $q->where('caste', $value)),
+                'diocese' => $query->whereHas('religiousInfo', fn($q) => $q->where('diocese', $value)),
+                'muslim_sect' => $query->whereHas('religiousInfo', fn($q) => $q->where('muslim_sect', $value)),
+                'muslim_community' => $query->whereHas('religiousInfo', fn($q) => $q->where('muslim_community', $value)),
+                'jain_sect' => $query->whereHas('religiousInfo', fn($q) => $q->where('jain_sect', $value)),
+                'marital_status' => $query->where('marital_status', $value),
+                'mother_tongue' => $query->where('mother_tongue', $value),
+                'occupation' => $query->whereHas('educationDetail', fn($q) => $q->where('occupation', $value)),
+                'native_state' => $query->whereHas('locationInfo', fn($q) => $q->where('native_state', $value)),
+                'native_district' => $query->whereHas('locationInfo', fn($q) => $q->where('native_district', $value)),
+                'residing_country' => $query->whereHas('locationInfo', fn($q) => $q->where('residing_country', $value)),
+                default => null,
+            };
+        }
+
+        return $query;
+    }
+
+    /**
+     * Every Discover page that has at least one public profile (for the
+     * sitemap, Oct 2026): Google was crawling hundreds of empty ones
+     * ("No profiles found") and filing them as soft 404s.
+     *
+     * @return array<int, string> URLs
+     */
+    public static function populatedPageUrls(): array
+    {
+        $urls = [];
+        $self = app(self::class);
+        foreach (config('discover', []) as $category => $config) {
+            foreach ($self->resolveSubcategories($config) as $sub) {
+                $count = self::applyFilters(
+                    Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),
+                    $sub['filter'] ?? []
+                )->count();
+                if ($count > 0) {
+                    $urls[] = route('discover.results', [$category, $sub['slug']]);
+                }
+            }
+        }
+
+        return $urls;
+    }
+
     private function resolveSubcategories(array $config): array
     {
         if (isset($config['subcategories_source'])) {

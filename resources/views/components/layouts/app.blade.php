@@ -61,7 +61,7 @@
 
     {{-- SEO Meta Tags --}}
     <meta name="description" content="{{ Str::limit(strip_tags($metaDescription), 160) }}">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{{ $robots ?? 'index, follow' }}">
     <link rel="canonical" href="{{ $canonicalUrl }}">
 
     {{-- Open Graph --}}

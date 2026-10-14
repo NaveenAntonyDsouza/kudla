@@ -26,6 +26,12 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # /public/... used to serve a second copy of every page, and Google indexed
+    # both. Send it to the real address (Oct 2026). THE_REQUEST = what the
+    # visitor asked for, so the internal rewrite to public/ below can't loop.
+    RewriteCond %{THE_REQUEST} ^[A-Z]+\s/public/([^\s?]*) [NC]
+    RewriteRule ^ /%1 [R=301,L]
+
     # Allow direct file access for existing files (CSS, JS, images at root level)
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]

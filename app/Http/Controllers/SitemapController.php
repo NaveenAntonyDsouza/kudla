@@ -57,6 +57,19 @@ class SitemapController extends Controller
             $urls->push(['url' => url("/discover/{$slug}"), 'priority' => '0.7', 'changefreq' => 'weekly']);
         }
 
+        // Each community / place / job page that has members (e.g. Billava,
+        // Bunt, Mogaveera matrimony) — the pages families actually search for.
+        // Empty ones are left out (Google files them as soft 404s). Cached 6 h.
+        try {
+            $populated = \Illuminate\Support\Facades\Cache::remember('sitemap.discover-populated', 21600, fn () => DiscoverController::populatedPageUrls());
+        } catch (\Throwable $e) {
+            report($e);
+            $populated = []; // the sitemap must always load, even if counting fails
+        }
+        foreach ($populated as $url) {
+            $urls->push(['url' => $url, 'priority' => '0.6', 'changefreq' => 'weekly']);
+        }
+
         // Build XML
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";

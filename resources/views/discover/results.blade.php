@@ -1,4 +1,4 @@
-<x-layouts.app title="{{ $title }}">
+<x-layouts.app title="{{ $title }}" :robots="$results->total() === 0 ? 'noindex, follow' : null">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
