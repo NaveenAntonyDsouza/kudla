@@ -22,9 +22,14 @@ class PageSeoSetting extends Model
      */
     public static function getForPage(string $pageSlug): ?self
     {
-        return Cache::remember("page_seo.{$pageSlug}", 3600, function () use ($pageSlug) {
-            return static::where('page_slug', $pageSlug)->first();
+        // Cache plain attributes, not the model: the cache refuses to unserialize
+        // objects (config cache.serializable_classes = false), which turned a
+        // cached model into __PHP_Incomplete_Class and took every page down (14 Oct 2026).
+        $attributes = Cache::remember("page_seo_v2.{$pageSlug}", 3600, function () use ($pageSlug) {
+            return static::where('page_slug', $pageSlug)->first()?->getAttributes() ?? [];
         });
+
+        return is_array($attributes) && $attributes !== [] ? (new static)->newFromBuilder($attributes) : null;
     }
 
     /**
@@ -33,11 +38,11 @@ class PageSeoSetting extends Model
     public static function clearCache(?string $pageSlug = null): void
     {
         if ($pageSlug) {
-            Cache::forget("page_seo.{$pageSlug}");
+            Cache::forget("page_seo_v2.{$pageSlug}");
         } else {
             $slugs = static::pluck('page_slug');
             foreach ($slugs as $slug) {
-                Cache::forget("page_seo.{$slug}");
+                Cache::forget("page_seo_v2.{$slug}");
             }
         }
     }
