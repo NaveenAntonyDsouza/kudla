@@ -41,7 +41,8 @@ Route::get('/add-with-us', [\App\Http\Controllers\StaticPageController::class, '
 
 // Pages that remain Blade-based (dynamic content / complex logic)
 Route::view('/faq', 'pages.faq')->name('faq');
-Route::view('/blog', 'pages.blog')->name('blog');
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show')->where('slug', '[a-z0-9-]+');
 Route::view('/demograph', 'pages.demograph')->name('demograph');
 Route::view('/event', 'pages.event')->name('event');
 

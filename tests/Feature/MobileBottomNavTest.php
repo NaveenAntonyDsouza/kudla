@@ -88,5 +88,6 @@ it('gives the login page its title back', function () {
     $layout = file_get_contents(resource_path('views/components/layouts/auth.blade.php'));
 
     expect($layout)->toContain("@props(['maxWidth' => 'md', 'title' => null])")
-        ->toContain('<title>{{ $title ?? \'\' }} | {{ $siteName }}</title>');
+        ->toContain("\$loginTitle = \$loginSeo?->meta_title ?: ((\$title ?? '') . ' | ' . \$siteName);")
+        ->toContain('<title>{{ $loginTitle }}</title>');
 });

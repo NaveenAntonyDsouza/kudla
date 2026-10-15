@@ -46,9 +46,11 @@ class SitemapController extends Controller
 
         // Discover pages
         $urls->push(['url' => route('discover.hub'), 'priority' => '0.7', 'changefreq' => 'weekly']);
-        $discoverCategories = config('discover', []);
-        foreach ($discoverCategories as $slug => $category) {
-            $urls->push(['url' => url("/discover/{$slug}"), 'priority' => '0.7', 'changefreq' => 'weekly']);
+        // Discover sections that have members (empty ones show nothing)
+        foreach (array_keys(config('discover', [])) as $slug) {
+            if (DiscoverController::profileCounts($slug) !== []) {
+                $urls->push(['url' => url("/discover/{$slug}"), 'priority' => '0.7', 'changefreq' => 'weekly']);
+            }
         }
 
         // Each community / place / job page that has members (e.g. Billava,
@@ -64,6 +66,19 @@ class SitemapController extends Controller
             $urls->push(['url' => $url, 'priority' => '0.6', 'changefreq' => 'weekly']);
         }
 
+        // Blog: the list and every published article (only once there is one)
+        if (\App\Models\BlogPost::hasPublishedPosts()) {
+            $urls->push(['url' => route('blog.index'), 'priority' => '0.7', 'changefreq' => 'weekly']);
+            foreach (\App\Models\BlogPost::published()->orderByDesc('published_at')->get(['slug', 'published_at', 'updated_at']) as $post) {
+                $urls->push([
+                    'url' => route('blog.show', $post->slug),
+                    'priority' => '0.6',
+                    'changefreq' => 'monthly',
+                    'lastmod' => ($post->updated_at ?? $post->published_at)?->toAtomString(),
+                ]);
+            }
+        }
+
         // Build XML
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
@@ -71,6 +86,9 @@ class SitemapController extends Controller
         foreach ($urls as $entry) {
             $xml .= "  <url>\n";
             $xml .= "    <loc>{$entry['url']}</loc>\n";
+            if (! empty($entry['lastmod'])) {
+                $xml .= "    <lastmod>{$entry['lastmod']}</lastmod>\n";
+            }
             $xml .= "    <changefreq>{$entry['changefreq']}</changefreq>\n";
             $xml .= "    <priority>{$entry['priority']}</priority>\n";
             $xml .= "  </url>\n";

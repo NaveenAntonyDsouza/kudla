@@ -25,9 +25,17 @@ class PageSeoSetting extends Model
         // Cache plain attributes, not the model: the cache refuses to unserialize
         // objects (config cache.serializable_classes = false), which turned a
         // cached model into __PHP_Incomplete_Class and took every page down (14 Oct 2026).
-        $attributes = Cache::remember("page_seo_v2.{$pageSlug}", 3600, function () use ($pageSlug) {
-            return static::where('page_slug', $pageSlug)->first()?->getAttributes() ?? [];
-        });
+        // SEO text must never take a page down: if the lookup fails, the page
+        // falls back to its own title and the default description.
+        try {
+            $attributes = Cache::remember("page_seo_v2.{$pageSlug}", 3600, function () use ($pageSlug) {
+                return static::where('page_slug', $pageSlug)->first()?->getAttributes() ?? [];
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
 
         return is_array($attributes) && $attributes !== [] ? (new static)->newFromBuilder($attributes) : null;
     }

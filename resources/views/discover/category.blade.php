@@ -1,4 +1,4 @@
-<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']"
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$subcategories === [] ? 'noindex, follow' : null"
     :breadcrumbs="[['name' => 'Discover Profiles', 'url' => route('discover.hub')], ['name' => $config['label'], 'url' => route('discover.category', $category)]]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -34,14 +34,17 @@
 
             {{-- Subcategory List --}}
             <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
-                @foreach($subcategories as $sub)
+                @forelse($subcategories as $sub)
                     <a href="{{ route('discover.results', [$category, $sub['slug']]) }}"
-                        class="block px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary) transition-colors"
-                        x-show="!search || '{{ strtolower($sub['label']) }}'.includes(search.toLowerCase())"
+                        class="flex items-center justify-between gap-4 px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary) transition-colors"
+                        x-show="!search || @js(mb_strtolower($sub['label'])).includes(search.toLowerCase())"
                         >
-                        {{ $sub['label'] }}
+                        <span>{{ \App\Support\DiscoverSeo::name($sub['label']) }}</span>
+                        <span class="text-xs text-gray-500">{{ $sub['count'] }} {{ Str::plural('profile', $sub['count']) }}</span>
                     </a>
-                @endforeach
+                @empty
+                    <p class="px-5 py-3.5 text-sm text-gray-600">Profiles will appear here as members join.</p>
+                @endforelse
             </div>
 
             {{-- Other Matrimonial Directories --}}

@@ -48,7 +48,7 @@
 
         $metaDescription = $pageSeo?->meta_description ?? ($metaDescription ?? $defaultMetaDesc);
         $canonicalUrl = $canonicalUrl ?? url()->current();
-        $ogImage = $pageSeo?->og_image_url ?? ($theme->logo_url ?? null);
+        $ogImage = $pageSeo?->og_image_url ?? ($ogImage ?? ($theme->logo_url ?? null));
 
         $siteEmail = \App\Models\SiteSetting::getValue('email', '');
         $sitePhone = \App\Models\SiteSetting::getValue('phone', '');
@@ -72,7 +72,7 @@
     <meta property="og:description" content="{{ Str::limit(strip_tags($metaDescription), 160) }}">
     <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:site_name" content="{{ $siteName }}">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ $ogType ?? 'website' }}">
     <meta property="og:locale" content="en_IN">
     @if($ogImage)
         <meta property="og:image" content="{{ $ogImage }}">
@@ -128,6 +128,13 @@
         ])) ?: null,
     ]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
+
+    {{-- Structured Data a page adds itself (e.g. a blog article) --}}
+    @if(! empty($jsonLd))
+    <script type="application/ld+json">
+    {!! json_encode(['@@context' => 'https://schema.org'] + $jsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_PRETTY_PRINT) !!}
+    </script>
+    @endif
 
     {{-- Structured Data: breadcrumbs (Discover pages pass :breadcrumbs) --}}
     @if(! empty($breadcrumbs))
@@ -614,7 +621,9 @@
                         <ul class="space-y-2 text-sm">
                             <li><a href="/contact-us" class="hover:text-white transition-colors">Contact Us</a></li>
                             <li><a href="/faq" class="hover:text-white transition-colors">Help & FAQ</a></li>
-                            <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
+                            @if(\App\Models\BlogPost::hasPublishedPosts())
+                                <li><a href="{{ route('blog.index') }}" class="hover:text-white transition-colors">Blog</a></li>
+                            @endif
                             <li><a href="/event" class="hover:text-white transition-colors">Events</a></li>
                             <li><a href="/add-with-us" class="hover:text-white transition-colors">Advertise With Us</a></li>
                         </ul>

@@ -91,7 +91,7 @@ it('points Hindu caste pages at the matching community page and keeps them out o
         ->and(DiscoverController::canonicalUrl('community-matrimony', 'billava'))->toBe(route('discover.results', ['community-matrimony', 'billava']))
         ->and(DiscoverController::canonicalUrl('karnataka-matrimony', 'udupi'))->toBe(route('discover.results', ['karnataka-matrimony', 'udupi']))
         ->and(file_get_contents(app_path('Http/Controllers/DiscoverController.php')))
-        ->toContain("if (\$category === self::DUPLICATE_OF_COMMUNITY) {\n                continue;");
+        ->toContain("if (\$category === self::DUPLICATE_OF_COMMUNITY || isset(");
 });
 
 it('passes Discover titles as data, so "&" is not shown as "&amp;amp;"', function () {

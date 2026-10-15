@@ -46,6 +46,7 @@ class SiteSettings extends Page implements HasForms
             // General
             'site_name' => $settings['site_name'] ?? '',
             'tagline' => $settings['tagline'] ?? '',
+            'blog_enabled' => ($settings['blog_enabled'] ?? '1') === '1',
 
             // Legal pages
             'grievance_officer_name' => $settings['grievance_officer_name'] ?? '',
@@ -117,6 +118,10 @@ class SiteSettings extends Page implements HasForms
                             ->label('Tagline')
                             ->maxLength(200)
                             ->helperText('Shown on homepage hero section. e.g., "Find Your Perfect Match"'),
+
+                        Forms\Components\Toggle::make('blog_enabled')
+                            ->label('Blog')
+                            ->helperText('The Blog at /blog and Content Management → Blog Posts. The footer link and sitemap entry appear once a post is published. Off: no blog at all.'),
                     ])
                     ->columns(2),
 
@@ -374,7 +379,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_profiles', 'auto_approve_profile_photos',
             'auto_approve_album_photos', 'auto_approve_family_photos',
             'auto_approve_documents',
-            'whatsapp_button_enabled', 'photo_via_whatsapp',
+            'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled',
         ];
 
         $jsonFields = ['canned_responses'];

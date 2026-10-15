@@ -1,4 +1,4 @@
-<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']">
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$categories->isEmpty() ? 'noindex, follow' : null">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
@@ -12,6 +12,10 @@
 
         <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
         <p class="text-sm text-gray-600 mt-1 mb-6">{{ $seo['intro'] }}</p>
+
+        @if($categories->isEmpty())
+            <p class="text-gray-600 py-8">Profiles will appear here as members join.</p>
+        @endif
 
         {{-- Category Grid --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">

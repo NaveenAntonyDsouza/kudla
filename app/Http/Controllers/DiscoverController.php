@@ -36,11 +36,14 @@ class DiscoverController extends Controller
      */
     public function hub()
     {
-        $categories = collect(config('discover'))->map(fn($cat, $slug) => [
-            'label' => $cat['label'],
-            'slug' => $slug,
-            'has_subcategories' => !isset($cat['direct_filter']),
-        ]);
+        // Only sections that have members (Oct 2026)
+        $categories = collect(config('discover'))
+            ->filter(fn ($cat, $slug) => self::profileCounts($slug) !== [])
+            ->map(fn($cat, $slug) => [
+                'label' => $cat['label'],
+                'slug' => $slug,
+                'has_subcategories' => !isset($cat['direct_filter']),
+            ]);
         $seo = \App\Support\DiscoverSeo::forHub();
 
         return view('discover.hub', compact('categories', 'seo'));
@@ -62,12 +65,13 @@ class DiscoverController extends Controller
             return $this->showResults($category, null, $config['label'], $config['direct_filter']);
         }
 
-        $subcategories = $this->resolveSubcategories($config);
-        $showSearch = $config['show_search'] ?? false;
+        $subcategories = self::withMembers($category, $this->resolveSubcategories($config));
+        $showSearch = ($config['show_search'] ?? false) && count($subcategories) > 12;
 
-        // Other directories (cross-links to other categories)
+        // Other directories (cross-links to other categories that have members)
         $otherCategories = collect(config('discover'))
             ->except($category)
+            ->filter(fn ($cat, $slug) => self::profileCounts($slug) !== [])
             ->map(fn($cat, $slug) => ['label' => $cat['label'], 'slug' => $slug])
             ->values()
             ->take(6);
@@ -221,23 +225,73 @@ class DiscoverController extends Controller
     public static function populatedPageUrls(): array
     {
         $urls = [];
-        $self = app(self::class);
-        foreach (config('discover', []) as $category => $config) {
-            if ($category === self::DUPLICATE_OF_COMMUNITY) {
+        foreach (array_keys(config('discover', [])) as $category) {
+            if ($category === self::DUPLICATE_OF_COMMUNITY || isset(config("discover.{$category}")['direct_filter'])) {
                 continue;
             }
-            foreach ($self->resolveSubcategories($config) as $sub) {
-                $count = self::applyFilters(
-                    Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),
-                    $sub['filter'] ?? []
-                )->count();
-                if ($count > 0) {
-                    $urls[] = route('discover.results', [$category, $sub['slug']]);
-                }
+            foreach (array_keys(self::profileCounts($category)) as $slug) {
+                $urls[] = route('discover.results', [$category, $slug]);
             }
         }
 
         return $urls;
+    }
+
+    /**
+     * Only the communities / places / jobs that have members, biggest first,
+     * each with its 'count' (Oct 2026: NRI listed ~190 countries, most empty).
+     */
+    public static function withMembers(string $category, array $subcategories): array
+    {
+        $counts = self::profileCounts($category);
+
+        return collect($subcategories)
+            ->filter(fn ($sub) => isset($counts[$sub['slug']]))
+            ->map(fn ($sub) => $sub + ['count' => $counts[$sub['slug']]])
+            ->sortBy([['count', 'desc'], ['label', 'asc']])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Public profiles per subcategory of a Discover category, biggest first,
+     * empty ones left out: [slug => count]. A direct-filter category (e.g.
+     * Kannadiga) gives ['' => count]. Plain array, cached 1 hour.
+     *
+     * @return array<string, int>
+     */
+    public static function profileCounts(string $category): array
+    {
+        $config = config("discover.{$category}");
+        if (! $config) {
+            return [];
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Cache::remember("discover.counts.{$category}", 3600, function () use ($config) {
+                $subs = isset($config['direct_filter'])
+                    ? [['slug' => '', 'filter' => $config['direct_filter']]]
+                    : app(self::class)->resolveSubcategories($config);
+
+                $counts = [];
+                foreach ($subs as $sub) {
+                    $count = self::applyFilters(
+                        Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),
+                        $sub['filter'] ?? []
+                    )->count();
+                    if ($count > 0) {
+                        $counts[$sub['slug']] = $count;
+                    }
+                }
+                arsort($counts);
+
+                return $counts;
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return []; // counting failed: show nothing rather than break the page
+        }
     }
 
     private function resolveSubcategories(array $config): array
