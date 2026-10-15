@@ -135,6 +135,27 @@ class BlogPost extends Model
             ->allowRelativeMedias()
             ->withMaxInputLength(500000);
 
-        return (new \Symfony\Component\HtmlSanitizer\HtmlSanitizer($config))->sanitize((string) $this->body);
+        $html = (new \Symfony\Component\HtmlSanitizer\HtmlSanitizer($config))->sanitize((string) $this->body);
+
+        return static::unlinkUnpublished($html);
+    }
+
+    /**
+     * Links to other articles that are not live yet (drafts, or scheduled for
+     * a later week) become plain text, so a reader never lands on a 404; they
+     * turn into links by themselves once that article is published.
+     */
+    public static function unlinkUnpublished(string $html): string
+    {
+        $host = preg_quote(rtrim(config('app.url'), '/'), '#');
+        $pattern = '#<a\b[^>]*\bhref="(?:' . $host . ')?/blog/([a-z0-9-]+)/?"[^>]*>(.*?)</a>#is';
+
+        if (! preg_match_all($pattern, $html, $matches)) {
+            return $html;
+        }
+
+        $live = static::published()->whereIn('slug', array_unique($matches[1]))->pluck('slug')->all();
+
+        return preg_replace_callback($pattern, fn ($m) => in_array($m[1], $live, true) ? $m[0] : $m[2], $html);
     }
 }

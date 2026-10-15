@@ -129,3 +129,19 @@ it('lists Discover communities with members only, biggest first', function () {
     expect(array_column($listed, 'slug'))->toBe(['billava', 'bunts', 'kulal'])
         ->and(array_column($listed, 'count'))->toBe([158, 40, 7]);
 });
+
+it('turns links to unpublished articles into plain text until they go live', function () {
+    blogPost(['slug' => 'live-one']);
+    blogPost(['slug' => 'next-week', 'published_at' => now()->addWeek()]);
+
+    $post = new BlogPost(['body' => '<p>See <a href="/blog/live-one">the checklist</a>, <a href="' . url('/blog/next-week') . '">the course</a> and <a href="/register">register</a>.</p>']);
+
+    expect($post->safe_body)->toContain('<a href="/blog/live-one">the checklist</a>')
+        ->toContain('the course')
+        ->not->toContain('next-week')
+        ->toContain('<a href="/register">register</a>');
+
+    BlogPost::where('slug', 'next-week')->update(['published_at' => now()->subMinute()]);
+
+    expect($post->safe_body)->toContain('/blog/next-week">the course</a>');
+});
