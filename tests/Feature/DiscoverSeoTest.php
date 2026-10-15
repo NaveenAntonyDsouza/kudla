@@ -121,3 +121,8 @@ it('keeps the empty search forms out of Google', function () {
         ->not->toContain("route('search.quick')")
         ->toContain("route('discover.hub')");
 });
+
+it('gives the register page a description and canonical', function () {
+    expect(file_get_contents(resource_path('views/auth/register-step1.blade.php')))
+        ->toContain("@include('components.partials.seo-basic', ['seoPage' => 'register'");
+});

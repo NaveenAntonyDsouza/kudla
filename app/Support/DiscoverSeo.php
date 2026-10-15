@@ -56,12 +56,12 @@ class DiscoverSeo
             'mother-tongue-matrimony' => [
                 ["{$n}-Speaking Brides & Grooms", "{$n}-Speaking Matrimony"],
                 "{$n}-Speaking Brides & Grooms",
-                "Find brides and grooms{$from} whose mother tongue is {$n}.",
+                "Find {$n}-speaking brides and grooms{$from}.",
             ],
             'karnataka-matrimony' => [
                 ["{$n} Matrimony – Brides & Grooms from {$n}", "{$n} Matrimony – Brides & Grooms"],
                 "{$n} Matrimony",
-                "Find brides and grooms whose native place is {$n} district, Karnataka.",
+                "Find brides and grooms from {$n} district in Karnataka.",
             ],
             'nri-matrimony' => [
                 ["NRI Brides & Grooms in {$n}", "NRI Matrimony – {$n}"],
@@ -81,7 +81,7 @@ class DiscoverSeo
             'occupation-matrimony' => [
                 ["{$n} Matrimony – {$n} Brides & Grooms", "{$n} Matrimony – Brides & Grooms", "{$n} Matrimony"],
                 "{$n} Matrimony",
-                "Find brides and grooms{$from} working as {$n}.",
+                "Find {$n} brides and grooms{$from}.",
             ],
             'second-marriage' => [
                 ["{$n} Brides & Grooms – Second Marriage", "{$n} – Second Marriage Matrimony"],
