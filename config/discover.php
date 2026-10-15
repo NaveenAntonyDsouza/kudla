@@ -10,6 +10,8 @@
  *   subcategories_source  — string method name on App\Services\DiscoverConfigService
  *                           that returns the same shape (used for dynamic lists)
  *   direct_filter         — if set, category has no subcategories (shows results directly)
+ *   seo_title, browse_by  — Google title and "Browse brides and grooms by …" wording
+ *                           for the category page (App\Support\DiscoverSeo)
  *
  * Filter keys map to DB columns/relations:
  *   religion, denomination, caste, diocese, muslim_sect, muslim_community, jain_sect
@@ -24,36 +26,48 @@ return [
 
     'nri-matrimony' => [
         'label' => 'NRI Matrimony',
+        'seo_title' => 'NRI Matrimony – Brides & Grooms Abroad',
+        'browse_by' => 'the country they live in',
         'show_search' => true,
         'subcategories_source' => 'nriCountries',
     ],
 
     'catholic-matrimony' => [
         'label' => 'Catholic Matrimony',
+        'seo_title' => 'Catholic Matrimony – Catholic Brides & Grooms',
+        'browse_by' => 'Catholic rite',
         'show_search' => false,
         'subcategories_source' => 'catholicDenominations',
     ],
 
     'karnataka-matrimony' => [
         'label' => 'Karnataka Matrimony',
+        'seo_title' => 'Karnataka Matrimony – Brides & Grooms by District',
+        'browse_by' => 'native district',
         'show_search' => true,
         'subcategories_source' => 'karnatakaDistricts',
     ],
 
     'christian-matrimony' => [
         'label' => 'Christian Matrimony',
+        'seo_title' => 'Christian Matrimony – Christian Brides & Grooms',
+        'browse_by' => 'church',
         'show_search' => false,
         'subcategories_source' => 'nonCatholicDenominations',
     ],
 
     'occupation-matrimony' => [
         'label' => 'Occupation Matrimony',
+        'seo_title' => 'Matrimony by Profession – Brides & Grooms',
+        'browse_by' => 'profession',
         'show_search' => true,
         'subcategories_source' => 'occupations',
     ],
 
     'diocese-matrimony' => [
         'label' => 'Diocese Matrimony',
+        'seo_title' => 'Diocese Matrimony – Catholic Brides & Grooms',
+        'browse_by' => 'diocese',
         'show_search' => true,
         'subcategories_source' => 'dioceses',
     ],
@@ -66,6 +80,8 @@ return [
 
     'second-marriage' => [
         'label' => 'Second Marriage Matrimony',
+        'seo_title' => 'Second Marriage Matrimony – Divorced & Widowed',
+        'browse_by' => 'marital status',
         'show_search' => false,
         'subcategories' => [
             ['label' => 'Annulled Profiles', 'slug' => 'annulled', 'filter' => ['marital_status' => 'Annulled']],
@@ -77,30 +93,40 @@ return [
 
     'mother-tongue-matrimony' => [
         'label' => 'Mother Tongue Matrimony',
+        'seo_title' => 'Mother Tongue Matrimony – Brides & Grooms',
+        'browse_by' => 'mother tongue',
         'show_search' => false,
         'subcategories_source' => 'languages',
     ],
 
     'community-matrimony' => [
         'label' => 'Community Matrimony',
+        'seo_title' => 'Community Matrimony – Brides & Grooms by Caste',
+        'browse_by' => 'community',
         'show_search' => true,
         'subcategories_source' => 'allCastes',
     ],
 
     'hindu-matrimony' => [
         'label' => 'Hindu Matrimony',
+        'seo_title' => 'Hindu Matrimony – Hindu Brides & Grooms',
+        'browse_by' => 'community',
         'show_search' => true,
         'subcategories_source' => 'hinduCastes',
     ],
 
     'muslim-matrimony' => [
         'label' => 'Muslim Matrimony',
+        'seo_title' => 'Muslim Matrimony – Muslim Brides & Grooms',
+        'browse_by' => 'sect',
         'show_search' => false,
         'subcategories_source' => 'muslimSects',
     ],
 
     'jain-matrimony' => [
         'label' => 'Jain Matrimony',
+        'seo_title' => 'Jain Matrimony – Jain Brides & Grooms',
+        'browse_by' => 'sect',
         'show_search' => false,
         'subcategories_source' => 'jainSects',
     ],

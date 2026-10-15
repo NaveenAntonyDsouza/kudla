@@ -1,4 +1,4 @@
-<x-layouts.app title="Search Profiles">
+<x-layouts.app title="Search Profiles" robots="noindex, follow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
         activeTab: @js($activeTab),
         advReligion: @js(is_array(request('religion')) ? '' : request('religion', '')),

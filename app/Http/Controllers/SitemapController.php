@@ -41,17 +41,11 @@ class SitemapController extends Controller
             ->map(fn ($slug) => ['url' => url("/{$slug}"), 'priority' => '0.3', 'changefreq' => 'yearly']);
         $urls = $urls->merge($legal);
 
-        // Search pages — route() so a renamed route can't leave a dead link
-        // here (/search/advanced-search and /search/search-by-id were 404s).
-        $searchPages = [
-            ['url' => route('search.quick'), 'priority' => '0.8', 'changefreq' => 'daily'],
-            ['url' => route('search.advance'), 'priority' => '0.7', 'changefreq' => 'daily'],
-            ['url' => route('search.keyword'), 'priority' => '0.6', 'changefreq' => 'daily'],
-            ['url' => route('search.byid'), 'priority' => '0.5', 'changefreq' => 'daily'],
-        ];
-        $urls = $urls->merge($searchPages);
+        // The search forms (quick / advanced / keyword / by ID) are left out:
+        // they are empty forms, marked noindex since Oct 2026.
 
         // Discover pages
+        $urls->push(['url' => route('discover.hub'), 'priority' => '0.7', 'changefreq' => 'weekly']);
         $discoverCategories = config('discover', []);
         foreach ($discoverCategories as $slug => $category) {
             $urls->push(['url' => url("/discover/{$slug}"), 'priority' => '0.7', 'changefreq' => 'weekly']);

@@ -47,6 +47,7 @@ class SeoSettings extends Page implements HasForms
             'meta_title_default' => $settings['meta_title_default'] ?? '',
             'meta_title_suffix' => $settings['meta_title_suffix'] ?? '',
             'meta_description_default' => $settings['meta_description_default'] ?? '',
+            'seo_region' => $settings['seo_region'] ?? '',
             'google_analytics_id' => $settings['google_analytics_id'] ?? '',
             'google_tag_manager_id' => $settings['google_tag_manager_id'] ?? '',
             'facebook_pixel_id' => $settings['facebook_pixel_id'] ?? '',
@@ -115,6 +116,12 @@ class SeoSettings extends Page implements HasForms
                             ->maxLength(160)
                             ->helperText('Fallback meta description. Max 155-160 characters.')
                             ->placeholder('e.g., Find your perfect life partner with our matrimony service...'),
+
+                        Forms\Components\TextInput::make('seo_region')
+                            ->label('Where members are from')
+                            ->maxLength(60)
+                            ->helperText('Used in the Google text of every community / browse page: "Find Billava brides and grooms from …". Leave blank to leave the place out.')
+                            ->placeholder('e.g., Mangaluru, Udupi and Tulu Nadu'),
                     ]),
 
                 \Filament\Schemas\Components\Section::make('Tracking & Analytics')

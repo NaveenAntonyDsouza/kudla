@@ -10,7 +10,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title }} | {{ $siteName }}</title>
+    @php
+        // Only the first step is a public page; the later steps need a login
+        $isRegisterLanding = request()->routeIs('register');
+        $registerSeo = $isRegisterLanding ? \App\Models\PageSeoSetting::getForPage('register') : null;
+        $registerTitle = $registerSeo?->meta_title ?: "{$title} | {$siteName}";
+    @endphp
+    <title>{{ $registerTitle }}</title>
+    @include('components.partials.seo-basic', ['seoPage' => 'register', 'seoTitle' => $registerTitle, 'robots' => $isRegisterLanding ? 'index, follow' : 'noindex, follow'])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

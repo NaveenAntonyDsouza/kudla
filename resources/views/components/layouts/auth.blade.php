@@ -22,7 +22,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? '' }} | {{ $siteName }}</title>
+    @php
+        $loginSeo = \App\Models\PageSeoSetting::getForPage('login');
+        $loginTitle = $loginSeo?->meta_title ?: (($title ?? '') . ' | ' . $siteName);
+    @endphp
+    <title>{{ $loginTitle }}</title>
+    @include('components.partials.seo-basic', ['seoPage' => 'login', 'seoTitle' => $loginTitle])
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

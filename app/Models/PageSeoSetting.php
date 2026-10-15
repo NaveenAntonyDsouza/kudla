@@ -40,7 +40,9 @@ class PageSeoSetting extends Model
         if ($pageSlug) {
             Cache::forget("page_seo_v2.{$pageSlug}");
         } else {
-            $slugs = static::pluck('page_slug');
+            // Pages just reset to blank are no longer in the table, so clear
+            // every known page as well as the saved ones.
+            $slugs = static::pluck('page_slug')->merge(array_keys(static::defaultPages()))->unique();
             foreach ($slugs as $slug) {
                 Cache::forget("page_seo_v2.{$slug}");
             }
@@ -63,6 +65,8 @@ class PageSeoSetting extends Model
             'about' => 'About Us',
             'contact' => 'Contact Us',
             'membership-plans' => 'Membership Plans',
+            'faq' => 'Help & FAQ',
+            'demograph' => 'Member Demographics',
         ];
     }
 }

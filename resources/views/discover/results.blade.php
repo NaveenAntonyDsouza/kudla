@@ -1,4 +1,10 @@
-<x-layouts.app title="{{ $title }}" :robots="$results->total() === 0 ? 'noindex, follow' : null">
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :canonicalUrl="$canonicalUrl"
+    :breadcrumbs="array_filter([
+        ['name' => 'Discover Profiles', 'url' => route('discover.hub')],
+        $slug ? ['name' => $config['label'], 'url' => route('discover.category', $category)] : null,
+        ['name' => $seo['heading'], 'url' => $canonicalUrl],
+    ])"
+    :robots="$results->total() === 0 ? 'noindex, follow' : null">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
@@ -13,14 +19,18 @@
                 <a href="{{ route('discover.category', $category) }}" class="hover:text-(--color-primary)">{{ $config['label'] }}</a>
                 <span class="mx-1">/</span>
             @endif
-            <span class="text-gray-700 font-medium">{{ $title }}</span>
+            <span class="text-gray-700 font-medium">{{ $seo['heading'] }}</span>
         </p>
 
         {{-- Header --}}
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <h1 class="text-lg font-semibold text-gray-900">
-                <span class="text-(--color-primary)">{{ $results->total() }}</span> {{ Str::plural('Profile', $results->total()) }} found
-            </h1>
+            <div>
+                <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
+                <p class="text-sm text-gray-600 mt-1">
+                    {{ $seo['intro'] }}
+                    <span class="font-semibold text-(--color-primary)">{{ $results->total() }}</span> {{ Str::plural('profile', $results->total()) }} found.
+                </p>
+            </div>
             <div class="flex items-center gap-3">
                 {{-- Sort By Dropdown --}}
                 <div class="relative" x-data="{ open: false }" @click.away="open = false">

@@ -1,4 +1,5 @@
-<x-layouts.app title="{{ $config['label'] }}">
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']"
+    :breadcrumbs="[['name' => 'Discover Profiles', 'url' => route('discover.hub')], ['name' => $config['label'], 'url' => route('discover.category', $category)]]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
@@ -16,7 +17,10 @@
 
             {{-- Title + Search --}}
             <div class="flex items-center justify-between mb-6">
-                <h1 class="text-xl font-semibold text-gray-900">{{ $config['label'] }}</h1>
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
+                    <p class="text-sm text-gray-600 mt-1">{{ $seo['intro'] }}</p>
+                </div>
                 @if($showSearch)
                     <div class="relative w-48">
                         <input type="text" x-model="search" placeholder="Search..."

@@ -12,21 +12,24 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        // Determine current page slug for per-page SEO lookup
+        // Determine current page slug for per-page SEO lookup (route name => SEO
+        // Settings page; the about/contact/membership/privacy names were wrong
+        // until Oct 2026, so those pages never picked up their custom SEO)
         $currentRoute = request()->route()?->getName() ?? '';
         $pageSlugMap = [
             'home' => 'home',
-            'search.results' => 'search',
+            'search.results.public' => 'search',
             'search.index' => 'search',
             'login' => 'login',
             'register' => 'register',
-            'register.step1' => 'register',
             'success-stories.index' => 'happy-stories',
-            'privacy-policy' => 'privacy-policy',
+            'privacy' => 'privacy-policy',
             'terms' => 'terms',
-            'about' => 'about',
-            'contact.show' => 'contact',
-            'membership.plans' => 'membership-plans',
+            'about-us' => 'about',
+            'contact' => 'contact',
+            'membership.index' => 'membership-plans',
+            'faq' => 'faq',
+            'demograph' => 'demograph',
         ];
         $pageSlug = $pageSlugMap[$currentRoute] ?? null;
         $pageSeo = $pageSlug ? \App\Models\PageSeoSetting::getForPage($pageSlug) : null;
@@ -125,6 +128,21 @@
         ])) ?: null,
     ]), JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
+
+    {{-- Structured Data: breadcrumbs (Discover pages pass :breadcrumbs) --}}
+    @if(! empty($breadcrumbs))
+    <script type="application/ld+json">
+    {!! json_encode([
+        '@@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => collect([['name' => 'Home', 'url' => url('/')]])
+            ->merge(array_values($breadcrumbs))
+            ->values()
+            ->map(fn ($crumb, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $crumb['name'], 'item' => $crumb['url']])
+            ->all(),
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_PRETTY_PRINT) !!}
+    </script>
+    @endif
 
     @if($theme->favicon_url ?? false)
         <link rel="icon" href="{{ $theme->favicon_url }}" type="image/x-icon">

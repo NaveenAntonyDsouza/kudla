@@ -28,6 +28,9 @@ class DiscoverController extends Controller
         'deshastha-brahmin' => 'brahmin',
     ];
 
+    /** Its caste pages repeat Community Matrimony's (see canonicalUrl()). */
+    private const DUPLICATE_OF_COMMUNITY = 'hindu-matrimony';
+
     /**
      * Level 1: Category hub — grid of all browsing categories.
      */
@@ -38,8 +41,9 @@ class DiscoverController extends Controller
             'slug' => $slug,
             'has_subcategories' => !isset($cat['direct_filter']),
         ]);
+        $seo = \App\Support\DiscoverSeo::forHub();
 
-        return view('discover.hub', compact('categories'));
+        return view('discover.hub', compact('categories', 'seo'));
     }
 
     /**
@@ -67,9 +71,10 @@ class DiscoverController extends Controller
             ->map(fn($cat, $slug) => ['label' => $cat['label'], 'slug' => $slug])
             ->values()
             ->take(6);
+        $seo = \App\Support\DiscoverSeo::forCategory($category, $config);
 
         return view('discover.category', compact(
-            'category', 'config', 'subcategories', 'showSearch', 'otherCategories'
+            'category', 'config', 'subcategories', 'showSearch', 'otherCategories', 'seo'
         ));
     }
 
@@ -127,10 +132,29 @@ class DiscoverController extends Controller
         $query = $this->applySortOrder($query, $sort);
         $results = $query->paginate(20)->withQueryString();
         $currentSort = $sort;
+        $seo = \App\Support\DiscoverSeo::forResults($category, $title);
+        $canonicalUrl = self::canonicalUrl($category, $slug);
 
         return view('discover.results', compact(
-            'category', 'slug', 'title', 'config', 'results', 'currentSort'
+            'category', 'slug', 'title', 'config', 'results', 'currentSort', 'seo', 'canonicalUrl'
         ));
+    }
+
+    /**
+     * Hindu > Billava lists the same people as Community > Billava, so Google is
+     * told the community page is the one to show (no duplicate pages competing).
+     */
+    public static function canonicalUrl(string $category, ?string $slug): string
+    {
+        if ($slug === null) {
+            return route('discover.category', $category);
+        }
+        if ($category === self::DUPLICATE_OF_COMMUNITY
+            && collect(app(\App\Services\DiscoverConfigService::class)->allCastes())->contains('slug', $slug)) {
+            return route('discover.results', ['community-matrimony', $slug]);
+        }
+
+        return route('discover.results', [$category, $slug]);
     }
 
     /**
@@ -199,6 +223,9 @@ class DiscoverController extends Controller
         $urls = [];
         $self = app(self::class);
         foreach (config('discover', []) as $category => $config) {
+            if ($category === self::DUPLICATE_OF_COMMUNITY) {
+                continue;
+            }
             foreach ($self->resolveSubcategories($config) as $sub) {
                 $count = self::applyFilters(
                     Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),

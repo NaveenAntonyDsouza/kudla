@@ -49,6 +49,7 @@ class DiscoverConfigService
     public function catholicDenominations(): array
     {
         return collect(config('reference_data.denomination_list.Catholic', []))
+            ->filter(fn ($d) => $d !== 'Other')
             ->map(fn ($d) => [
                 'label' => "$d Profiles",
                 'slug' => Str::slug($d),
@@ -107,6 +108,7 @@ class DiscoverConfigService
     public function dioceses(): array
     {
         return collect(config('reference_data.diocese_list', []))
+            ->filter(fn ($d) => $d !== 'Other')
             ->map(fn ($d) => [
                 'label' => "$d Profiles",
                 'slug' => Str::slug($d),
