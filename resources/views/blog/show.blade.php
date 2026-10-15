@@ -36,8 +36,12 @@
         .blog-body blockquote { border-left: 4px solid var(--color-primary); padding-left: 1em; font-style: italic; color: #4b5563; }
         .blog-body img { max-width: 100%; height: auto; border-radius: .5rem; }
         .blog-body table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-        .blog-body th, .blog-body td { border: 1px solid #e5e7eb; padding: .5em .75em; text-align: left; vertical-align: top; }
+        .blog-body th, .blog-body td { border: 1px solid #e5e7eb; padding: .5em .75em; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
         .blog-body th { background: #f9fafb; font-weight: 600; }
+        @media (max-width: 480px) {
+            .blog-body table { font-size: .85rem; }
+            .blog-body th, .blog-body td { padding: .45em .5em; }
+        }
     </style>
 
     <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
