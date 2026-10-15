@@ -40,7 +40,8 @@
                 @endif
             </a>
             <div class="text-sm text-gray-500">
-                Need Assistance? <a href="tel:+911800123456" class="text-(--color-primary) hover:underline font-medium">Call Us</a>
+                @php $helpPhone = preg_replace('/[^0-9+]/', '', (string) \App\Models\SiteSetting::getValue('phone', '')); @endphp
+                @if($helpPhone !== '')Need Assistance? <a href="tel:{{ $helpPhone }}" class="text-(--color-primary) hover:underline font-medium">Call Us</a>@endif
             </div>
         </div>
     </header>
@@ -92,6 +93,8 @@
                         Go to Dashboard
                     </a>
                 </div>
+
+                <x-whatsapp-channel class="mt-8" />
             </div>
         </div>
     </main>

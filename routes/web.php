@@ -44,6 +44,8 @@ Route::view('/faq', 'pages.faq')->name('faq');
 Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show')->where('slug', '[a-z0-9-]+');
 Route::view('/demograph', 'pages.demograph')->name('demograph');
+// The site's WhatsApp channel and number (only where a channel is set in Site Settings)
+Route::get('/whatsapp', fn () => \App\Support\WhatsApp::channelUrl() ? view('pages.whatsapp') : abort(404))->name('whatsapp');
 Route::view('/event', 'pages.event')->name('event');
 
 // Ad click tracking

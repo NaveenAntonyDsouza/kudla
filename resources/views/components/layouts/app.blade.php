@@ -621,6 +621,9 @@
                         <ul class="space-y-2 text-sm">
                             <li><a href="/contact-us" class="hover:text-white transition-colors">Contact Us</a></li>
                             <li><a href="/faq" class="hover:text-white transition-colors">Help & FAQ</a></li>
+                            @if(\App\Support\WhatsApp::channelUrl())
+                                <li><a href="{{ route('whatsapp') }}" class="hover:text-white transition-colors">WhatsApp Channel</a></li>
+                            @endif
                             @if(\App\Models\BlogPost::hasPublishedPosts())
                                 <li><a href="{{ route('blog.index') }}" class="hover:text-white transition-colors">Blog</a></li>
                             @endif

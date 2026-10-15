@@ -42,6 +42,21 @@ final class WhatsApp
         return 'https://wa.me/'.$digits.($text !== null && $text !== '' ? '?text='.rawurlencode($text) : '');
     }
 
+    /**
+     * The site's WhatsApp channel (Site Settings -> Social Links), or null when
+     * none is set. Only a real https channel link counts.
+     */
+    public static function channelUrl(): ?string
+    {
+        try {
+            $url = trim((string) SiteSetting::getValue('whatsapp_channel_url', ''));
+        } catch (\Throwable) {
+            return null; // a page decoration must never break the page
+        }
+
+        return preg_match('#^https://(www\.)?whatsapp\.com/channel/[A-Za-z0-9]+#', $url) ? $url : null;
+    }
+
     /** The floating chat button: switched on for this site and a real number set. */
     public static function buttonEnabled(): bool
     {

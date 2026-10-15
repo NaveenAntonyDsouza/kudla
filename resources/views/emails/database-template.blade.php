@@ -53,6 +53,10 @@
             {!! $body !!}
         </div>
         <div class="footer">
+            @php $waChannel = \App\Support\WhatsApp::channelUrl(); @endphp
+            @if($waChannel)
+                <p style="margin:0 0 8px"><a href="{{ $waChannel }}">Follow {{ $siteName }} on WhatsApp</a> for new profiles and news.</p>
+            @endif
             &copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.
         </div>
     </div>

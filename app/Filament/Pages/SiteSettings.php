@@ -91,6 +91,7 @@ class SiteSettings extends Page implements HasForms
             'social_youtube' => $settings['social_youtube'] ?? '',
             'social_twitter' => $settings['social_twitter'] ?? '',
             'social_linkedin' => $settings['social_linkedin'] ?? '',
+            'whatsapp_channel_url' => $settings['whatsapp_channel_url'] ?? '',
 
             // Mobile App
             'app_play_store_url' => $settings['app_play_store_url'] ?? '',
@@ -319,6 +320,13 @@ class SiteSettings extends Page implements HasForms
                             ->label('LinkedIn Company URL')
                             ->url()
                             ->placeholder('https://linkedin.com/company/...'),
+
+                        Forms\Components\TextInput::make('whatsapp_channel_url')
+                            ->label('WhatsApp Channel URL')
+                            ->url()
+                            ->rules(['regex:#^https://(www\.)?whatsapp\.com/channel/#'])
+                            ->placeholder('https://whatsapp.com/channel/...')
+                            ->helperText('Shows "Follow us on WhatsApp" in the footer, on the sign-up complete page, the dashboard, the /whatsapp page and in every email. Leave blank to hide it.'),
                     ])
                     ->columns(2),
 

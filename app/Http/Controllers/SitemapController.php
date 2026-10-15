@@ -66,6 +66,11 @@ class SitemapController extends Controller
             $urls->push(['url' => $url, 'priority' => '0.6', 'changefreq' => 'weekly']);
         }
 
+        // WhatsApp channel page (people search "<site> whatsapp group link")
+        if (\App\Support\WhatsApp::channelUrl()) {
+            $urls->push(['url' => route('whatsapp'), 'priority' => '0.5', 'changefreq' => 'monthly']);
+        }
+
         // Blog: the list and every published article (only once there is one)
         if (\App\Models\BlogPost::hasPublishedPosts()) {
             $urls->push(['url' => route('blog.index'), 'priority' => '0.7', 'changefreq' => 'weekly']);

@@ -84,6 +84,7 @@
                         </div>
                     </div>
                 </div>
+                <div style="margin-top:16px"><x-whatsapp-channel compact /></div>
             </div>
 
             {{-- Main Content --}}

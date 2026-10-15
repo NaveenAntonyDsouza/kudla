@@ -150,6 +150,7 @@ function seedThemeSettingsCacheForRegistrationTest(): void
     Cache::put('site_setting.posthog_api_key', '', 3600);
     Cache::put('site_setting.posthog_host', 'https://us.i.posthog.com', 3600);
     Cache::put('site_setting.site_name', 'Test Matrimony', 3600);
+    Cache::put('site_setting.phone', '77600 20186', 3600); // "Need Assistance? Call Us"
     // SEO tags on the registration pages (Oct 2026)
     Cache::put('site_setting.meta_description_default', 'Test Matrimony. Register free.', 3600);
     Cache::put('page_seo_v2.register', [], 3600);

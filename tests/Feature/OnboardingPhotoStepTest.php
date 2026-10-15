@@ -53,6 +53,7 @@ function seedThemeSettingsCacheForOnboardingTest(): void
     Cache::put('site_setting.posthog_api_key', '', 3600);
     Cache::put('site_setting.posthog_host', 'https://us.i.posthog.com', 3600);
     Cache::put('site_setting.site_name', 'Test Matrimony', 3600);
+    Cache::put('site_setting.phone', '77600 20186', 3600); // "Need Assistance? Call Us"
     // Read by the photo-privacy picker (offers "Premium members only" on paid sites)
     Cache::put('site_setting.free_membership_enabled', '0', 3600);
 }
