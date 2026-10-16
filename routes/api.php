@@ -71,6 +71,11 @@ Route::prefix('v1')->group(function () {
     // established by per-gateway signature verification inside the
     // gateway service's handleWebhook method. NOT throttled — Razorpay
     // / Stripe / PayPal control their own retry rates.
+    // WhatsApp Cloud API (Oct 2026). Declared before the payment route,
+    // whose {gateway} pattern would otherwise catch "whatsapp".
+    Route::get('/webhooks/whatsapp', [\App\Http\Controllers\Api\V1\WhatsAppWebhookController::class, 'verify']);
+    Route::post('/webhooks/whatsapp', [\App\Http\Controllers\Api\V1\WhatsAppWebhookController::class, 'receive']);
+
     Route::post('/webhooks/{gateway}', [\App\Http\Controllers\Api\V1\PaymentController::class, 'webhook'])
         ->where('gateway', '[a-z0-9-]+');
 

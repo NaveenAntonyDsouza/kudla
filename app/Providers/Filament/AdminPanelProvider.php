@@ -88,6 +88,11 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([])
+            // Photos members send on WhatsApp, for the inbox (needs the Meta token).
+            ->authenticatedRoutes(function () {
+                \Illuminate\Support\Facades\Route::get('whatsapp-media/{message}', \App\Http\Controllers\Admin\WhatsAppMediaController::class)
+                    ->name('whatsapp-media');
+            })
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
             ->renderHook('panels::head.end', fn () => <<<'HTML'
