@@ -60,6 +60,7 @@ class WhatsAppSettings extends Page implements HasForms
             'wa_cloud_auto_reply_enabled' => SiteSetting::getValue('wa_cloud_auto_reply_enabled', '1') === '1',
             'wa_cloud_auto_reply' => SiteSetting::getValue('wa_cloud_auto_reply', ''),
             'wa_cloud_photo_reply' => SiteSetting::getValue('wa_cloud_photo_reply', ''),
+            'wa_cloud_photo_template' => WhatsAppCloud::photoTemplate(),
         ]);
     }
 
@@ -109,6 +110,18 @@ class WhatsAppSettings extends Page implements HasForms
                     ])
                     ->columns(2),
 
+                \Filament\Schemas\Components\Section::make('Photo requests')
+                    ->schema([
+                        Forms\Components\Select::make('wa_cloud_photo_template')
+                            ->label('Message sent from Members Without Photo')
+                            ->options([
+                                WhatsAppCloud::TEMPLATE_PHOTO_MISSING => 'profile_photo_missing: plain notice (Utility, about Rs 0.12 each)',
+                                WhatsAppCloud::TEMPLATE_PHOTO_REQUEST => 'photo_request: friendlier, with an "Add it myself" button (Marketing, about Rs 0.86 each)',
+                            ])
+                            ->required()
+                            ->helperText('Both are approved in WhatsApp Manager, in English and Kannada.'),
+                    ]),
+
                 \Filament\Schemas\Components\Section::make('Automatic replies')
                     ->schema([
                         Forms\Components\Toggle::make('wa_cloud_auto_reply_enabled')
@@ -137,7 +150,7 @@ class WhatsAppSettings extends Page implements HasForms
 
         SiteSetting::setValue('wa_cloud_enabled', ! empty($data['wa_cloud_enabled']) ? '1' : '0');
         SiteSetting::setValue('wa_cloud_auto_reply_enabled', ! empty($data['wa_cloud_auto_reply_enabled']) ? '1' : '0');
-        foreach (['wa_cloud_phone_number_id', 'wa_cloud_waba_id', 'wa_cloud_auto_reply', 'wa_cloud_photo_reply'] as $key) {
+        foreach (['wa_cloud_phone_number_id', 'wa_cloud_waba_id', 'wa_cloud_auto_reply', 'wa_cloud_photo_reply', 'wa_cloud_photo_template'] as $key) {
             SiteSetting::setValue($key, trim((string) ($data[$key] ?? '')));
         }
         foreach (WhatsAppCloud::SECRET_KEYS as $key) {

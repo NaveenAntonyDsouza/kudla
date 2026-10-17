@@ -110,14 +110,51 @@ final class WhatsAppCloud
      *
      * @return array{ok: bool, id: ?string, error: ?string}
      */
-    public static function sendTemplate(string $to, string $name, string $language = 'en_US'): array
+    public static function sendTemplate(string $to, string $name, string $language = 'en_US', array $bodyParams = []): array
     {
+        $template = ['name' => $name, 'language' => ['code' => $language]];
+        if ($bodyParams) {
+            $template['components'] = [[
+                'type' => 'body',
+                'parameters' => array_map(fn ($v) => ['type' => 'text', 'text' => (string) $v], array_values($bodyParams)),
+            ]];
+        }
+
         return self::post([
             'messaging_product' => 'whatsapp',
             'to' => $to,
             'type' => 'template',
-            'template' => ['name' => $name, 'language' => ['code' => $language]],
+            'template' => $template,
         ]);
+    }
+
+    /**
+     * Templates approved in WhatsApp Manager (Oct 2026), in English and
+     * Kannada. Body variables: {{1}} first name, then {{2}} member ID.
+     */
+    public const TEMPLATE_PHOTO_REQUEST = 'photo_request';          // Marketing (about Rs 0.86)
+    public const TEMPLATE_PHOTO_MISSING = 'profile_photo_missing';  // Utility (about Rs 0.12), plain account notice
+    public const TEMPLATE_REPLY_WAITING = 'reply_waiting';
+    public const LANGUAGES = ['en' => 'English', 'kn' => 'Kannada'];
+
+    /** Which approved template asks members for a photo (Settings -> WhatsApp API). */
+    public static function photoTemplate(): string
+    {
+        $chosen = (string) SiteSetting::getValue('wa_cloud_photo_template', self::TEMPLATE_PHOTO_MISSING);
+
+        return in_array($chosen, [self::TEMPLATE_PHOTO_REQUEST, self::TEMPLATE_PHOTO_MISSING], true) ? $chosen : self::TEMPLATE_PHOTO_MISSING;
+    }
+
+    /** Kannada for members whose mother tongue is Kannada, English otherwise. */
+    public static function languageFor(?\App\Models\Profile $profile): string
+    {
+        return strcasecmp(trim((string) $profile?->mother_tongue), 'Kannada') === 0 ? 'kn' : 'en';
+    }
+
+    /** First word of the name, for "Hi {{1}}". */
+    public static function firstName(?string $fullName): string
+    {
+        return trim((string) strtok(trim((string) $fullName), ' ')) ?: 'there';
     }
 
     /** @return array{ok: bool, id: ?string, error: ?string} */

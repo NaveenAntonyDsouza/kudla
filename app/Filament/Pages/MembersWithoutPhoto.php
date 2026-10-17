@@ -6,7 +6,10 @@ use App\Filament\Resources\UserResource;
 use App\Models\Profile;
 use App\Models\ProfileNote;
 use App\Models\SiteSetting;
+use App\Models\WhatsAppMessage;
+use App\Services\WhatsAppInboxService;
 use App\Support\WhatsApp;
+use App\Support\WhatsAppCloud;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -91,6 +94,39 @@ class MembersWithoutPhoto extends Page implements HasTable
             . 'You can also add it yourself here: ' . route('photos.manage');
     }
 
+    /** Don't send the request again within this many days (bulk sending). */
+    public const RESEND_AFTER_DAYS = 7;
+
+    /** Most messages one bulk click sends; new WhatsApp numbers start with a daily limit. */
+    public const BULK_LIMIT = 200;
+
+    /**
+     * Send the approved photo_request template through the WhatsApp API and
+     * note it in the member's history (which also marks them as asked).
+     */
+    public static function sendRequest(Profile $profile, ?string $language = null): WhatsAppMessage
+    {
+        $message = app(WhatsAppInboxService::class)->sendTemplate(
+            (string) static::whatsappDigits($profile),
+            WhatsAppCloud::photoTemplate(),
+            $language ?? WhatsAppCloud::languageFor($profile),
+            [WhatsAppCloud::firstName($profile->full_name), (string) $profile->matri_id],
+            auth()->id(),
+            $profile->id,
+        );
+
+        if ($message->status !== 'failed' && auth()->id()) {
+            ProfileNote::create([
+                'profile_id' => $profile->id,
+                'admin_user_id' => auth()->id(),
+                'note_type' => 'whatsapp',
+                'note' => self::NOTE_PREFIX.' sent the photo request on WhatsApp ('.(WhatsAppCloud::LANGUAGES[$language ?? WhatsAppCloud::languageFor($profile)] ?? 'English').').',
+            ]);
+        }
+
+        return $message;
+    }
+
     public static function whatsappUrl(Profile $profile): ?string
     {
         $digits = static::whatsappDigits($profile);
@@ -152,7 +188,27 @@ class MembersWithoutPhoto extends Page implements HasTable
                     ->color('success')
                     ->url(fn (Profile $record) => static::whatsappUrl($record))
                     ->openUrlInNewTab()
-                    ->visible(fn (Profile $record) => static::whatsappUrl($record) !== null),
+                    // Once the office number runs on the API, the WhatsApp app on the
+                    // office phone no longer works: send through the API instead.
+                    ->visible(fn (Profile $record) => ! WhatsAppCloud::enabled() && static::whatsappUrl($record) !== null),
+                Action::make('sendRequest')
+                    ->label(fn (Profile $record) => $record->photo_asked_at ? 'Send again' : 'Send photo request')
+                    ->color('success')
+                    ->visible(fn (Profile $record) => WhatsAppCloud::enabled() && static::whatsappDigits($record) !== null)
+                    ->modalHeading(fn (Profile $record) => "Send the photo request to {$record->matri_id}?")
+                    ->modalDescription(fn (Profile $record) => 'Sends the approved photo message ('.WhatsAppCloud::photoTemplate().') on WhatsApp to +'.static::whatsappDigits($record).'.')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('language')
+                            ->options(WhatsAppCloud::LANGUAGES)
+                            ->default(fn (Profile $record) => WhatsAppCloud::languageFor($record))
+                            ->required(),
+                    ])
+                    ->action(function (Profile $record, array $data): void {
+                        $sent = static::sendRequest($record, $data['language'] ?? null);
+                        $sent->status === 'failed'
+                            ? Notification::make()->title('Not sent')->body($sent->note)->danger()->send()
+                            : Notification::make()->title("Photo request sent to {$record->matri_id}")->success()->send();
+                    }),
                 Action::make('markAsked')
                     ->label(fn (Profile $record) => $record->photo_asked_at ? 'Asked again' : 'Mark as asked')
                     ->color('gray')
@@ -170,6 +226,41 @@ class MembersWithoutPhoto extends Page implements HasTable
                     ->color('gray')
                     ->url(fn (Profile $record) => UserResource::profileViewUrl($record)),
             ])
+            ->bulkActions([
+                \Filament\Actions\BulkAction::make('sendRequests')
+                    ->label('Send photo request on WhatsApp')
+                    ->color('success')
+                    ->visible(fn () => WhatsAppCloud::enabled())
+                    ->modalHeading('Send the photo request to the selected members?')
+                    ->modalDescription('Members asked in the last '.self::RESEND_AFTER_DAYS.' days and members without a usable number are skipped. At most '.self::BULK_LIMIT.' at a time. Meta charges per message (about Rs 0.12 for profile_photo_missing, Rs 0.86 for photo_request).')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('language')
+                            ->options(['auto' => 'Kannada for Kannada speakers, English for others'] + WhatsAppCloud::LANGUAGES)
+                            ->default('auto')
+                            ->required(),
+                    ])
+                    ->deselectRecordsAfterCompletion()
+                    ->action(function (\Illuminate\Support\Collection $records, array $data): void {
+                        $sent = $failed = $skipped = 0;
+                        $error = null;
+                        foreach ($records as $record) {
+                            if ($sent + $failed >= self::BULK_LIMIT || static::whatsappDigits($record) === null
+                                || ($record->photo_asked_at && \Illuminate\Support\Carbon::parse($record->photo_asked_at)->gt(now()->subDays(self::RESEND_AFTER_DAYS)))) {
+                                $skipped++;
+                                continue;
+                            }
+                            $message = static::sendRequest($record, ($data['language'] ?? 'auto') === 'auto' ? null : $data['language']);
+                            $message->status === 'failed' ? $failed++ : $sent++;
+                            $error ??= $message->status === 'failed' ? $message->note : null;
+                        }
+
+                        Notification::make()
+                            ->title("Photo request sent to {$sent} ".($sent === 1 ? 'member' : 'members'))
+                            ->body(trim(($skipped ? "{$skipped} skipped. " : '').($failed ? "{$failed} failed: {$error}" : '')) ?: null)
+                            ->{$failed ? 'warning' : 'success'}()
+                            ->send();
+                    }),
+            ])
             ->emptyStateHeading('Every active member has a photo')
             ->paginated([25, 50, 100]);
     }
@@ -178,6 +269,10 @@ class MembersWithoutPhoto extends Page implements HasTable
     {
         $total = static::query()->count();
         $asked = static::query()->whereHas('profileNotes', fn ($n) => $n->where('note', 'like', self::NOTE_PREFIX . '%'))->count();
+
+        if (WhatsAppCloud::enabled()) {
+            return "{$total} active members have no photo; {$asked} have been asked. Send photo request sends the approved WhatsApp message from the office number (tick several members to send to all of them). Photos they send back are added to their profile for approval automatically, and their replies appear in the WhatsApp Inbox.";
+        }
 
         return "{$total} active members have no photo; {$asked} have been asked. Click WhatsApp to open a ready-made message on this phone or computer (WhatsApp Web), send it from the office number, then mark the member as asked. When they reply with a photo, open their profile and upload it.";
     }

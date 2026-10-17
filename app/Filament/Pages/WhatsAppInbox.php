@@ -214,6 +214,41 @@ class WhatsAppInbox extends Page
         $this->markRead();
     }
 
+    /**
+     * Outside the 24-hour window only an approved template can go out: this
+     * one asks the member to reply, which opens the window again.
+     */
+    public function sendReplyWaiting(string $language = 'en'): void
+    {
+        if (! $this->selected || $this->windowHoursLeft() !== null) {
+            return;
+        }
+
+        $recent = WhatsAppMessage::where('wa_id', $this->selected)->where('direction', WhatsAppMessage::OUT)
+            ->where('note', 'template:'.WhatsAppCloud::TEMPLATE_REPLY_WAITING)->where('created_at', '>=', now()->subDay())->exists();
+        if ($recent) {
+            Notification::make()->title('Already sent today')
+                ->body('The member was asked to reply in the last 24 hours. Wait for their reply, or call them.')->warning()->send();
+
+            return;
+        }
+
+        $profile = $this->selectedProfile();
+        $name = $profile?->full_name ?? WhatsAppMessage::where('wa_id', $this->selected)->whereNotNull('contact_name')->latest('id')->value('contact_name');
+        $message = app(WhatsAppInboxService::class)->sendTemplate(
+            $this->selected,
+            WhatsAppCloud::TEMPLATE_REPLY_WAITING,
+            $language,
+            [WhatsAppCloud::firstName($name)],
+            auth()->id(),
+            $profile?->id,
+        );
+
+        $message->status === 'failed'
+            ? Notification::make()->title('Not sent')->body($message->note)->danger()->send()
+            : Notification::make()->title('Sent. Their reply will open the chat again.')->success()->send();
+    }
+
     public function linkMember(?string $matriId = null): void
     {
         $matriId = strtoupper(trim($matriId ?? $this->linkMatriId));

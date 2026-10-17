@@ -313,3 +313,20 @@ it('shows a member\'s photo to staff only, fetched once from Meta', function () 
     Http::assertSentCount(2); // media lookup + download, then served from the kept copy
     Storage::disk('local')->assertExists("whatsapp-media/{$msg->id}");
 });
+
+it('asks the member to reply with the approved template once the 24 hours are over', function () {
+    waInboxAsAdmin();
+    $old = WhatsAppMessage::create(['direction' => 'in', 'wa_message_id' => 'wamid.OLD2', 'wa_id' => '919845012345', 'profile_id' => 2, 'type' => 'text', 'body' => 'Hello?', 'status' => 'received']);
+    $old->forceFill(['created_at' => now()->subHours(30)])->save();
+
+    Livewire::test(\App\Filament\Pages\WhatsAppInbox::class)
+        ->call('open', '919845012345')
+        ->assertSee('Ask them to reply')
+        ->call('sendReplyWaiting', 'en')
+        ->call('sendReplyWaiting', 'en'); // second click the same day does nothing
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($r) => $r['template']['name'] === 'reply_waiting'
+        && $r['template']['components'][0]['parameters'][0]['text'] === 'Asha');
+    expect(WhatsAppMessage::where('direction', 'out')->value('body'))->toBe('Hi Asha, the Kudla Matrimony team has a reply to your message. Please reply to this message (any text is fine) and we will answer you here straight away.');
+});

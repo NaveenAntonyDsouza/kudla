@@ -146,3 +146,61 @@ it('is hidden where photos by WhatsApp are switched off', function () {
     \App\Models\SiteSetting::setValue('photo_via_whatsapp', '0');
     expect(MembersWithoutPhoto::canAccess())->toBeFalse();
 });
+
+/* ── Through the WhatsApp API (Oct 2026) ───────────────────────────── */
+
+function wpEnableApi(): void
+{
+    Schema::dropIfExists('whatsapp_messages');
+    (require base_path('database/migrations/2026_10_16_000001_create_whatsapp_messages_table.php'))->up();
+    \App\Models\SiteSetting::setValue('wa_cloud_enabled', '1');
+    \App\Models\SiteSetting::setValue('wa_cloud_phone_number_id', '1112223334');
+    \App\Support\WhatsAppCloud::storeSecret('wa_cloud_access_token', 'EAA-test-token');
+    \Illuminate\Support\Facades\Http::fake([
+        'graph.facebook.com/*' => \Illuminate\Support\Facades\Http::response(['messages' => [['id' => 'wamid.T'.uniqid()]]]),
+    ]);
+}
+
+it('sends the approved photo request with the name and member ID, and marks the member asked', function () {
+    wpEnableApi();
+
+    Livewire::test(MembersWithoutPhoto::class)
+        ->assertTableActionHidden('whatsapp', Profile::find(2))
+        ->callTableAction('sendRequest', Profile::find(2), ['language' => 'kn']);
+
+    \Illuminate\Support\Facades\Http::assertSent(fn ($r) => $r['to'] === '971501234567'
+        && $r['template']['name'] === 'profile_photo_missing'
+        && $r['template']['language']['code'] === 'kn'
+        && $r['template']['components'][0]['parameters'][0]['text'] === 'Asha'
+        && $r['template']['components'][0]['parameters'][1]['text'] === 'KM100002');
+
+    $out = \App\Models\WhatsAppMessage::first();
+    expect($out->type)->toBe('template')
+        ->and($out->profile_id)->toBe(2)
+        ->and($out->body)->toContain('ನಮಸ್ಕಾರ Asha')->toContain('KM100002')
+        ->and(ProfileNote::where('profile_id', 2)->value('note'))->toStartWith(MembersWithoutPhoto::NOTE_PREFIX)
+        ->and(MembersWithoutPhoto::query()->find(2)->photo_asked_at)->not->toBeNull();
+});
+
+it('sends to several members at once, skipping anyone asked this week', function () {
+    wpEnableApi();
+    ProfileNote::create(['profile_id' => 4, 'admin_user_id' => 1, 'note_type' => 'whatsapp', 'note' => MembersWithoutPhoto::NOTE_PREFIX.' asked.']);
+
+    Livewire::test(MembersWithoutPhoto::class)
+        ->callTableBulkAction('sendRequests', Profile::whereIn('id', [2, 4])->get(), ['language' => 'auto']);
+
+    \Illuminate\Support\Facades\Http::assertSentCount(1);
+    expect(\App\Models\WhatsAppMessage::pluck('profile_id')->all())->toBe([2]);
+});
+
+it('can use the friendlier marketing template instead', function () {
+    wpEnableApi();
+    \App\Models\SiteSetting::setValue('wa_cloud_photo_template', 'photo_request');
+
+    MembersWithoutPhoto::sendRequest(Profile::with(['contactInfo', 'user'])->find(4));
+
+    \Illuminate\Support\Facades\Http::assertSent(fn ($r) => $r['template']['name'] === 'photo_request'
+        && $r['template']['language']['code'] === 'en'
+        && $r['to'] === '919845088888');
+    expect(\App\Models\WhatsAppMessage::value('body'))->toStartWith('Hi Meera, this is the Kudla Matrimony team.');
+});

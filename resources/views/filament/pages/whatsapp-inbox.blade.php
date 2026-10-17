@@ -120,10 +120,10 @@
                                 {{ $m->created_at?->format('j M, g:i a') }}
                                 @if ($m->direction === 'out')
                                     &middot; {{ $m->status === 'read' ? 'Read' : ($m->status === 'delivered' ? 'Delivered' : ucfirst((string) $m->status)) }}
-                                    @if ($m->note === 'auto-reply' || $m->note === 'photo-reply') &middot; automatic @endif
+                                    @if ($m->note === 'auto-reply' || $m->note === 'photo-reply') &middot; automatic @elseif ($m->type === 'template') &middot; approved message @endif
                                 @endif
                             </div>
-                            @if ($m->note && ! in_array($m->note, ['auto-reply', 'photo-reply', 'test']))
+                            @if ($m->note && ! in_array($m->note, ['auto-reply', 'photo-reply', 'test']) && (! str_starts_with($m->note, 'template:') || $m->status === 'failed'))
                                 <div class="wa-note">{{ $m->note }}</div>
                             @endif
                         </div>
@@ -139,7 +139,17 @@
                         </form>
                         <p style="font-size:.7rem;opacity:.6;margin-top:.35rem;">Enter sends, Shift+Enter for a new line. You can reply freely for {{ $hoursLeft }} more {{ $hoursLeft === 1 ? 'hour' : 'hours' }} (WhatsApp's 24-hour rule).</p>
                     @else
-                        <p style="font-size:.8rem;opacity:.75;">WhatsApp only allows a free reply within 24 hours of the member's last message. Ask them to message the office number, or call them.</p>
+                        <p style="font-size:.8rem;opacity:.75;">WhatsApp only allows a free reply within 24 hours of the member's last message. Send the approved "please reply" message: when they answer, you can write to them freely again.</p>
+                        @php $lang = \App\Support\WhatsAppCloud::languageFor($profile); @endphp
+                        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem;">
+                            <x-filament::button size="sm" color="success" wire:click="sendReplyWaiting('{{ $lang }}')" wire:loading.attr="disabled">
+                                Ask them to reply ({{ \App\Support\WhatsAppCloud::LANGUAGES[$lang] }})
+                            </x-filament::button>
+                            @php $other = $lang === 'en' ? 'kn' : 'en'; @endphp
+                            <x-filament::button size="sm" color="gray" wire:click="sendReplyWaiting('{{ $other }}')" wire:loading.attr="disabled">
+                                In {{ \App\Support\WhatsAppCloud::LANGUAGES[$other] }}
+                            </x-filament::button>
+                        </div>
                     @endif
                 </div>
             @endif
