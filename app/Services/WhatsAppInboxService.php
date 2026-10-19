@@ -246,8 +246,8 @@ class WhatsAppInboxService
             'kn' => "ನಮಸ್ಕಾರ {{1}}, ನಾವು ಕುಡ್ಲ ಮ್ಯಾಟ್ರಿಮೋನಿ ತಂಡ. ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ {{2}} ನಲ್ಲಿ ಇನ್ನೂ ಫೋಟೋ ಇಲ್ಲ. ಫೋಟೋ ಇರುವ ಪ್ರೊಫೈಲ್‌ಗಳಿಗೆ ಕುಟುಂಬಗಳಿಂದ ಹೆಚ್ಚು ಪ್ರತಿಕ್ರಿಯೆಗಳು ಬರುತ್ತವೆ.\n\nನಿಮ್ಮ ಒಂದು ಸ್ಪಷ್ಟವಾದ, ಇತ್ತೀಚಿನ ಫೋಟೋವನ್ನು ಈ ಸಂದೇಶಕ್ಕೆ ಉತ್ತರವಾಗಿ ಕಳುಹಿಸಿ. ನಾವೇ ಅದನ್ನು ನಿಮ್ಮ ಪ್ರೊಫೈಲ್‌ಗೆ ಸೇರಿಸುತ್ತೇವೆ.",
         ],
         WhatsAppCloud::TEMPLATE_PHOTO_MISSING => [
-            'en' => 'Hi {{1}}, your Kudla Matrimony profile {{2}} has no profile photo. To add one, reply to this message with a clear, recent photo of yourself and the Kudla Matrimony team will add it to your profile.',
-            'kn' => 'ನಮಸ್ಕಾರ {{1}}, ನಿಮ್ಮ ಕುಡ್ಲ ಮ್ಯಾಟ್ರಿಮೋನಿ ಪ್ರೊಫೈಲ್ {{2}} ನಲ್ಲಿ ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಇಲ್ಲ. ಫೋಟೋ ಸೇರಿಸಲು, ನಿಮ್ಮ ಒಂದು ಸ್ಪಷ್ಟವಾದ, ಇತ್ತೀಚಿನ ಫೋಟೋವನ್ನು ಈ ಸಂದೇಶಕ್ಕೆ ಉತ್ತರವಾಗಿ ಕಳುಹಿಸಿ. ಕುಡ್ಲ ಮ್ಯಾಟ್ರಿಮೋನಿ ತಂಡ ಅದನ್ನು ನಿಮ್ಮ ಪ್ರೊಫೈಲ್‌ಗೆ ಸೇರಿಸುತ್ತದೆ.',
+            'en' => 'Hi {{1}}, your Kudla Matrimony profile {{2}} does not have a profile photo yet. To add one, simply reply to this message with a clear, recent photo of yourself and the Kudla Matrimony team will add it to your profile for you. You can also add it yourself using the button below.',
+            'kn' => 'ನಮಸ್ಕಾರ {{1}}, ನಿಮ್ಮ ಕುಡ್ಲ ಮ್ಯಾಟ್ರಿಮೋನಿ ಪ್ರೊಫೈಲ್ {{2}} ನಲ್ಲಿ ಇನ್ನೂ ಪ್ರೊಫೈಲ್ ಫೋಟೋ ಇಲ್ಲ. ಫೋಟೋ ಸೇರಿಸಲು, ನಿಮ್ಮ ಒಂದು ಸ್ಪಷ್ಟವಾದ, ಇತ್ತೀಚಿನ ಫೋಟೋವನ್ನು ಈ ಸಂದೇಶಕ್ಕೆ ಉತ್ತರವಾಗಿ ಕಳುಹಿಸಿ, ಕುಡ್ಲ ಮ್ಯಾಟ್ರಿಮೋನಿ ತಂಡ ಅದನ್ನು ನಿಮ್ಮ ಪ್ರೊಫೈಲ್‌ಗೆ ಸೇರಿಸುತ್ತದೆ. ಕೆಳಗಿನ ಬಟನ್ ಬಳಸಿ ನೀವೇ ಕೂಡ ಸೇರಿಸಬಹುದು.',
         ],
         WhatsAppCloud::TEMPLATE_REPLY_WAITING => [
             'en' => 'Hi {{1}}, the Kudla Matrimony team has a reply to your message. Please reply to this message (any text is fine) and we will answer you here straight away.',

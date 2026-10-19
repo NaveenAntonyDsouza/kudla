@@ -115,7 +115,7 @@ class WhatsAppSettings extends Page implements HasForms
                         Forms\Components\Select::make('wa_cloud_photo_template')
                             ->label('Message sent from Members Without Photo')
                             ->options([
-                                WhatsAppCloud::TEMPLATE_PHOTO_MISSING => 'profile_photo_missing: plain notice (Utility, about Rs 0.12 each)',
+                                WhatsAppCloud::TEMPLATE_PHOTO_MISSING => 'profile_photo_missing: account notice with an "Add photo" button (Utility, about Rs 0.12 each)',
                                 WhatsAppCloud::TEMPLATE_PHOTO_REQUEST => 'photo_request: friendlier, with an "Add it myself" button (Marketing, about Rs 0.86 each)',
                             ])
                             ->required()
