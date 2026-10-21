@@ -22,7 +22,12 @@
     // Cache shortlisted IDs to avoid N+1 queries
     static $shortlistedIds = null;
     if ($shortlistedIds === null && !$isGuest) {
-        $shortlistedIds = \App\Models\Shortlist::where('profile_id', auth()->user()->profile->id)->pluck('shortlisted_profile_id')->toArray();
+        // A logged-in account may have no member profile (an admin, or a member
+        // whose profile was removed): nothing is shortlisted then.
+        $viewerProfileId = auth()->user()->profile?->id;
+        $shortlistedIds = $viewerProfileId
+            ? \App\Models\Shortlist::where('profile_id', $viewerProfileId)->pluck('shortlisted_profile_id')->toArray()
+            : [];
     }
     $isShortlisted = $shortlistedIds !== null && in_array($p->id, $shortlistedIds);
     $profileUrl = $isGuest ? route('login') : route('profile.view', $p);
