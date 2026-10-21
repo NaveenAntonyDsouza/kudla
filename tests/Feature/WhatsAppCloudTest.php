@@ -102,7 +102,8 @@ beforeEach(function () {
     ]);
 
     Http::fake([
-        'graph.facebook.com/v25.0/1112223334/messages' => Http::response(['messages' => [['id' => 'wamid.OUT'.uniqid()]]]),
+        // A fresh id per send, as Meta does (the table keeps ids unique).
+        'graph.facebook.com/v25.0/1112223334/messages' => fn () => Http::response(['messages' => [['id' => 'wamid.OUT'.uniqid('', true)]]]),
         'graph.facebook.com/v25.0/MEDIA1' => Http::response(['url' => 'https://lookaside.fbsbx.com/media/MEDIA1', 'mime_type' => 'image/png']),
         'lookaside.fbsbx.com/*' => Http::response(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='), 200, ['Content-Type' => 'image/png']),
     ]);
@@ -329,4 +330,40 @@ it('asks the member to reply with the approved template once the 24 hours are ov
     Http::assertSent(fn ($r) => $r['template']['name'] === 'reply_waiting'
         && $r['template']['components'][0]['parameters'][0]['text'] === 'Asha');
     expect(WhatsAppMessage::where('direction', 'out')->value('body'))->toBe('Hi Asha, the Kudla Matrimony team has a reply to your message. Please reply to this message (any text is fine) and we will answer you here straight away.');
+});
+
+/* ── Staff email alerts ────────────────────────────────────────────── */
+
+it('emails staff about a new message, once per member every 30 minutes', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    SiteSetting::setValue('contact_email', 'office@example.com');
+
+    waPost([['id' => 'wamid.A1', 'from' => '919845012345', 'type' => 'text', 'text' => ['body' => "Hi, what's the fee?"]]])->assertOk();
+    waPost([['id' => 'wamid.A2', 'from' => '919845012345', 'type' => 'text', 'text' => ['body' => 'Hello?']]])->assertOk();
+
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\WhatsAppMessageAlert::class, 1);
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\WhatsAppMessageAlert::class, function ($mail) {
+        $text = $mail->render();
+
+        return $mail->hasTo('office@example.com')
+            && $mail->envelope()->subject === 'WhatsApp: new message from Asha Salian (KM100002)'
+            && str_contains($text, "Message: Hi, what's the fee?")
+            && str_contains($text, 'whats-app-inbox?chat=919845012345');
+    });
+});
+
+it('sends alerts to the chosen address, says what happened to a photo, and can be switched off', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    SiteSetting::setValue('wa_cloud_alert_email', 'staff@example.com');
+    $this->mock(ImageProcessingService::class, fn ($m) => $m->shouldReceive('processUpload')->once()
+        ->andReturn(['original' => 'o.png', 'full' => 'f.webp', 'medium' => 'm.webp', 'thumb' => 't.webp', 'driver' => 'public']));
+
+    waPost([['id' => 'wamid.P9', 'from' => '919845012345', 'type' => 'image', 'image' => ['id' => 'MEDIA1']]])->assertOk();
+
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\WhatsAppMessageAlert::class, fn ($mail) => $mail->hasTo('staff@example.com')
+        && str_contains($mail->render(), 'Added to KM100002 as a profile photo'));
+
+    SiteSetting::setValue('wa_cloud_alert_enabled', '0');
+    waPost([['id' => 'wamid.P10', 'from' => '919900011111', 'type' => 'text', 'text' => ['body' => 'Hi']]])->assertOk();
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\WhatsAppMessageAlert::class, 1);
 });

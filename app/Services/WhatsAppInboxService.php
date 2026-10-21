@@ -6,9 +6,12 @@ use App\Models\Profile;
 use App\Models\ProfilePhoto;
 use App\Models\SiteSetting;
 use App\Models\WhatsAppMessage;
+use App\Mail\WhatsAppMessageAlert;
 use App\Support\WhatsAppCloud;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -39,6 +42,55 @@ class WhatsAppInboxService
     public static function defaultPhotoReply(): string
     {
         return 'Thank you, we have received your photo. It will appear on your profile ({id}) once our team has checked it.';
+    }
+
+    /** Members writing again within this window don't send another staff email. */
+    public const ALERT_QUIET_MINUTES = 30;
+
+    /**
+     * Email staff about a new incoming message (Settings -> WhatsApp API ->
+     * Email alerts), at most once per number every ALERT_QUIET_MINUTES.
+     * Never throws: an alert must not break message handling.
+     */
+    public function alertStaff(WhatsAppMessage $message): void
+    {
+        try {
+            if ($message->direction !== WhatsAppMessage::IN
+                || SiteSetting::getValue('wa_cloud_alert_enabled', '1') !== '1') {
+                return;
+            }
+            $to = trim((string) SiteSetting::getValue('wa_cloud_alert_email', ''))
+                ?: trim((string) SiteSetting::getValue('contact_email', ''))
+                ?: (string) config('mail.from.address');
+            if (! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+                return;
+            }
+            if (! Cache::add('wa-alert:'.$message->wa_id, 1, now()->addMinutes(self::ALERT_QUIET_MINUTES))) {
+                return; // already emailed about this number recently
+            }
+
+            $profile = $message->profile_id ? Profile::find($message->profile_id) : null;
+            $sender = $profile
+                ? trim($profile->full_name.' ('.$profile->matri_id.')')
+                : ($message->contact_name ? $message->contact_name.' (not linked to a member)' : 'a number not linked to a member');
+
+            $preview = match (true) {
+                filled($message->body) && in_array($message->type, ['text', 'button', 'interactive'], true) => 'Message: '.mb_strimwidth((string) $message->body, 0, 500, '...'),
+                $message->media_id !== null => ucfirst($message->type).($message->body ? ' with caption: '.mb_strimwidth((string) $message->body, 0, 300, '...') : '')
+                    .($message->note ? "\n".$message->note : ''),
+                default => ucfirst($message->type).' message',
+            };
+
+            Mail::to($to)->send(new WhatsAppMessageAlert(
+                $message,
+                $sender,
+                $preview,
+                route('filament.admin.pages.whats-app-inbox', ['chat' => $message->wa_id]),
+                self::ALERT_QUIET_MINUTES,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('WhatsApp staff alert not sent', ['message' => $message->id, 'error' => $e->getMessage()]);
+        }
     }
 
     public function process(WhatsAppMessage $message): void

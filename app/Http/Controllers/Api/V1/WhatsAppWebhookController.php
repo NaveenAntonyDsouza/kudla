@@ -59,8 +59,18 @@ class WhatsAppWebhookController extends Controller
 
         foreach ($new as $id) {
             dispatch(function () use ($id) {
+                // Exactly once per message, whatever runs the after-response callbacks.
+                if (! \Illuminate\Support\Facades\Cache::add('wa-processed:'.$id, 1, now()->addDay())) {
+                    return;
+                }
                 if ($message = WhatsAppMessage::find($id)) {
-                    app(WhatsAppInboxService::class)->process($message);
+                    $inbox = app(WhatsAppInboxService::class);
+                    try {
+                        $inbox->process($message);
+                    } finally {
+                        // After processing, so the email can say what happened to a photo.
+                        $inbox->alertStaff($message->fresh() ?? $message);
+                    }
                 }
             })->afterResponse();
         }

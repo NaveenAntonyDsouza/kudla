@@ -61,6 +61,8 @@ class WhatsAppSettings extends Page implements HasForms
             'wa_cloud_auto_reply' => SiteSetting::getValue('wa_cloud_auto_reply', ''),
             'wa_cloud_photo_reply' => SiteSetting::getValue('wa_cloud_photo_reply', ''),
             'wa_cloud_photo_template' => WhatsAppCloud::photoTemplate(),
+            'wa_cloud_alert_enabled' => SiteSetting::getValue('wa_cloud_alert_enabled', '1') === '1',
+            'wa_cloud_alert_email' => SiteSetting::getValue('wa_cloud_alert_email', ''),
         ]);
     }
 
@@ -110,6 +112,20 @@ class WhatsAppSettings extends Page implements HasForms
                     ])
                     ->columns(2),
 
+                \Filament\Schemas\Components\Section::make('Email alerts')
+                    ->description('An email when a member writes to the WhatsApp number, so nobody has to keep the inbox open.')
+                    ->schema([
+                        Forms\Components\Toggle::make('wa_cloud_alert_enabled')
+                            ->label('Email me about new WhatsApp messages')
+                            ->helperText('At most one email per member every '.\App\Services\WhatsAppInboxService::ALERT_QUIET_MINUTES.' minutes, with a link that opens the chat.'),
+                        Forms\Components\TextInput::make('wa_cloud_alert_email')
+                            ->label('Send alerts to')
+                            ->email()
+                            ->placeholder(fn () => SiteSetting::getValue('contact_email', '') ?: (string) config('mail.from.address'))
+                            ->helperText('Leave empty to use the contact email shown.'),
+                    ])
+                    ->columns(2),
+
                 \Filament\Schemas\Components\Section::make('Photo requests')
                     ->schema([
                         Forms\Components\Select::make('wa_cloud_photo_template')
@@ -150,7 +166,8 @@ class WhatsAppSettings extends Page implements HasForms
 
         SiteSetting::setValue('wa_cloud_enabled', ! empty($data['wa_cloud_enabled']) ? '1' : '0');
         SiteSetting::setValue('wa_cloud_auto_reply_enabled', ! empty($data['wa_cloud_auto_reply_enabled']) ? '1' : '0');
-        foreach (['wa_cloud_phone_number_id', 'wa_cloud_waba_id', 'wa_cloud_auto_reply', 'wa_cloud_photo_reply', 'wa_cloud_photo_template'] as $key) {
+        SiteSetting::setValue('wa_cloud_alert_enabled', ! empty($data['wa_cloud_alert_enabled']) ? '1' : '0');
+        foreach (['wa_cloud_phone_number_id', 'wa_cloud_waba_id', 'wa_cloud_auto_reply', 'wa_cloud_photo_reply', 'wa_cloud_photo_template', 'wa_cloud_alert_email'] as $key) {
             SiteSetting::setValue($key, trim((string) ($data[$key] ?? '')));
         }
         foreach (WhatsAppCloud::SECRET_KEYS as $key) {
