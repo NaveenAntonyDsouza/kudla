@@ -3,9 +3,10 @@
     a WhatsApp number and Site Settings → "WhatsApp chat button" is on. The
     chat opens with a message saying what the visitor is looking at and their
     member ID, so whoever answers can help straight away.
+    Hidden from logged-in members outside sign-up/onboarding (WhatsApp::buttonShownOn).
     Inline styles: the live CSS build is not rebuilt on deploy.
 --}}
-@if (\App\Support\WhatsApp::buttonEnabled())
+@if (\App\Support\WhatsApp::buttonEnabled() && \App\Support\WhatsApp::buttonShownOn(request()))
     <a href="{{ \App\Support\WhatsApp::link(\App\Support\WhatsApp::prefilledMessage(request())) }}"
        class="wa-fab" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp" title="Chat with us on WhatsApp"
        onclick="var p = { page_route: @js((string) request()->route()?->getName()) }; if (window.gtag) { gtag('event', 'whatsapp_click', p); } if (window.posthog) { posthog.capture('whatsapp_click', p); }">

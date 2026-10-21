@@ -67,7 +67,7 @@ it('opens the chat saying what the visitor is looking at', function (string $rou
     'registration' => ['register.step3', [], 'Hi Kudla Matrimony, I need help with registration.'],
     'step one' => ['register', [], 'Hi Kudla Matrimony, I need help with registration.'],
     'plans' => ['membership.index', [], 'Hi Kudla Matrimony, I have a question about membership plans.'],
-    'a profile' => ['profile.view', ['profile' => 'km100500'], "Hi Kudla Matrimony, I'd like to know more about profile KM100500."],
+    'a profile' => ['profile.view', ['profile' => 'km100500'], 'Hi Kudla Matrimony, I have a question.'],
     'anything else' => ['home', [], 'Hi Kudla Matrimony, I have a question.'],
 ]);
 
@@ -77,3 +77,26 @@ it('is on every page layout', function () {
     }
     expect(file_get_contents(resource_path('views/auth/register-step1.blade.php')))->toContain('<x-whatsapp-button />');
 });
+
+it('hides the button from logged-in members except while signing up or finishing their profile', function (?string $routeName, bool $loggedIn, bool $shown) {
+    if ($loggedIn) {
+        $user = new \App\Models\User();
+        $user->id = 7;
+        auth()->setUser($user);
+    }
+    $request = Request::create('/x');
+    if ($routeName) {
+        $route = (new Route('GET', '/x', []))->name($routeName);
+        $route->bind($request);
+        $request->setRouteResolver(fn () => $route);
+    }
+
+    expect(WhatsApp::buttonShownOn($request))->toBe($shown);
+})->with([
+    'visitor, home' => ['home', false, true],
+    'visitor, a profile' => ['profile.view', false, true],
+    'member, a profile' => ['profile.view', true, false],
+    'member, dashboard' => ['dashboard', true, false],
+    'member, registration step' => ['register.step3', true, true],
+    'member, onboarding' => ['onboarding.photo', true, true],
+]);

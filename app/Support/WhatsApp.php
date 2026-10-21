@@ -68,8 +68,28 @@ final class WhatsApp
     }
 
     /**
-     * Opening message for the chat button: what the member is looking at and,
-     * when logged in, their member ID — so staff can help without asking.
+     * Whether this page shows the floating button (Oct 2026, owner's call):
+     * visitors yes; logged-in members only while signing up or finishing
+     * their profile. On member pages it covered the profile's Contact tab and
+     * could be mistaken for messaging the member being viewed. Members still
+     * reach the office through the footer and the Contact page.
+     */
+    public static function buttonShownOn(Request $request): bool
+    {
+        if (! auth()->check()) {
+            return true;
+        }
+
+        $route = (string) $request->route()?->getName();
+
+        return $route === 'register' || str_starts_with($route, 'register.') || str_starts_with($route, 'onboarding.');
+    }
+
+    /**
+     * Opening message for the chat button: what the visitor needs help with
+     * and, when logged in, their member ID — so staff can help without asking.
+     * (No "about profile KMxxxx" line since Oct 2026: the button no longer
+     * shows on member pages, and visitors can't open profiles.)
      */
     public static function prefilledMessage(Request $request): string
     {
@@ -80,7 +100,6 @@ final class WhatsApp
             $route === 'register', str_starts_with($route, 'register.') => 'I need help with registration.',
             str_starts_with($route, 'onboarding.') => 'I need help completing my profile.',
             str_starts_with($route, 'membership.') => 'I have a question about membership plans.',
-            $route === 'profile.view' && ($viewed = self::viewedMatriId($request)) => "I'd like to know more about profile {$viewed}.",
             default => 'I have a question.',
         };
 
@@ -88,17 +107,5 @@ final class WhatsApp
         $who = $matriId ? ' My '.LoginIdentifier::memberIdLabel().": {$matriId}." : '';
 
         return "Hi {$site}, {$topic}{$who}";
-    }
-
-    private static function viewedMatriId(Request $request): ?string
-    {
-        foreach ((array) $request->route()?->parameters() as $value) {
-            $id = is_object($value) ? ($value->matri_id ?? null) : (is_string($value) ? $value : null);
-            if (is_string($id) && preg_match('/^[A-Z]{1,5}\d{3,}$/i', $id)) {
-                return strtoupper($id);
-            }
-        }
-
-        return null;
     }
 }
