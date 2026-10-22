@@ -220,7 +220,7 @@ class WhatsAppInbox extends Page
      */
     public function sendReplyWaiting(string $language = 'en'): void
     {
-        if (! $this->selected || $this->windowHoursLeft() !== null) {
+        if (! $this->selected || $this->windowHoursLeft() !== null || ! WhatsAppCloud::templatesEnabled()) {
             return;
         }
 

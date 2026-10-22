@@ -138,6 +138,8 @@
                             <x-filament::button type="submit" color="success" wire:loading.attr="disabled">Send</x-filament::button>
                         </form>
                         <p style="font-size:.7rem;opacity:.6;margin-top:.35rem;">Enter sends, Shift+Enter for a new line. You can reply freely for {{ $hoursLeft }} more {{ $hoursLeft === 1 ? 'hour' : 'hours' }} (WhatsApp's 24-hour rule).</p>
+                    @elseif (! \App\Support\WhatsAppCloud::templatesEnabled())
+                        <p style="font-size:.8rem;opacity:.75;">WhatsApp only allows a free reply within 24 hours of the member's last message. The approved "please reply" message can be sent once a payment card is added in WhatsApp Manager and "Send approved messages" is switched on in Settings &rarr; WhatsApp API. Until then, call the member or message them from the office phone.</p>
                     @else
                         <p style="font-size:.8rem;opacity:.75;">WhatsApp only allows a free reply within 24 hours of the member's last message. Send the approved "please reply" message: when they answer, you can write to them freely again.</p>
                         @php $lang = \App\Support\WhatsAppCloud::languageFor($profile); @endphp

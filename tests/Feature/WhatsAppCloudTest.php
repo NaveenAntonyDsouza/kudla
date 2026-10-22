@@ -317,6 +317,7 @@ it('shows a member\'s photo to staff only, fetched once from Meta', function () 
 
 it('asks the member to reply with the approved template once the 24 hours are over', function () {
     waInboxAsAdmin();
+    SiteSetting::setValue('wa_cloud_templates_enabled', '1');
     $old = WhatsAppMessage::create(['direction' => 'in', 'wa_message_id' => 'wamid.OLD2', 'wa_id' => '919845012345', 'profile_id' => 2, 'type' => 'text', 'body' => 'Hello?', 'status' => 'received']);
     $old->forceFill(['created_at' => now()->subHours(30)])->save();
 
@@ -366,4 +367,18 @@ it('sends alerts to the chosen address, says what happened to a photo, and can b
     SiteSetting::setValue('wa_cloud_alert_enabled', '0');
     waPost([['id' => 'wamid.P10', 'from' => '919900011111', 'type' => 'text', 'text' => ['body' => 'Hi']]])->assertOk();
     \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\WhatsAppMessageAlert::class, 1);
+});
+
+it('does not offer the paid "please reply" message until approved messages are switched on', function () {
+    waInboxAsAdmin();
+    $old = WhatsAppMessage::create(['direction' => 'in', 'wa_message_id' => 'wamid.OLD3', 'wa_id' => '919845012345', 'profile_id' => 2, 'type' => 'text', 'body' => 'Hello?', 'status' => 'received']);
+    $old->forceFill(['created_at' => now()->subHours(30)])->save();
+
+    Livewire::test(\App\Filament\Pages\WhatsAppInbox::class)
+        ->call('open', '919845012345')
+        ->assertDontSee('Ask them to reply')
+        ->assertSee('payment card')
+        ->call('sendReplyWaiting', 'en');
+
+    Http::assertNothingSent();
 });

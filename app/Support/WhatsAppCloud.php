@@ -137,6 +137,22 @@ final class WhatsAppCloud
     public const TEMPLATE_REPLY_WAITING = 'reply_waiting';
     public const LANGUAGES = ['en' => 'English', 'kn' => 'Kannada'];
 
+    /**
+     * Whether staff may send approved templates (photo requests, "please
+     * reply"). Meta charges for these and refuses them until a payment card
+     * is added in WhatsApp Manager, so this is a separate switch, off by
+     * default (Oct 2026: card planned for Nov). Replies inside the 24-hour
+     * window are free and don't depend on it.
+     */
+    public static function templatesEnabled(): bool
+    {
+        try {
+            return self::enabled() && SiteSetting::getValue('wa_cloud_templates_enabled', '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /** Which approved template asks members for a photo (Settings -> WhatsApp API). */
     public static function photoTemplate(): string
     {

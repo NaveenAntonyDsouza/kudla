@@ -188,13 +188,13 @@ class MembersWithoutPhoto extends Page implements HasTable
                     ->color('success')
                     ->url(fn (Profile $record) => static::whatsappUrl($record))
                     ->openUrlInNewTab()
-                    // Once the office number runs on the API, the WhatsApp app on the
-                    // office phone no longer works: send through the API instead.
-                    ->visible(fn (Profile $record) => ! WhatsAppCloud::enabled() && static::whatsappUrl($record) !== null),
+                    // Opens WhatsApp on this phone or computer (the office number), until
+                    // approved messages can be sent through the API (needs Meta's payment card).
+                    ->visible(fn (Profile $record) => ! WhatsAppCloud::templatesEnabled() && static::whatsappUrl($record) !== null),
                 Action::make('sendRequest')
                     ->label(fn (Profile $record) => $record->photo_asked_at ? 'Send again' : 'Send photo request')
                     ->color('success')
-                    ->visible(fn (Profile $record) => WhatsAppCloud::enabled() && static::whatsappDigits($record) !== null)
+                    ->visible(fn (Profile $record) => WhatsAppCloud::templatesEnabled() && static::whatsappDigits($record) !== null)
                     ->modalHeading(fn (Profile $record) => "Send the photo request to {$record->matri_id}?")
                     ->modalDescription(fn (Profile $record) => 'Sends the approved photo message ('.WhatsAppCloud::photoTemplate().') on WhatsApp to +'.static::whatsappDigits($record).'.')
                     ->form([
@@ -230,7 +230,7 @@ class MembersWithoutPhoto extends Page implements HasTable
                 \Filament\Actions\BulkAction::make('sendRequests')
                     ->label('Send photo request on WhatsApp')
                     ->color('success')
-                    ->visible(fn () => WhatsAppCloud::enabled())
+                    ->visible(fn () => WhatsAppCloud::templatesEnabled())
                     ->modalHeading('Send the photo request to the selected members?')
                     ->modalDescription('Members asked in the last '.self::RESEND_AFTER_DAYS.' days and members without a usable number are skipped. At most '.self::BULK_LIMIT.' at a time. Meta charges per message (about Rs 0.12 for profile_photo_missing, Rs 0.86 for photo_request).')
                     ->form([
@@ -270,7 +270,7 @@ class MembersWithoutPhoto extends Page implements HasTable
         $total = static::query()->count();
         $asked = static::query()->whereHas('profileNotes', fn ($n) => $n->where('note', 'like', self::NOTE_PREFIX . '%'))->count();
 
-        if (WhatsAppCloud::enabled()) {
+        if (WhatsAppCloud::templatesEnabled()) {
             return "{$total} active members have no photo; {$asked} have been asked. Send photo request sends the approved WhatsApp message from the office number (tick several members to send to all of them). Photos they send back are added to their profile for approval automatically, and their replies appear in the WhatsApp Inbox.";
         }
 

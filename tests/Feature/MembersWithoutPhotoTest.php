@@ -155,6 +155,7 @@ function wpEnableApi(): void
     (require base_path('database/migrations/2026_10_16_000001_create_whatsapp_messages_table.php'))->up();
     \App\Models\SiteSetting::setValue('wa_cloud_enabled', '1');
     \App\Models\SiteSetting::setValue('wa_cloud_phone_number_id', '1112223334');
+    \App\Models\SiteSetting::setValue('wa_cloud_templates_enabled', '1');
     \App\Support\WhatsAppCloud::storeSecret('wa_cloud_access_token', 'EAA-test-token');
     \Illuminate\Support\Facades\Http::fake([
         'graph.facebook.com/*' => \Illuminate\Support\Facades\Http::response(['messages' => [['id' => 'wamid.T'.uniqid()]]]),
@@ -203,4 +204,13 @@ it('can use the friendlier marketing template instead', function () {
         && $r['template']['language']['code'] === 'en'
         && $r['to'] === '919845088888');
     expect(\App\Models\WhatsAppMessage::value('body'))->toStartWith('Hi Meera, this is the Kudla Matrimony team.');
+});
+
+it('keeps the office-phone WhatsApp button until approved messages are switched on (payment card)', function () {
+    wpEnableApi();
+    \App\Models\SiteSetting::setValue('wa_cloud_templates_enabled', '0');
+
+    Livewire::test(MembersWithoutPhoto::class)
+        ->assertTableActionVisible('whatsapp', Profile::find(2))
+        ->assertTableActionHidden('sendRequest', Profile::find(2));
 });

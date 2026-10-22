@@ -61,6 +61,7 @@ class WhatsAppSettings extends Page implements HasForms
             'wa_cloud_auto_reply' => SiteSetting::getValue('wa_cloud_auto_reply', ''),
             'wa_cloud_photo_reply' => SiteSetting::getValue('wa_cloud_photo_reply', ''),
             'wa_cloud_photo_template' => WhatsAppCloud::photoTemplate(),
+            'wa_cloud_templates_enabled' => SiteSetting::getValue('wa_cloud_templates_enabled', '0') === '1',
             'wa_cloud_alert_enabled' => SiteSetting::getValue('wa_cloud_alert_enabled', '1') === '1',
             'wa_cloud_alert_email' => SiteSetting::getValue('wa_cloud_alert_email', ''),
         ]);
@@ -126,8 +127,12 @@ class WhatsAppSettings extends Page implements HasForms
                     ])
                     ->columns(2),
 
-                \Filament\Schemas\Components\Section::make('Photo requests')
+                \Filament\Schemas\Components\Section::make('Approved messages (photo requests, "please reply")')
+                    ->description('Messages the office starts, sent through Meta. Meta charges for them and refuses them until a payment card is added in WhatsApp Manager -> Payment settings. Replies within 24 hours of a message from the member are free and work either way.')
                     ->schema([
+                        Forms\Components\Toggle::make('wa_cloud_templates_enabled')
+                            ->label('Send approved messages through the WhatsApp API')
+                            ->helperText('Off: Members Without Photo opens WhatsApp on this phone or computer, as before. On: it sends the photo request through the API, and the inbox can ask members to reply.'),
                         Forms\Components\Select::make('wa_cloud_photo_template')
                             ->label('Message sent from Members Without Photo')
                             ->options([
@@ -167,6 +172,7 @@ class WhatsAppSettings extends Page implements HasForms
         SiteSetting::setValue('wa_cloud_enabled', ! empty($data['wa_cloud_enabled']) ? '1' : '0');
         SiteSetting::setValue('wa_cloud_auto_reply_enabled', ! empty($data['wa_cloud_auto_reply_enabled']) ? '1' : '0');
         SiteSetting::setValue('wa_cloud_alert_enabled', ! empty($data['wa_cloud_alert_enabled']) ? '1' : '0');
+        SiteSetting::setValue('wa_cloud_templates_enabled', ! empty($data['wa_cloud_templates_enabled']) ? '1' : '0');
         foreach (['wa_cloud_phone_number_id', 'wa_cloud_waba_id', 'wa_cloud_auto_reply', 'wa_cloud_photo_reply', 'wa_cloud_photo_template', 'wa_cloud_alert_email'] as $key) {
             SiteSetting::setValue($key, trim((string) ($data[$key] ?? '')));
         }
