@@ -321,7 +321,17 @@
                             </button>
 
                             {{-- Notification dropdown --}}
-                            <div x-show="notifOpen" x-cloak class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+                            {{-- On phones the bell sits mid-header, so a panel pinned to it ran off the
+                                 left edge (Oct 2026): below 640px it is pinned to the screen under the
+                                 header instead. Inline CSS: the live build is not rebuilt on deploy. --}}
+                            <style>
+                                @media (max-width: 639px) {
+                                    .notif-panel { position: fixed !important; left: 12px !important; right: 12px !important; top: 68px !important; width: auto !important; max-width: none !important; margin-top: 0 !important; }
+                                    .notif-panel .notif-list { max-height: calc(100vh - 190px) !important; }
+                                }
+                                .notif-msg { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+                            </style>
+                            <div x-show="notifOpen" x-cloak class="notif-panel absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
                                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                                     <h3 class="text-sm font-semibold text-gray-900">Notifications ({{ $unreadNotificationCount ?? 0 }})</h3>
                                     <div class="flex items-center gap-2">
@@ -337,7 +347,7 @@
                                     </div>
                                 </div>
 
-                                <div class="max-h-96 overflow-y-auto">
+                                <div class="notif-list max-h-96 overflow-y-auto">
                                     @php $notifs = $recentNotifications ?? ['today' => collect(), 'yesterday' => collect(), 'previous' => collect()]; @endphp
                                     @php $hasAny = $notifs['today']->count() + $notifs['yesterday']->count() + $notifs['previous']->count(); @endphp
 
@@ -354,7 +364,7 @@
                                                             </div>
                                                             <div class="flex-1 min-w-0">
                                                                 <p class="text-sm font-medium text-gray-900 {{ !$notif->is_read ? 'font-semibold' : '' }}">{{ $notif->title }}</p>
-                                                                <p class="text-xs text-gray-600 truncate">{{ $notif->message }}</p>
+                                                                <p class="notif-msg text-xs text-gray-600">{{ $notif->message }}</p>
                                                                 <p class="text-[10px] text-gray-400 mt-0.5">{{ $notif->created_at->displayTz()->format('d/m/Y h:i A') }}</p>
                                                             </div>
                                                             @if(!$notif->is_read)
