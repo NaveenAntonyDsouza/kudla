@@ -82,12 +82,19 @@ it('draws the header logo at the site height on a page that uses the main layout
         ->not->toContain('style="height: 40px; width: auto"');
 });
 
-it('uses the setting in every header layout, not a fixed class', function () {
-    foreach (['app', 'onboarding', 'public', 'registration'] as $layout) {
-        $blade = file_get_contents(resource_path("views/components/layouts/{$layout}.blade.php"));
-        expect($blade)->toContain('style="height: {{ \App\Support\HeaderLogo::height() }}px; width: auto"')
-            ->not->toContain('alt="{{ $siteName }}" class="h-10"');
+it('uses the setting in every header, not a fixed class', function () {
+    $headers = ['components/layouts/app', 'components/layouts/onboarding', 'components/layouts/public', 'components/layouts/registration',
+        'auth/register-step1', 'auth/register-verify', 'auth/register-verify-email', 'auth/register-complete'];
+    foreach ($headers as $view) {
+        expect(file_get_contents(resource_path("views/{$view}.blade.php")))
+            ->toContain('style="height: {{ \App\Support\HeaderLogo::height() }}px; width: auto"');
     }
+
+    // the sign-up pages draw their own header: no view may keep a fixed-height header logo
+    $fixed = collect(\Illuminate\Support\Facades\File::allFiles(resource_path('views')))
+        ->filter(fn ($f) => preg_match('/\$theme->logo_url \}\}" alt="\{\{ \$siteName \}\}" class="h-10"/', $f->getContents()))
+        ->map(fn ($f) => $f->getRelativePathname())->values()->all();
+    expect($fixed)->toBe([]);
 });
 
 it('saves the height from Theme & Branding and keeps it when colours are reset', function () {

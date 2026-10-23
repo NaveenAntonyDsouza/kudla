@@ -34,7 +34,7 @@
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <a href="/" class="inline-block">
                 @if($theme->logo_url ?? false)
-                    <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" class="h-10">
+                    <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" style="height: {{ \App\Support\HeaderLogo::height() }}px; width: auto">
                 @else
                     <h1 class="text-xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</h1>
                 @endif
