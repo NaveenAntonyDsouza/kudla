@@ -132,6 +132,7 @@ class HomepageSettings extends Page implements HasForms
                                 'tulunadu' => 'Tulu Nadu — The Classic layout with a coastal Tulu Nadu feel: mango-leaf thorana, mallige, kalasha and deepa, palms by the sea; maroon, turmeric and leaf-green colours on the homepage. Uses its own artwork instead of the hero photo.',
                                 'coastal' => 'Coastal — The Classic layout with a simple, secular Mangalorean coastline: sunset over the Arabian Sea, coconut palms, a Mangalore-tiled house; no religious symbols. Maroon, gold and cream on the homepage. Uses its own artwork instead of the hero photo.',
                                 'parish' => 'Parish — The Classic layout with a Catholic feel: stained-glass window and cross, dove and lilies, a short verse (1 Cor 13:4); blue, white and gold on the homepage. Uses its own artwork instead of the hero photo.',
+                                'garland' => 'Garland — Festive and modern: a twilight sky in your theme colours hung with marigold-and-jasmine garlands, a floating search card, warm ivory sections, numbered steps and community chips. Made for purple and marigold; follows the site theme colours. Uses its own artwork instead of the hero photo.',
                             ], fn ($design) => $design !== 'tulunadu' || static::offersTuluNadu(), ARRAY_FILTER_USE_KEY))
                             ->default('classic')
                             ->required()
