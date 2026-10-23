@@ -48,7 +48,9 @@
 
         $metaDescription = $pageSeo?->meta_description ?? ($metaDescription ?? $defaultMetaDesc);
         $canonicalUrl = $canonicalUrl ?? url()->current();
-        $ogImage = $pageSeo?->og_image_url ?? ($ogImage ?? ($theme->logo_url ?? null));
+        // Absolute URL, with the site's share image before the header logo
+        // (link crawlers ignore relative paths; see App\Support\ShareImage)
+        $ogImage = \App\Support\ShareImage::for($pageSeo?->og_image_url, $ogImage ?? null);
 
         $siteEmail = \App\Models\SiteSetting::getValue('email', '');
         $sitePhone = \App\Models\SiteSetting::getValue('phone', '');
@@ -79,7 +81,7 @@
     @endif
 
     {{-- Twitter Card --}}
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="{{ \App\Support\ShareImage::twitterCard($ogImage) }}">
     <meta name="twitter:title" content="{{ $fullTitle }}">
     <meta name="twitter:description" content="{{ Str::limit(strip_tags($metaDescription), 160) }}">
     @if($ogImage)
@@ -115,7 +117,7 @@
         '@type' => 'Organization',
         'name' => $siteName,
         'url' => url('/'),
-        'logo' => ($theme->logo_url ?? false) ? $theme->logo_url : null,
+        'logo' => \App\Support\ShareImage::logo(),
         'email' => $siteEmail ?: null,
         'telephone' => $sitePhone ?: null,
         'address' => $siteAddress ? ['@type' => 'PostalAddress', 'streetAddress' => $siteAddress] : null,

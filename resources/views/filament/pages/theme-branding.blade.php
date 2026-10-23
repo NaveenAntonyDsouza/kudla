@@ -72,6 +72,24 @@
                 <img src="{{ $theme->favicon_url }}" alt="Current Favicon" style="height: 32px; width: 32px;">
             </div>
         @endif
+        @if($shareImage = \App\Support\ShareImage::siteImage())
+            <div style="padding: 16px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.3); background: rgba(128,128,128,0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-size: 13px; font-weight: 500; opacity: 0.7;">Current Share Image:</span>
+                    <button
+                        type="button"
+                        wire:click="removeShareImage"
+                        wire:confirm="Remove the share image? Shared links will show the site logo instead."
+                        style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 12px; font-weight: 500; color: #fff; background: #dc2626; border: none; border-radius: 4px; cursor: pointer;"
+                        onmouseover="this.style.background='#b91c1c'"
+                        onmouseout="this.style.background='#dc2626'"
+                    >
+                        &times; Remove Share Image
+                    </button>
+                </div>
+                <img src="{{ $shareImage }}" alt="Current Share Image" style="height: 105px; width: 200px; object-fit: contain; border: 1px solid rgba(128,128,128,0.3);">
+            </div>
+        @endif
     </div>
 
     {{-- Live Color Preview --}}

@@ -7,6 +7,7 @@
     $seoDescription = $seoSettings?->meta_description
         ?: \App\Models\SiteSetting::getValue('meta_description_default', '')
         ?: \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match') . ' - ' . $seoSiteName . '. Register free and find your perfect life partner.';
+    $seoImage = \App\Support\ShareImage::for($seoSettings?->og_image_url);
 @endphp
 <meta name="description" content="{{ Str::limit(strip_tags($seoDescription), 160) }}">
 <meta name="robots" content="{{ $robots ?? 'index, follow' }}">
@@ -16,3 +17,8 @@
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:site_name" content="{{ $seoSiteName }}">
 <meta property="og:type" content="website">
+@if($seoImage)
+<meta property="og:image" content="{{ $seoImage }}">
+<meta name="twitter:card" content="{{ \App\Support\ShareImage::twitterCard($seoImage) }}">
+<meta name="twitter:image" content="{{ $seoImage }}">
+@endif

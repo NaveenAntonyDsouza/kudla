@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\ThemeSetting;
+use App\Support\ShareImage;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -93,8 +94,17 @@ class ThemeBranding extends Page implements HasForms
                             ->directory('branding')
                             ->disk('public')
                             ->helperText('Recommended: 32x32 or 64x64 PNG. Leave empty to keep current.'),
+
+                        Forms\Components\FileUpload::make('share_image_upload')
+                            ->label('Share Image')
+                            ->image()
+                            ->maxSize(2048)
+                            ->acceptedFileTypes(['image/png', 'image/jpeg'])
+                            ->directory('branding')
+                            ->disk('public')
+                            ->helperText('Picture shown when a link to the site is shared on WhatsApp, Facebook or X. 1200x630 PNG or JPG, logo on a solid background. Without one, the site logo is used. Leave empty to keep current.'),
                     ])
-                    ->columns(2),
+                    ->columns(3),
 
                 \Filament\Schemas\Components\Section::make('Primary Colors')
                     ->description('Main brand color used for buttons, links, and accents.')
@@ -229,6 +239,12 @@ class ThemeBranding extends Page implements HasForms
             $updateData['favicon_url'] = '/storage/' . $faviconUpload;
         }
 
+        // Handle share image upload (a site setting, not a theme column)
+        $shareImageUpload = $data['share_image_upload'] ?? null;
+        if ($shareImageUpload) {
+            \App\Models\SiteSetting::setValue(ShareImage::SETTING, '/storage/' . $shareImageUpload);
+        }
+
         $theme->update($updateData);
 
         // Clear theme cache
@@ -322,6 +338,23 @@ class ThemeBranding extends Page implements HasForms
 
             Notification::make()
                 ->title('Favicon removed successfully')
+                ->success()
+                ->send();
+        }
+    }
+
+    public function removeShareImage(): void
+    {
+        $shareImage = ShareImage::siteImage();
+        if ($shareImage) {
+            if (str_starts_with($shareImage, '/storage/')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete(str_replace('/storage/', '', $shareImage));
+            }
+
+            \App\Models\SiteSetting::setValue(ShareImage::SETTING, '');
+
+            Notification::make()
+                ->title('Share image removed. Shared links now show the site logo.')
                 ->success()
                 ->send();
         }
