@@ -230,7 +230,7 @@
                     <!-- Logo -->
                     <a href="/dashboard" class="flex items-center gap-2">
                         @if($theme->logo_url ?? false)
-                            <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" class="h-10">
+                            <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" style="height: {{ \App\Support\HeaderLogo::height() }}px; width: auto">
                         @else
                             <span class="text-xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</span>
                         @endif
@@ -492,7 +492,7 @@
                     <!-- Logo -->
                     <a href="/" class="flex items-center gap-2">
                         @if($theme->logo_url ?? false)
-                            <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" class="h-10">
+                            <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" style="height: {{ \App\Support\HeaderLogo::height() }}px; width: auto">
                         @else
                             <span class="text-xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</span>
                         @endif

@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\ThemeSetting;
+use App\Support\HeaderLogo;
 use App\Support\ShareImage;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -67,6 +68,7 @@ class ThemeBranding extends Page implements HasForms
             'custom_body_font' => $bodyIsCustom ? $currentBody : '',
             'current_logo_url' => $theme?->logo_url,
             'current_favicon_url' => $theme?->favicon_url,
+            'header_logo_height' => HeaderLogo::height(),
         ]);
     }
 
@@ -84,7 +86,7 @@ class ThemeBranding extends Page implements HasForms
                             ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'])
                             ->directory('branding')
                             ->disk('public')
-                            ->helperText('Recommended: PNG or SVG, max height 40px. Leave empty to keep current logo.'),
+                            ->helperText('PNG or SVG, cropped close to the lettering. Shown in the header at the height set below. Leave empty to keep current logo.'),
 
                         Forms\Components\FileUpload::make('favicon_upload')
                             ->label('Favicon')
@@ -103,6 +105,16 @@ class ThemeBranding extends Page implements HasForms
                             ->directory('branding')
                             ->disk('public')
                             ->helperText('Picture shown when a link to the site is shared on WhatsApp, Facebook or X. 1200x630 PNG or JPG, logo on a solid background. Without one, the site logo is used. Leave empty to keep current.'),
+
+                        Forms\Components\TextInput::make('header_logo_height')
+                            ->label('Logo height in the header')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(HeaderLogo::MIN)
+                            ->maxValue(HeaderLogo::MAX)
+                            ->suffix('px')
+                            ->required()
+                            ->helperText('How tall the logo shows at the top of the website. ' . HeaderLogo::DEFAULT . ' suits a wide one-line logo; a stacked logo needs about 48. Between ' . HeaderLogo::MIN . ' and ' . HeaderLogo::MAX . '.'),
                     ])
                     ->columns(3),
 
@@ -245,6 +257,8 @@ class ThemeBranding extends Page implements HasForms
             \App\Models\SiteSetting::setValue(ShareImage::SETTING, '/storage/' . $shareImageUpload);
         }
 
+        \App\Models\SiteSetting::setValue(HeaderLogo::SETTING, (string) HeaderLogo::clamp($data['header_logo_height'] ?? HeaderLogo::DEFAULT));
+
         $theme->update($updateData);
 
         // Clear theme cache
@@ -362,7 +376,9 @@ class ThemeBranding extends Page implements HasForms
 
     public function resetToDefaults(): void
     {
+        // keep the other fields (fonts, logo height): fill() replaces the whole form state
         $this->form->fill([
+            ...($this->data ?? []),
             'primary_color' => '#8B1D91',
             'primary_hover' => '#6B1571',
             'primary_light' => '#F3E8F7',
