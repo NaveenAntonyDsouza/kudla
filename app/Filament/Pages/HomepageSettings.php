@@ -78,6 +78,17 @@ class HomepageSettings extends Page implements HasForms
             'show_success_stories' => ($settings['show_success_stories'] ?? '1') === '1',
             'show_faq_section' => ($settings['show_faq_section'] ?? '1') === '1',
 
+            // Extra sections on the Garland & Harmony designs (Oct 2026). Personal
+            // matchmaking is OFF until the site offers the service.
+            'show_plans_section' => ($settings['show_plans_section'] ?? '1') === '1',
+            'show_safety_section' => ($settings['show_safety_section'] ?? '1') === '1',
+            'show_browse_section' => ($settings['show_browse_section'] ?? '1') === '1',
+            'show_contact_section' => ($settings['show_contact_section'] ?? '1') === '1',
+            'show_assisted_matchmaking' => ($settings['show_assisted_matchmaking'] ?? '0') === '1',
+            'assisted_title' => $settings['assisted_title'] ?? '',
+            'assisted_text' => $settings['assisted_text'] ?? '',
+            'assisted_button_text' => $settings['assisted_button_text'] ?? '',
+
             // Featured Profiles options
             'featured_profiles_count' => $settings['featured_profiles_count'] ?? '8',
             'featured_profiles_manual_only' => ($settings['featured_profiles_manual_only'] ?? '0') === '1',
@@ -133,6 +144,7 @@ class HomepageSettings extends Page implements HasForms
                                 'coastal' => 'Coastal — The Classic layout with a simple, secular Mangalorean coastline: sunset over the Arabian Sea, coconut palms, a Mangalore-tiled house; no religious symbols. Maroon, gold and cream on the homepage. Uses its own artwork instead of the hero photo.',
                                 'parish' => 'Parish — The Classic layout with a Catholic feel: stained-glass window and cross, dove and lilies, a short verse (1 Cor 13:4); blue, white and gold on the homepage. Uses its own artwork instead of the hero photo.',
                                 'garland' => 'Garland — Festive and modern: a twilight sky in your theme colours hung with marigold-and-jasmine garlands, a floating search card, warm ivory sections, numbered steps and community chips. Made for purple and marigold; follows the site theme colours. Uses its own artwork instead of the hero photo.',
+                                'harmony' => 'Harmony — The Garland layout made culture- and religion-neutral: two flowing ribbons that meet and twist together (no flowers, symbols or people), a floating search card, ivory sections, numbered steps. Follows the site theme colours. Uses its own artwork instead of the hero photo.',
                             ], fn ($design) => $design !== 'tulunadu' || static::offersTuluNadu(), ARRAY_FILTER_USE_KEY))
                             ->default('classic')
                             ->required()
@@ -249,7 +261,7 @@ class HomepageSettings extends Page implements HasForms
                             ->helperText('The showcase of VIP / featured / recent members.'),
                         Forms\Components\Toggle::make('show_communities_section')
                             ->label('Community Browse')
-                            ->helperText('The "browse by community" chips grouped by religion.'),
+                            ->helperText('The "browse by community" chips grouped by religion. On Garland / Harmony you can use "Browse profiles by" below instead, which lists every religion A–Z.'),
                         Forms\Components\Toggle::make('show_why_choose_us')
                             ->label('Why Choose Us')
                             ->helperText('The feature highlights edited under "Why Choose Us" above.'),
@@ -259,6 +271,47 @@ class HomepageSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('show_faq_section')
                             ->label('FAQ')
                             ->helperText('The frequently-asked-questions preview.'),
+                    ])
+                    ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Garland & Harmony sections')
+                    ->description('Extra homepage sections on the Garland and Harmony designs. Turn each on or off.')
+                    ->schema([
+                        Forms\Components\Toggle::make('show_plans_section')
+                            ->label('Membership Plans')
+                            ->helperText('Your active plans side by side, live from Membership Plans.'),
+                        Forms\Components\Toggle::make('show_safety_section')
+                            ->label('Safety & Privacy')
+                            ->helperText('How profiles, photos and contact details are protected, safety tips, and "for marriage, not dating".'),
+                        Forms\Components\Toggle::make('show_browse_section')
+                            ->label('Browse profiles by')
+                            ->helperText('Tabs for city & district, NRI, religion & community (all A–Z), mother tongue, profession, second marriage. Only links that have members.'),
+                        Forms\Components\Toggle::make('show_contact_section')
+                            ->label('Contact & Help')
+                            ->helperText('Phone, WhatsApp, email and office address from Site Settings.'),
+                        Forms\Components\Toggle::make('show_assisted_matchmaking')
+                            ->label('Personal Matchmaking')
+                            ->helperText('Introduces a staff-assisted matchmaking service with a "Talk to us" WhatsApp button. Turn on only when you offer it.')
+                            ->live()
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('assisted_title')
+                            ->label('Matchmaking title')
+                            ->placeholder('Personal Matchmaking')
+                            ->maxLength(60)
+                            ->visible(fn ($get) => (bool) $get('show_assisted_matchmaking')),
+                        Forms\Components\TextInput::make('assisted_button_text')
+                            ->label('Matchmaking button')
+                            ->placeholder('Talk to Our Team')
+                            ->maxLength(30)
+                            ->visible(fn ($get) => (bool) $get('show_assisted_matchmaking')),
+                        Forms\Components\Textarea::make('assisted_text')
+                            ->label('Matchmaking text')
+                            ->placeholder('Busy, or living abroad? Let our team search for you. A relationship advisor learns what you and your family are looking for, shortlists suitable profiles and speaks to families on your behalf.')
+                            ->rows(3)
+                            ->maxLength(400)
+                            ->helperText('Leave blank to use the text shown in grey.')
+                            ->columnSpanFull()
+                            ->visible(fn ($get) => (bool) $get('show_assisted_matchmaking')),
                     ])
                     ->columns(2),
 
@@ -427,7 +480,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities'];
+        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities', 'show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,

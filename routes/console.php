@@ -58,3 +58,7 @@ Schedule::command('members:remind-photo', ['--scheduled', '--delay' => 3])->dail
 // Interests unanswered for 30 days expire; each sender gets one in-app note
 // (only where interest_expiry_enabled = 1)
 Schedule::command('interests:expire', ['--scheduled'])->dailyAt('07:30')->withoutOverlapping();
+
+// Homepage "Browse profiles by" links (Garland / Harmony designs): rebuilt in the
+// background so no visitor waits for the ~600 member counts behind them
+Schedule::call(fn () => \App\Support\HomeBrowse::refresh())->hourly()->name('home-browse-refresh')->withoutOverlapping();

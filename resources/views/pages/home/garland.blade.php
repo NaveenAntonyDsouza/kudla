@@ -1,4 +1,9 @@
 {{--
+    "Garland" and "Harmony" homepage designs (Oct 2026, Kudla in purple and
+    marigold). Harmony (pages/home/harmony) is this page with $variant =
+    'harmony': abstract ribbons instead of the garlands, for a culture- and
+    religion-neutral homepage; everything else is shared.
+
     "Garland" homepage design (Oct 2026, first for Kudla in purple and marigold).
     A twilight sky in the site's theme colours hung with marigold-and-jasmine
     garlands, a floating search card, warm ivory sections, numbered steps and
@@ -12,6 +17,9 @@
     :title="$siteTitle"
     :metaDescription="$siteMetaDesc">
     @php
+        $variant = in_array($variant ?? null, ['garland', 'harmony'], true) ? $variant : 'garland';
+        $divider = 'home-art.' . $variant . '-divider';
+        $section = fn (string $key, string $default = '1') => \App\Models\SiteSetting::getValue($key, $default) === '1';
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
         $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
         $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
@@ -106,11 +114,19 @@
             padding: clamp(132px, calc(10.8vw + 24px), 236px) 0 128px;
         }
         .home-garland .g-art { position: absolute; top: 0; left: 0; width: 100%; height: auto; pointer-events: none; }
+        /* Harmony: ribbons fill the sky on wide screens, a slim band above the headline on phones */
+        .home-garland .g-hero-harmony { padding: 92px 0 128px; }
+        .home-garland .h-art { position: absolute; pointer-events: none; }
+        .home-garland .h-art-wide { inset: 0; width: 100%; height: 100%; }
+        .home-garland .h-art-narrow { display: none; top: 0; left: 0; width: 100%; height: auto; }
         .home-garland .g-art-narrow { display: none; }
         @media (max-width: 767px) {
             .home-garland .g-hero { padding: calc(25vw + 18px) 0 96px; }
             .home-garland .g-art-wide { display: none; }
             .home-garland .g-art-narrow { display: block; }
+            .home-garland .g-hero-harmony { padding: calc(42vw + 6px) 0 96px; }
+            .home-garland .h-art-wide { display: none; }
+            .home-garland .h-art-narrow { display: block; }
         }
         .home-garland .g-hero-grid { position: relative; display: flex; flex-direction: column; align-items: center; gap: 32px; }
         .home-garland .g-hero-copy { text-align: center; }
@@ -227,11 +243,11 @@
         @media (prefers-reduced-motion: reduce) { .home-garland * { transition: none !important; } }
     </style>
 
-    <div class="home-garland">
+    <div class="home-garland variant-{{ $variant }}">
 
     {{-- 1. Hero with the registration form --}}
-    <section class="g-hero">
-        <x-home-art.garland-hero />
+    <section class="g-hero g-hero-{{ $variant }}">
+        <x-dynamic-component :component="'home-art.' . $variant . '-hero'" />
         <div class="g-wrap">
             <div class="g-hero-grid">
                 <div class="g-hero-copy">
@@ -502,7 +518,7 @@
     {{-- 3. How it works --}}
     <section class="g-section g-ivory">
         <div class="g-wrap">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">How It Works</h2>
             <div class="g-steps">
                 <div class="g-step">
@@ -528,7 +544,7 @@
     @if($showWhyChooseUs)
     <section class="g-section g-white">
         <div class="g-wrap">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Why Choose {{ $siteName }}?</h2>
             <p class="g-lead">We understand the importance of finding the right life partner. Here's what makes us different.</p>
             <div class="g-why cols-{{ $whyCols }}">
@@ -551,7 +567,7 @@
     @if($showSuccessStories && $successStories->count() > 0)
     <section class="g-section g-lav">
         <div class="g-wrap">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Success Stories</h2>
             <p class="g-lead">Real couples who found their perfect match through {{ $siteName }}.</p>
 
@@ -625,7 +641,7 @@
     @if($showFeatured && $featuredProfiles->count() > 0)
     <section class="g-section g-white">
         <div class="g-wrap">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Featured Profiles</h2>
             <p class="g-lead">Hand-picked profiles from our community</p>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" style="margin-top: 40px;">
@@ -643,11 +659,25 @@
     </section>
     @endif
 
+    {{-- New sections (Oct 2026), each with its own switch: Admin → Homepage Content → Garland & Harmony sections --}}
+    @if($section('show_plans_section'))
+        @include('pages.home.sections.plans')
+    @endif
+    @if($section('show_assisted_matchmaking', '0'))
+        @include('pages.home.sections.matchmaking')
+    @endif
+    @if($section('show_safety_section'))
+        @include('pages.home.sections.safety')
+    @endif
+    @if($section(\App\Support\HomeBrowse::SETTING))
+        @include('pages.home.sections.browse')
+    @endif
+
     {{-- 6. Browse by community (links as in Classic) --}}
     @if($showCommunities && $communities->count() > 0)
     <section class="g-section g-ivory">
         <div class="g-wrap">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Browse by Community</h2>
 
             @foreach($communities as $religion => $group)
@@ -704,7 +734,7 @@
     @if($faqs->count() > 0)
     <section class="g-section g-white">
         <div class="g-wrap" style="max-width: 48rem;">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Frequently Asked Questions</h2>
             <p class="g-lead">Have questions? We've got answers.</p>
 
@@ -737,7 +767,7 @@
     @if($playStoreUrl || $appStoreUrl)
     <section class="g-section g-lav">
         <div class="g-wrap" style="text-align: center;">
-            <x-home-art.garland-divider />
+            <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Get the {{ $siteName }} App</h2>
             <p class="g-lead">Find your perfect match on the go. Browse profiles, send interests, and chat — all from your mobile phone.</p>
             <div style="display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 28px;">
@@ -764,6 +794,10 @@
     </section>
     @endif
 
+    @if($section('show_contact_section'))
+        @include('pages.home.sections.contact')
+    @endif
+
     {{-- 9. Closing call to action (Homepage Content → CTA) --}}
     @php
         $ctaTitle = \App\Models\SiteSetting::getValue('cta_title', 'Register Free Today');
@@ -772,7 +806,7 @@
     @endphp
     <section class="g-cta">
         <div class="g-wrap">
-            <x-home-art.garland-divider :light="true" />
+            <x-dynamic-component :component="$divider" :light="true" />
             <h2>{{ $ctaTitle }}</h2>
             <p>{{ $ctaDesc }}</p>
             <a href="/register" class="g-btn g-btn-marigold">{{ $ctaButton }}</a>

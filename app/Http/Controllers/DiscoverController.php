@@ -254,6 +254,40 @@ class DiscoverController extends Controller
     }
 
     /**
+     * Homepage "Browse profiles by" links (Oct 2026): the subcategories of a
+     * category that have members, as ['label' => 'Bunts', 'url' => …] with
+     * "Profiles" dropped from the label. Biggest first, or A–Z when asked
+     * (religion and community lists are A–Z so no group comes first).
+     *
+     * @return array<int, array{label: string, url: string}>
+     */
+    public static function homeLinks(string $category, int $limit = 0, bool $alphabetical = false): array
+    {
+        $config = config("discover.{$category}");
+        if (! $config || isset($config['direct_filter'])) {
+            return [];
+        }
+
+        try {
+            $subs = self::withMembers($category, app(self::class)->resolveSubcategories($config));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [];
+        }
+
+        $links = collect($subs)->map(fn ($sub) => [
+            'label' => trim(preg_replace('/\s+Profiles$/i', '', $sub['label'])),
+            'url' => route('discover.results', [$category, $sub['slug']]),
+        ]);
+        if ($alphabetical) {
+            $links = $links->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE);
+        }
+
+        return ($limit > 0 ? $links->take($limit) : $links)->values()->all();
+    }
+
+    /**
      * Public profiles per subcategory of a Discover category, biggest first,
      * empty ones left out: [slug => count]. A direct-filter category (e.g.
      * Kannadiga) gives ['' => count]. Plain array, cached 1 hour.

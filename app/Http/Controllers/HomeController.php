@@ -115,7 +115,7 @@ class HomeController extends Controller
         // Pick the homepage template: classic (default) | modern | premium.
         // Admin sets this from Settings -> Homepage Content -> Homepage Design.
         $template = SiteSetting::getValue('homepage_template', 'classic');
-        $template = in_array($template, ['classic', 'modern', 'premium', 'tulunadu', 'parish', 'coastal', 'garland'], true) ? $template : 'classic';
+        $template = in_array($template, ['classic', 'modern', 'premium', 'tulunadu', 'parish', 'coastal', 'garland', 'harmony'], true) ? $template : 'classic';
 
         return view("pages.home.{$template}", compact('communities', 'stats', 'featuredProfiles', 'showFeatured', 'showCommunities', 'showWhyChooseUs', 'showSuccessStories', 'totalProfiles', 'faqs', 'siteTitle', 'siteMetaDesc'));
     }

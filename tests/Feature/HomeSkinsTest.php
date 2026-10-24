@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Blade;
 */
 
 it('offers the two new designs in the admin and lets the homepage use them', function () {
-    expect(file_get_contents(app_path('Http/Controllers/HomeController.php')))->toContain("['classic', 'modern', 'premium', 'tulunadu', 'parish', 'coastal', 'garland']")
+    expect(file_get_contents(app_path('Http/Controllers/HomeController.php')))->toContain("['classic', 'modern', 'premium', 'tulunadu', 'parish', 'coastal', 'garland', 'harmony']")
         ->and(file_get_contents(app_path('Filament/Pages/HomepageSettings.php')))->toContain("'tulunadu' => 'Tulu Nadu")->toContain("'parish' => 'Parish")->toContain("'coastal' => 'Coastal")
         ->and(trim(file_get_contents(resource_path('views/pages/home/tulunadu.blade.php'))))->toEndWith("@include('pages.home.classic', ['skin' => 'tulunadu'])")
         ->and(trim(file_get_contents(resource_path('views/pages/home/parish.blade.php'))))->toEndWith("@include('pages.home.classic', ['skin' => 'parish'])")
