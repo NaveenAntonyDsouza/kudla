@@ -28,7 +28,7 @@
         <div class="g-tabs" role="tablist" aria-label="Browse profiles by">
             @foreach($browseTabs as $key => $tab)
                 <button type="button" role="tab" id="g-tab-{{ $key }}" class="g-tab {{ $loop->first ? 'on' : '' }}"
-                    :class="tab === @js($key) && 'on'" :aria-selected="tab === @js($key)" aria-controls="g-panel-{{ $key }}"
+                    :class="{ 'on': tab === @js($key) }" :aria-selected="tab === @js($key)" aria-controls="g-panel-{{ $key }}"
                     @click="tab = @js($key)">{{ $tab['label'] }}</button>
             @endforeach
         </div>
