@@ -238,6 +238,17 @@ it('builds browse links from Discover pages that have members, without "Profiles
         ->and(\App\Http\Controllers\DiscoverController::homeLinks('kannadiga-matrimony'))->toBe([])
         ->and(\App\Http\Controllers\DiscoverController::homeLinks('no-such-page'))->toBe([]);
 
+    // religions with members get a chip each, A–Z (24 Oct: an array union once dropped them all)
+    Cache::forget('home.browse.tabs');
+    Cache::put('discover.counts.muslim-matrimony', ['sunni' => 2], 60);
+    Cache::put('discover.counts.hindu-matrimony', ['bunts' => 30], 60);
+    Cache::put('discover.counts.jain-matrimony', [], 60);
+    $tabs = \App\Support\HomeBrowse::tabs();
+    expect(array_column($tabs['religion']['religions'], 'label'))->toBe(['Hindu', 'Muslim'])
+        ->and($tabs['religion']['religions'][1]['url'])->toBe(route('discover.category', 'muslim-matrimony'))
+        ->and($tabs['second']['links'][0]['label'])->toBe('Divorced')
+        ->and($tabs['second']['religions'])->toBe([]);
+
     // the hourly rebuild only runs where the homepage shows the tabs
     SiteSetting::setValue('homepage_template', 'classic');
     Cache::put('home.browse.tabs', ['kept' => true], 60);

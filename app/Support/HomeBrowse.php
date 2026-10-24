@@ -76,7 +76,7 @@ class HomeBrowse
 
         return collect($tabs)
             ->filter(fn ($tab) => ! empty($tab['links']) || ! empty($tab['religions']))
-            ->map(fn ($tab) => ['religions' => []] + $tab + ['all_url' => route('discover.category', $tab['all'])])
+            ->map(fn ($tab) => $tab + ['religions' => [], 'all_url' => route('discover.category', $tab['all'])])
             ->all();
     }
 }
