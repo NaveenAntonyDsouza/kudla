@@ -108,9 +108,9 @@ class HomeController extends Controller
 
         // SEO: Homepage-specific title and description
         $siteName = SiteSetting::getValue('site_name', 'Matrimony');
-        $siteTagline = SiteSetting::getValue('tagline', 'Find Your Perfect Match');
+        $siteTagline = SiteSetting::getValue('tagline', 'Find Your Life Partner');
         $siteTitle = "{$siteName} - {$siteTagline} | Free Registration";
-        $siteMetaDesc = "{$siteName} - Trusted matrimony service. Register free, browse verified profiles, and find your perfect life partner. {$stats['members']}+ members, {$stats['marriages']}+ successful marriages.";
+        $siteMetaDesc = "{$siteName} - Trusted matrimony service. Register free, browse verified profiles, and find the right life partner. {$stats['members']}+ members, {$stats['marriages']}+ successful marriages.";
 
         // Pick the homepage template: classic (default) | modern | premium.
         // Admin sets this from Settings -> Homepage Content -> Homepage Design.

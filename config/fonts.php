@@ -25,7 +25,7 @@ return [
             'label' => 'Playfair Display',
             'family' => 'Playfair Display',
             'weights' => '400;700',
-            'preview' => 'Find Your Perfect Match',
+            'preview' => 'Find Your Life Partner',
         ],
         'cormorant_garamond' => [
             'label' => 'Cormorant Garamond',
@@ -70,7 +70,7 @@ return [
             'label' => 'Nunito',
             'family' => 'Nunito',
             'weights' => '400;500;600;700',
-            'preview' => 'Soft, rounded, welcoming — perfect for a friendly brand voice.',
+            'preview' => 'Soft, rounded, welcoming — great for a friendly brand voice.',
         ],
         'dm_sans' => [
             'label' => 'DM Sans',

@@ -1,7 +1,7 @@
 @php
     $theme = \App\Models\ThemeSetting::getTheme();
     $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-    $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
+    $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Life Partner');
     $isLoggedIn = auth()->check();
 @endphp
 <!DOCTYPE html>
@@ -37,7 +37,7 @@
         // SEO values with per-page override > passed props > global defaults
         $metaTitleSuffix = \App\Models\SiteSetting::getValue('meta_title_suffix', '');
         $defaultMetaTitle = \App\Models\SiteSetting::getValue('meta_title_default', $siteName);
-        $defaultMetaDesc = \App\Models\SiteSetting::getValue('meta_description_default', $siteTagline . ' - ' . $siteName . '. Register free and find your perfect life partner.');
+        $defaultMetaDesc = \App\Models\SiteSetting::getValue('meta_description_default', $siteTagline . ' - ' . $siteName . '. Register free and find the right life partner.');
 
         $pageTitle = $pageSeo?->meta_title ?? ($title ?? '');
         if ($pageTitle) {

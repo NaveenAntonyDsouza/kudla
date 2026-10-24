@@ -64,7 +64,7 @@ class DummyContentSeeder extends Seeder
         $stories = [
             [
                 'couple_names' => 'Rahul & Priya',
-                'story' => 'We found each other through this platform and instantly connected over our shared values and love for family. After months of getting to know each other, we tied the knot in a beautiful ceremony. Thank you for helping us find our perfect match!',
+                'story' => 'We found each other through this platform and instantly connected over our shared values and love for family. After months of getting to know each other, we tied the knot in a beautiful ceremony. Thank you for helping us find each other!',
                 'location' => 'Mangalore, Karnataka',
                 'display_order' => 1,
             ],
@@ -82,7 +82,7 @@ class DummyContentSeeder extends Seeder
             ],
             [
                 'couple_names' => 'Suresh & Kavitha',
-                'story' => 'After searching for a long time, we finally found our perfect match here. The detailed profiles and partner preference matching helped us connect with the right person. We are now blessed with a beautiful family and recommend this platform to everyone.',
+                'story' => 'After searching for a long time, we finally found each other here. The detailed profiles and partner preference matching helped us connect with the right person. We are now blessed with a beautiful family and recommend this platform to everyone.',
                 'location' => 'Bangalore, Karnataka',
                 'display_order' => 4,
             ],

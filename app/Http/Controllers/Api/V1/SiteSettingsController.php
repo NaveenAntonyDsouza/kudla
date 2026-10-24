@@ -46,7 +46,7 @@ class SiteSettingsController extends BaseApiController
      *   "data": {
      *     "site": {
      *       "name": "Kudla Matrimony",
-     *       "tagline": "Find Your Perfect Match",
+     *       "tagline": "Find Your Life Partner",
      *       "logo_url": "https://kudlamatrimony.com/storage/branding/logo.png",
      *       "support_email": "support@kudlamatrimony.com"
      *     },

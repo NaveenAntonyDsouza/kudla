@@ -3,8 +3,8 @@
     :metaDescription="$siteMetaDesc">
     @php
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-        $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
-        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
+        $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Life Partner');
+        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Life Partner');
         $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
         $heroImageUrl = \App\Models\SiteSetting::getValue('hero_image_url', '');
     @endphp
@@ -216,7 +216,7 @@
     {{-- 1b. Search Widget (moved below hero) --}}
     <section class="py-6" style="background: linear-gradient(135deg, var(--brand-primary-hover) 0%, var(--brand-secondary) 100%);">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-white font-semibold text-center mb-4">{{ \App\Models\SiteSetting::getValue('search_heading', 'Search for Your Perfect Partner') }}</h2>
+            <h2 class="text-white font-semibold text-center mb-4">{{ \App\Models\SiteSetting::getValue('search_heading', 'Search for Your Life Partner') }}</h2>
             <form action="/search" method="GET" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
                 <div class="text-left">
                     <label class="block text-xs font-medium text-white/80 mb-1">I'm looking for</label>
@@ -407,7 +407,7 @@
     <section class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-4">Success Stories</h2>
-            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto">Real couples who found their perfect match through {{ $siteName }}.</p>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto">Real couples who met through {{ $siteName }}.</p>
 
             <div x-data="{
                 current: 0,
@@ -630,7 +630,7 @@
                 {{-- Right: Content --}}
                 <div class="text-center md:text-left flex-1">
                     <h2 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 mb-4">Get the {{ $siteName }} App</h2>
-                    <p class="text-gray-500 mb-8 max-w-md">Find your perfect match on the go. Browse profiles, send interests, and chat — all from your mobile phone.</p>
+                    <p class="text-gray-500 mb-8 max-w-md">Search for your life partner on the go. Browse profiles, send interests, and chat — all from your mobile phone.</p>
 
                     <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                         @if($playStoreUrl)
@@ -661,7 +661,7 @@
     {{-- 9. CTA Banner (dynamic from admin settings) --}}
     @php
         $ctaTitle = \App\Models\SiteSetting::getValue('cta_title', 'Register Free Today');
-        $ctaDesc = \App\Models\SiteSetting::getValue('cta_description', 'Join thousands of members who have found their perfect match. Registration is free and takes just a few minutes.');
+        $ctaDesc = \App\Models\SiteSetting::getValue('cta_description', 'Join the families who are looking for the right match. Registration is free and takes just a few minutes.');
         $ctaButton = \App\Models\SiteSetting::getValue('cta_button_text', 'Create Your Profile');
     @endphp
     <section class="py-16" style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);">

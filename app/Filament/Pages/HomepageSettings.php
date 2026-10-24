@@ -101,7 +101,7 @@ class HomepageSettings extends Page implements HasForms
 
             // CTA Section
             'cta_title' => $settings['cta_title'] ?? 'Register Free Today',
-            'cta_description' => $settings['cta_description'] ?? 'Join thousands of families who found their perfect match.',
+            'cta_description' => $settings['cta_description'] ?? 'Join the families who are looking for the right match.',
             'cta_button_text' => $settings['cta_button_text'] ?? 'Register Now',
 
             // Why Choose Us Items (stored as JSON)
@@ -168,7 +168,7 @@ class HomepageSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('hero_heading')
                             ->label('Hero Heading')
                             ->maxLength(200)
-                            ->helperText('Big text on homepage hero. e.g., "Find Your Perfect Match in Coastal Karnataka"'),
+                            ->helperText('Big text on homepage hero. e.g., "Find Your Life Partner in Coastal Karnataka"'),
 
                         Forms\Components\TextInput::make('hero_subheading')
                             ->label('Hero Subheading')
@@ -178,7 +178,7 @@ class HomepageSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('search_heading')
                             ->label('Search Box Heading')
                             ->maxLength(200)
-                            ->helperText('Text above the search form. e.g., "Search for Your Perfect Partner"'),
+                            ->helperText('Text above the search form. e.g., "Search for Your Life Partner"'),
                     ]),
 
                 \Filament\Schemas\Components\Section::make('Wording & Labels')

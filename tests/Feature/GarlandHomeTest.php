@@ -122,7 +122,7 @@ it('draws garlands, ornaments and sections from the admin content', function () 
 
     expect($html)->toContain('g-art-wide')->toContain('g-art-narrow')
         ->and(substr_count($html, 'class="g-ornament"'))->toBeGreaterThanOrEqual(5)
-        ->and($html)->toContain('Search for Your Perfect Partner')        // blank admin heading falls back
+        ->and($html)->toContain('Search for Your Life Partner')        // blank admin heading falls back
         ->toContain('How It Works')->toContain('Why Choose')
         ->toContain('Anitha &amp; Prakash')
         ->toContain('href="' . url('/search/quick-search?caste=Bunt+Jain') . '" class="g-chip">Bunt Jain</a>')

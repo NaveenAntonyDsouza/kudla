@@ -27,7 +27,7 @@ class ThemeSetting extends Model
         $theme = Cache::remember('theme_settings', 3600, function () {
             return static::first() ?? new self([
                 'site_name' => 'Matrimony Platform',
-                'tagline' => 'Find Your Perfect Match',
+                'tagline' => 'Find Your Life Partner',
                 'primary_color' => '#8B1D91',
                 'primary_hover' => '#6B1571',
                 'primary_light' => '#F3E8F7',
@@ -43,7 +43,7 @@ class ThemeSetting extends Model
 
             return static::first() ?? new self([
                 'site_name' => 'Matrimony Platform',
-                'tagline' => 'Find Your Perfect Match',
+                'tagline' => 'Find Your Life Partner',
                 'primary_color' => '#8B1D91',
                 'primary_hover' => '#6B1571',
                 'primary_light' => '#F3E8F7',

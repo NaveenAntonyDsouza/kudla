@@ -118,7 +118,7 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('tagline')
                             ->label('Tagline')
                             ->maxLength(200)
-                            ->helperText('Shown on homepage hero section. e.g., "Find Your Perfect Match"'),
+                            ->helperText('Shown on homepage hero section. e.g., "Find Your Life Partner"'),
 
                         Forms\Components\Toggle::make('blog_enabled')
                             ->label('Blog')

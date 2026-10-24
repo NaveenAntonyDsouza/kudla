@@ -6,7 +6,7 @@
     $seoSiteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
     $seoDescription = $seoSettings?->meta_description
         ?: \App\Models\SiteSetting::getValue('meta_description_default', '')
-        ?: \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match') . ' - ' . $seoSiteName . '. Register free and find your perfect life partner.';
+        ?: \App\Models\SiteSetting::getValue('tagline', 'Find Your Life Partner') . ' - ' . $seoSiteName . '. Register free and find the right life partner.';
     $seoImage = \App\Support\ShareImage::for($seoSettings?->og_image_url);
 @endphp
 <meta name="description" content="{{ Str::limit(strip_tags($seoDescription), 160) }}">

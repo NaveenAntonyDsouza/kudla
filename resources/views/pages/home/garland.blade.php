@@ -21,8 +21,8 @@
         $divider = 'home-art.' . $variant . '-divider';
         $section = fn (string $key, string $default = '1') => \App\Models\SiteSetting::getValue($key, $default) === '1';
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-        $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
-        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
+        $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Life Partner');
+        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Life Partner');
         $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
 
         // Colours come from the site theme; the shades below are mixed from it.
@@ -413,7 +413,7 @@
     <section class="g-search-sec">
         <div class="g-wrap">
             <div class="g-search">
-                <h2 class="g-search-title">{{ \App\Models\SiteSetting::getValue('search_heading', '') ?: 'Search for Your Perfect Partner' }}</h2>
+                <h2 class="g-search-title">{{ \App\Models\SiteSetting::getValue('search_heading', '') ?: 'Search for Your Life Partner' }}</h2>
                 <form action="/search" method="GET" class="g-search-grid">
                     <div>
                         <label class="g-label" for="g_s_gender">I'm looking for</label>
@@ -569,7 +569,7 @@
         <div class="g-wrap">
             <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Success Stories</h2>
-            <p class="g-lead">Real couples who found their perfect match through {{ $siteName }}.</p>
+            <p class="g-lead">Real couples who met through {{ $siteName }}.</p>
 
             <div style="margin-top: 52px; position: relative;" x-data="{
                 current: 0,
@@ -769,7 +769,7 @@
         <div class="g-wrap" style="text-align: center;">
             <x-dynamic-component :component="$divider" />
             <h2 class="g-h2">Get the {{ $siteName }} App</h2>
-            <p class="g-lead">Find your perfect match on the go. Browse profiles, send interests, and chat — all from your mobile phone.</p>
+            <p class="g-lead">Search for your life partner on the go. Browse profiles, send interests, and chat — all from your mobile phone.</p>
             <div style="display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 28px;">
                 @if($playStoreUrl)
                     <a href="{{ $playStoreUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-3 bg-gray-900 text-white rounded-xl px-6 py-3 hover:bg-gray-800 transition-colors">
@@ -801,7 +801,7 @@
     {{-- 9. Closing call to action (Homepage Content → CTA) --}}
     @php
         $ctaTitle = \App\Models\SiteSetting::getValue('cta_title', 'Register Free Today');
-        $ctaDesc = \App\Models\SiteSetting::getValue('cta_description', 'Join thousands of members who have found their perfect match. Registration is free and takes just a few minutes.');
+        $ctaDesc = \App\Models\SiteSetting::getValue('cta_description', 'Join the families who are looking for the right match. Registration is free and takes just a few minutes.');
         $ctaButton = \App\Models\SiteSetting::getValue('cta_button_text', 'Create Your Profile');
     @endphp
     <section class="g-cta">

@@ -102,7 +102,7 @@ class SeoSettings extends Page implements HasForms
                             ->label('Default Meta Title')
                             ->maxLength(70)
                             ->helperText('Fallback <title> tag. Max 60-70 characters recommended.')
-                            ->placeholder('e.g., Your Matrimony Site - Find Your Perfect Match'),
+                            ->placeholder('e.g., Your Matrimony Site - Find Your Life Partner'),
 
                         Forms\Components\TextInput::make('meta_title_suffix')
                             ->label('Meta Title Suffix')
@@ -115,7 +115,7 @@ class SeoSettings extends Page implements HasForms
                             ->rows(3)
                             ->maxLength(160)
                             ->helperText('Fallback meta description. Max 155-160 characters.')
-                            ->placeholder('e.g., Find your perfect life partner with our matrimony service...'),
+                            ->placeholder('e.g., Find the right life partner with our matrimony service...'),
 
                         Forms\Components\TextInput::make('seo_region')
                             ->label('Where members are from')

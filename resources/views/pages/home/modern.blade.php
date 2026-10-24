@@ -3,8 +3,8 @@
     :metaDescription="$siteMetaDesc">
     @php
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-        $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
-        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Perfect Match');
+        $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Life Partner');
+        $heroHeading = \App\Models\SiteSetting::getValue('hero_heading', 'Find Your Life Partner');
         $heroSubheading = \App\Models\SiteSetting::getValue('hero_subheading', '');
         $heroImageUrl = \App\Models\SiteSetting::getValue('hero_image_url', '');
         $playStoreUrl = \App\Models\SiteSetting::getValue('app_play_store_url', '');

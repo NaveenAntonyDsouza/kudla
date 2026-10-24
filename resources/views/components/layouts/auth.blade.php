@@ -4,7 +4,7 @@
 @php
     $theme = \App\Models\ThemeSetting::getTheme();
     $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-    $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Perfect Match');
+    $siteTagline = \App\Models\SiteSetting::getValue('tagline', 'Find Your Life Partner');
     $maxWidthClass = match($maxWidth) {
         'sm' => 'max-w-sm',
         'md' => 'max-w-md',

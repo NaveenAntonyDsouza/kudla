@@ -11,7 +11,7 @@ class SiteSettingsSeeder extends Seeder
     {
         $settings = [
             ['key' => 'site_name', 'value' => 'MatrimonyTheme'],
-            ['key' => 'tagline', 'value' => 'Find Your Perfect Match'],
+            ['key' => 'tagline', 'value' => 'Find Your Life Partner'],
             ['key' => 'phone', 'value' => '+91 00000 00000'],
             ['key' => 'whatsapp', 'value' => '+91 00000 00000'],
             ['key' => 'email', 'value' => 'info@example.com'],

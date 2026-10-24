@@ -4981,7 +4981,7 @@ fetch(url, {
     &quot;data&quot;: {
         &quot;site&quot;: {
             &quot;name&quot;: &quot;Kudla Matrimony&quot;,
-            &quot;tagline&quot;: &quot;Find Your Perfect Match&quot;,
+            &quot;tagline&quot;: &quot;Find Your Life Partner&quot;,
             &quot;logo_url&quot;: &quot;https://kudlamatrimony.com/storage/branding/logo.png&quot;,
             &quot;support_email&quot;: &quot;support@kudlamatrimony.com&quot;
         },
