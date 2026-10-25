@@ -15,46 +15,10 @@
             <span class="text-gray-700 font-medium">Search</span>
         </p>
 
-        {{-- Phones: the search-type menu below is desktop-only (lg:block), so
-             Keyword Search and Search by ID couldn't be reached on a phone --}}
-        <style>
-            .srch-mtabs { display: flex; gap: 6px; padding: 4px; margin-bottom: 16px; border-radius: 12px; background: #f3f4f6; }
-            .srch-mtabs button { flex: 1 1 0; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: #4b5563; font-size: 13.5px; font-weight: 600; cursor: pointer; }
-            .srch-mtabs button.on { background: #fff; color: var(--color-primary, #8B1D91); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-            @media (min-width: 1024px) { .srch-mtabs { display: none; } }
-        </style>
-        <div class="srch-mtabs" role="tablist" aria-label="Search type">
-            <button type="button" role="tab" @click="activeTab = 'partner'" :class="activeTab === 'partner' && 'on'" :aria-selected="activeTab === 'partner'">Preferences</button>
-            <button type="button" role="tab" @click="activeTab = 'keyword'" :class="activeTab === 'keyword' && 'on'" :aria-selected="activeTab === 'keyword'">Keyword</button>
-            <button type="button" role="tab" @click="activeTab = 'byid'" :class="activeTab === 'byid' && 'on'" :aria-selected="activeTab === 'byid'">By ID</button>
-        </div>
-
         <div class="flex flex-col lg:flex-row gap-8">
 
-            {{-- ══ LEFT NAV ══ --}}
-            <div class="hidden lg:block lg:w-48 shrink-0">
-                <div class="sticky top-24 space-y-1">
-                    <h2 class="text-base font-semibold text-gray-900 mb-3">Advanced Search</h2>
-                    <button @click="activeTab = 'partner'"
-                        :class="activeTab === 'partner' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
-                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-                        Advanced Search
-                    </button>
-                    <button @click="activeTab = 'keyword'"
-                        :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
-                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
-                        Keyword Search
-                    </button>
-                    <button @click="activeTab = 'byid'"
-                        :class="activeTab === 'byid' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
-                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/></svg>
-                        Search by ID
-                    </button>
-                </div>
-            </div>
+            {{-- ══ Search navigation: the same for visitors and members ══ --}}
+            @include('search._nav', ['current' => ['partner' => 'advanced', 'keyword' => 'keyword', 'byid' => 'byid'][$activeTab] ?? 'advanced'])
 
             {{-- ══ RIGHT: CONTENT ══ --}}
             <div class="flex-1 min-w-0">
@@ -63,14 +27,14 @@
                 <div x-show="activeTab === 'partner'" x-cloak>
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-lg font-semibold text-gray-900">Search by Preferences</h2>
+                            <h2 class="text-lg font-semibold text-gray-900">Advanced Search</h2>
                             @if($prefs)
-                                <a href="{{ route('search.index', ['tab' => 'partner', 'load_prefs' => 1]) }}"
+                                <a href="{{ route('search.advance', ['load_prefs' => 1]) }}"
                                     class="text-sm text-(--color-primary) hover:underline font-medium">Load Partner Preferences</a>
                             @endif
                         </div>
 
-                        <form method="GET" action="{{ route('search.index') }}">
+                        <form method="GET" action="{{ route('search.advance') }}">
                             <input type="hidden" name="search" value="1">
                             <input type="hidden" name="tab" value="partner">
 
@@ -271,7 +235,7 @@
 
                             {{-- Actions --}}
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 pt-4 border-t border-gray-200">
-                                <a href="{{ route('search.index') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">Clear</a>
+                                <a href="{{ route('search.advance') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">Clear</a>
                                 <button type="submit" class="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
                                     Search Partner
                                 </button>
@@ -286,7 +250,7 @@
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Keyword Search</h2>
                         <p class="text-sm text-gray-500 mb-6">Search profiles by name, profession, religion, or any keyword.</p>
-                        <form method="GET" action="{{ route('search.index') }}" class="space-y-4">
+                        <form method="GET" action="{{ route('search.keyword') }}" class="space-y-4">
                             <input type="hidden" name="tab" value="keyword">
                             <div class="float-field">
                                 <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">
@@ -303,7 +267,7 @@
                 <div x-show="activeTab === 'byid'" x-cloak>
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Search by Matrimony ID</h2>
-                        <form method="GET" action="{{ route('search.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+                        <form method="GET" action="{{ route('search.byid') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
                             <input type="hidden" name="tab" value="byid">
                             <div class="float-field flex-1">
                                 <input type="text" name="matri_id" value="{{ request('matri_id') }}" placeholder=" " required

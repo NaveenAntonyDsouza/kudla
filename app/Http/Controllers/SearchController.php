@@ -11,7 +11,13 @@ use Illuminate\Http\Request;
 class SearchController extends Controller
 {
     use ProfileQueryFilters;
-    public function index(Request $request)
+
+    /**
+     * The members' search page. Since Oct 2026 it lives at the same addresses
+     * as the visitors' (/search/advanced-search, /keyword-search, /id-search):
+     * publicSearch() hands members over here with the tab.
+     */
+    public function index(Request $request, ?string $tab = null)
     {
         $user = auth()->user();
         $profile = $user->profile;
@@ -28,7 +34,7 @@ class SearchController extends Controller
             'height_to' => $isMale ? ($profile->height ?? '213 cm - 7 ft 00 inch') : '213 cm - 7 ft 00 inch',
         ];
 
-        $activeTab = $request->get('tab', 'partner');
+        $activeTab = $tab ?? $request->get('tab', 'partner');
 
         // Load partner preferences into search form
         if ($request->boolean('load_prefs') && $prefs) {
@@ -236,6 +242,50 @@ class SearchController extends Controller
      * "relevance" (default) = Profile::scopeDefaultOrder(): paid boosts → finished → photo → recently active → newest
      * Uses subqueries instead of JOINs to avoid ambiguous column issues with baseQuery.
      */
+    /**
+     * Where a members' search with these parameters lives now: keyword →
+     * Keyword Search, Matri ID → Search by ID, filters → Advanced Search results.
+     */
+    public static function memberSearchUrl(array $query): string
+    {
+        $tab = $query['tab'] ?? null;
+        unset($query['tab']);
+        if (filled($query['keyword'] ?? null) || $tab === 'keyword') {
+            return route('search.keyword', $query);
+        }
+        if (filled($query['matri_id'] ?? null) || $tab === 'byid') {
+            return route('search.byid', $query);
+        }
+
+        return route('search.advance', $query ? $query + ['search' => 1] : []);
+    }
+
+    /**
+     * /search (the members' old address): no parameters → Quick Search for
+     * everyone (owner, Oct 2026); an old link with a search in it → the page
+     * that now has it, permanently.
+     */
+    public function legacy(Request $request)
+    {
+        if (! $request->query()) {
+            return redirect()->route('search.quick');
+        }
+
+        return redirect(self::memberSearchUrl($request->query()), 301);
+    }
+
+    /**
+     * "Save this search" for a visitor: log in (or register), then come back to
+     * the same search as a member, where the Save button is.
+     */
+    public function saveForLater(Request $request)
+    {
+        $request->session()->put('url.intended', self::memberSearchUrl($request->query()));
+
+        return redirect()->route('login');
+    }
+
+    /** Relevance (default), newest, recently active — for members and visitors alike (no age sorts). */
     private function applySortOrder(Builder $query, string $sort): Builder
     {
         return match ($sort) {
@@ -244,12 +294,6 @@ class SearchController extends Controller
             'recently_active' => $query->completedFirst()
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
                 ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC'),
-
-            'age_low' => $query->completedFirst()
-                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) ASC'),
-
-            'age_high' => $query->completedFirst()
-                ->orderByRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) DESC'),
 
             // Default: paid boosts → finished → with photo → recently active → newest
             // (Profile::scopeDefaultOrder — one definition for every listing)
@@ -326,13 +370,16 @@ class SearchController extends Controller
      */
     public function publicSearch(string $tab)
     {
-        // Members use the same Search menu as visitors (Oct 2026): Quick Search
-        // shows the same short form (its results open as member results);
-        // Advanced / Keyword / ID open that tab of the members' search page.
-        if (auth()->check() && auth()->user()->profile && $tab !== 'partner') {
-            $memberTab = ['keyword' => 'keyword', 'byid' => 'byid'][$tab] ?? null;
-
-            return redirect()->route('search.index', array_merge(request()->query(), $memberTab ? ['tab' => $memberTab] : []));
+        // One address for visitors and members (Oct 2026). Members: Quick Search
+        // shows the same short form (its results open as member results); the
+        // other three show the members' search page right here.
+        $member = auth()->check() && auth()->user()->profile;
+        if ($member && $tab !== 'partner') {
+            return $this->index(request(), ['keyword' => 'keyword', 'byid' => 'byid'][$tab] ?? 'partner');
+        }
+        // A visitor opening a member's results link (shared, or after logging out)
+        if (! $member && request()->has('search')) {
+            return redirect()->route('search.results.public', request()->except(['search', 'tab']));
         }
 
         $activeTab = $tab;
@@ -362,11 +409,9 @@ class SearchController extends Controller
      */
     public function publicResults()
     {
-        // If logged in, show the member results (a filter search needs the "search" flag)
+        // If logged in, show the member results at the shared address
         if (auth()->check() && auth()->user()->profile) {
-            $isFilterSearch = ! request()->filled('keyword') && ! request()->filled('matri_id');
-
-            return redirect()->route('search.index', array_merge(request()->query(), $isFilterSearch ? ['search' => 1] : []));
+            return redirect(self::memberSearchUrl(request()->query()));
         }
 
         $query = Profile::where('is_active', true)
@@ -484,7 +529,8 @@ class SearchController extends Controller
                 )));
         }
 
-        $results = $query->defaultOrder()->paginate(20)->withQueryString();
+        $currentSort = in_array(request('sort'), ['newest', 'recently_active'], true) ? request('sort') : 'relevance';
+        $results = $this->applySortOrder($query, $currentSort)->paginate(20)->withQueryString();
 
         // Pick a single human label for the results header, tolerating
         // array (multi-select) values for caste/denomination/religion.
@@ -507,7 +553,7 @@ class SearchController extends Controller
             default => route('search.quick', request()->except(['page', 'search_type'])),
         };
 
-        return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl'));
+        return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl', 'currentSort'));
     }
 
     /**

@@ -196,10 +196,29 @@ it('moved Advanced Search to /search/advanced-search and sends the old address t
         ->assertRedirect('/search/advanced-search?gender=female&with_photo=1');
 });
 
-it('sends visitors who open /search to Quick Search, not the login page', function () {
+it('sends everyone who opens /search to Quick Search, and old /search links to their page', function () {
     $this->get('/search')->assertStatus(302)->assertRedirect('/search/quick-search');
-    $this->get('/search?gender=female')->assertRedirect('/search/quick-search?gender=female');
+    // old member links with a search in them now live at the shared addresses
+    $this->get('/search?keyword=teacher')->assertStatus(301)->assertRedirect('/search/keyword-search?keyword=teacher');
+    $this->get('/search?tab=byid&matri_id=KM100123')->assertStatus(301)->assertRedirect('/search/id-search?matri_id=KM100123');
+    $this->get('/search?search=1&age_from=25')->assertStatus(301)->assertRedirect('/search/advanced-search?search=1&age_from=25');
+    // a visitor opening a member's results link sees the visitor results
+    $this->get('/search/advanced-search?search=1&age_from=25')->assertRedirect('/search/results?age_from=25');
     $this->get('/dashboard')->assertRedirect('/login'); // other member pages still ask to log in
+});
+
+it('lets a visitor save a search by logging in and coming back to it', function () {
+    $this->get('/search/save?gender=female&age_from=25')->assertRedirect('/login')
+        ->assertSessionHas('url.intended', route('search.advance', ['gender' => 'female', 'age_from' => 25, 'search' => 1]));
+    expect(file_get_contents(resource_path('views/search/public-results.blade.php')))->toContain("route('search.save-later', request()->except(['page']))")->toContain('Save this search');
+});
+
+it('sorts by relevance, newest or recently active only, for visitors too', function () {
+    $sort = file_get_contents(resource_path('views/search/_sort.blade.php'));
+    expect($sort)->toContain("'recently_active' => 'Recently Active'")->not->toContain('age_low')->not->toContain('Age: Low')
+        ->and(file_get_contents(resource_path('views/search/public-results.blade.php')))->toContain("@include('search._sort'")
+        ->and(file_get_contents(resource_path('views/search/results.blade.php')))->toContain("@include('search._sort'")
+        ->and(file_get_contents(app_path('Http/Controllers/SearchController.php')))->not->toContain("'age_low' =>");
 });
 
 it('shows the same Search menu to visitors and members', function () {
@@ -210,13 +229,13 @@ it('shows the same Search menu to visitors and members', function () {
         expect(substr_count($layout, $item))->toBeGreaterThanOrEqual(4); // desktop + phone, member + visitor
     }
     expect($layout)->not->toContain('>Id Search<')
-        ->not->toContain("route('search.index', ['tab' => 'keyword'])");
+        ->not->toContain("route('search.index', ['tab' => 'keyword'])")
+        ->and(substr_count($layout, "route('saved-searches.index') }}\" class"))->toBe(4);   // Saved Searches in the menu too
 
-    // members: Quick Search shows the same form; the others open their own search tabs;
-    // a filter search from the shared form opens as member results
+    // the same address shows the member page to members (no redirect), the same sidebar for both
     $controller = file_get_contents(app_path('Http/Controllers/SearchController.php'));
-    expect($controller)->toContain("&& \$tab !== 'partner'")
-        ->toContain("['keyword' => 'keyword', 'byid' => 'byid'][\$tab]")
-        ->toContain("\$isFilterSearch ? ['search' => 1] : []")
-        ->and(file_get_contents(resource_path('views/search/public.blade.php')))->toContain("@guest\n                <div class=\"bg-(--color-primary-light)");
+    expect($controller)->toContain("return \$this->index(request(), ['keyword' => 'keyword', 'byid' => 'byid'][\$tab] ?? 'partner');")
+        ->and(file_get_contents(resource_path('views/search/_nav.blade.php')))->toContain("'saved' => ['Saved Searches'")->toContain("'discover' => ['Discover Profiles'")
+        ->and(file_get_contents(resource_path('views/search/public.blade.php')))->toContain("@guest\n                <div class=\"bg-(--color-primary-light)")
+        ->and(file_get_contents(base_path('routes/web.php')))->toContain("->name('search.advance')->middleware('profile.complete.member')");
 });

@@ -28,11 +28,20 @@
                 <span class="text-(--color-primary)">{{ $results->total() }}</span> {{ Str::plural('Matching Profile', $results->total()) }} found
             </h1>
 
+            <div class="flex items-center gap-3 flex-wrap">
+            @include('search._sort', ['currentSort' => $currentSort ?? 'relevance'])
+            {{-- Save this search: log in (or register), then the same search opens as a member, ready to save --}}
+            <a href="{{ route('search.save-later', request()->except(['page'])) }}"
+                class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
+                Save this search
+            </a>
             <a href="{{ $modifySearchUrl }}"
                 class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-(--color-primary) border border-(--color-primary) rounded-lg hover:bg-(--color-primary-light) transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                 Modify Search
             </a>
+            </div>
         </div>
 
         {{-- Results Grid --}}

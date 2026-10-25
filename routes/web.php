@@ -91,13 +91,16 @@ Route::post('/contact-us', [\App\Http\Controllers\ContactController::class, 'sub
 Route::permanentRedirect('/contact', '/contact-us');
 
 // Search (public — accessible without login for SEO)
-Route::get('/search/quick-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.quick');
-Route::get('/search/advanced-search', fn() => app(SearchController::class)->publicSearch('advance'))->name('search.advance');
+Route::get('/search/quick-search', fn() => app(SearchController::class)->publicSearch('partner'))->name('search.quick')->middleware('profile.complete.member');
+Route::get('/search/advanced-search', fn() => app(SearchController::class)->publicSearch('advance'))->name('search.advance')->middleware('profile.complete.member');
 // Old address (until Oct 2026, page renamed "Advanced Search"): permanent redirect, keeping any filters in the link
 Route::get('/search/advance-search', fn () => redirect()->to('/search/advanced-search'.(request()->getQueryString() ? '?'.request()->getQueryString() : ''), 301));
-Route::get('/search/keyword-search', fn() => app(SearchController::class)->publicSearch('keyword'))->name('search.keyword');
-Route::get('/search/id-search', fn() => app(SearchController::class)->publicSearch('byid'))->name('search.byid');
-Route::get('/search/results', [SearchController::class, 'publicResults'])->name('search.results.public');
+Route::get('/search/keyword-search', fn() => app(SearchController::class)->publicSearch('keyword'))->name('search.keyword')->middleware('profile.complete.member');
+Route::get('/search/id-search', fn() => app(SearchController::class)->publicSearch('byid'))->name('search.byid')->middleware('profile.complete.member');
+Route::get('/search/results', [SearchController::class, 'publicResults'])->name('search.results.public')->middleware('profile.complete.member');
+// /search: Quick Search for everyone; old /search?... member links → their page now
+Route::get('/search', [SearchController::class, 'legacy'])->name('search.index');
+Route::get('/search/save', [SearchController::class, 'saveForLater'])->name('search.save-later');
 
 // Discover Profiles (public — accessible without login for SEO)
 Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
@@ -239,7 +242,6 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/unblock/{profile}', [BlockController::class, 'unblock'])->name('unblock.profile');
 
     // Search (authenticated — full functionality)
-    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
     // Matches
     Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');

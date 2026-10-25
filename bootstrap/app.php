@@ -39,13 +39,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // Keep email campaign tags on the way to the login page, so GA4 still
         // credits the email that brought a logged-out member back.
         $middleware->redirectGuestsTo(function (Request $request) {
-            // /search is the members' Advanced Search; a visitor gets the public
-            // Quick Search instead of the login page (owner, Oct 2026). A normal
-            // (302) redirect: after logging in, /search must open for them.
-            if ($request->is('search')) {
-                return '/search/quick-search' . ($request->getQueryString() ? '?' . $request->getQueryString() : '');
-            }
-
             $utm = array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign']), 'is_string');
 
             return '/login' . ($utm ? '?' . http_build_query($utm) : '');
@@ -57,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'profile.complete' => \App\Http\Middleware\EnsureProfileComplete::class,
+            'profile.complete.member' => \App\Http\Middleware\EnsureProfileCompleteWhenLoggedIn::class, // shared visitor/member pages
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);

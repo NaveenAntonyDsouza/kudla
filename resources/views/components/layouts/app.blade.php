@@ -20,6 +20,10 @@
             'home' => 'home',
             'search.results.public' => 'search',
             'search.index' => 'search',
+            'search.quick' => 'search',
+            'search.advance' => 'search',
+            'search.keyword' => 'search',
+            'search.byid' => 'search',
             'login' => 'login',
             'register' => 'register',
             'success-stories.index' => 'happy-stories',
@@ -265,6 +269,7 @@
                                 <a href="{{ route('search.advance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Advanced Search</a>
                                 <a href="{{ route('search.keyword') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Keyword Search</a>
                                 <a href="{{ route('search.byid') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Search by ID</a>
+                                <a href="{{ route('saved-searches.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Saved Searches</a>
                                 <div class="border-t border-gray-100 my-1"></div>
                                 <a href="{{ route('discover.hub') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Discover Profiles</a>
                             </div>
@@ -446,6 +451,7 @@
                     <a href="{{ route('search.advance') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Advanced Search</a>
                     <a href="{{ route('search.keyword') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Keyword Search</a>
                     <a href="{{ route('search.byid') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Search by ID</a>
+                    <a href="{{ route('saved-searches.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Saved Searches</a>
                     <a href="{{ route('discover.hub') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Discover Profiles</a>
 
                     {{-- Matches --}}
@@ -516,6 +522,7 @@
                                 <a href="{{ route('search.advance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Advanced Search</a>
                                 <a href="{{ route('search.keyword') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Keyword Search</a>
                                 <a href="{{ route('search.byid') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Search by ID</a>
+                                <a href="{{ route('saved-searches.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Saved Searches</a>
                                 <div class="border-t border-gray-100 my-1"></div>
                                 <a href="{{ route('discover.hub') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Discover Profiles</a>
                             </div>
@@ -550,6 +557,7 @@
                             <a href="{{ route('search.advance') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Advanced Search</a>
                             <a href="{{ route('search.keyword') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Keyword Search</a>
                             <a href="{{ route('search.byid') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Search by ID</a>
+                            <a href="{{ route('saved-searches.index') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Saved Searches</a>
                             <a href="{{ route('discover.hub') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Discover Profiles</a>
                         </div>
                     </div>

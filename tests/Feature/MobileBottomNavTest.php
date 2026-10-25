@@ -75,12 +75,15 @@ it('stays out of the way where it would clash', function () {
 });
 
 it('lets phone users switch search type, which was desktop-only', function () {
-    $search = file_get_contents(resource_path('views/search/index.blade.php'));
-
-    expect($search)->toContain('class="srch-mtabs" role="tablist"')
-        ->toContain("@click=\"activeTab = 'keyword'\"")
-        ->toContain("@click=\"activeTab = 'byid'\"")
-        ->toContain('@media (min-width: 1024px) { .srch-mtabs { display: none; } }');
+    // Oct 2026: one search navigation for visitors and members (search/_nav), with a phone strip
+    $nav = file_get_contents(resource_path('views/search/_nav.blade.php'));
+    foreach (['index', 'public'] as $page) {
+        expect(file_get_contents(resource_path("views/search/{$page}.blade.php")))->toContain("@include('search._nav'");
+    }
+    expect($nav)->toContain('<nav class="srch-nav-phone"')
+        ->toContain("'keyword' => ['Keyword Search', 'Keyword'")
+        ->toContain("'byid' => ['Search by ID', 'By ID'")
+        ->toContain('@media (min-width: 1024px) { .srch-nav-phone { display: none; }');
 });
 
 it('gives the login page its title back', function () {
