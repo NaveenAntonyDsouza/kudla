@@ -623,7 +623,7 @@
         $playStoreUrl = \App\Models\SiteSetting::getValue('app_play_store_url', '');
         $appStoreUrl = \App\Models\SiteSetting::getValue('app_apple_store_url', '');
     @endphp
-    @if($playStoreUrl || $appStoreUrl)
+    @if(($playStoreUrl || $appStoreUrl) && \App\Models\SiteSetting::getValue('show_app_section', '1') === '1')
     <section class="py-16 bg-white overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="app-cta-layout">

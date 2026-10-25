@@ -264,5 +264,5 @@ it('lets the admin switch each new section on or off, matchmaking off by default
         expect($admin)->toContain("Toggle::make('{$key}')")->toContain("'{$key}' => (\$settings['{$key}']");
     }
     expect($admin)->toContain("'show_assisted_matchmaking' => (\$settings['show_assisted_matchmaking'] ?? '0') === '1'")
-        ->toContain("'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note'];");
+        ->toContain("'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note', 'show_app_section'];");
 });

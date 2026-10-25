@@ -340,7 +340,7 @@
     @endif
 
     {{-- 9. App CTA (if URLs set) --}}
-    @if($playStoreUrl || $appStoreUrl)
+    @if(($playStoreUrl || $appStoreUrl) && \App\Models\SiteSetting::getValue('show_app_section', '1') === '1')
     <section class="py-12 bg-white border-y border-gray-100">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color: var(--brand-primary);">Get the App</p>

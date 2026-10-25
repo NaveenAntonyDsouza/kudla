@@ -308,7 +308,7 @@
     @endif
 
     {{-- 9. App CTA — minimalist strip --}}
-    @if($playStoreUrl || $appStoreUrl)
+    @if(($playStoreUrl || $appStoreUrl) && \App\Models\SiteSetting::getValue('show_app_section', '1') === '1')
     <section class="py-14 bg-white border-y border-gray-200">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>

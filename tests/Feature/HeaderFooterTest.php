@@ -118,3 +118,13 @@ it('puts the contact details in one band at the top of the visitor footer, with 
         ->and(substr_count($app, 'class="ft-social"'))->toBe(5)
         ->and(substr_count($app, 'SiteContact::address()'))->toBe(1);
 });
+
+it('lets the admin hide the homepage "Get the App" section on every design', function () {
+    foreach (['classic', 'modern', 'premium', 'garland'] as $design) {
+        expect(file_get_contents(resource_path("views/pages/home/{$design}.blade.php")))
+            ->toContain("@if((\$playStoreUrl || \$appStoreUrl) && \App\Models\SiteSetting::getValue('show_app_section', '1') === '1')");
+    }
+    expect(file_get_contents(app_path('Filament/Pages/HomepageSettings.php')))
+        ->toContain("Toggle::make('show_app_section')")
+        ->toContain("'show_app_section' => (\$settings['show_app_section'] ?? '1') === '1'");
+});

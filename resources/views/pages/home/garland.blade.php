@@ -764,7 +764,7 @@
         $playStoreUrl = \App\Models\SiteSetting::getValue('app_play_store_url', '');
         $appStoreUrl = \App\Models\SiteSetting::getValue('app_apple_store_url', '');
     @endphp
-    @if($playStoreUrl || $appStoreUrl)
+    @if(($playStoreUrl || $appStoreUrl) && \App\Models\SiteSetting::getValue('show_app_section', '1') === '1')
     <section class="g-section g-lav">
         <div class="g-wrap" style="text-align: center;">
             <x-dynamic-component :component="$divider" />
