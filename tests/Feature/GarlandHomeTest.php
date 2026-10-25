@@ -266,3 +266,14 @@ it('lets the admin switch each new section on or off, matchmaking off by default
     expect($admin)->toContain("'show_assisted_matchmaking' => (\$settings['show_assisted_matchmaking'] ?? '0') === '1'")
         ->toContain("'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note', 'show_app_section'];");
 });
+
+it('centres two Why Choose cards in two columns instead of leaving a third column empty', function () {
+    SiteSetting::setValue('why_choose_us', json_encode([
+        ['title' => 'Community Focused', 'description' => 'Families.', 'icon' => 'heart'],
+        ['title' => 'Easy to Use', 'description' => 'Simple.', 'icon' => 'star'],
+    ]));
+
+    expect(($this->home)('harmony'))->toContain('<div class="g-why cols-2">')
+        ->toContain('.home-garland .g-why.cols-2 { max-width: 820px;')
+        ->not->toContain('100% Privacy');
+});
