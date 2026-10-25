@@ -285,3 +285,28 @@ it('gives visitors the keyword "any word" fallback and a Looking for choice', fu
     $keywordForm = substr($view, strpos($view, '<input type="hidden" name="search_type" value="keyword">'));
     expect($keywordForm)->toContain("@guest\n                            <div class=\"float-field\">\n                                <select name=\"gender\">");
 });
+
+it('finds a Matri ID typed any way and shows visitors the result on the Search by ID page', function () {
+    expect(\App\Http\Controllers\SearchController::matriIdFromInput(' km 100-123 '))->toBe('KM100123')
+        ->and(\App\Http\Controllers\SearchController::matriIdFromInput('KM.100123'))->toBe('KM100123');
+
+    $c = file_get_contents(app_path('Http/Controllers/SearchController.php'));
+    expect($c)->toContain("->where('matri_id', self::matriIdFromInput((string) \$request->matri_id))")
+        ->toContain("\$this->visitorBaseQuery()->where('matri_id', self::matriIdFromInput((string) request('matri_id')))->first()")
+        ->toContain("return redirect()->route('search.byid', ['matri_id' => request('matri_id')]);")
+        ->not->toContain("strtoupper(\$matriId)");
+
+    $view = file_get_contents(resource_path('views/search/public.blade.php'));
+    expect($view)->toContain("<form method=\"GET\" action=\"{{ route('search.byid') }}\"")
+        ->toContain('@if($idResult ?? null)')
+        ->not->toContain('name="search_type" value="byid"');
+});
+
+it('hides from visitors the profiles shown only to premium members or to their own community', function () {
+    $c = file_get_contents(app_path('Http/Controllers/SearchController.php'));
+    expect($c)->toContain("->where(fn(\$q) => \$q->where('show_profile_to', '!=', 'premium')->orWhereNull('show_profile_to'))")
+        ->toContain("->where(fn(\$q) => \$q->where('only_same_religion', false)->orWhereNull('only_same_religion'))")
+        ->toContain("->where(fn(\$q) => \$q->where('only_same_denomination', false)->orWhereNull('only_same_denomination'))")
+        ->toContain("->where(fn(\$q) => \$q->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue'))")
+        ->toContain("\$query = \$this->visitorBaseQuery();");
+});

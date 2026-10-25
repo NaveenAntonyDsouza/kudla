@@ -71,7 +71,7 @@ class SearchController extends Controller
         if ($request->filled('matri_id')) {
             // a search for one Matri ID shows it even when it's the same gotra / bari
             $idResult = $this->baseQuery($profile, respectLineagePreference: false)
-                ->where('matri_id', strtoupper($request->matri_id))
+                ->where('matri_id', self::matriIdFromInput((string) $request->matri_id))
                 ->first();
             Analytics::track('search_performed', ['search_type' => 'id', 'results' => $idResult ? 1 : 0]);
         }
@@ -399,12 +399,39 @@ class SearchController extends Controller
         }
 
         $activeTab = $tab;
+        // Search by ID shows its one profile right here, as for members (Oct 2026)
+        $idResult = $tab === 'byid' && request()->filled('matri_id')
+            ? $this->visitorBaseQuery()->where('matri_id', self::matriIdFromInput((string) request('matri_id')))->first()
+            : null;
         // Quick / Advanced Search start members at their own range, visitors at every age (Oct 2026)
         $quickDefaults = $member
             ? self::memberSearchDefaults(auth()->user()->profile)
             : ['age_from' => \App\Support\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => ''];
 
-        return view('search.public', compact('activeTab', 'quickDefaults'));
+        return view('search.public', compact('activeTab', 'quickDefaults', 'idResult'));
+    }
+
+    /**
+     * Profiles a visitor may find. Visitors are never premium and have no
+     * religion, denomination or mother tongue on record, so profiles shown
+     * only to premium members or only to their own community stay hidden.
+     */
+    private function visitorBaseQuery(): Builder
+    {
+        return Profile::where('is_active', true)
+            ->approved()
+            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+            ->where(fn($q) => $q->where('show_profile_to', '!=', 'premium')->orWhereNull('show_profile_to'))
+            ->where(fn($q) => $q->where('only_same_religion', false)->orWhereNull('only_same_religion'))
+            ->where(fn($q) => $q->where('only_same_denomination', false)->orWhereNull('only_same_denomination'))
+            ->where(fn($q) => $q->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue'))
+            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
+    }
+
+    /** A Matri ID typed any way ("km 100123", "KM-100123") → "KM100123". */
+    public static function matriIdFromInput(string $input): string
+    {
+        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $input));
     }
 
     /**
@@ -429,20 +456,16 @@ class SearchController extends Controller
      */
     public function publicResults()
     {
-        // Members get their results at this same address (Oct 2026); a Matri ID
-        // search shows its one profile on the Search by ID page.
+        // A Matri ID search shows its one profile on the Search by ID page (Oct 2026)
+        if (request()->filled('matri_id')) {
+            return redirect()->route('search.byid', ['matri_id' => request('matri_id')]);
+        }
+        // Members get their results at this same address (Oct 2026)
         if (auth()->check() && auth()->user()->profile) {
-            if (request()->filled('matri_id')) {
-                return redirect()->route('search.byid', request()->query());
-            }
-
             return $this->index(request(), request()->filled('keyword') ? 'keyword' : 'partner', showResults: true);
         }
 
-        $query = Profile::where('is_active', true)
-            ->approved()
-            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-            ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
+        $query = $this->visitorBaseQuery();
 
         // Apply filters from query params. Caste/denomination are multi-select
         // aware ("Any"/empty = no filter) and also match the "Other → Specify"
@@ -481,9 +504,6 @@ class SearchController extends Controller
         // the keyword is applied after every other filter (below), so the
         // "any word" fallback keeps those filters
         $keyword = trim((string) request('keyword', ''));
-        if ($matriId = request('matri_id')) {
-            $query->where('matri_id', strtoupper($matriId));
-        }
         if ($maritals = $this->multiParam('marital_status')) {
             $query->whereIn('marital_status', \App\Support\MaritalStatus::expand($maritals));
         }

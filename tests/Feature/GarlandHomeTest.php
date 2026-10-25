@@ -192,7 +192,7 @@ it('shows plans, safety and contact by default, and personal matchmaking only wh
         ->toContain('Most popular')->toContain('View up to 200 contacts')
         ->toContain('Saved as text</li>')->not->toContain('[&quot;Saved')           // features saved as JSON text still list properly
         ->not->toContain('<h3>Old</h3>')
-        ->toContain('Your Safety Comes First')->toContain('is for people who want to marry. It is not a dating site.')
+        ->toContain('Your Safety Comes First')->and(substr_count($html, 'It is not a dating site.'))->toBeLessThan(2)->and($html)  // once, in the footer
         ->toContain('href="' . route('report-misuse') . '"')
         ->toContain("We're Here to Help")->toContain('+91 77600 20186')->toContain('href="tel:+917760020186"')
         ->toContain('href="https://wa.me/917760020186"')->toContain('mailto:info@kudlamatrimony.com')->toContain('Ganjimutt, Mangaluru')

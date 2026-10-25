@@ -275,7 +275,7 @@ class HomepageSettings extends Page implements HasForms
                             ->helperText('The frequently-asked-questions preview.'),
                         Forms\Components\Toggle::make('show_not_dating_note')
                             ->label('"Not a dating site" note')
-                            ->helperText('"… is for people who want to marry. It is not a dating site." in the footer and the safety section. Turn off on dating-style sites.'),
+                            ->helperText('"… is for people who want to marry. It is not a dating site." in the footer of every page. Turn off on dating-style sites.'),
                     ])
                     ->columns(2),
 

@@ -442,8 +442,7 @@
                 <div x-show="activeTab === 'byid'" x-cloak>
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <h2 class="text-lg font-semibold text-gray-900 mb-6">Search by Matrimony ID</h2>
-                        <form method="GET" action="{{ route('search.results.public') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
-                            <input type="hidden" name="search_type" value="byid">
+                        <form method="GET" action="{{ route('search.byid') }}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
                             <div class="float-field flex-1">
                                 <input type="text" name="matri_id" value="{{ request('matri_id') }}" placeholder=" " required
                                     class="uppercase" maxlength="20">
@@ -453,6 +452,19 @@
                                 Search
                             </button>
                         </form>
+
+                        @if(request('matri_id'))
+                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                @if($idResult ?? null)
+                                    <p class="text-sm text-gray-600 mb-4">Profile found:</p>
+                                    <div class="max-w-xs">
+                                        <x-profile-card :profile="$idResult" />
+                                    </div>
+                                @else
+                                    <p class="text-sm text-gray-500">No profile found with ID "{{ request('matri_id') }}".</p>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
 
