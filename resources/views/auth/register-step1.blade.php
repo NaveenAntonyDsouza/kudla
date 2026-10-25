@@ -183,18 +183,15 @@
                     </div>
 
                     {{-- Continue Button --}}
+                    @guest
+                        <x-terms-consent />
+                    @endguest
                     <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"
                         class="w-full mt-6 bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-6 py-3.5 font-semibold text-sm uppercase tracking-wider transition-colors">
                         <span x-show="!submitting">Continue</span>
                         <span x-show="submitting" x-cloak>Please wait...</span>
                     </button>
 
-                    {{-- Privacy Policy --}}
-                    <p class="mt-4 text-center text-xs text-gray-500">
-                        By clicking Continue, you agree to our<br>
-                        <a href="{{ route('privacy') }}" target="_blank" class="text-(--color-primary) hover:underline">Privacy Policy</a> &
-                        <a href="{{ route('terms') }}" target="_blank" class="text-(--color-primary) hover:underline">Terms of Use</a>
-                    </p>
 
                     {{-- Login Link --}}
                     <p class="mt-4 text-center text-sm text-gray-600">

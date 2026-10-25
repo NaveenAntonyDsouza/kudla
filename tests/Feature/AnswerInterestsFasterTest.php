@@ -47,6 +47,6 @@ it('shows who sent it in full and says what accepting shares', function () {
     expect($inbox)->not->toContain('text-sm font-semibold text-gray-900 truncate')
         ->toContain('style="overflow-wrap: anywhere;">{{ $other?->matri_id')
         ->toContain('ib-status-phone')
-        ->toContain('Accepting shares your phone and WhatsApp with each other.')
-        ->and($show)->toContain('Accepting shares your phone and WhatsApp with each other.');
+        ->toContain('Accept to connect: you can chat, call and WhatsApp each other.')
+        ->and($show)->toContain('Accept to connect: you can chat, call and WhatsApp each other.');
 });

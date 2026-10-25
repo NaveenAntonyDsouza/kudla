@@ -29,6 +29,7 @@ class RegisterStep1Request extends ApiFormRequest
             'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => 'required|string|min:6|max:64',
             'ref' => 'nullable|string|max:20',  // optional affiliate code
+            'accept_terms' => 'sometimes|accepted', // "I agree" tick (stored as users.terms_accepted_at)
         ];
     }
 

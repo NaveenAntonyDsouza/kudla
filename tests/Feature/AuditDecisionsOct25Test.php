@@ -1,0 +1,175 @@
+<?php
+
+use App\Models\Profile;
+use App\Services\MemberErasure;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+/*
+| Owner's decisions on the 25 Oct 2026 audit:
+| 1. "Delete Account" now keeps the privacy policy's promise: personal data is
+|    erased 90 days later (members:erase-deleted), unless staff restore it.
+| 2. Paid plans are "Coming soon" where no payment method is set up.
+| 4. Sign-up asks for a tick to agree to the Privacy Policy and Terms, and
+|    records when.
+| 6. Multi-choice lists build their rows only when opened (pages were ~0.9 MB).
+| Plus: the accept line is an invitation, not a warning.
+*/
+
+function erasureSchema(): void
+{
+    Schema::create('users', function (Blueprint $t) {
+        $t->id();
+        $t->string('name');
+        $t->string('email')->nullable();
+        $t->string('phone')->nullable();
+        $t->string('password');
+        $t->string('remember_token')->nullable();
+        $t->json('notification_preferences')->nullable();
+        $t->boolean('is_active')->default(true);
+        $t->timestamps();
+    });
+    Schema::create('profiles', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->string('matri_id');
+        $t->string('full_name');
+        $t->string('gender')->default('female');
+        $t->date('date_of_birth');
+        foreach (['creator_name', 'creator_contact_number', 'height', 'weight_kg', 'complexion', 'body_type', 'blood_group', 'mother_tongue', 'how_did_you_hear_about_us', 'deletion_reason'] as $c) {
+            $t->string($c)->nullable();
+        }
+        $t->text('about_me')->nullable();
+        $t->boolean('is_active')->default(true);
+        $t->boolean('is_hidden')->default(false);
+        $t->timestamp('account_deleted_at')->nullable();
+        $t->timestamp('data_erased_at')->nullable();
+        $t->softDeletes();
+        $t->timestamps();
+    });
+    Schema::create('contact_info', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('profile_id'), $t->string('whatsapp_number')->nullable(), $t->timestamps()]);
+    Schema::create('shortlists', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('profile_id'), $t->unsignedBigInteger('shortlisted_profile_id'), $t->timestamps()]);
+    Schema::create('interests', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('sender_profile_id'), $t->unsignedBigInteger('receiver_profile_id'), $t->text('custom_message')->nullable(), $t->timestamps()]);
+    Schema::create('interest_replies', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('interest_id'), $t->unsignedBigInteger('replier_profile_id'), $t->text('custom_message')->nullable(), $t->timestamps()]);
+    Schema::create('profile_photos', fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('profile_id'), $t->string('photo_url')->nullable(), $t->string('thumbnail_url')->nullable(), $t->string('storage_driver')->nullable(), $t->timestamps()]);
+    Schema::create('admin_activity_log', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('admin_user_id')->nullable();
+        $t->string('action');
+        $t->string('model_type')->nullable();
+        $t->unsignedBigInteger('model_id')->nullable();
+        $t->json('changes')->nullable();
+        $t->string('ip_address')->nullable();
+        $t->timestamps();
+    });
+}
+
+afterEach(function () {
+    foreach (['users', 'profiles', 'contact_info', 'shortlists', 'interests', 'interest_replies', 'profile_photos', 'admin_activity_log'] as $t) {
+        Schema::dropIfExists($t);
+    }
+});
+
+it('erases a deleted member\'s personal data after 90 days, and only then', function () {
+    erasureSchema();
+    $member = function (int $id, ?string $deletedDaysAgo, bool $active = false) {
+        DB::table('users')->insert(['id' => $id, 'name' => "Member $id", 'email' => "m$id@example.com", 'phone' => "98450000$id", 'password' => 'x']);
+        DB::table('profiles')->insert(['id' => $id, 'user_id' => $id, 'matri_id' => "KM$id", 'full_name' => "Member $id", 'date_of_birth' => '1995-05-05',
+            'about_me' => 'Call me on 9845000000', 'is_active' => $active, 'is_hidden' => ! $active,
+            'deletion_reason' => $deletedDaysAgo !== null ? 'I am Married' : null,
+            'account_deleted_at' => $deletedDaysAgo !== null ? now()->subDays((int) $deletedDaysAgo) : null]);
+        DB::table('contact_info')->insert(['profile_id' => $id, 'whatsapp_number' => '9845000000']);
+    };
+    $member(11, '120');           // deleted 120 days ago → erase
+    $member(12, '30');            // deleted 30 days ago → not yet
+    $member(13, '200', true);     // restored by staff → never
+    $member(14, null);            // ordinary member
+    DB::table('shortlists')->insert([['profile_id' => 14, 'shortlisted_profile_id' => 11], ['profile_id' => 14, 'shortlisted_profile_id' => 12]]);
+    DB::table('interests')->insert([['id' => 1, 'sender_profile_id' => 11, 'receiver_profile_id' => 14, 'custom_message' => 'Here is my number 98450 00000']]);
+    DB::table('interest_replies')->insert(['interest_id' => 1, 'replier_profile_id' => 11, 'custom_message' => 'WhatsApp me']);
+
+    $this->artisan('members:erase-deleted', ['--dry-run' => true])->expectsOutputToContain('not yet erased: 1.');
+    expect(DB::table('profiles')->where('id', 11)->value('full_name'))->toBe('Member 11');
+
+    $this->artisan('members:erase-deleted')->expectsOutputToContain('Erased: 1.');
+
+    $p = DB::table('profiles')->where('id', 11)->first();
+    $u = DB::table('users')->where('id', 11)->first();
+    expect($p->full_name)->toBe('Deleted member')->and($p->about_me)->toBeNull()->and($p->data_erased_at)->not->toBeNull()->and($p->deleted_at)->not->toBeNull()
+        ->and($p->matri_id)->toBe('KM11')
+        ->and($u->name)->toBe('Deleted member')->and($u->email)->toBe('deleted-11@deleted.invalid')->and($u->phone)->toBeNull()
+        ->and(DB::table('contact_info')->where('profile_id', 11)->count())->toBe(0)
+        ->and(DB::table('shortlists')->where('shortlisted_profile_id', 11)->count())->toBe(0)
+        ->and(DB::table('interests')->where('id', 1)->value('custom_message'))->toBeNull()
+        ->and(DB::table('interest_replies')->where('replier_profile_id', 11)->value('custom_message'))->toBeNull()
+        ->and(DB::table('admin_activity_log')->where('action', 'member_data_erased')->count())->toBe(1);
+
+    // the others are untouched
+    expect(DB::table('profiles')->whereIn('id', [12, 13, 14])->pluck('full_name')->all())->toBe(['Member 12', 'Member 13', 'Member 14'])
+        ->and(DB::table('contact_info')->whereIn('profile_id', [12, 13, 14])->count())->toBe(3)
+        ->and(DB::table('shortlists')->where('shortlisted_profile_id', 12)->count())->toBe(1);
+
+    // second run: nothing left to do
+    $this->artisan('members:erase-deleted')->expectsOutputToContain('not yet erased: 0.');
+});
+
+it('cancels the erasure when staff reactivate the account, and says 90 days when deleting', function () {
+    erasureSchema();
+    DB::table('users')->insert(['id' => 21, 'name' => 'X', 'password' => 'x']);
+    DB::table('profiles')->insert(['id' => 21, 'user_id' => 21, 'matri_id' => 'KM21', 'full_name' => 'X', 'date_of_birth' => '1995-05-05', 'is_active' => false, 'deletion_reason' => 'Other Reasons', 'account_deleted_at' => now()->subDays(10)]);
+
+    Profile::withTrashed()->find(21)->update(['is_active' => true]);
+    expect(DB::table('profiles')->where('id', 21)->value('account_deleted_at'))->toBeNull();
+
+    expect(file_get_contents(app_path('Http/Controllers/SettingsController.php')))->toContain("'account_deleted_at' => now()")
+        ->and(file_get_contents(app_path('Http/Controllers/Api/V1/SettingsController.php')))->toContain("'account_deleted_at' => now()")
+        ->and(file_get_contents(resource_path('views/settings/partials/delete-account.blade.php')))->toContain('permanently deleted after 90 days')
+        ->and(file_get_contents(base_path('routes/console.php')))->toContain("Schedule::command('members:erase-deleted')");
+});
+
+it('shows paid plans as coming soon when no payment method is set up', function () {
+    $index = file_get_contents(resource_path('views/membership/index.blade.php'));
+    $home = file_get_contents(resource_path('views/pages/home/sections/plans.blade.php'));
+
+    expect($index)->toContain('$comingSoon = \App\Support\PaidPlans::comingSoon();')
+        ->toContain('@elseif($comingSoon)')
+        ->toContain('Paid plans are coming soon')
+        ->and($home)->toContain('@elseif($plansSoon)')
+        ->and(file_get_contents(app_path('Support/PaidPlans.php')))->toContain('empty(app(PaymentGatewayManager::class)->getConfigured())');
+});
+
+it('asks new members to tick that they agree, and records when', function () {
+    $rules = (new \App\Http\Requests\RegisterStep1Request())->rules();
+    expect($rules['accept_terms'] ?? null)->toBe('accepted');
+
+    \Illuminate\Support\Facades\View::share('errors', new \Illuminate\Support\ViewErrorBag()); // as every real page does
+    $html = Blade::render('<x-terms-consent />');
+    expect($html)->toContain('type="checkbox" name="accept_terms"')->toContain(' required')
+        ->toContain(route('privacy'))->toContain(route('terms'));
+
+    foreach (['auth/register-step1', 'pages/home/garland', 'pages/home/classic', 'pages/home'] as $view) {
+        expect(file_get_contents(resource_path("views/{$view}.blade.php")))->toContain('<x-terms-consent')->not->toContain('By registering, you agree');
+    }
+    expect(file_get_contents(app_path('Http/Controllers/Auth/RegisterController.php')))->toContain("'terms_accepted_at' => now()")
+        ->and(file_get_contents(app_path('Services/RegistrationService.php')))->toContain("'terms_accepted_at' => ! empty(\$data['accept_terms']) ? now() : null");
+});
+
+it('builds list rows only when a list is opened', function () {
+    $html = Blade::render('<x-multi-select name="edu" label="Education" :options="$o" :grouped="true" />', ['o' => ['Bachelors' => ['B.Sc', 'B.Com'], 'Masters' => ['MBA/PGDM']]]);
+
+    expect($html)->toContain('<template x-if="open">')
+        ->toContain('x-for="(g, gi) in groupList"')
+        ->toContain('MBA')                                        // the options travel once, as data
+        ->not->toContain('selected.includes(\'MBA')              // no pre-rendered row per option
+        ->not->toContain('groupMap');
+});
+
+it('invites rather than warns under the Accept button', function () {
+    foreach (['interests/inbox', 'interests/show'] as $view) {
+        expect(file_get_contents(resource_path("views/{$view}.blade.php")))
+            ->toContain('Accept to connect: you can chat, call and WhatsApp each other.')
+            ->not->toContain('Accepting shares your phone');
+    }
+});

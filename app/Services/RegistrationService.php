@@ -56,6 +56,8 @@ class RegistrationService
             'password' => Hash::make($data['password']),
             'role' => 'user',
             'is_active' => true,
+            // the app sends accept_terms once its sign-up screen has the tick box
+            'terms_accepted_at' => ! empty($data['accept_terms']) ? now() : null,
         ]);
 
         // Affiliate attribution — safe no-op when no ?ref= cookie/param set.

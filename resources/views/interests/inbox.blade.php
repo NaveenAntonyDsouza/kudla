@@ -180,7 +180,7 @@
                                             <button type="submit" style="padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #374151; background: #fff; border: 1px solid #d1d5db; cursor: pointer;">Decline</button>
                                         </form>
                                         <a href="{{ route('interests.show', $interest) }}" style="font-size: 13px; color: var(--color-primary, #8B1D91);">Reply with a message</a>
-                                        <p style="flex-basis: 100%; margin: 2px 0 0; font-size: 12px; color: #6b7280;">Accepting shares your phone and WhatsApp with each other.</p>
+                                        <p style="flex-basis: 100%; margin: 2px 0 0; font-size: 12px; color: #6b7280;">Accept to connect: you can chat, call and WhatsApp each other.</p>
                                     </div>
                                 @endif
                                 </div>

@@ -60,6 +60,8 @@ class Profile extends Model
         'only_same_denomination',
         'only_same_mother_tongue',
         'deletion_reason',
+        'account_deleted_at',
+        'data_erased_at',
         'suspension_status',
         'suspension_reason',
         'suspended_at',
@@ -67,10 +69,22 @@ class Profile extends Model
         'suspended_by',
     ];
 
+    protected static function booted(): void
+    {
+        // Staff reactivating a deleted account cancels its 90-day erasure (App\Services\MemberErasure)
+        static::updating(function (Profile $profile) {
+            if ($profile->isDirty('is_active') && $profile->is_active && $profile->account_deleted_at) {
+                $profile->account_deleted_at = null;
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'date_of_birth' => 'date',
+            'account_deleted_at' => 'datetime',
+            'data_erased_at' => 'datetime',
             'profile_completion_pct' => 'integer',
             'onboarding_completed' => 'boolean',
             'photo_step_skipped_at' => 'datetime',

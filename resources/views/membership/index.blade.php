@@ -3,6 +3,7 @@
     // Everything on this page is driven by the plans managed in admin
     // (/console/membership-plans) — no hardcoded plan data.
     $paidPlans = $plans->where('price_inr', '>', 0)->values();
+    $comingSoon = \App\Support\PaidPlans::comingSoon(); // no payment method yet
 
     // Literal grid classes so Tailwind's build picks them up (no dynamic class names).
     $gridColsClass = [1 => 'lg:grid-cols-1', 2 => 'lg:grid-cols-2', 3 => 'lg:grid-cols-3'][$paidPlans->count()] ?? 'lg:grid-cols-4';
@@ -58,7 +59,7 @@
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 class="text-2xl sm:text-3xl font-serif font-bold text-gray-900 text-center mb-2">Upgrade and enjoy added benefits</h1>
-        <p class="text-center text-gray-500 mb-8">Choose the plan that suits you best</p>
+        <p class="text-center text-gray-500 mb-8">{{ $comingSoon ? 'Paid plans are coming soon: online payment isn\'t open yet.' : 'Choose the plan that suits you best' }}</p>
 
         @if(session('success'))
             <div class="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -120,6 +121,8 @@
 
                         @if($activePlanId === $plan->id)
                             <div class="mt-5 px-6 py-2.5 text-sm font-semibold text-green-700 bg-green-100 rounded-lg">Current Plan</div>
+                        @elseif($comingSoon)
+                            <div class="mt-5 px-6 py-2.5 text-sm font-semibold rounded-lg" style="background: #f3f4f6; color: #6b7280;">Coming soon</div>
                         @else
                             <form method="POST" action="{{ route('membership.checkout') }}" class="mt-5" x-data="couponForm({{ $plan->id }}, {{ $plan->price_inr }})">
                                 @csrf
@@ -253,6 +256,8 @@
                                 <td class="text-center px-3 py-4">
                                     @if($activePlanId === $plan->id)
                                         <span class="text-xs font-semibold text-green-700">Current</span>
+                                    @elseif($plan->price_inr > 0 && $comingSoon)
+                                        <span class="text-xs font-semibold" style="color: #6b7280;">Coming soon</span>
                                     @elseif($plan->price_inr > 0)
                                         <form method="POST" action="{{ route('membership.checkout') }}">
                                             @csrf

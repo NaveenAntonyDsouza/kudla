@@ -358,6 +358,7 @@ class SettingsController extends BaseApiController
             'is_active' => false,
             'is_hidden' => true,
             'deletion_reason' => $reasonText,
+            'account_deleted_at' => now(), // details erased after 90 days (members:erase-deleted)
         ]);
         // Soft-delete via the SoftDeletes trait — auto-sets deleted_at.
         $user->profile->delete();

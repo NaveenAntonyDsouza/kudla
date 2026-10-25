@@ -176,9 +176,11 @@ it('fixes what the phone form walk found', function () {
     $step4 = file_get_contents(resource_path('views/auth/register-step4.blade.php'));
     $onb2 = file_get_contents(resource_path('views/onboarding/step2.blade.php'));
 
-    // the sign-up consent line links to the real pages
-    expect($step1)->toContain("href=\"{{ route('privacy') }}\"")->toContain("href=\"{{ route('terms') }}\"")
-        ->not->toContain('you are agree')->not->toMatch('/<a href="#"[^>]*>(Privacy Policy|Terms of Use)/');
+    // the sign-up consent links to the real pages (now via the tick box, x-terms-consent)
+    $consent = file_get_contents(resource_path('views/components/terms-consent.blade.php'));
+    expect($step1)->toContain('<x-terms-consent />')
+        ->and($consent)->toContain("href=\"{{ route('privacy') }}\"")->toContain("href=\"{{ route('terms') }}\"")
+        ->and($step1)->not->toContain('you are agree')->not->toMatch('/<a href="#"[^>]*>(Privacy Policy|Terms of Use)/');
     // stars only where the server really requires the field
     expect(substr_count($step4, "x-show=\"nativeCountry === 'India'\">*</span>"))->toBe(4)
         ->and($onb2)->not->toContain("Residing Country <span class=\"text-red-500\">*</span>")

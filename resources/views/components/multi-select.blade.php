@@ -16,10 +16,10 @@
     }
 
     $flatOptions = [];
-    $groupMap = [];
+    $groupList = []; // [{label, items}] in list order, for the x-for below
     if ($isGrouped) {
         foreach ($options as $group => $items) {
-            $groupMap[$group] = $items;
+            $groupList[] = ['label' => (string) $group, 'items' => array_values((array) $items)];
             foreach ($items as $item) {
                 $flatOptions[] = $item;
             }
@@ -39,8 +39,13 @@
     open: false,
     search: '',
     selected: {{ Js::from(old($name, $selectedArr)) }},
-    allOptions: {{ Js::from($flatOptions) }},
-    groupMap: {{ Js::from($groupMap) }},
+    // one copy of the options: a flat list, or groups (flattened in init)
+    allOptions: {{ Js::from($isGrouped ? [] : $flatOptions) }},
+    groupList: {{ Js::from($groupList) }},
+
+    itemsOf(groupName) {
+        return (this.groupList.find(g => g.label === groupName) || {}).items || [];
+    },
 
     get isAny() {
         return this.selected.includes('Any');
@@ -77,7 +82,7 @@
     },
 
     toggleGroup(groupName) {
-        const items = this.groupMap[groupName] || [];
+        const items = this.itemsOf(groupName);
         const allSelected = items.every(i => this.selected.includes(i));
         this.selected = this.selected.filter(v => v !== 'Any');
         if (allSelected) {
@@ -91,7 +96,7 @@
     },
 
     isGroupSelected(groupName) {
-        const items = this.groupMap[groupName] || [];
+        const items = this.itemsOf(groupName);
         return items.length > 0 && items.every(i => this.selected.includes(i));
     },
 
@@ -100,6 +105,7 @@
         return item.toLowerCase().includes(this.search.toLowerCase());
     },
     init() {
+        if (this.groupList.length) this.allOptions = this.groupList.flatMap(g => g.items);
         this.$watch('selected', (val) => {
             @if($emitTo)
                 this.$dispatch('multiselect-change', { name: '{{ $name }}', value: val });
@@ -145,6 +151,9 @@
             </div>
         @endif
 
+        {{-- Rows are built from the data above only while the list is open (Oct 2026: the
+             partner-preferences page carried ~0.9 MB of option HTML for its 24 lists) --}}
+        <template x-if="open">
         <div class="overflow-y-auto max-h-52 p-1">
             {{-- Any Option --}}
             @if($showAny)
@@ -157,30 +166,33 @@
             @endif
 
             @if($isGrouped)
-                @foreach($options as $group => $items)
-                    <label class="flex items-center gap-2 px-3 pt-2.5 pb-1 cursor-pointer hover:bg-gray-50 rounded">
-                        <input type="checkbox" :checked="isGroupSelected('{{ addslashes($group) }}')" @change="toggleGroup('{{ addslashes($group) }}')"
-                            class="rounded border-gray-300 text-(--color-secondary) focus:ring-(--color-secondary)">
-                        <span class="text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ $group }}</span>
-                    </label>
-                    @foreach($items as $item)
-                        <label x-show="matchesSearch('{{ addslashes($item) }}')" class="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
-                            <input type="checkbox" :checked="selected.includes('{{ addslashes($item) }}')" @change="toggle('{{ addslashes($item) }}')"
-                                class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
-                            {{ $item }}
+                <template x-for="(g, gi) in groupList" :key="gi">
+                    <div>
+                        <label class="flex items-center gap-2 px-3 pt-2.5 pb-1 cursor-pointer hover:bg-gray-50 rounded">
+                            <input type="checkbox" :checked="isGroupSelected(g.label)" @change="toggleGroup(g.label)"
+                                class="rounded border-gray-300 text-(--color-secondary) focus:ring-(--color-secondary)">
+                            <span class="text-xs font-semibold text-gray-600 uppercase tracking-wider" x-text="g.label"></span>
                         </label>
-                    @endforeach
-                @endforeach
+                        <template x-for="(item, i) in g.items" :key="i">
+                            <label x-show="!search || item.toLowerCase().includes(search.toLowerCase())" class="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                <input type="checkbox" :checked="selected.includes(item)" @change="toggle(item)"
+                                    class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
+                                <span x-text="item"></span>
+                            </label>
+                        </template>
+                    </div>
+                </template>
             @else
-                @foreach($flatOptions as $option)
-                    <label x-show="matchesSearch('{{ addslashes($option) }}')" class="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
-                        <input type="checkbox" :checked="selected.includes('{{ addslashes($option) }}')" @change="toggle('{{ addslashes($option) }}')"
+                <template x-for="(item, i) in allOptions" :key="i">
+                    <label x-show="!search || item.toLowerCase().includes(search.toLowerCase())" class="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                        <input type="checkbox" :checked="selected.includes(item)" @change="toggle(item)"
                             class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
-                        {{ $option }}
+                        <span x-text="item"></span>
                     </label>
-                @endforeach
+                </template>
             @endif
         </div>
+        </template>
     </div>
 
     {{-- Hidden inputs for form submission --}}

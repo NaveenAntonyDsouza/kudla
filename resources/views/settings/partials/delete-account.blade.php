@@ -74,7 +74,7 @@
           <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 16px; box-sizing: border-box;">
             <div @click.outside="asking = false" style="width: 100%; max-width: 420px; background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,.2); text-align: center;">
                 <p style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 8px;">Are you sure you want to delete your account?</p>
-                <p style="font-size: 13px; color: #6b7280; margin: 0 0 20px;">Your profile will be hidden from everyone right away and you'll be signed out. To come back later, just contact us.</p>
+                <p style="font-size: 13px; color: #6b7280; margin: 0 0 20px;">Your profile will be hidden from everyone right away and you'll be signed out. Your details are permanently deleted after 90 days; to come back before then, just contact us.</p>
                 <div style="display: flex; gap: 12px; justify-content: center;">
                     <button type="button" @click="asking = false" style="min-width: 96px; padding: 9px 18px; border-radius: 6px; border: 1px solid var(--color-primary, #8B1D91); color: var(--color-primary, #8B1D91); background: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">No</button>
                     <button type="button" @click="$refs.form.submit()" style="min-width: 96px; padding: 9px 18px; border-radius: 6px; border: 0; color: #fff; background: var(--color-primary, #8B1D91); font-weight: 600; font-size: 14px; cursor: pointer;">Yes, delete</button>

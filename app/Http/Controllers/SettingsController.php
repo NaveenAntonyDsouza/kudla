@@ -105,6 +105,7 @@ class SettingsController extends Controller
             'is_active' => false,
             'is_hidden' => true,
             'deletion_reason' => self::deletionReason($data),
+            'account_deleted_at' => now(), // details erased after 90 days (members:erase-deleted)
         ]);
 
         // Met their partner here: a possible success story for staff to follow up (never published by itself)
@@ -130,7 +131,7 @@ class SettingsController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/')->with('success', 'Your profile has been deactivated. Contact support to reactivate.');
+        return redirect('/')->with('success', 'Your account has been deleted. Your details will be permanently removed after 90 days; contact us before then if you change your mind.');
     }
 
     /**

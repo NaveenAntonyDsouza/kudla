@@ -72,6 +72,7 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => 'user',
             'is_active' => true,
+            'terms_accepted_at' => now(), // ticked "I agree" (accept_terms is required)
         ]);
 
         // Affiliate attribution — if the user arrived via ?ref=CODE,

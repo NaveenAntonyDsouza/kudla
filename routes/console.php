@@ -58,6 +58,8 @@ Schedule::command('members:remind-photo', ['--scheduled', '--delay' => 3])->dail
 // Interests unanswered for 30 days expire; each sender gets one in-app note
 // (only where interest_expiry_enabled = 1)
 Schedule::command('interests:expire', ['--scheduled'])->dailyAt('07:30')->withoutOverlapping();
+// privacy policy: personal data erased 90 days after "Delete Account" (App\Services\MemberErasure)
+Schedule::command('members:erase-deleted')->dailyAt('03:15')->withoutOverlapping();
 
 // Homepage "Browse profiles by" links (Garland / Harmony designs): rebuilt in the
 // background so no visitor waits for the ~600 member counts behind them

@@ -35,12 +35,14 @@ class RegisterStep1Request extends FormRequest
             'phone' => 'required|digits:10|unique:users,phone',
             'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => ['required', 'min:6', 'max:64'],
+            'accept_terms' => 'accepted',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'accept_terms.accepted' => 'Please tick the box to agree to the Privacy Policy and Terms of Use.',
             'phone.unique' => 'This phone number is already registered.',
             'email.unique' => 'This email is already registered.',
             'password.min' => 'Password must be at least 6 characters.',

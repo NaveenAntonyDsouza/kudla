@@ -55,7 +55,8 @@
     <div class="g-wrap">
         <x-dynamic-component :component="$divider" />
         <h2 class="g-h2">Membership Plans</h2>
-        <p class="g-lead">Start free. Upgrade when you are ready to contact the families you like.</p>
+        @php $plansSoon = \App\Support\PaidPlans::comingSoon(); @endphp
+        <p class="g-lead">{{ $plansSoon ? 'Start free. Paid plans are coming soon.' : 'Start free. Upgrade when you are ready to contact the families you like.' }}</p>
 
         <div class="g-plans n-{{ min($homePlans->count(), 4) }}">
             @foreach($homePlans as $plan)
@@ -92,6 +93,8 @@
                     </ul>
                     @if((int) $plan->price_inr === 0)
                         <a href="/register" class="g-btn g-btn-outline">Register Free</a>
+                    @elseif($plansSoon)
+                        <span class="g-btn g-btn-outline" style="opacity: .6; cursor: default;">Coming soon</span>
                     @else
                         <a href="{{ route('membership.index') }}" class="g-btn {{ $plan->is_popular ? 'g-btn-primary' : 'g-btn-outline' }}">Choose {{ $plan->plan_name }}</a>
                     @endif

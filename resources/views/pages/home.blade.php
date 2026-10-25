@@ -185,13 +185,13 @@
                             </div>
                         @endif
 
+                        <x-terms-consent id="hero_accept_terms" />
                         <button type="submit" :disabled="submitting" :class="submitting && 'opacity-50 cursor-not-allowed'"
                             class="w-full py-3 text-sm font-bold text-white rounded-lg transition-colors" style="background: var(--brand-primary);">
                             <span x-show="!submitting">REGISTER FREE</span>
                             <span x-show="submitting" x-cloak>Please wait...</span>
                         </button>
 
-                        <p class="text-xs text-gray-400 text-center">By registering, you agree to our <a href="/terms-condition" class="text-(--color-primary) hover:underline">Terms</a> & <a href="/privacy-policy" class="text-(--color-primary) hover:underline">Privacy Policy</a></p>
                     </form>
 
                     <p class="mt-4 text-center text-sm text-gray-600">Already have an account? <a href="{{ route('login') }}" class="text-(--color-primary) font-semibold hover:underline">LOGIN</a></p>

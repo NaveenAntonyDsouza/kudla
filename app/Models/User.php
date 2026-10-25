@@ -38,6 +38,7 @@ class User extends Authenticatable implements FilamentUser
         'nudges_sent_count',
         'last_nudge_sent_at',
         'notification_preferences',
+        'terms_accepted_at',
     ];
 
     protected $hidden = [
@@ -49,6 +50,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
