@@ -150,21 +150,8 @@
                             @error('gender') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- Date of Birth + Age --}}
-                        <div style="display: flex; gap: 0.5rem;">
-                            <div class="float-field" style="flex: 1;">
-                                <input type="date" name="date_of_birth" id="hero_dob" x-model="dob" required placeholder=" "
-                                    max="{{ \App\Support\MinimumAge::latestBirthDate() }}" :max="gender === 'male' ? @js(\App\Support\MinimumAge::latestBirthDate('male')) : (gender === 'female' ? @js(\App\Support\MinimumAge::latestBirthDate('female')) : @js(\App\Support\MinimumAge::latestBirthDate()))"
-                                    class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
-                                <label for="hero_dob" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Date of Birth *</label>
-                            </div>
-                            <div style="width: 100px; min-width: 100px;">
-                                <div class="border border-gray-200 rounded-lg bg-gray-50 flex flex-col justify-center" style="padding: 0.5rem 0.75rem; height: 100%;">
-                                    <span style="font-size: 10px; color: #9ca3af; line-height: 1;">Age</span>
-                                    <span x-text="calculatedAge || '—'" style="font-size: 12px; font-weight: 500; color: #374151;"></span>
-                                </div>
-                            </div>
-                        </div>
+                        {{-- Date of Birth: Day / Month / Year (age shown underneath) --}}
+                        <x-dob-select id="hero_dob" />
                         @error('date_of_birth') <p class="-mt-2 text-xs text-red-500">{{ $message }}</p> @enderror
 
                         {{-- Primary Mobile Number (with country code) --}}

@@ -74,8 +74,9 @@ it('checks the age in every place a member can be created', function () {
     foreach (['app/Http/Requests/RegisterStep1Request.php', 'app/Http/Requests/Api/V1/Auth/RegisterStep1Request.php'] as $file) {
         expect(file_get_contents(base_path($file)))->toContain("new \\App\\Rules\\OldEnoughToMarry(\$this->input('gender'))")->not->toContain('before:-18 years');
     }
+    // every sign-up form: Day / Month / Year dropdowns, no phone date picker that opens on the limit date
     foreach (['auth/register-step1', 'pages/home/garland', 'pages/home/classic', 'pages/home'] as $view) {
-        expect(file_get_contents(resource_path("views/{$view}.blade.php")))->toContain("MinimumAge::latestBirthDate('male')")->not->toContain('subYears(18)');
+        expect(file_get_contents(resource_path("views/{$view}.blade.php")))->toContain('<x-dob-select id=')->not->toContain('type="date"')->not->toContain('subYears(18)');
     }
     expect(file_get_contents(app_path('Services/BulkImportValidator.php')))->toContain('MinimumAge::forGender(')
         ->and(file_get_contents(app_path('Filament/Resources/UserResource.php')))->toContain('MinimumAge::latestBirthDate($get(\'gender\'))')
@@ -159,4 +160,27 @@ it('uses dropdowns instead of text boxes where there is a list', function () {
     expect($cascade)->toContain('name="native_country"')->toContain('name="native_state"')->toContain('name="native_district"')->toContain('name="native_place"')
         ->toContain('/api/cascade/districts?state=')
         ->and(file_get_contents(resource_path('views/components/location-cascade.blade.php')))->toContain("@props(['prefix', 'label', 'district' => true])"); // the search filter is untouched
+});
+
+it('asks for the date of birth as Day / Month / Year with nothing pre-filled', function () {
+    $html = Blade::render('<form x-data="{ dob: \'\', gender: \'\' }"><x-dob-select id="t_dob" /></form>');
+    $year = (int) now()->format('Y');
+
+    expect($html)
+        ->toContain('<option value="">Day</option>')
+        ->toContain('<option value="">Month</option>')
+        ->toContain('<option value="">Year</option>')
+        ->toContain('<option value="09">Sep</option>')
+        ->toContain('<option value="' . ($year - 18) . '">')                 // youngest year for women
+        ->not->toContain('<option value="' . ($year - 17) . '">')
+        ->toContain('<option value="' . ($year - 75) . '">')
+        ->toContain('<input type="hidden" name="date_of_birth" :value="dob">')
+        ->toContain('return g === \'male\' ? 21 : (g === \'female\' ? 18 : 18)')
+        ->toContain('Men must be at least 21 years old to register.')
+        ->toContain('$refs.year.setCustomValidity(')
+        ->not->toContain(' selected');                                       // no default year / month
+
+    SiteSetting::setValue('min_age_male', '18');                              // e.g. a USA site
+    expect(Blade::render('<form x-data="{ dob: \'\', gender: \'\' }"><x-dob-select /></form>'))
+        ->toContain('return g === \'male\' ? 18 : (g === \'female\' ? 18 : 18)');
 });

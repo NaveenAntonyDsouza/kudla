@@ -133,21 +133,10 @@
                             @error('gender') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- Date of Birth + Age --}}
-                        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                            <div class="sm:col-span-3 float-field">
-                                <input type="date" name="date_of_birth" id="date_of_birth" x-model="dob" required placeholder=" "
-                                    max="{{ \App\Support\MinimumAge::latestBirthDate() }}" :max="gender === 'male' ? @js(\App\Support\MinimumAge::latestBirthDate('male')) : (gender === 'female' ? @js(\App\Support\MinimumAge::latestBirthDate('female')) : @js(\App\Support\MinimumAge::latestBirthDate()))"
-                                    class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
-                                <label for="date_of_birth">Date of Birth <span class="text-red-500">*</span></label>
-                                @error('date_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div class="sm:col-span-2">
-                                <div class="border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-50 h-full flex flex-col justify-center">
-                                    <span class="text-[10px] text-gray-400 leading-tight">Age</span>
-                                    <span x-text="calculatedAge || '0 Yrs 0 Months'" class="text-sm font-medium text-gray-700"></span>
-                                </div>
-                            </div>
+                        {{-- Date of Birth: Day / Month / Year (age shown underneath) --}}
+                        <div>
+                            <x-dob-select id="date_of_birth" />
+                            @error('date_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Primary Mobile Number --}}
