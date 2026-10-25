@@ -634,7 +634,8 @@
                     .ft-band { background: rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.08); }
                     .ft-band-grid { display: grid; grid-template-columns: 1fr; gap: 18px; padding-top: 22px; padding-bottom: 22px; }
                     @media (min-width: 640px) { .ft-band-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-                    @media (min-width: 1024px) { .ft-band-grid { grid-template-columns: repeat({{ count($fBand) }}, minmax(0, 1fr)); } }
+                    {{-- wide screens: phone / email / help keep their width, the address takes what is left --}}
+                    @media (min-width: 1024px) { .ft-band-grid { grid-template-columns: {{ collect($fBand)->map(fn ($b) => empty($b['small']) ? 'auto' : 'minmax(0, 1fr)')->implode(' ') }}; justify-content: space-between; gap: 32px; } .ft-band-value { overflow-wrap: normal; } }
                     .ft-band-item { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
                     .ft-band-icon { flex: none; width: 38px; height: 38px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); color: var(--color-secondary); }
                     .ft-band-label { display: block; font-size: 12px; color: rgba(255,255,255,.6); }
