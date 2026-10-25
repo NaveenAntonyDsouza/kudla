@@ -52,19 +52,26 @@
 </head>
 <body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased min-h-screen flex flex-col">
     @include('components.partials.tracking-body')
-    <!-- Centered Auth Content -->
-    <div class="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <!-- Logo + Tagline -->
-        <div class="text-center mb-8">
+    {{-- Header (Oct 2026): the login page gets a real header like the big portals: logo, Help, Register Free --}}
+    <header class="bg-white border-b border-gray-200 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
             <a href="/" class="inline-block">
                 @if($theme->logo_url ?? false)
-                    <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" class="h-12 mx-auto">
+                    <img src="{{ $theme->logo_url }}" alt="{{ $siteName }}" style="height: {{ \App\Support\HeaderLogo::height() }}px; width: auto">
                 @else
-                    <h1 class="text-3xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</h1>
+                    <span class="text-xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</span>
                 @endif
             </a>
-            <p class="mt-2 text-sm text-gray-500">{{ $siteTagline }}</p>
+            <div class="flex items-center gap-4">
+                <a href="/faq" class="hidden sm:inline text-sm font-medium text-gray-700 hover:text-gray-900">Help</a>
+                <span class="hidden sm:inline text-sm text-gray-500">New here?</span>
+                <a href="/register" class="px-4 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Register Free</a>
+            </div>
         </div>
+    </header>
+
+    <!-- Centered Auth Content -->
+    <div class="flex-1 flex flex-col items-center justify-center px-4 py-12">
 
         <!-- Auth Card -->
         <div class="w-full {{ $maxWidthClass }} bg-white rounded-lg border border-gray-200 shadow-xs p-6 sm:p-8">
@@ -76,6 +83,13 @@
             <a href="/" class="text-(--color-primary) hover:underline">&larr; Back to Home</a>
         </p>
     </div>
+
+    <footer class="bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center" style="background-color: {{ \App\Support\SiteContact::footerColour() }};">
+        &copy; {{ date('Y') }} {{ $siteName }}. All rights reserved. &middot;
+        <a href="/privacy-policy" class="hover:text-white">Privacy</a> &middot;
+        <a href="/terms-condition" class="hover:text-white">Terms</a> &middot;
+        <a href="/faq" class="hover:text-white">Help</a>
+    </footer>
 
     @livewireScripts
     <x-whatsapp-button />

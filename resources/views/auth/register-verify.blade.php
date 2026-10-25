@@ -42,8 +42,7 @@
                 @endif
             </a>
             <div class="text-sm text-gray-500">
-                @php $helpPhone = preg_replace('/[^0-9+]/', '', (string) \App\Models\SiteSetting::getValue('phone', '')); @endphp
-                @if($helpPhone !== '')Need Assistance? <a href="tel:{{ $helpPhone }}" class="text-(--color-primary) hover:underline font-medium">Call Us</a>@endif
+                @include('components.partials.signup-help')
             </div>
         </div>
     </header>
@@ -137,7 +136,7 @@
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center">
+    <footer class="bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center" style="background-color: {{ \App\Support\SiteContact::footerColour() }};">
         <p>&copy; {{ date('Y') }} {{ $siteName }}. All Rights Reserved.</p>
     </footer>
 

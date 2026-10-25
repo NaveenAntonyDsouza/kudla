@@ -64,6 +64,9 @@ it('no longer sends people who need help to a placeholder phone number', functio
     foreach (['auth/register-complete', 'auth/register-verify-email', 'auth/register-verify', 'components/layouts/onboarding', 'components/layouts/registration'] as $view) {
         expect(file_get_contents(resource_path("views/{$view}.blade.php")))
             ->not->toContain('1800123456')
-            ->toContain("SiteSetting::getValue('phone', '')");
+            ->toContain("@include('components.partials.signup-help')");
     }
+    // the shared partial reads the real site phone (Oct 2026 header review)
+    expect(file_get_contents(resource_path('views/components/partials/signup-help.blade.php')))->toContain('SiteContact::phoneDisplay()')->not->toContain('1800123456')
+        ->and(file_get_contents(app_path('Support/SiteContact.php')))->toContain("SiteSetting::getValue('phone', '')");
 });

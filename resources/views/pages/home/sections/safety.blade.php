@@ -48,6 +48,6 @@
             <p><b>Stay safe:</b> {{ $safetySite }} will never ask for your password or OTP. Never send money to someone you have not met, and meet for the first time in a public place with your family.</p>
         </div>
 
-        <p class="g-not-dating">{{ $safetySite }} is for people who want to marry. It is not a dating site. &middot; <a href="{{ route('report-misuse') }}">Report misuse</a> &middot; <a href="{{ route('privacy') }}">Privacy policy</a></p>
+        <p class="g-not-dating">@if(\App\Support\SiteContact::showNotDatingNote()){{ $safetySite }} is for people who want to marry. It is not a dating site. &middot; @endif<a href="{{ route('report-misuse') }}">Report misuse</a> &middot; <a href="{{ route('privacy') }}">Privacy policy</a></p>
     </div>
 </section>

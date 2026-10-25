@@ -77,6 +77,7 @@ class HomepageSettings extends Page implements HasForms
             'show_why_choose_us' => ($settings['show_why_choose_us'] ?? '1') === '1',
             'show_success_stories' => ($settings['show_success_stories'] ?? '1') === '1',
             'show_faq_section' => ($settings['show_faq_section'] ?? '1') === '1',
+            'show_not_dating_note' => ($settings['show_not_dating_note'] ?? '1') === '1',
 
             // Extra sections on the Garland & Harmony designs (Oct 2026). Personal
             // matchmaking is OFF until the site offers the service.
@@ -271,6 +272,9 @@ class HomepageSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('show_faq_section')
                             ->label('FAQ')
                             ->helperText('The frequently-asked-questions preview.'),
+                        Forms\Components\Toggle::make('show_not_dating_note')
+                            ->label('"Not a dating site" note')
+                            ->helperText('"… is for people who want to marry. It is not a dating site." in the footer and the safety section. Turn off on dating-style sites.'),
                     ])
                     ->columns(2),
 
@@ -480,7 +484,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities', 'show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking'];
+        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities', 'show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,

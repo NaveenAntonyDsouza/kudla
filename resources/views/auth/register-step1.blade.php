@@ -46,10 +46,7 @@
                     <h1 class="text-xl font-serif font-bold text-(--color-primary)">{{ $siteName }}</h1>
                 @endif
             </a>
-            <div class="hidden sm:flex items-center gap-4 text-sm text-gray-500">
-                <span>Need Assistance to Register?</span>
-                <span class="text-(--color-primary) font-medium">Call Us</span>
-            </div>
+            @include('components.partials.signup-help')
         </div>
     </header>
 
@@ -220,7 +217,7 @@
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center">
+    <footer class="bg-gray-900 text-gray-400 text-xs py-4 px-4 text-center" style="background-color: {{ \App\Support\SiteContact::footerColour() }};">
         <p>&copy; {{ date('Y') }} {{ $siteName }}. All Rights Reserved.</p>
     </footer>
 

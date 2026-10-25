@@ -486,6 +486,7 @@
         </header>
     @else
         {{-- ══ NON-LOGGED-IN HEADER ══ --}}
+        @include('components.partials.contact-strip')
         <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-xs">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
@@ -518,8 +519,9 @@
                         <a href="/membership-plans" class="text-sm font-medium text-gray-700 hover:text-gray-900">Membership</a>
                         <a href="/about-us" class="text-sm font-medium text-gray-700 hover:text-gray-900">About Us</a>
                         <a href="/contact-us" class="text-sm font-medium text-gray-700 hover:text-gray-900">Contact</a>
-                        <a href="/register" class="text-sm font-medium text-(--color-primary) hover:text-(--color-primary-hover)">Register Free</a>
-                        <a href="/login" class="px-5 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Login</a>
+                        {{-- Register Free is the main action (filled); Login is secondary (outline) --}}
+                        <a href="/login" class="px-4 py-2 text-sm font-semibold text-(--color-primary) border border-(--color-primary) hover:bg-(--color-primary-light) rounded-lg transition-colors">Login</a>
+                        <a href="/register" class="px-5 py-2 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Register Free</a>
                     </nav>
 
                     <!-- Mobile hamburger -->
@@ -549,8 +551,8 @@
                     <a href="/membership-plans" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Membership</a>
                     <a href="/about-us" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">About Us</a>
                     <a href="/contact-us" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Contact</a>
-                    <a href="/register" class="block px-3 py-2 rounded-lg text-sm font-medium text-(--color-primary) hover:bg-gray-100">Register Free</a>
-                    <a href="/login" class="block px-3 py-2 rounded-lg text-sm font-medium text-white bg-(--color-primary) text-center rounded-lg">Login</a>
+                    <a href="/register" class="block px-3 py-2 rounded-lg text-sm font-semibold text-white bg-(--color-primary) text-center">Register Free</a>
+                    <a href="/login" class="block px-3 py-2 rounded-lg text-sm font-semibold text-(--color-primary) border border-(--color-primary) text-center">Login</a>
                 </div>
             </div>
         </header>
@@ -566,7 +568,7 @@
 
     @if($isLoggedIn)
         {{-- ══ LOGGED-IN FOOTER ══ --}}
-        <footer class="bg-gray-900 text-gray-400 mt-16">
+        <footer class="bg-gray-900 text-gray-400 mt-16" style="background-color: {{ \App\Support\SiteContact::footerColour() }};">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p class="text-sm">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
@@ -601,12 +603,32 @@
         <x-ad-slot position="footer_banner" />
 
         {{-- ══ NON-LOGGED-IN FOOTER ══ --}}
-        <footer class="bg-gray-900 text-gray-400 mt-16">
+        <footer class="bg-gray-900 text-gray-400 mt-16" style="background-color: {{ \App\Support\SiteContact::footerColour() }};">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     <div>
                         <h3 class="text-white font-semibold text-sm mb-3">{{ $siteName }}</h3>
-                        <p class="text-xs text-gray-500 leading-relaxed">{{ $siteTagline }}. {{ \App\Models\SiteSetting::getValue('footer_description', '') ?: 'A trusted matrimony platform for families seeking meaningful connections.' }}</p>
+                        <p class="text-xs leading-relaxed" style="color: rgba(255,255,255,.6);">{{ \App\Support\SiteContact::sentence($siteTagline) }} {{ \App\Models\SiteSetting::getValue('footer_description', '') ?: 'A trusted matrimony platform for families seeking meaningful connections.' }}</p>
+                        @php
+                            $fPlay = \App\Models\SiteSetting::getValue('app_play_store_url', '');
+                            $fApple = \App\Models\SiteSetting::getValue('app_apple_store_url', '');
+                        @endphp
+                        @if($fPlay || $fApple)
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;">
+                                @if($fPlay)
+                                    <a href="{{ $fPlay }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; color: #fff;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.302 2.302a1 1 0 010 1.38l-2.302 2.302L15.396 13l2.302-2.492zM5.864 2.658L16.8 9.39l-2.302 2.302L5.864 2.658z"/></svg>
+                                        <span style="line-height: 1.1;"><span style="display: block; font-size: 9px; opacity: .7; text-transform: uppercase; letter-spacing: .05em;">Get it on</span><span style="font-size: 13px; font-weight: 600;">Google Play</span></span>
+                                    </a>
+                                @endif
+                                @if($fApple)
+                                    <a href="{{ $fApple }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; color: #fff;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                                        <span style="line-height: 1.1;"><span style="display: block; font-size: 9px; opacity: .7; text-transform: uppercase; letter-spacing: .05em;">Download on the</span><span style="font-size: 13px; font-weight: 600;">App Store</span></span>
+                                    </a>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                     <div>
                         <h4 class="text-white font-semibold text-sm mb-3">Quick Links</h4>
@@ -614,7 +636,9 @@
                             <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
                             <li><a href="/register" class="hover:text-white transition-colors">Register Free</a></li>
                             <li><a href="/login" class="hover:text-white transition-colors">Login</a></li>
-                            <li><a href="/about-us" class="hover:text-white transition-colors">About Us</a></li>
+                            @unless(collect(\App\Models\StaticPage::getFooterPages())->contains('slug', 'about-us'))
+                                <li><a href="/about-us" class="hover:text-white transition-colors">About Us</a></li>
+                            @endunless
                             <li><a href="/membership-plans" class="hover:text-white transition-colors">Membership Plans</a></li>
                             {{-- <li><a href="/demograph" class="hover:text-white transition-colors">Demographics</a></li> --}}
                             <li><a href="/success-stories" class="hover:text-white transition-colors">Success Stories</a></li>
@@ -642,10 +666,30 @@
                             <li><a href="/event" class="hover:text-white transition-colors">Events</a></li>
                             <li><a href="/add-with-us" class="hover:text-white transition-colors">Advertise With Us</a></li>
                         </ul>
+                        @php
+                            $fPhone = \App\Support\SiteContact::phoneDisplay();
+                            $fTel = \App\Support\SiteContact::phoneHref();
+                            $fWa = \App\Support\SiteContact::whatsappHref();
+                            $fEmail = \App\Support\SiteContact::email();
+                            $fAddress = \App\Support\SiteContact::address();
+                        @endphp
+                        @if($fTel || $fWa || $fEmail || $fAddress)
+                            <ul class="space-y-2 text-sm" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.1);">
+                                @if($fTel)<li><a href="{{ $fTel }}" class="hover:text-white transition-colors">Call: <span style="color: #fff;">{{ $fPhone }}</span></a></li>@endif
+                                @if($fWa)<li><a href="{{ $fWa }}" target="_blank" rel="noopener" class="hover:text-white transition-colors">WhatsApp us</a></li>@endif
+                                @if($fEmail)<li><a href="mailto:{{ $fEmail }}" class="hover:text-white transition-colors" style="overflow-wrap: anywhere;">{{ $fEmail }}</a></li>@endif
+                                @if($fAddress)<li class="text-xs leading-relaxed" style="color: rgba(255,255,255,.55);">{{ $fAddress }}</li>@endif
+                            </ul>
+                        @endif
                     </div>
                 </div>
-                <div class="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p class="text-xs">&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
+                <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style="border-top: 1px solid rgba(255,255,255,.1);">
+                    <div class="text-xs">
+                        <p>&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>
+                        @if(\App\Support\SiteContact::showNotDatingNote())
+                            <p style="margin-top: 4px; color: rgba(255,255,255,.55);">{{ $siteName }} is for people who want to marry. It is not a dating site.</p>
+                        @endif
+                    </div>
                     @php
                         $sFb = \App\Models\SiteSetting::getValue('social_facebook');
                         $sIg = \App\Models\SiteSetting::getValue('social_instagram');
