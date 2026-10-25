@@ -270,7 +270,7 @@
                                 <div class="float-field">
                                     <select name="age_from">
                                         @for($i = 18; $i <= 70; $i++)
-                                            <option value="{{ $i }}" {{ (int) request('age_from', 21) === $i ? 'selected' : '' }}>{{ $i }}</option>
+                                            <option value="{{ $i }}" {{ (int) request('age_from', $quickDefaults['age_from'] ?? 18) === $i ? 'selected' : '' }}>{{ $i }}</option>
                                         @endfor
                                     </select>
                                     <label>Age From</label>
@@ -278,7 +278,7 @@
                                 <div class="float-field">
                                     <select name="age_to">
                                         @for($i = 18; $i <= 70; $i++)
-                                            <option value="{{ $i }}" {{ (int) request('age_to', 35) === $i ? 'selected' : '' }}>{{ $i }}</option>
+                                            <option value="{{ $i }}" {{ (int) request('age_to', $quickDefaults['age_to'] ?? 70) === $i ? 'selected' : '' }}>{{ $i }}</option>
                                         @endfor
                                     </select>
                                     <label>Age To</label>

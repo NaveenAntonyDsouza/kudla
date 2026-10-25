@@ -61,8 +61,6 @@ class SavedSearchController extends Controller
             abort(403);
         }
 
-        $params = array_merge($savedSearch->criteria ?? [], ['search' => 1]);
-
-        return redirect()->route('search.advance', $params);
+        return redirect()->route('search.results.public', $savedSearch->criteria ?? []);
     }
 }

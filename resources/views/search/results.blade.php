@@ -23,7 +23,7 @@
                 {{-- Sort By Dropdown --}}
                 @include('search._sort', ['currentSort' => $currentSort ?? 'relevance'])
 
-                <a href="{{ request()->filled('keyword') ? route('search.keyword', request()->except(['page'])) : route('search.advance', request()->except(['search', 'page'])) }}"
+                <a href="{{ request()->filled('keyword') ? route('search.keyword') : route('search.advance', request()->except(['search', 'page', 'sort'])) }}"
                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-(--color-primary) border border-(--color-primary) rounded-lg hover:bg-(--color-primary-light) transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                     Modify Search

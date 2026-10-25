@@ -17,7 +17,7 @@ class SearchController extends Controller
      * as the visitors' (/search/advanced-search, /keyword-search, /id-search):
      * publicSearch() hands members over here with the tab.
      */
-    public function index(Request $request, ?string $tab = null)
+    public function index(Request $request, ?string $tab = null, bool $showResults = false)
     {
         $user = auth()->user();
         $profile = $user->profile;
@@ -39,8 +39,8 @@ class SearchController extends Controller
             if ($prefs->height_to_cm) $defaults['height_to'] = $prefs->height_to_cm;
         }
 
-        // If search was submitted, show results page
-        if ($request->has('search')) {
+        // If search was submitted, show results page (at /search/results since Oct 2026)
+        if ($request->has('search') || ($showResults && ! $request->filled('keyword'))) {
             $query = $this->buildSearchQuery($request, $profile);
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
@@ -254,15 +254,21 @@ class SearchController extends Controller
     public static function memberSearchUrl(array $query): string
     {
         $tab = $query['tab'] ?? null;
-        unset($query['tab']);
-        if (filled($query['keyword'] ?? null) || $tab === 'keyword') {
-            return route('search.keyword', $query);
-        }
+        $hadSearch = array_key_exists('search', $query);
+        unset($query['tab'], $query['search']);
         if (filled($query['matri_id'] ?? null) || $tab === 'byid') {
             return route('search.byid', $query);
         }
+        if (filled($query['keyword'] ?? null)) {
+            return route('search.results.public', $query);
+        }
+        if ($tab === 'keyword') {
+            return route('search.keyword');
+        }
+        // a search with filters → the results address; otherwise the form (e.g. load_prefs)
+        $filters = array_diff_key($query, array_flip(['page', 'sort', 'load_prefs']));
 
-        return route('search.advance', $query ? $query + ['search' => 1] : []);
+        return $hadSearch || $filters ? route('search.results.public', $query) : route('search.advance', $query);
     }
 
     /**
@@ -380,6 +386,11 @@ class SearchController extends Controller
         // other three show the members' search page right here.
         $member = auth()->check() && auth()->user()->profile;
         if ($member && $tab !== 'partner') {
+            // a link that already holds a search (old links, saved searches) → the results address
+            if (request()->has('search') || ($tab === 'keyword' && request()->filled('keyword'))) {
+                return redirect()->route('search.results.public', request()->except(['search', 'tab']));
+            }
+
             return $this->index(request(), ['keyword' => 'keyword', 'byid' => 'byid'][$tab] ?? 'partner');
         }
         // A visitor opening a member's results link (shared, or after logging out)
@@ -388,10 +399,10 @@ class SearchController extends Controller
         }
 
         $activeTab = $tab;
-        // Quick Search starts members at their own range (Oct 2026); visitors at 21–35
+        // Quick / Advanced Search start members at their own range, visitors at every age (Oct 2026)
         $quickDefaults = $member
             ? self::memberSearchDefaults(auth()->user()->profile)
-            : ['age_from' => 21, 'age_to' => 35, 'height_from' => '', 'height_to' => ''];
+            : ['age_from' => \App\Support\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => ''];
 
         return view('search.public', compact('activeTab', 'quickDefaults'));
     }
@@ -418,9 +429,14 @@ class SearchController extends Controller
      */
     public function publicResults()
     {
-        // If logged in, show the member results at the shared address
+        // Members get their results at this same address (Oct 2026); a Matri ID
+        // search shows its one profile on the Search by ID page.
         if (auth()->check() && auth()->user()->profile) {
-            return redirect(self::memberSearchUrl(request()->query()));
+            if (request()->filled('matri_id')) {
+                return redirect()->route('search.byid', request()->query());
+            }
+
+            return $this->index(request(), request()->filled('keyword') ? 'keyword' : 'partner', showResults: true);
         }
 
         $query = Profile::where('is_active', true)

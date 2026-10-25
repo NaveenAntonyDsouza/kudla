@@ -199,9 +199,11 @@ it('moved Advanced Search to /search/advanced-search and sends the old address t
 it('sends everyone who opens /search to Quick Search, and old /search links to their page', function () {
     $this->get('/search')->assertStatus(302)->assertRedirect('/search/quick-search');
     // old member links with a search in them now live at the shared addresses
-    $this->get('/search?keyword=teacher')->assertStatus(301)->assertRedirect('/search/keyword-search?keyword=teacher');
+    // ... and results, for visitors and members alike, at /search/results
+    $this->get('/search?keyword=teacher')->assertStatus(301)->assertRedirect('/search/results?keyword=teacher');
     $this->get('/search?tab=byid&matri_id=KM100123')->assertStatus(301)->assertRedirect('/search/id-search?matri_id=KM100123');
-    $this->get('/search?search=1&age_from=25')->assertStatus(301)->assertRedirect('/search/advanced-search?search=1&age_from=25');
+    $this->get('/search?search=1&age_from=25')->assertStatus(301)->assertRedirect('/search/results?age_from=25');
+    $this->get('/search?tab=partner&load_prefs=1')->assertStatus(301)->assertRedirect('/search/advanced-search?load_prefs=1');
     // a visitor opening a member's results link sees the visitor results
     $this->get('/search/advanced-search?search=1&age_from=25')->assertRedirect('/search/results?age_from=25');
     $this->get('/dashboard')->assertRedirect('/login'); // other member pages still ask to log in
@@ -209,7 +211,7 @@ it('sends everyone who opens /search to Quick Search, and old /search links to t
 
 it('lets a visitor save a search by logging in and coming back to it', function () {
     $this->get('/search/save?gender=female&age_from=25')->assertRedirect('/login')
-        ->assertSessionHas('url.intended', route('search.advance', ['gender' => 'female', 'age_from' => 25, 'search' => 1]));
+        ->assertSessionHas('url.intended', route('search.results.public', ['gender' => 'female', 'age_from' => 25]));
     expect(file_get_contents(resource_path('views/search/public-results.blade.php')))->toContain("route('search.save-later', request()->except(['page']))")->toContain('Save this search');
 });
 
@@ -251,4 +253,25 @@ it('starts members at their own range in Quick Search and does not ask them who 
     $woman = (new Profile())->forceFill(['gender' => 'female', 'date_of_birth' => now()->subYears(28)->format('Y-m-d'), 'height' => '160 cm - 5 ft 03 inch']);
     expect(\App\Http\Controllers\SearchController::memberSearchDefaults($woman))
         ->toMatchArray(['age_from' => 28, 'age_to' => 38, 'height_from' => '160 cm - 5 ft 03 inch']);
+});
+
+it('shows results at one address for visitors and members', function () {
+    $c = file_get_contents(app_path('Http/Controllers/SearchController.php'));
+    $member = file_get_contents(resource_path('views/search/index.blade.php'));
+
+    expect($c)->toContain("return \$this->index(request(), request()->filled('keyword') ? 'keyword' : 'partner', showResults: true);")
+        ->and($member)->toContain("<form method=\"GET\" action=\"{{ route('search.results.public') }}\">")
+        ->toContain("<form method=\"GET\" action=\"{{ route('search.results.public') }}\" class=\"space-y-4\">")
+        ->not->toContain('<input type="hidden" name="search" value="1">')
+        ->and(file_get_contents(app_path('Http/Controllers/SavedSearchController.php')))->toContain("route('search.results.public', \$savedSearch->criteria ?? [])");
+});
+
+it('starts visitors at every age, from the youngest allowed to 70', function () {
+    expect(file_get_contents(app_path('Http/Controllers/SearchController.php')))
+        ->toContain("['age_from' => \\App\\Support\\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => '']");
+
+    // both visitor forms (Quick and Advanced) start from those defaults
+    $view = file_get_contents(resource_path('views/search/public.blade.php'));
+    expect(substr_count($view, "request('age_from', \$quickDefaults['age_from']"))->toBe(2)
+        ->and(substr_count($view, "request('age_to', \$quickDefaults['age_to']"))->toBe(2);
 });
