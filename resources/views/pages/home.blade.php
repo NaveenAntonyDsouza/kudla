@@ -74,7 +74,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-semibold text-white">Smart Matchmaking</p>
-                                    <p class="text-xs text-white/70">AI-powered compatibility scoring</p>
+                                    <p class="text-xs text-white/70">Matches ranked by your partner preferences</p>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +88,7 @@
                     <h2 class="text-lg font-bold text-gray-900 mb-0.5">Register Free</h2>
                     <p class="text-xs text-gray-500 mb-4">Create your profile in 2 minutes</p>
 
-                    <form method="POST" action="{{ route('register.store1') }}" class="space-y-3" x-data="{
+                    <form method="POST" action="{{ route('register.store1') }}" data-hides-wa-fab class="space-y-3" x-data="{
                         gender: @js(old('gender', '')),
                         showPw: false,
                         submitting: false,

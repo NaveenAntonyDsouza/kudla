@@ -18,5 +18,21 @@
         .wa-fab:focus-visible { outline: 3px solid #128C7E; outline-offset: 3px; }
         @media (max-width: 640px) { .wa-fab { right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: 52px; height: 52px; } }
         @media print { .wa-fab { display: none; } }
+        .wa-fab { transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease; }
+        .wa-fab.wa-fab-away { opacity: 0; pointer-events: none; }
     </style>
+    {{-- Step aside while a sign-up form ([data-hides-wa-fab]) passes the bottom of the screen, so the button never covers its fields or links --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var fab = document.querySelector('.wa-fab');
+            var forms = document.querySelectorAll('[data-hides-wa-fab]');
+            if (!fab || !forms.length || !('IntersectionObserver' in window)) return;
+            var inView = new Set();
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) { e.isIntersecting ? inView.add(e.target) : inView.delete(e.target); });
+                fab.classList.toggle('wa-fab-away', inView.size > 0);
+            }, { rootMargin: '-85% 0px 0px 0px' });
+            forms.forEach(function (f) { io.observe(f); });
+        });
+    </script>
 @endif

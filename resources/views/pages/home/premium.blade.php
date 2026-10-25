@@ -225,7 +225,7 @@
                 <h2 class="p-serif text-3xl md:text-5xl font-bold">Your story starts with hello</h2>
                 <p class="mt-4 text-lg text-white/80 max-w-xl mx-auto">Free to join. No obligations. Just possibility.</p>
             </div>
-            <form action="{{ route('register') }}" method="GET" class="bg-white rounded-sm shadow-2xl p-8 md:p-10">
+            <form action="{{ route('register') }}" method="GET" data-hides-wa-fab class="bg-white rounded-sm shadow-2xl p-8 md:p-10">
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <button type="button" onclick="document.getElementById('p-gender').value='male'; this.classList.add('p-selected'); document.querySelectorAll('.p-gender-btn').forEach(b => b !== this && b.classList.remove('p-selected'));" class="p-gender-btn py-4 border-2 border-gray-200 text-sm font-semibold hover:border-gray-400 transition-colors">
                         I am a Groom

@@ -145,8 +145,6 @@
         .home-garland .g-trust-icon { width: 42px; height: 42px; flex: none; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: rgba(var(--g-a-rgb), .18); border: 1px solid rgba(var(--g-a-rgb), .4); color: #ffc27a; }
         .home-garland .g-trust-item b { display: block; font-size: 0.95rem; color: #fff; }
         .home-garland .g-trust-item small { display: block; font-size: 0.8rem; color: rgba(255,255,255,.72); }
-        .home-garland .g-member { margin-top: 26px; font-size: 0.9rem; color: rgba(255,255,255,.7); }
-        .home-garland .g-member a { color: #fff; font-weight: 600; }
 
         .home-garland .g-card { position: relative; width: 100%; max-width: 400px; flex: none; background: #fff; color: var(--g-ink); border-radius: 18px; padding: 24px 20px 20px; box-shadow: 0 30px 60px -22px rgba(12,2,18,.6), 0 0 0 1px rgba(255,255,255,.06); }
         @media (min-width: 768px) { .home-garland .g-card { width: 360px; min-width: 360px; padding: 26px 24px 22px; } }
@@ -270,14 +268,13 @@
                         </div>
                         <div class="g-trust-item">
                             <span class="g-trust-icon"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icons['heart'] }}"/></svg></span>
-                            <span><b>Smart Matchmaking</b><small>AI-powered compatibility scoring</small></span>
+                            <span><b>Smart Matchmaking</b><small>Matches ranked by your partner preferences</small></span>
                         </div>
-                        <p class="g-member">Already a member? <a href="{{ route('login') }}">Login</a></p>
                     </div>
                 </div>
 
                 {{-- Registration form: identical to Classic --}}
-                <div class="g-card">
+                <div class="g-card" data-hides-wa-fab>
                     <h2 class="g-card-title">Register Free</h2>
                     <p class="g-card-sub">Create your profile in 2 minutes</p>
 

@@ -128,3 +128,23 @@ it('lets the admin hide the homepage "Get the App" section on every design', fun
         ->toContain("Toggle::make('show_app_section')")
         ->toContain("'show_app_section' => (\$settings['show_app_section'] ?? '1') === '1'");
 });
+
+it('keeps the homepage hero honest and uncluttered', function () {
+    foreach (['pages/home/garland', 'pages/home/classic', 'pages/home'] as $view) {
+        expect(file_get_contents(resource_path("views/{$view}.blade.php")))
+            ->not->toContain('AI-powered')                       // matching is a weighted preference score, not AI
+            ->toContain('Matches ranked by your partner preferences');
+    }
+    expect(file_get_contents(resource_path('views/pages/home/garland.blade.php')))
+        ->not->toContain('Already a member?')                    // header + form already offer Login
+        ->toContain('<div class="g-card" data-hides-wa-fab>');
+});
+
+it('moves the WhatsApp button out of the way of homepage sign-up forms', function () {
+    foreach (['classic', 'modern', 'premium', 'garland'] as $design) {
+        expect(file_get_contents(resource_path("views/pages/home/{$design}.blade.php")))->toContain('data-hides-wa-fab');
+    }
+    expect(file_get_contents(resource_path('views/components/whatsapp-button.blade.php')))
+        ->toContain("document.querySelectorAll('[data-hides-wa-fab]')")
+        ->toContain('.wa-fab.wa-fab-away { opacity: 0; pointer-events: none; }');
+});

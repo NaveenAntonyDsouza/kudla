@@ -73,7 +73,7 @@
                     @endif
 
                     {{-- Compact registration form — 3 fields --}}
-                    <form action="{{ route('register') }}" method="GET" class="mt-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+                    <form action="{{ route('register') }}" method="GET" data-hides-wa-fab class="mt-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
                         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Registration</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <button type="button" onclick="document.getElementById('m-gender').value='male'; this.classList.add('m-selected'); document.querySelectorAll('.m-gender-btn').forEach(b => b !== this && b.classList.remove('m-selected'));" class="m-gender-btn py-3 rounded-lg border-2 border-gray-200 text-sm font-semibold hover:border-gray-400 transition-colors" style="--active-border: var(--brand-primary);">
