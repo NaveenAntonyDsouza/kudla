@@ -257,7 +257,7 @@ class MatchingService
             'age'              => $prefs->age_from > 0 && $prefs->age_to > 0,
             'denomination'     => $this->hasArrayValues($prefs->denomination) || $this->hasArrayValues($prefs->caste),
             'mother_tongue'    => $this->hasArrayValues($prefs->mother_tongues),
-            'education'        => $this->hasArrayValues($prefs->education_levels),
+            'education'        => $this->hasArrayValues($prefs->education_levels) || $this->hasArrayValues($prefs->educational_qualifications),
             'occupation'       => $this->hasArrayValues($prefs->occupations),
             'height'           => (int) $prefs->height_from_cm > 0 && (int) $prefs->height_to_cm > 0,
             'native_location'  => $this->hasArrayValues($prefs->native_districts) || $this->hasArrayValues($prefs->native_states) || $this->hasArrayValues($prefs->native_countries),
@@ -300,11 +300,7 @@ class MatchingService
                 true
             ),
 
-            'education' => in_array(
-                $candidate->educationDetail?->highest_education,
-                $prefs->education_levels ?? [],
-                true
-            ),
+            'education' => $this->educationMatches($candidate, $prefs),
 
             'occupation' => in_array(
                 $candidate->educationDetail?->occupation,
@@ -350,6 +346,20 @@ class MatchingService
     /**
      * Check if an array has real values (not null, empty, or "Any").
      */
+    /**
+     * Onboarding saves education LEVELS ("Bachelor's") and qualifications in two
+     * fields; profile editing saves qualifications ("B.Sc") into education_levels.
+     * Match either against the candidate's level or qualification (Oct 2026:
+     * level-only preferences used to match nobody).
+     */
+    private function educationMatches(Profile $candidate, PartnerPreference $prefs): bool
+    {
+        $wanted = array_merge((array) ($prefs->education_levels ?? []), (array) ($prefs->educational_qualifications ?? []));
+        $ed = $candidate->educationDetail;
+
+        return $ed !== null && (in_array($ed->highest_education, $wanted, true) || in_array($ed->education_level, $wanted, true));
+    }
+
     private function hasArrayValues(?array $arr): bool
     {
         if (!$arr) {

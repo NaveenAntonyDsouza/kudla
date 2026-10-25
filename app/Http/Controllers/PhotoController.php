@@ -64,12 +64,6 @@ class PhotoController extends Controller
         $autoApprove = SiteSetting::getValue($settingKey, '1') === '1';
         $approvalStatus = $autoApprove ? ProfilePhoto::STATUS_APPROVED : ProfilePhoto::STATUS_PENDING;
 
-        // For profile type, archive existing before uploading new
-        if ($type === 'profile') {
-            $profile->profilePhotos()->visible()->ofType('profile')
-                ->update(['is_visible' => false, 'is_primary' => false]);
-        }
-
         // Check count limits (for album/family)
         if ($type !== 'profile') {
             $currentCount = $profile->profilePhotos()->visible()->approved()->ofType($type)->count();
@@ -89,6 +83,14 @@ class PhotoController extends Controller
             $activeDriver = PhotoStorageService::DRIVER_LOCAL;
         }
         $paths = $this->imageProcessor->processUpload($request->file('photo'), $folder, $activeDriver);
+
+        // Profile type: archive the old main photo only now that the new one is
+        // safely processed (Oct 2026: archiving first meant a failed upload left
+        // the member with no photo at all)
+        if ($type === 'profile') {
+            $profile->profilePhotos()->visible()->ofType('profile')
+                ->update(['is_visible' => false, 'is_primary' => false]);
+        }
 
         // For profile type, clear any primary flag and set this as primary
         $isPrimary = false;

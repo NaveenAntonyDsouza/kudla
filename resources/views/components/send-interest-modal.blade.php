@@ -1,4 +1,5 @@
 @props(['profile'])
+@php $canWriteOwn = auth()->user()?->profile ? app(\App\Services\InterestService::class)->canWritePersonalMessage(auth()->user()->profile, $profile) : false; @endphp
 
 <div x-data="{ showModal: false, source: 'profile', selectedTemplate: 'msg_suitable', customMessage: '', submitting: false }"
      x-on:open-interest-modal.window="source = $event.detail?.source || 'profile'; showModal = true"
@@ -48,7 +49,13 @@
                             </label>
                         @endforeach
 
-                        {{-- Custom message option --}}
+                        {{-- Custom message option: paid plans with "Personalized messages" (or Free Membership mode) --}}
+                        @if(! $canWriteOwn)
+                            <div class="flex items-start gap-3 p-3 rounded-lg border border-dashed border-gray-200" style="color: #6b7280;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="flex: none; margin-top: 2px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span class="text-sm">Write your own message: included in <a href="{{ route('membership.index') }}" class="font-semibold text-(--color-primary) hover:underline">paid plans</a></span>
+                            </div>
+                        @else
                         <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors"
                             :class="selectedTemplate === 'msg_custom' ? 'border-(--color-primary) bg-(--color-primary-light)' : 'border-gray-200'">
                             <input type="radio" name="template_id" value="msg_custom" x-model="selectedTemplate"
@@ -62,6 +69,7 @@
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)"></textarea>
                             <p class="text-xs text-gray-400 mt-1"><span x-text="customMessage.length">0</span>/500 characters</p>
                         </div>
+                        @endif
                     </div>
                 </div>
 

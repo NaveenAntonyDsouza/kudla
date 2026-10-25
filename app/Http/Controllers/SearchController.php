@@ -295,7 +295,7 @@ class SearchController extends Controller
         if ($prefs->caste) $params['caste'] = $prefs->caste;
         if ($prefs->marital_status) $params['marital_status'] = $prefs->marital_status;
         if ($prefs->mother_tongues) $params['mother_tongue'] = $prefs->mother_tongues;
-        if ($prefs->education_levels) $params['education'] = $prefs->education_levels;
+        if ($prefs->education_levels || $prefs->educational_qualifications) $params['education'] = array_values(array_unique(array_merge((array) $prefs->education_levels, (array) $prefs->educational_qualifications)));
         if ($prefs->occupations) $params['occupation'] = $prefs->occupations;
         if ($prefs->diet) $params['diet'] = $prefs->diet;
         if ($prefs->family_status) $params['family_status'] = $prefs->family_status;
@@ -412,7 +412,8 @@ class SearchController extends Controller
             $query->whereIn('marital_status', \App\Support\MaritalStatus::expand($maritals));
         }
         if ($education = $this->multiParam('education')) {
-            $query->whereHas('educationDetail', fn($q) => $q->whereIn('highest_education', $education));
+            // a qualification (B.Sc) or a level (Bachelor's) — preferences hold both
+            $query->whereHas('educationDetail', fn($q) => $q->where(fn($w) => $w->whereIn('highest_education', $education)->orWhereIn('education_level', $education)));
         }
         if ($occupation = $this->multiParam('occupation')) {
             $query->whereHas('educationDetail', fn($q) => $q->whereIn('occupation', $occupation));

@@ -59,9 +59,7 @@ class InterestService
         // is on a high-end tier with `allows_free_member_chat=true`, in which
         // case free senders may include custom text. Models the BharatMatrimony
         // Platinum convention; see config/matrimony.php + MembershipPlan.
-        if ($customMessage
-            && !$sender->user->isPremium()
-            && !$receiver->user?->activePlanAllowsFreeMemberChat()) {
+        if ($customMessage && ! $this->canWritePersonalMessage($sender, $receiver)) {
             throw new \RuntimeException('Upgrade to a paid plan to send personalized messages.');
         }
 
@@ -335,6 +333,22 @@ class InterestService
             return $membership->plan->daily_interest_limit ?? self::FREE_DAILY_LIMIT;
         }
         return self::FREE_DAILY_LIMIT;
+    }
+
+    /**
+     * May this member write their own message with an interest? The rule used by
+     * send() and by the interest form (Oct 2026: the form offered it to everyone):
+     * a paid plan (everyone in Free Membership mode), or a receiver whose plan
+     * lets free members write to them.
+     */
+    public function canWritePersonalMessage(Profile $sender, ?Profile $receiver = null): bool
+    {
+        try {
+            return (bool) $sender->user?->isPremium()
+                || (bool) $receiver?->user?->activePlanAllowsFreeMemberChat();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**

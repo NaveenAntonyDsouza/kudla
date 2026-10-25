@@ -239,7 +239,8 @@ class SearchController extends BaseApiController
         // Education detail joins.
         $education = array_filter((array) ($request->education ?? []), fn ($i) => $i !== 'Any');
         if (! empty($education)) {
-            $query->whereHas('educationDetail', fn ($q) => $q->whereIn('highest_education', $education));
+            // a qualification (B.Sc) or a level (Bachelor's), as on the website
+            $query->whereHas('educationDetail', fn ($q) => $q->where(fn ($w) => $w->whereIn('highest_education', $education)->orWhereIn('education_level', $education)));
         }
         $occupation = array_filter((array) ($request->occupation ?? []), fn ($i) => $i !== 'Any');
         if (! empty($occupation)) {

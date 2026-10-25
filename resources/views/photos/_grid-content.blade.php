@@ -31,6 +31,17 @@
     </div>
 @endif
 
+{{-- Photos but none is the main one (Oct 2026: 21 Kudla members) → their card shows no picture --}}
+@php
+    $gridHasAny = $profilePhoto || $albumPhotos->isNotEmpty() || $familyPhotos->isNotEmpty();
+    $gridHasMain = ($profilePhoto?->is_primary) || $albumPhotos->contains('is_primary', true) || $familyPhotos->contains('is_primary', true);
+@endphp
+@if($gridHasAny && ! $gridHasMain)
+    <div class="mb-6 p-3 rounded-lg" style="background: #fffbeb; border: 1px solid #fde68a;">
+        <p class="text-sm font-medium" style="color: #92400e; margin: 0;">Your profile card shows no photo yet. Upload a profile photo, or tap one of your photos below and choose &#10003; (Set as Profile Photo).</p>
+    </div>
+@endif
+
 <div x-data="photoManagerEditor({{ $archivedPhotos->count() > 0 ? 'true' : 'false' }}, @js(request('tab', 'album')), @js($redirectTo ?? route('photos.manage')))">
 
     <div class="flex flex-col lg:flex-row gap-8">

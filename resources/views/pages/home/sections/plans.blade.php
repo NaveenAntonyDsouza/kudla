@@ -2,11 +2,38 @@
     Membership plans preview (Oct 2026; Admin → Homepage Content → Garland &
     Harmony sections). Live from Membership Plans (active plans, in their own
     order): name, price, struck-out price, length and features as set there.
+    In Free Membership mode (Settings → Membership Mode) everyone already has
+    full access and /membership-plans says so, so this shows the same message
+    instead of prices.
 --}}
 @php
-    $homePlans = \App\Models\MembershipPlan::where('is_active', true)->orderBy('sort_order')->orderBy('price_inr')->get();
+    $freeMode = \App\Models\User::freeMembershipEnabled();
+    $homePlans = $freeMode ? collect() : \App\Models\MembershipPlan::where('is_active', true)->orderBy('sort_order')->orderBy('price_inr')->get();
 @endphp
-@if($homePlans->count())
+@if($freeMode)
+<section class="g-section g-lav">
+    <div class="g-wrap" style="text-align: center;">
+        <x-dynamic-component :component="$divider" />
+        <h2 class="g-h2">Everything Is Free Right Now</h2>
+        <p class="g-lead">Every feature is free for all members. No plan or payment needed.</p>
+        <div style="max-width: 34rem; margin: 32px auto 0; background: #fff; border: 1px solid var(--g-line); border-radius: 18px; padding: 24px 22px; text-align: left;">
+            <ul style="list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;">
+                @foreach([
+                    'Create your profile and add photos',
+                    'Search and view profiles',
+                    'Send up to ' . \App\Services\InterestService::FREE_DAILY_LIMIT . ' interests a day, with your own message',
+                    'Chat, and see each other\'s phone and WhatsApp once you both accept',
+                ] as $freeItem)
+                    <li style="display: flex; gap: 9px; align-items: flex-start; font-size: 0.95rem; line-height: 1.45; color: var(--g-ink);"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="flex: none; margin-top: 3px; color: var(--g-a-ink);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="M5 13l4 4L19 7"/></svg>{{ $freeItem }}</li>
+                @endforeach
+            </ul>
+            @guest
+                <a href="/register" class="g-btn g-btn-primary" style="width: 100%; margin-top: 20px;">Register Free</a>
+            @endguest
+        </div>
+    </div>
+</section>
+@elseif($homePlans->count())
 <style>
     .home-garland .g-plans { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 44px; align-items: stretch; }
     @media (min-width: 640px) { .home-garland .g-plans { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

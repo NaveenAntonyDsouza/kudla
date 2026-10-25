@@ -52,18 +52,23 @@ class SendMembershipExpiryReminders extends Command
 
         $this->info("Sent {$endingTomorrow->count()} ending-tomorrow reminders.");
 
-        // 3. Memberships that expired today — deactivate and notify
+        // 3. Memberships that have ended — deactivate, and tell the member when it
+        // ended recently. (Oct 2026: only "ended yesterday" was looked at, so a day
+        // the scheduler missed left a membership active forever — 3 on kudla.)
         $expiredToday = UserMembership::where('is_active', true)
-            ->whereDate('ends_at', now()->subDay()->toDateString())
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<', now())
             ->with(['user', 'plan'])
             ->get();
 
         foreach ($expiredToday as $membership) {
             $user = $membership->user;
-            if (!$user) continue;
 
             // Deactivate
             $membership->update(['is_active' => false]);
+
+            // no late "your plan has expired" messages for old ones
+            if (! $user || $membership->ends_at->lt(now()->subDays(3))) continue;
 
             $notificationService->send(
                 $user,

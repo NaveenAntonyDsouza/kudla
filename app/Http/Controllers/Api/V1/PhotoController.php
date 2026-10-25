@@ -198,15 +198,6 @@ class PhotoController extends BaseApiController
             ? ProfilePhoto::STATUS_APPROVED
             : ProfilePhoto::STATUS_PENDING;
 
-        // Profile type: archive the previous primary BEFORE processing the
-        // new file so we don't briefly have two profile photos live.
-        if ($type === 'profile') {
-            $profile->profilePhotos()
-                ->visible()
-                ->ofType('profile')
-                ->update(['is_visible' => false, 'is_primary' => false]);
-        }
-
         // Pick the active storage driver (defaults to public if the
         // configured one isn't set up — matches web safety net).
         $driver = $this->storage->getActiveDriver();
@@ -218,6 +209,16 @@ class PhotoController extends BaseApiController
         // medium, thumb) + applies watermark (if enabled) + returns paths.
         $folder = "photos/{$profile->id}";
         $paths = $this->images->processUpload($request->file('photo'), $folder, $driver);
+
+        // Profile type: archive the previous primary only after the new file
+        // processed OK (a failed upload must not leave the member photo-less),
+        // and before saving it, so two profile photos are never live at once.
+        if ($type === 'profile') {
+            $profile->profilePhotos()
+                ->visible()
+                ->ofType('profile')
+                ->update(['is_visible' => false, 'is_primary' => false]);
+        }
 
         // Make this the primary only if it's a profile-type upload AND
         // it auto-approved (an admin-pending photo shouldn't be primary).

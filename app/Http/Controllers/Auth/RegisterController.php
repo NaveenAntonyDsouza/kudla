@@ -394,11 +394,6 @@ class RegisterController extends Controller
             ? ProfilePhoto::STATUS_APPROVED
             : ProfilePhoto::STATUS_PENDING;
 
-        // Archive any prior profile photos (defensive — shouldn't exist at
-        // registration but a re-submit could create one).
-        $profile->profilePhotos()->visible()->ofType('profile')
-            ->update(['is_visible' => false, 'is_primary' => false]);
-
         // Process upload — generates 3 size variants + preserves original.
         // Picks storage driver from SiteSetting `active_storage_driver`,
         // falls back to local if the configured driver isn't available.
@@ -412,6 +407,11 @@ class RegisterController extends Controller
             $folder,
             $activeDriver
         );
+
+        // Archive any prior profile photos (a re-submit could create one) —
+        // only after the new one processed OK, so a failed upload loses nothing.
+        $profile->profilePhotos()->visible()->ofType('profile')
+            ->update(['is_visible' => false, 'is_primary' => false]);
 
         ProfilePhoto::create([
             'profile_id' => $profile->id,
