@@ -239,3 +239,16 @@ it('shows the same Search menu to visitors and members', function () {
         ->and(file_get_contents(resource_path('views/search/public.blade.php')))->toContain("@guest\n                <div class=\"bg-(--color-primary-light)")
         ->and(file_get_contents(base_path('routes/web.php')))->toContain("->name('search.advance')->middleware('profile.complete.member')");
 });
+
+it('starts members at their own range in Quick Search and does not ask them who they are looking for', function () {
+    $view = file_get_contents(resource_path('views/search/public.blade.php'));
+    $quick = substr($view, strpos($view, "x-show=\"activeTab === 'partner'\""), 9000);
+
+    expect($quick)->toContain("@guest\n                                <div class=\"float-field\">\n                                    <select name=\"gender\">")
+        ->toContain("request('age_from', \$quickDefaults['age_from'] ?? 21)")
+        ->toContain("request('height_to', \$quickDefaults['height_to'] ?? '')");
+
+    $woman = (new Profile())->forceFill(['gender' => 'female', 'date_of_birth' => now()->subYears(28)->format('Y-m-d'), 'height' => '160 cm - 5 ft 03 inch']);
+    expect(\App\Http\Controllers\SearchController::memberSearchDefaults($woman))
+        ->toMatchArray(['age_from' => 28, 'age_to' => 38, 'height_from' => '160 cm - 5 ft 03 inch']);
+});

@@ -23,16 +23,7 @@ class SearchController extends Controller
         $profile = $user->profile;
         $prefs = $profile->partnerPreference;
 
-        // Smart defaults based on gender
-        $isMale = $profile->gender === 'male' || $profile->gender === 'Male';
-        $age = $profile->age ?? 25;
-
-        $defaults = [
-            'age_from' => $isMale ? 18 : $age,
-            'age_to' => $isMale ? $age : min($age + 10, 70),
-            'height_from' => $isMale ? '134 cm - 4 ft 05 inch' : ($profile->height ?? '134 cm - 4 ft 05 inch'),
-            'height_to' => $isMale ? ($profile->height ?? '213 cm - 7 ft 00 inch') : '213 cm - 7 ft 00 inch',
-        ];
+        $defaults = self::memberSearchDefaults($profile);
 
         $activeTab = $tab ?? $request->get('tab', 'partner');
 
@@ -246,6 +237,20 @@ class SearchController extends Controller
      * Where a members' search with these parameters lives now: keyword →
      * Keyword Search, Matri ID → Search by ID, filters → Advanced Search results.
      */
+    public static function memberSearchDefaults(Profile $profile): array
+    {
+        // Starting age / height range from the member's own (Advanced and Quick Search)
+        $isMale = $profile->gender === 'male' || $profile->gender === 'Male';
+        $age = $profile->age ?? 25;
+
+        return [
+            'age_from' => $isMale ? 18 : $age,
+            'age_to' => $isMale ? $age : min($age + 10, 70),
+            'height_from' => $isMale ? '134 cm - 4 ft 05 inch' : ($profile->height ?? '134 cm - 4 ft 05 inch'),
+            'height_to' => $isMale ? ($profile->height ?? '213 cm - 7 ft 00 inch') : '213 cm - 7 ft 00 inch',
+        ];
+    }
+
     public static function memberSearchUrl(array $query): string
     {
         $tab = $query['tab'] ?? null;
@@ -383,8 +388,12 @@ class SearchController extends Controller
         }
 
         $activeTab = $tab;
+        // Quick Search starts members at their own range (Oct 2026); visitors at 21–35
+        $quickDefaults = $member
+            ? self::memberSearchDefaults(auth()->user()->profile)
+            : ['age_from' => 21, 'age_to' => 35, 'height_from' => '', 'height_to' => ''];
 
-        return view('search.public', compact('activeTab'));
+        return view('search.public', compact('activeTab', 'quickDefaults'));
     }
 
     /**

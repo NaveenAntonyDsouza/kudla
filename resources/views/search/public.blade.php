@@ -98,7 +98,8 @@
                         <form method="GET" action="{{ route('search.results.public') }}">
                             <input type="hidden" name="search_type" value="quick">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                {{-- Gender --}}
+                                {{-- Gender: visitors only — members always see the opposite gender --}}
+                                @guest
                                 <div class="float-field">
                                     <select name="gender">
                                         <option value="">Any</option>
@@ -107,12 +108,13 @@
                                     </select>
                                     <label>Looking for</label>
                                 </div>
+                                @endguest
 
                                 {{-- Age Range --}}
                                 <div class="float-field">
                                     <select name="age_from">
                                         @for($i = 18; $i <= 70; $i++)
-                                            <option value="{{ $i }}" {{ (int) request('age_from', 21) === $i ? 'selected' : '' }}>{{ $i }}</option>
+                                            <option value="{{ $i }}" {{ (int) request('age_from', $quickDefaults['age_from'] ?? 21) === $i ? 'selected' : '' }}>{{ $i }}</option>
                                         @endfor
                                     </select>
                                     <label>Age From</label>
@@ -120,7 +122,7 @@
                                 <div class="float-field">
                                     <select name="age_to">
                                         @for($i = 18; $i <= 70; $i++)
-                                            <option value="{{ $i }}" {{ (int) request('age_to', 35) === $i ? 'selected' : '' }}>{{ $i }}</option>
+                                            <option value="{{ $i }}" {{ (int) request('age_to', $quickDefaults['age_to'] ?? 35) === $i ? 'selected' : '' }}>{{ $i }}</option>
                                         @endfor
                                     </select>
                                     <label>Age To</label>
@@ -131,7 +133,7 @@
                                     <select name="height_from">
                                         <option value="">Any</option>
                                         @foreach(config('reference_data.height_list', []) as $h)
-                                            <option value="{{ $h }}" {{ request('height_from') === $h ? 'selected' : '' }}>{{ $h }}</option>
+                                            <option value="{{ $h }}" {{ request('height_from', $quickDefaults['height_from'] ?? '') === $h ? 'selected' : '' }}>{{ $h }}</option>
                                         @endforeach
                                     </select>
                                     <label>Height From</label>
@@ -140,7 +142,7 @@
                                     <select name="height_to">
                                         <option value="">Any</option>
                                         @foreach(config('reference_data.height_list', []) as $h)
-                                            <option value="{{ $h }}" {{ request('height_to') === $h ? 'selected' : '' }}>{{ $h }}</option>
+                                            <option value="{{ $h }}" {{ request('height_to', $quickDefaults['height_to'] ?? '') === $h ? 'selected' : '' }}>{{ $h }}</option>
                                         @endforeach
                                     </select>
                                     <label>Height To</label>
