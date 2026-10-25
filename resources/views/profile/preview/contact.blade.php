@@ -63,12 +63,13 @@
                         @case($ca::SENT_PENDING) Waiting for their reply @break
                         @case($ca::RECEIVED_PENDING) They're interested in you @break
                         @case($ca::NEEDS_PLAN) You're connected — upgrade to call or WhatsApp @break
+                        @case($ca::LIMIT_REACHED) You've used your plan's contact views @break
                         @default Contact details not available
                     @endswitch
                 </h3>
-                <p class="ct-text">{{ \App\Support\ContactAccess::lockedReason((string) $state) }}</p>
+                <p class="ct-text">{{ \App\Support\ContactAccess::lockedReason((string) $state, auth()->user()?->profile) }}</p>
 
-                @if(in_array($state, [$ca::NO_INTEREST, $ca::SENT_PENDING, $ca::RECEIVED_PENDING, $ca::NEEDS_PLAN], true) && ($hasPhone || $hasWhatsApp || $socialLinks->isNotEmpty()))
+                @if(in_array($state, [$ca::NO_INTEREST, $ca::SENT_PENDING, $ca::RECEIVED_PENDING, $ca::NEEDS_PLAN, $ca::LIMIT_REACHED], true) && ($hasPhone || $hasWhatsApp || $socialLinks->isNotEmpty()))
                     <div class="ct-chips" aria-label="Available once connected">
                         @if($hasPhone)<span class="ct-chip">&#128222; Mobile number</span>@endif
                         @if($hasWhatsApp)<span class="ct-chip">&#128172; WhatsApp</span>@endif
@@ -85,7 +86,7 @@
                     </button>
                 @elseif($state === $ca::RECEIVED_PENDING && $pendingInterest)
                     <a href="{{ route('interests.show', $pendingInterest) }}" class="ct-cta ct-cta-green">Accept or reply</a>
-                @elseif($state === $ca::NEEDS_PLAN)
+                @elseif($state === $ca::NEEDS_PLAN || $state === $ca::LIMIT_REACHED)
                     <a href="{{ route('membership.index') }}" class="ct-cta ct-cta-primary">View membership plans</a>
                     @if($pendingInterest)
                         <div><a href="{{ route('interests.show', $pendingInterest) }}" class="ct-link">Or chat here meanwhile &rarr;</a></div>

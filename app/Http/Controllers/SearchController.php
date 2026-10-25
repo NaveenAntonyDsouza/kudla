@@ -111,8 +111,9 @@ class SearchController extends Controller
         });
 
         // Direct profile field filters
+        // every spelling of the chosen status (Divorced = Divorcee, Widower = Widow/Widower)
         $query->when($request->marital_status, fn($q, $v) =>
-            $q->whereIn('marital_status', array_filter((array) $v, fn($i) => $i !== 'Any'))
+            $q->whereIn('marital_status', \App\Support\MaritalStatus::expand((array) $v))
         );
         $query->when($request->mother_tongue, fn($q, $v) =>
             $q->whereIn('mother_tongue', array_filter((array) $v, fn($i) => $i !== 'Any'))
@@ -408,7 +409,7 @@ class SearchController extends Controller
             $query->where('matri_id', strtoupper($matriId));
         }
         if ($maritals = $this->multiParam('marital_status')) {
-            $query->whereIn('marital_status', $maritals);
+            $query->whereIn('marital_status', \App\Support\MaritalStatus::expand($maritals));
         }
         if ($education = $this->multiParam('education')) {
             $query->whereHas('educationDetail', fn($q) => $q->whereIn('highest_education', $education));

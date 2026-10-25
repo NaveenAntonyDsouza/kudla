@@ -132,6 +132,10 @@
                     <div style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #fffbeb; border: 1px solid #fde68a; font-size: 13px; color: #92400e;">
                         Want to call or WhatsApp instead? <a href="{{ route('membership.index') }}" style="font-weight: 600; color: #92400e; text-decoration: underline;">Upgrade to see their phone and WhatsApp</a>
                     </div>
+                @elseif($chatContact['state'] === \App\Support\ContactAccess::LIMIT_REACHED)
+                    <div style="margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #fffbeb; border: 1px solid #fde68a; font-size: 13px; color: #92400e;">
+                        {{ \App\Support\ContactAccess::lockedReason(\App\Support\ContactAccess::LIMIT_REACHED, $profile) }} You can keep chatting here. <a href="{{ route('membership.index') }}" style="font-weight: 600; color: #92400e; text-decoration: underline;">See plans</a>
+                    </div>
                 @endif
             @endif
         </div>

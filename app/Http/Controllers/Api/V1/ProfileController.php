@@ -226,6 +226,9 @@ class ProfileController extends BaseApiController
 
         $isSelf = $reason === ProfileAccessService::REASON_SELF;
         $canViewContact = $isSelf ? true : $this->access->canViewContact($viewer, $target);
+        // plan's contact-view limit (App\Services\ContactViewQuota), as on the website
+        $contactLimitReached = ! $isSelf && $canViewContact && ! app(\App\Services\ContactViewQuota::class)->allow($viewer, $target);
+        $canViewContact = $canViewContact && ! $contactLimitReached;
 
         return ApiResponse::ok([
             'profile' => (new ProfileResource(
@@ -239,6 +242,7 @@ class ProfileController extends BaseApiController
             'is_blocked'           => false,  // by definition — a block would have returned 404 above
             'photo_request_status' => $isSelf ? null : $this->photoRequestStatus($viewer, $target),
             'can_view_contact'     => $canViewContact,
+            'contact_limit_reached' => $contactLimitReached,
         ]);
     }
 

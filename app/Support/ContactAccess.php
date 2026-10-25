@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Profile;
 use App\Models\SiteSetting;
+use App\Services\ContactViewQuota;
 use App\Services\InterestService;
 use App\Services\ProfileAccessService;
 
@@ -27,21 +28,29 @@ final class ContactAccess
     public const DECLINED = 'declined';
     public const NEEDS_PLAN = 'needs_plan';          // accepted, but the viewer's plan doesn't include contacts
     public const UNAVAILABLE = 'unavailable';        // blocked, hidden, same gender…
+    public const LIMIT_REACHED = 'limit_reached';    // the plan's contact-view limit is used up (App\Services\ContactViewQuota)
 
-    /** @return array{state: string, contact: ?array} */
-    public static function for(?Profile $viewer, ?Profile $target): array
+    /**
+     * @param  bool  $countView  false on lists (Chats): shows numbers only for
+     *         contacts already opened, so scrolling a list never uses up the
+     *         plan's contact views.
+     * @return array{state: string, contact: ?array}
+     */
+    public static function for(?Profile $viewer, ?Profile $target, bool $countView = true): array
     {
         if (! $viewer || ! $target) {
             return ['state' => self::UNAVAILABLE, 'contact' => null];
         }
 
-        $key = 'contact_access.'.$viewer->id.'.'.$target->id;
+        $key = 'contact_access.'.$viewer->id.'.'.$target->id.($countView ? '' : '.list');
         if (request()->attributes->has($key)) {
             return request()->attributes->get($key);
         }
 
-        $result = ['state' => self::resolveState($viewer, $target), 'contact' => null];
-        if (in_array($result['state'], [self::OPEN, self::OWN], true)) {
+        $result = ['state' => self::resolveState($viewer, $target, $countView), 'contact' => null];
+        if ($result['state'] === self::OPEN && ! $countView && ! app(ContactViewQuota::class)->alreadyViewed($viewer, $target)) {
+            // open, but not opened yet: a list shows no number until they open the chat / profile
+        } elseif (in_array($result['state'], [self::OPEN, self::OWN], true)) {
             $result['contact'] = self::details($viewer, $target);
         }
 
@@ -50,7 +59,7 @@ final class ContactAccess
         return $result;
     }
 
-    private static function resolveState(Profile $viewer, Profile $target): string
+    private static function resolveState(Profile $viewer, Profile $target, bool $countView = true): string
     {
         if ($viewer->id === $target->id) {
             return self::OWN;
@@ -59,6 +68,10 @@ final class ContactAccess
         try {
             $access = app(ProfileAccessService::class);
             if ($access->canViewContact($viewer, $target)) {
+                if ($countView && ! app(ContactViewQuota::class)->allow($viewer, $target)) {
+                    return self::LIMIT_REACHED;
+                }
+
                 return self::OPEN;
             }
             if (! $access->canAccess($viewer, $target)) {
@@ -120,8 +133,13 @@ final class ContactAccess
     }
 
     /** Short sentence for a locked state (Contact tab, sidebar hint). */
-    public static function lockedReason(string $state): string
+    public static function lockedReason(string $state, ?Profile $viewer = null): string
     {
+        if ($state === self::LIMIT_REACHED) {
+            return ($viewer ? app(ContactViewQuota::class)->reason($viewer) : null)
+                ?? 'You have used all the contact views included in your plan. Upgrade to see more phone numbers.';
+        }
+
         return match ($state) {
             self::NO_INTEREST => 'Their phone and WhatsApp open as soon as they accept your interest.',
             self::SENT_PENDING => 'Your interest is waiting for a reply. Their phone and WhatsApp open as soon as they accept — we\'ll let you know.',

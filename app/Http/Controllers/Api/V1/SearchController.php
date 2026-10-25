@@ -203,7 +203,7 @@ class SearchController extends BaseApiController
         // "no preference" sentinel that must be stripped).
         $query->when($request->marital_status, fn ($q, $v) => $q->whereIn(
             'marital_status',
-            array_filter((array) $v, fn ($i) => $i !== 'Any'),
+            \App\Support\MaritalStatus::expand((array) $v), // all spellings; drops 'Any'
         ));
         $query->when($request->mother_tongue, fn ($q, $v) => $q->whereIn(
             'mother_tongue',

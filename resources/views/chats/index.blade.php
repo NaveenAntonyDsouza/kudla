@@ -24,7 +24,7 @@
                             $at = $chat->last_activity_at ? \Illuminate\Support\Carbon::parse($chat->last_activity_at) : $chat->updated_at;
                         @endphp
                         @php
-                            $rowContact = $other ? \App\Support\ContactAccess::for($profile, $other) : null;
+                            $rowContact = $other ? \App\Support\ContactAccess::for($profile, $other, countView: false) : null;
                             $rowWhatsApp = ($rowContact['state'] ?? null) === \App\Support\ContactAccess::OPEN ? ($rowContact['contact']['whatsapp_link'] ?? null) : null;
                             $anyRowWhatsApp = ($anyRowWhatsApp ?? false) || (bool) $rowWhatsApp;
                         @endphp

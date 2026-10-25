@@ -325,7 +325,7 @@ class MatchingService
 
             'marital_status' => in_array(
                 $candidate->marital_status,
-                $prefs->marital_status ?? [],
+                \App\Support\MaritalStatus::expand($prefs->marital_status ?? []), // Divorced = Divorcee etc.
                 true
             ),
 
