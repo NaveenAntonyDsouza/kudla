@@ -21,7 +21,7 @@ class RegisterStep1Request extends FormRequest
             return [
                 'full_name' => 'required|string|min:2|max:100',
                 'gender' => 'required|in:male,female',
-                'date_of_birth' => 'required|date|before:-18 years',
+                'date_of_birth' => ['required', 'date', new \App\Rules\OldEnoughToMarry($this->input('gender'))],
                 'phone' => 'required|digits:10|unique:users,phone,' . $userId,
                 'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email,' . $userId],
                 'password' => ['nullable', 'min:6', 'max:64'],
@@ -31,7 +31,7 @@ class RegisterStep1Request extends FormRequest
         return [
             'full_name' => 'required|string|min:2|max:100',
             'gender' => 'required|in:male,female',
-            'date_of_birth' => 'required|date|before:-18 years',
+            'date_of_birth' => ['required', 'date', new \App\Rules\OldEnoughToMarry($this->input('gender'))],
             'phone' => 'required|digits:10|unique:users,phone',
             'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => ['required', 'min:6', 'max:64'],
@@ -41,7 +41,6 @@ class RegisterStep1Request extends FormRequest
     public function messages(): array
     {
         return [
-            'date_of_birth.before' => 'You must be at least 18 years old to register.',
             'phone.unique' => 'This phone number is already registered.',
             'email.unique' => 'This email is already registered.',
             'password.min' => 'Password must be at least 6 characters.',

@@ -331,6 +331,21 @@ return [
     'blood_group_list' => ['A+ve', 'A-ve', 'B+ve', 'B-ve', 'O+ve', 'O-ve', 'AB+ve', 'AB-ve'],
     'custodian_relation_list' => ['Self', 'Father', 'Mother', 'Brother', 'Sister', 'Relative', 'Friend'],
 
+    // Father's / mother's occupation (Oct 2026: dropdown + "Other (type it)"
+    // in profile edit and onboarding; older typed values stay as "Other").
+    'parent_occupation_list' => [
+        'Business / Self Employed', 'Government Employee', 'Private Employee',
+        'Professional (Doctor, Engineer, Lawyer...)', 'Teacher / Lecturer',
+        'Farmer / Agriculture', 'Working Abroad', 'Retired', 'Homemaker',
+        'Not Employed', 'Passed Away',
+    ],
+
+    // Reference person's relationship to the candidate (same dropdown pattern).
+    'reference_relationship_list' => [
+        'Father', 'Mother', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Cousin',
+        'Grandparent', 'Brother-in-law', 'Sister-in-law', 'Relative', 'Family Friend', 'Friend',
+    ],
+
     // preferred_call_time format MUST match what existing rows in
     // contact_info.preferred_call_time already use ("8 AM - 10 AM IST",
     // "Any Time", etc.). The contact_info column is varchar(100) so

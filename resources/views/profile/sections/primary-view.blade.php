@@ -1,7 +1,7 @@
 @php $p = $profile; $da = $profile->differentlyAbledInfo; $lang = $profile->lifestyleInfo?->languages_known; @endphp
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
     <div><p class="text-xs text-gray-500">Full Name</p><p class="text-sm font-medium text-gray-900">{{ $p->full_name ?? 'Not Mentioned' }}</p></div>
-    <div><p class="text-xs text-gray-500">Gender</p><p class="text-sm font-medium text-gray-900">{{ $p->gender ?? 'Not Mentioned' }}</p></div>
+    <div><p class="text-xs text-gray-500">Gender</p><p class="text-sm font-medium text-gray-900">{{ $p->gender ? ucfirst($p->gender) : 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">Date of Birth</p><p class="text-sm font-medium text-gray-900">{{ $p->date_of_birth?->format('d/m/Y') ?? 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">Age</p><p class="text-sm font-medium text-gray-900">{{ $p->age ? $p->age . ' years' : 'Not Mentioned' }}</p></div>
     <div><p class="text-xs text-gray-500">Height</p><p class="text-sm font-medium text-gray-900">{{ $p->height ?? 'Not Mentioned' }}</p></div>

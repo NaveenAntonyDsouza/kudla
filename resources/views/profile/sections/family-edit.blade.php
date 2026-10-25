@@ -1,4 +1,9 @@
-@php $f = $profile->familyDetail; @endphp
+@php
+    $f = $profile->familyDetail;
+    // Priest / Nun are Christian family details: shown for Christian members (or if one was already filled in)
+    $showClergy = $profile->religiousInfo?->religion === 'Christian' || ($f?->brothers_priest ?? 0) > 0 || ($f?->sisters_nun ?? 0) > 0;
+    $parentJobs = config('reference_data.parent_occupation_list', []);
+@endphp
 <form method="POST" action="{{ route('profile.update', 'family') }}" x-data="{ submitting: false }" @submit="submitting = true">
     @csrf
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -12,21 +17,25 @@
         <div class="float-field"><input type="text" name="father_name" value="{{ $f?->father_name ?? '' }}" maxlength="100" placeholder=" "><label>Father's Name</label></div>
         <div class="float-field"><input type="text" name="father_house_name" value="{{ $f?->father_house_name ?? '' }}" maxlength="100" placeholder=" "><label>Father's Family Name / Surname</label></div>
         <div class="float-field"><input type="text" name="father_native_place" value="{{ $f?->father_native_place ?? '' }}" maxlength="100" placeholder=" "><label>Father's Native Place</label></div>
-        <div class="float-field"><input type="text" name="father_occupation" value="{{ $f?->father_occupation ?? '' }}" maxlength="100" placeholder=" "><label>Father's Occupation</label></div>
+        <x-select-or-other name="father_occupation" label="Father's Occupation" :options="$parentJobs" :value="$f?->father_occupation" />
         <div class="float-field"><input type="text" name="mother_name" value="{{ $f?->mother_name ?? '' }}" maxlength="100" placeholder=" "><label>Mother's Name</label></div>
         <div class="float-field"><input type="text" name="mother_house_name" value="{{ $f?->mother_house_name ?? '' }}" maxlength="100" placeholder=" "><label>Mother's Maiden Family Name</label></div>
         <div class="float-field"><input type="text" name="mother_native_place" value="{{ $f?->mother_native_place ?? '' }}" maxlength="100" placeholder=" "><label>Mother's Native Place</label></div>
-        <div class="float-field"><input type="text" name="mother_occupation" value="{{ $f?->mother_occupation ?? '' }}" maxlength="100" placeholder=" "><label>Mother's Occupation</label></div>
+        <x-select-or-other name="mother_occupation" label="Mother's Occupation" :options="$parentJobs" :value="$f?->mother_occupation" />
     </div>
 
     <p class="text-sm font-semibold text-gray-700 mt-6 mb-3">Sibling Details</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
-        <div class="float-field"><input type="number" name="brothers_married" value="{{ $f?->brothers_married ?? 0 }}" min="0" placeholder=" "><label>Brothers Married</label></div>
-        <div class="float-field"><input type="number" name="brothers_unmarried" value="{{ $f?->brothers_unmarried ?? 0 }}" min="0" placeholder=" "><label>Brothers Unmarried</label></div>
-        <div class="float-field"><input type="number" name="brothers_priest" value="{{ $f?->brothers_priest ?? 0 }}" min="0" placeholder=" "><label>Brothers Priest</label></div>
-        <div class="float-field"><input type="number" name="sisters_married" value="{{ $f?->sisters_married ?? 0 }}" min="0" placeholder=" "><label>Sisters Married</label></div>
-        <div class="float-field"><input type="number" name="sisters_unmarried" value="{{ $f?->sisters_unmarried ?? 0 }}" min="0" placeholder=" "><label>Sisters Unmarried</label></div>
-        <div class="float-field"><input type="number" name="sisters_nun" value="{{ $f?->sisters_nun ?? 0 }}" min="0" placeholder=" "><label>Sisters Nun</label></div>
+        <x-count-select name="brothers_married" label="Brothers Married" :value="$f?->brothers_married" />
+        <x-count-select name="brothers_unmarried" label="Brothers Unmarried" :value="$f?->brothers_unmarried" />
+        @if($showClergy)
+            <x-count-select name="brothers_priest" label="Brothers Priest" :value="$f?->brothers_priest" />
+        @endif
+        <x-count-select name="sisters_married" label="Sisters Married" :value="$f?->sisters_married" />
+        <x-count-select name="sisters_unmarried" label="Sisters Unmarried" :value="$f?->sisters_unmarried" />
+        @if($showClergy)
+            <x-count-select name="sisters_nun" label="Sisters Nun" :value="$f?->sisters_nun" />
+        @endif
     </div>
 
     <div class="mt-5 float-field">

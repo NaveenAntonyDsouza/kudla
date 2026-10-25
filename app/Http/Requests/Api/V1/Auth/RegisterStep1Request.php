@@ -24,7 +24,7 @@ class RegisterStep1Request extends ApiFormRequest
         return [
             'full_name' => 'required|string|min:2|max:100',
             'gender' => 'required|in:male,female',
-            'date_of_birth' => 'required|date|before:-18 years',
+            'date_of_birth' => ['required', 'date', new \App\Rules\OldEnoughToMarry($this->input('gender'))],
             'phone' => 'required|digits:10|unique:users,phone',
             'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => 'required|string|min:6|max:64',
@@ -35,7 +35,6 @@ class RegisterStep1Request extends ApiFormRequest
     public function messages(): array
     {
         return [
-            'date_of_birth.before' => 'You must be at least 18 years old to register.',
             'phone.unique' => 'This phone number is already registered. Try logging in instead.',
             'email.unique' => 'This email is already registered. Try logging in instead.',
             'password.min' => 'Password must be at least 6 characters.',
@@ -49,7 +48,7 @@ class RegisterStep1Request extends ApiFormRequest
         return [
             'full_name' => ['description' => 'Full legal name. 2-100 characters.', 'example' => 'Naveen DSouza'],
             'gender' => ['description' => 'Either "male" or "female". Drives partner-search defaults + same-gender interest guards.', 'enum' => ['male', 'female'], 'example' => 'male'],
-            'date_of_birth' => ['description' => 'YYYY-MM-DD. Must be 18+ at the time of registration.', 'example' => '1995-04-12'],
+            'date_of_birth' => ['description' => 'YYYY-MM-DD. Minimum age is a site setting: by default 21 for men and 18 for women (legal age to marry in India).', 'example' => '1995-04-12'],
             'phone' => ['description' => '10-digit phone number. Must be globally unique across users.', 'example' => '9876543210'],
             'email' => ['description' => 'Valid email address. Must be globally unique across users.', 'example' => 'naveen@example.com'],
             'password' => ['description' => '6-64 characters. Hashed with bcrypt before storage.', 'example' => 'choose-a-password'],

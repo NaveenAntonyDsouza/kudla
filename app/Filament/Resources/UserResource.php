@@ -1421,7 +1421,8 @@ class UserResource extends Resource
                                 : null),
                         Forms\Components\TextInput::make('full_name')->label('Full Name')->required()->maxLength(100),
                         Forms\Components\Select::make('gender')->options(['male' => 'Male', 'female' => 'Female'])->required(),
-                        Forms\Components\DatePicker::make('date_of_birth')->label('Date of Birth')->required()->maxDate(now()->subYears(18)),
+                        Forms\Components\DatePicker::make('date_of_birth')->label('Date of Birth')->required()
+                            ->maxDate(fn (Get $get) => \App\Support\MinimumAge::latestBirthDate($get('gender'))),
                         Forms\Components\Select::make('marital_status')->label('Marital Status')->options([
                             'Unmarried' => 'Unmarried', 'Divorced' => 'Divorced',
                             'Widow/Widower' => 'Widow/Widower', 'Awaiting Divorce' => 'Awaiting Divorce', 'Annulled' => 'Annulled',

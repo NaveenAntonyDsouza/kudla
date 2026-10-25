@@ -24,7 +24,7 @@
     <p class="text-sm font-semibold text-gray-700 mt-6 mb-3">Reference Person</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div class="float-field"><input type="text" name="reference_name" value="{{ $c?->reference_name ?? '' }}" maxlength="100" placeholder=" "><label>Name</label></div>
-        <div class="float-field"><input type="text" name="reference_relationship" value="{{ $c?->reference_relationship ?? '' }}" maxlength="50" placeholder=" "><label>Relationship</label></div>
+        <x-select-or-other name="reference_relationship" label="Relationship" :options="config('reference_data.reference_relationship_list', [])" :value="$c?->reference_relationship" maxlength="50" />
         <x-phone-input name="reference_mobile" label="Mobile Number" :value="$c?->reference_mobile ?? ''" />
     </div>
 

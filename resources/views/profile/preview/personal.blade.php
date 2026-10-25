@@ -14,7 +14,7 @@
     <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Primary Information</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
         <div><p class="text-xs text-gray-500">Full Name</p><p class="text-sm font-semibold text-gray-900">{{ $nm($p->full_name) }}</p></div>
-        <div><p class="text-xs text-gray-500">Gender</p><p class="text-sm font-semibold text-gray-900">{{ $nm($p->gender) }}</p></div>
+        <div><p class="text-xs text-gray-500">Gender</p><p class="text-sm font-semibold text-gray-900">{{ $nm($p->gender ? ucfirst($p->gender) : null) }}</p></div>
         <div><p class="text-xs text-gray-500">Date of Birth</p><p class="text-sm font-semibold text-gray-900">{{ $p->date_of_birth?->format('d/m/Y') ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Age</p><p class="text-sm font-semibold text-gray-900">{{ $p->age ? $p->age . ' Yrs ' . ($p->date_of_birth ? floor($p->date_of_birth->diffInMonths(now()) % 12) . ' months' : '') : 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Height</p><p class="text-sm font-semibold text-gray-900">{{ $nm($p->height) }}</p></div>

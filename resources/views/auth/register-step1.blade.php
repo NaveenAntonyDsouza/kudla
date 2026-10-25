@@ -137,7 +137,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
                             <div class="sm:col-span-3 float-field">
                                 <input type="date" name="date_of_birth" id="date_of_birth" x-model="dob" required placeholder=" "
-                                    max="{{ now()->subYears(18)->format('Y-m-d') }}"
+                                    max="{{ \App\Support\MinimumAge::latestBirthDate() }}" :max="gender === 'male' ? @js(\App\Support\MinimumAge::latestBirthDate('male')) : (gender === 'female' ? @js(\App\Support\MinimumAge::latestBirthDate('female')) : @js(\App\Support\MinimumAge::latestBirthDate()))"
                                     class="border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary)">
                                 <label for="date_of_birth">Date of Birth <span class="text-red-500">*</span></label>
                                 @error('date_of_birth') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

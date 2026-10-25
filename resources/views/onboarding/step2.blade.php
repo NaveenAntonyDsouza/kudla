@@ -221,12 +221,7 @@
                 @error('reference_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <div class="float-field">
-                <input type="text" name="reference_relationship" id="reference_relationship"
-                    value="{{ old('reference_relationship', $contactInfo?->reference_relationship ?? '') }}" maxlength="50" placeholder=" ">
-                <label for="reference_relationship">Reference Person's Relationship with Candidate</label>
-                @error('reference_relationship') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            <x-select-or-other name="reference_relationship" label="Reference Person's Relationship with Candidate" :options="config('reference_data.reference_relationship_list', [])" :value="old('reference_relationship', $contactInfo?->reference_relationship)" maxlength="50" :stacked="true" />
 
             <x-phone-input name="reference_mobile" label="Reference Person's Mobile Number" :value="$contactInfo?->reference_mobile ?? ''" />
         </div>

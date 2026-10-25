@@ -300,11 +300,7 @@
                 @error('father_native_place') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <div class="float-field">
-                <input type="text" name="father_occupation" id="father_occupation" value="{{ old('father_occupation', $familyDetail?->father_occupation ?? '') }}" placeholder=" ">
-                <label for="father_occupation">Father's Occupation</label>
-                @error('father_occupation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            <x-select-or-other name="father_occupation" label="Father's Occupation" :options="config('reference_data.parent_occupation_list', [])" :value="old('father_occupation', $familyDetail?->father_occupation)" :stacked="true" />
 
             <div class="float-field">
                 <input type="text" name="mother_name" id="mother_name" value="{{ old('mother_name', $familyDetail?->mother_name ?? '') }}" placeholder=" ">
@@ -324,11 +320,7 @@
                 @error('mother_native_place') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            <div class="float-field">
-                <input type="text" name="mother_occupation" id="mother_occupation" value="{{ old('mother_occupation', $familyDetail?->mother_occupation ?? '') }}" placeholder=" ">
-                <label for="mother_occupation">Mother's Occupation</label>
-                @error('mother_occupation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            <x-select-or-other name="mother_occupation" label="Mother's Occupation" :options="config('reference_data.parent_occupation_list', [])" :value="old('mother_occupation', $familyDetail?->mother_occupation)" :stacked="true" />
 
             <div class="float-field" x-data="{ count: {{ mb_strlen(old('candidate_asset_details', $familyDetail?->candidate_asset_details ?? '')) }} }">
                 <textarea name="candidate_asset_details" id="candidate_asset_details" rows="3" maxlength="500" placeholder=" "
@@ -350,6 +342,7 @@
         </div>
 
         {{-- ── Sibling Details ────────────────────────────────── --}}
+        @php $showClergy = ($religiousInfo?->religion ?? '') === 'Christian' || ($familyDetail?->brothers_priest ?? 0) > 0 || ($familyDetail?->sisters_nun ?? 0) > 0; @endphp
         <h2 class="text-lg font-semibold text-gray-900 mb-6">Sibling Details</h2>
 
         <div class="space-y-6 mb-10">
@@ -357,18 +350,11 @@
             <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">No. of Brothers</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="float-field">
-                        <input type="number" name="brothers_married" id="brothers_married" value="{{ old('brothers_married', $familyDetail?->brothers_married ?? 0) }}" min="0" placeholder=" ">
-                        <label for="brothers_married">Married</label>
-                    </div>
-                    <div class="float-field">
-                        <input type="number" name="brothers_unmarried" id="brothers_unmarried" value="{{ old('brothers_unmarried', $familyDetail?->brothers_unmarried ?? 0) }}" min="0" placeholder=" ">
-                        <label for="brothers_unmarried">Unmarried</label>
-                    </div>
-                    <div class="float-field">
-                        <input type="number" name="brothers_priest" id="brothers_priest" value="{{ old('brothers_priest', $familyDetail?->brothers_priest ?? 0) }}" min="0" placeholder=" ">
-                        <label for="brothers_priest">Priest</label>
-                    </div>
+                    <x-count-select name="brothers_married" label="Married" :value="old('brothers_married', $familyDetail?->brothers_married ?? 0)" />
+                    <x-count-select name="brothers_unmarried" label="Unmarried" :value="old('brothers_unmarried', $familyDetail?->brothers_unmarried ?? 0)" />
+                    @if($showClergy)
+                        <x-count-select name="brothers_priest" label="Priest" :value="old('brothers_priest', $familyDetail?->brothers_priest ?? 0)" />
+                    @endif
                 </div>
             </div>
 
@@ -376,18 +362,11 @@
             <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">No. of Sisters</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="float-field">
-                        <input type="number" name="sisters_married" id="sisters_married" value="{{ old('sisters_married', $familyDetail?->sisters_married ?? 0) }}" min="0" placeholder=" ">
-                        <label for="sisters_married">Married</label>
-                    </div>
-                    <div class="float-field">
-                        <input type="number" name="sisters_unmarried" id="sisters_unmarried" value="{{ old('sisters_unmarried', $familyDetail?->sisters_unmarried ?? 0) }}" min="0" placeholder=" ">
-                        <label for="sisters_unmarried">Unmarried</label>
-                    </div>
-                    <div class="float-field">
-                        <input type="number" name="sisters_nun" id="sisters_nun" value="{{ old('sisters_nun', $familyDetail?->sisters_nun ?? 0) }}" min="0" placeholder=" ">
-                        <label for="sisters_nun">Nun</label>
-                    </div>
+                    <x-count-select name="sisters_married" label="Married" :value="old('sisters_married', $familyDetail?->sisters_married ?? 0)" />
+                    <x-count-select name="sisters_unmarried" label="Unmarried" :value="old('sisters_unmarried', $familyDetail?->sisters_unmarried ?? 0)" />
+                    @if($showClergy)
+                        <x-count-select name="sisters_nun" label="Nun" :value="old('sisters_nun', $familyDetail?->sisters_nun ?? 0)" />
+                    @endif
                 </div>
             </div>
         </div>

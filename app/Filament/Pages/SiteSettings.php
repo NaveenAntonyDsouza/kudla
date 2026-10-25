@@ -69,6 +69,8 @@ class SiteSettings extends Page implements HasForms
             'profile_id_prefix' => $settings['profile_id_prefix'] ?? 'AM',
             'show_diocese' => ($settings['show_diocese'] ?? '1') === '1',
             'caste_required' => ($settings['caste_required'] ?? '1') === '1',
+            'min_age_male' => $settings['min_age_male'] ?? (string) \App\Support\MinimumAge::DEFAULT_MALE,
+            'min_age_female' => $settings['min_age_female'] ?? (string) \App\Support\MinimumAge::DEFAULT_FEMALE,
             'default_phone_code' => $settings['default_phone_code'] ?? '+91',
             'cascade_countries' => $settings['cascade_countries'] ?? '',
             'email_verification_enabled' => $settings['email_verification_enabled'] ?? '1',
@@ -225,6 +227,18 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('caste_required')
                             ->label('Caste / Community required')
                             ->helperText('Hindu members must pick a Caste / Community in registration & profile editing. Turn OFF to make it optional (e.g. a dating site). Default: ON.'),
+
+                        Forms\Components\Select::make('min_age_male')
+                            ->label('Minimum age to register: men')
+                            ->options(array_combine($ages = array_map('strval', range(18, 30)), $ages))
+                            ->selectablePlaceholder(false)
+                            ->helperText('India: 21 (legal age to marry). Checked at sign-up, in admin member creation and bulk import.'),
+
+                        Forms\Components\Select::make('min_age_female')
+                            ->label('Minimum age to register: women')
+                            ->options(array_combine($ages = array_map('strval', range(18, 30)), $ages))
+                            ->selectablePlaceholder(false)
+                            ->helperText('India: 18 (legal age to marry).'),
 
                         Forms\Components\Toggle::make('email_verification_enabled')
                             ->label('Email Verification Required')

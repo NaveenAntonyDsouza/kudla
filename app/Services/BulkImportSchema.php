@@ -58,7 +58,7 @@ class BulkImportSchema
             'date_of_birth' => [
                 'required' => true,
                 'type' => 'date',
-                'help' => 'YYYY-MM-DD. Member must be at least 18 years old.',
+                'help' => 'YYYY-MM-DD. Minimum age: 21 for men, 18 for women (Site Settings can change this).',
                 'example' => '1995-06-15',
             ],
             'religion' => [

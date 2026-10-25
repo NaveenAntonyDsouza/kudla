@@ -47,8 +47,8 @@ class ListUsers extends ListRecords
                     Forms\Components\DatePicker::make('date_of_birth')
                         ->label('Date of Birth')
                         ->required()
-                        ->maxDate(now()->subYears(18))
-                        ->helperText('Must be at least 18 years old.'),
+                        ->maxDate(fn (\Filament\Schemas\Components\Utilities\Get $get) => \App\Support\MinimumAge::latestBirthDate($get('gender')))
+                        ->helperText(fn (\Filament\Schemas\Components\Utilities\Get $get) => \App\Support\MinimumAge::message($get('gender'))),
 
                     Forms\Components\TextInput::make('email')
                         ->label('Email')

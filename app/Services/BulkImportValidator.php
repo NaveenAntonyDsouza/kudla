@@ -110,13 +110,14 @@ class BulkImportValidator
             }
         }
 
-        // Layer 7: age >= 18
+        // Layer 7: minimum age for the gender (21 men / 18 women by default — App\Support\MinimumAge)
         if (!isset($errors['date_of_birth']) && isset($normalized['date_of_birth'])) {
             try {
                 $dob = Carbon::parse($normalized['date_of_birth']);
-                $age = $dob->diffInYears(now());
-                if ($age < 18) {
-                    $errors['date_of_birth'] = "Member must be at least 18 years old (currently $age)";
+                $age = (int) floor($dob->diffInYears(now()));
+                $min = \App\Support\MinimumAge::forGender($normalized['gender'] ?? null);
+                if ($age < $min) {
+                    $errors['date_of_birth'] = "Member must be at least $min years old (currently $age)";
                 }
             } catch (\Throwable $e) {
                 // Already caught by date type validation

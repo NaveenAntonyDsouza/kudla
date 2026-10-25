@@ -154,7 +154,7 @@
                         <div style="display: flex; gap: 0.5rem;">
                             <div class="float-field" style="flex: 1;">
                                 <input type="date" name="date_of_birth" id="hero_dob" x-model="dob" required placeholder=" "
-                                    max="{{ now()->subYears(18)->format('Y-m-d') }}"
+                                    max="{{ \App\Support\MinimumAge::latestBirthDate() }}" :max="gender === 'male' ? @js(\App\Support\MinimumAge::latestBirthDate('male')) : (gender === 'female' ? @js(\App\Support\MinimumAge::latestBirthDate('female')) : @js(\App\Support\MinimumAge::latestBirthDate()))"
                                     class="w-full rounded-lg border border-gray-300 px-4 pt-5 pb-2 text-sm text-gray-900 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) peer">
                                 <label for="hero_dob" class="absolute left-4 top-2 text-xs text-gray-500 peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-(--color-primary) transition-all pointer-events-none">Date of Birth *</label>
                             </div>

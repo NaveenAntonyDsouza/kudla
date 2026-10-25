@@ -147,6 +147,16 @@ class ProfileController extends Controller
     private function updatePrimary(Request $request, $profile): void
     {
         $validated = $request->validate([
+            // Height and marital status: members can correct these themselves
+            // (Oct 2026). Name, gender and date of birth stay team-only.
+            'height' => 'required|string|max:50',
+            'marital_status' => 'required|string|max:50',
+            'children_with_me' => 'nullable|integer|min:0|max:20',
+            'children_not_with_me' => 'nullable|integer|min:0|max:20',
+            'physical_status' => 'nullable|string|max:50',
+            'da_category' => 'nullable|string|max:50',
+            'da_category_other' => 'nullable|string|max:50',
+            'da_description' => 'nullable|string|max:500',
             'weight_kg' => 'nullable|string|max:20',
             'blood_group' => 'nullable|string|max:10',
             'mother_tongue' => 'required|string|max:50',
@@ -156,7 +166,13 @@ class ProfileController extends Controller
             'about_me' => 'nullable|string|max:5000',
         ]);
 
+        $unmarried = $validated['marital_status'] === 'Unmarried';
         $profile->update([
+            'height' => $validated['height'],
+            'marital_status' => $validated['marital_status'],
+            'children_with_me' => $unmarried ? 0 : (int) ($validated['children_with_me'] ?? 0),
+            'children_not_with_me' => $unmarried ? 0 : (int) ($validated['children_not_with_me'] ?? 0),
+            'physical_status' => $validated['physical_status'] ?? null,
             'weight_kg' => $validated['weight_kg'] ?? null,
             'blood_group' => $validated['blood_group'] ?? null,
             'mother_tongue' => $validated['mother_tongue'] ?? null,
@@ -164,6 +180,18 @@ class ProfileController extends Controller
             'body_type' => $validated['body_type'] ?? null,
             'about_me' => $validated['about_me'] ?? null,
         ]);
+
+        // Differently-abled details, as in onboarding (kept when the status changes back, like there)
+        if (($validated['physical_status'] ?? '') === 'Differently Abled') {
+            DifferentlyAbledInfo::updateOrCreate(
+                ['profile_id' => $profile->id],
+                [
+                    'category' => $validated['da_category'] ?? null,
+                    'specify' => ($validated['da_category'] ?? '') === 'Other' ? ($validated['da_category_other'] ?? null) : null,
+                    'description' => $validated['da_description'] ?? null,
+                ]
+            );
+        }
 
         LifestyleInfo::updateOrCreate(
             ['profile_id' => $profile->id],
