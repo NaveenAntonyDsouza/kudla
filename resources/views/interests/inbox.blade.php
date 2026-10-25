@@ -116,6 +116,13 @@
                                     };
                                 @endphp
 
+                                @once
+                                    <style>
+                                        .ib-status-phone { display: inline-block; }
+                                        .ib-status-wide { display: none; }
+                                        @media (min-width: 640px) { .ib-status-phone { display: none; } .ib-status-wide { display: inline-block; } }
+                                    </style>
+                                @endonce
                                 <div>
                                 <a href="{{ route('interests.show', $interest) }}"
                                     class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
@@ -140,14 +147,16 @@
                                         @endif
                                     </div>
 
-                                    {{-- Name & ID --}}
+                                    {{-- Name & ID: wrap, never cut off — on a phone the status
+                                         goes underneath (Oct 2026: "AM100…", "Smoke Ta…") --}}
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $other?->matri_id ?? 'Unknown' }}</p>
-                                        <p class="text-xs text-gray-500 truncate">{{ $other?->full_name }}</p>
+                                        <p class="text-sm font-semibold text-gray-900" style="overflow-wrap: anywhere;">{{ $other?->matri_id ?? 'Unknown' }}</p>
+                                        <p class="text-xs text-gray-500" style="overflow-wrap: anywhere;">{{ $other?->full_name }}{{ $other?->age ? ' · '.$other->age.' yrs' : '' }}</p>
+                                        <span class="ib-status-phone text-xs font-medium px-2.5 py-1 rounded-full {{ $statusColor }}" style="margin-top: 4px;">{{ $statusLabel }}</span>
                                     </div>
 
                                     {{-- Status --}}
-                                    <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $statusColor }} shrink-0">
+                                    <span class="ib-status-wide text-xs font-medium px-2.5 py-1 rounded-full {{ $statusColor }} shrink-0">
                                         {{ $statusLabel }}
                                     </span>
 
@@ -171,6 +180,7 @@
                                             <button type="submit" style="padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; color: #374151; background: #fff; border: 1px solid #d1d5db; cursor: pointer;">Decline</button>
                                         </form>
                                         <a href="{{ route('interests.show', $interest) }}" style="font-size: 13px; color: var(--color-primary, #8B1D91);">Reply with a message</a>
+                                        <p style="flex-basis: 100%; margin: 2px 0 0; font-size: 12px; color: #6b7280;">Accepting shares your phone and WhatsApp with each other.</p>
                                     </div>
                                 @endif
                                 </div>

@@ -218,6 +218,8 @@
                 {{-- Accept section --}}
                 <div class="mb-4">
                     <p class="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2">Accept Interest</p>
+                    {{-- members didn't always realise this (Oct 2026 privacy complaint) --}}
+                    <p style="margin: -2px 0 8px; font-size: 12px; color: #6b7280;">Accepting shares your phone and WhatsApp with each other.</p>
                     <div class="space-y-2">
                         <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-green-50 transition-colors"
                             :class="action === 'accept' && selectedTemplate === 'reply_accept_1' ? 'border-green-400 bg-green-50' : 'border-gray-200'"
