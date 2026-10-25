@@ -34,12 +34,12 @@
             {{-- ══ LEFT NAV ══ --}}
             <div class="hidden lg:block lg:w-48 shrink-0">
                 <div class="sticky top-24 space-y-1">
-                    <h2 class="text-base font-semibold text-gray-900 mb-3">Partner Search</h2>
+                    <h2 class="text-base font-semibold text-gray-900 mb-3">Advanced Search</h2>
                     <button @click="activeTab = 'partner'"
                         :class="activeTab === 'partner' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-                        Partner Search
+                        Advanced Search
                     </button>
                     <button @click="activeTab = 'keyword'"
                         :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"

@@ -173,3 +173,17 @@ it('invites rather than warns under the Accept button', function () {
             ->not->toContain('Accepting shares your phone');
     }
 });
+
+it('calls the full search "Advanced Search" everywhere and offers With Photo Only to visitors too', function () {
+    $public = file_get_contents(resource_path('views/search/public.blade.php'));
+    $member = file_get_contents(resource_path('views/search/index.blade.php'));
+    $layout = file_get_contents(resource_path('views/components/layouts/app.blade.php'));
+
+    foreach ([$public, $member, $layout] as $view) {
+        expect($view)->not->toContain('Partner Search')->not->toContain('Advance Search');
+    }
+    expect($member)->toContain('Advanced Search')
+        ->and($public)->toContain('name="with_photo" value="1"')
+        ->and(file_get_contents(app_path('Http/Controllers/SearchController.php')))
+        ->toContain("COALESCE(NULLIF(profile_photo_privacy, ''), NULLIF(privacy_level, ''), 'visible_to_all') = 'visible_to_all'");
+});

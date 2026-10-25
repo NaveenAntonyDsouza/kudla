@@ -467,6 +467,16 @@ class SearchController extends Controller
         if ($drinking = $this->multiParam('drinking')) {
             $query->whereHas('lifestyleInfo', fn($q) => $q->whereIn('drinking', $drinking));
         }
+        // With photo only (Oct 2026): for a visitor that means a main photo they can
+        // actually see — privacy "visible to all", the default when none is set
+        // (same rule as App\Support\PhotoVisibility for guests)
+        if (request()->boolean('with_photo')) {
+            $query->whereHas('primaryPhoto')->where(fn ($q) => $q
+                ->whereDoesntHave('photoPrivacySetting')
+                ->orWhereHas('photoPrivacySetting', fn ($p) => $p->whereRaw(
+                    "COALESCE(NULLIF(profile_photo_privacy, ''), NULLIF(privacy_level, ''), 'visible_to_all') = 'visible_to_all'"
+                )));
+        }
 
         $results = $query->defaultOrder()->paginate(20)->withQueryString();
 

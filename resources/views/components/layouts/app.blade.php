@@ -261,7 +261,7 @@
                                 <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
                             <div x-show="open" x-cloak class="absolute left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                                <a href="{{ route('search.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Partner Search</a>
+                                <a href="{{ route('search.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Advanced Search</a>
                                 <a href="{{ route('search.index', ['tab' => 'keyword']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Keyword Search</a>
                                 <a href="{{ route('search.index', ['tab' => 'byid']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Search by ID</a>
                                 <div class="border-t border-gray-100 my-1"></div>
@@ -441,7 +441,7 @@
                     {{-- Search --}}
                     <div class="border-t border-gray-100 my-1"></div>
                     <p class="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Search</p>
-                    <a href="{{ route('search.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Partner Search</a>
+                    <a href="{{ route('search.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Advanced Search</a>
                     <a href="{{ route('search.index', ['tab' => 'keyword']) }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Keyword Search</a>
                     <a href="{{ route('search.index', ['tab' => 'byid']) }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Search by ID</a>
                     <a href="{{ route('discover.hub') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Discover Profiles</a>
@@ -511,7 +511,7 @@
                             <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-cloak
                                 class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                                 <a href="{{ route('search.quick') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Quick Search</a>
-                                <a href="{{ route('search.advance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Advance Search</a>
+                                <a href="{{ route('search.advance') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Advanced Search</a>
                                 <a href="{{ route('search.keyword') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Keyword Search</a>
                                 <a href="{{ route('search.byid') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-(--color-primary)">Id Search</a>
                             </div>
@@ -543,7 +543,7 @@
                         </button>
                         <div x-show="open" x-collapse class="ml-4 space-y-1 mt-1">
                             <a href="{{ route('search.quick') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Quick Search</a>
-                            <a href="{{ route('search.advance') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Advance Search</a>
+                            <a href="{{ route('search.advance') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Advanced Search</a>
                             <a href="{{ route('search.keyword') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Keyword Search</a>
                             <a href="{{ route('search.byid') }}" class="block px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 hover:text-(--color-primary)">Id Search</a>
                         </div>

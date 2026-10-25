@@ -15,7 +15,7 @@
                 'Searching & Matching' => [
                     ["How does the matching system work?", "Our matching engine compares your partner preferences with other profiles across 12 criteria including religion, age, education, occupation, and location. Each match gets a compatibility score (0-100%)."],
                     ["What are Mutual Matches?", "Mutual Matches are profiles where both you and the other person match each other's partner preferences. These are your highest-quality matches."],
-                    ["How do I search for profiles?", "Go to Search > Partner Search to filter by detailed criteria. You can also use Keyword Search or Search by ID. The Discover section lets you browse by category (religion, location, etc.)."],
+                    ["How do I search for profiles?", "Go to Search > Advanced Search to filter by detailed criteria. You can also use Keyword Search or Search by ID. The Discover section lets you browse by category (religion, location, etc.)."],
                     ["Can I save my search filters?", "Currently, you can load your saved partner preferences into the search form using the 'Load Partner Preferences' button."],
                 ],
                 'Interest & Communication' => [

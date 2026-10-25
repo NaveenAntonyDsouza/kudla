@@ -28,7 +28,7 @@
                         :class="activeTab === 'advance' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
                         class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
-                        Advance Search
+                        Advanced Search
                     </a>
                     <a href="{{ route('search.keyword') }}"
                         :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'text-gray-700 hover:bg-gray-100'"
@@ -52,7 +52,7 @@
                     class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Quick Search</a>
                 <a href="{{ route('search.advance') }}"
                     :class="activeTab === 'advance' ? 'bg-(--color-primary) text-white' : 'bg-gray-100 text-gray-700'"
-                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Advance Search</a>
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Advanced Search</a>
                 <a href="{{ route('search.keyword') }}"
                     :class="activeTab === 'keyword' ? 'bg-(--color-primary) text-white' : 'bg-gray-100 text-gray-700'"
                     class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors">Keyword</a>
@@ -291,7 +291,7 @@
                 {{-- ── ADVANCE SEARCH TAB ── --}}
                 <div x-show="activeTab === 'advance'" x-cloak>
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-6">Advance Search</h2>
+                        <h2 class="text-lg font-semibold text-gray-900 mb-6">Advanced Search</h2>
 
                         <form method="GET" action="{{ route('search.results.public') }}">
                             <input type="hidden" name="search_type" value="advance">
@@ -431,6 +431,13 @@
                                     <x-multi-select name="smoking" label="Smoking Habit" :options="config('reference_data.smoking_habits', [])" :selected="(array) request('smoking', [])" />
                                 </div>
                             </div>
+
+                            {{-- as on the members' Advanced Search: only profiles whose photo the visitor can see --}}
+                            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer" style="margin-top: 20px;">
+                                <input type="checkbox" name="with_photo" value="1" {{ request('with_photo') ? 'checked' : '' }}
+                                    class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
+                                With Photo Only
+                            </label>
 
                             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 pt-4 border-t border-gray-200">
                                 <a href="{{ route('search.advance') }}" class="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-center">Clear</a>
