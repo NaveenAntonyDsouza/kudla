@@ -277,3 +277,9 @@ it('centres two Why Choose cards in two columns instead of leaving a third colum
         ->toContain('.home-garland .g-why.cols-2 { max-width: 820px;')
         ->not->toContain('100% Privacy');
 });
+
+it('names the after-the-fact check honestly when profiles go live without review', function () {
+    expect(file_get_contents(resource_path('views/pages/home/sections/safety.blade.php')))
+        ->toContain(": ['Fake profiles removed', 'Our team removes fake or misleading profiles, and you can report anyone to us.'")
+        ->not->toContain('Watched by our team');
+});
