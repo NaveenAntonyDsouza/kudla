@@ -46,11 +46,13 @@ class SearchController extends Controller
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
             $this->trackSearch('filters', $request, $results);
-            return view('search.results', compact('profile', 'results', 'currentSort'));
+            $modifySearchUrl = self::modifySearchUrl('advance');
+            return view('search.results', compact('profile', 'results', 'currentSort', 'modifySearchUrl'));
         }
 
         // Keyword search
-        if ($request->filled('keyword')) {
+        // (modify=1: Modify Search reopens the keyword form filled in)
+        if ($request->filled('keyword') && ! $request->boolean('modify')) {
             $keyword = (string) $request->keyword;
             $query = self::applyKeyword($this->baseQuery($profile), $keyword);
             $searchNote = null;
@@ -63,7 +65,8 @@ class SearchController extends Controller
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
             $this->trackSearch('keyword', $request, $results);
-            return view('search.results', compact('profile', 'results', 'currentSort', 'searchNote'));
+            $modifySearchUrl = self::modifySearchUrl('advance');
+            return view('search.results', compact('profile', 'results', 'currentSort', 'searchNote', 'modifySearchUrl'));
         }
 
         // Search by ID
@@ -326,7 +329,7 @@ class SearchController extends Controller
             return;
         }
 
-        $filters = collect($request->except(['search', 'sort', 'page', 'tab', '_token', 'keyword']))
+        $filters = collect($request->except(['search', 'sort', 'page', 'tab', '_token', 'keyword', 'search_type', 'modify']))
             ->filter(fn ($v) => filled($v) && $v !== 'Any' && $v !== ['Any'])
             ->keys()->sort()->values();
 
@@ -387,7 +390,7 @@ class SearchController extends Controller
         $member = auth()->check() && auth()->user()->profile;
         if ($member && $tab !== 'partner') {
             // a link that already holds a search (old links, saved searches) → the results address
-            if (request()->has('search') || ($tab === 'keyword' && request()->filled('keyword'))) {
+            if (request()->has('search') || ($tab === 'keyword' && request()->filled('keyword') && ! request()->boolean('modify'))) {
                 return redirect()->route('search.results.public', request()->except(['search', 'tab']));
             }
 
@@ -426,6 +429,24 @@ class SearchController extends Controller
             ->where(fn($q) => $q->where('only_same_denomination', false)->orWhereNull('only_same_denomination'))
             ->where(fn($q) => $q->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue'))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
+    }
+
+    /**
+     * "Modify Search": back to the form the search came from (Quick, Advanced
+     * or Keyword), filled in with the same choices — members and visitors
+     * alike (Oct 2026). Links without a search_type (old links, saved
+     * searches) go to $fallback.
+     */
+    private static function modifySearchUrl(string $fallback): string
+    {
+        $type = request('search_type') ?: (request()->filled('keyword') ? 'keyword' : $fallback);
+        $params = request()->except(['page', 'search_type', 'sort', 'search', 'tab', 'modify']);
+
+        return match ($type) {
+            'advance' => route('search.advance', $params),
+            'keyword' => route('search.keyword', $params + ['modify' => 1]),
+            default => route('search.quick', $params),
+        };
     }
 
     /** A Matri ID typed any way ("km 100123", "KM-100123") → "KM100123". */
@@ -602,14 +623,7 @@ class SearchController extends Controller
         };
         $filterLabel = $firstVal(request('caste')) ?? $firstVal(request('denomination')) ?? $firstVal(request('religion')) ?? null;
 
-        // Determine which search form to link back to
-        $searchType = request('search_type', 'quick');
-        $modifySearchUrl = match ($searchType) {
-            'advance' => route('search.advance', request()->except(['page', 'search_type'])),
-            'keyword' => route('search.keyword', request()->except(['page', 'search_type'])),
-            'byid' => route('search.byid', request()->except(['page', 'search_type'])),
-            default => route('search.quick', request()->except(['page', 'search_type'])),
-        };
+        $modifySearchUrl = self::modifySearchUrl('quick');
 
         return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl', 'currentSort', 'searchNote'));
     }

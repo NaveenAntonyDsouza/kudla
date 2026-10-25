@@ -35,6 +35,7 @@
                         </div>
 
                         <form method="GET" action="{{ route('search.results.public') }}">
+                            <input type="hidden" name="search_type" value="advance">
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 {{-- Age Range --}}
@@ -249,6 +250,7 @@
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Keyword Search</h2>
                         <p class="text-sm text-gray-500 mb-6">Search profiles by name, profession, religion, or any keyword.</p>
                         <form method="GET" action="{{ route('search.results.public') }}" class="space-y-4">
+                            <input type="hidden" name="search_type" value="keyword">
                             <input type="hidden" name="tab" value="keyword">
                             <div class="float-field">
                                 <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">

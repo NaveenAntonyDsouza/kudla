@@ -7,7 +7,7 @@
             <span class="mx-1">/</span>
             <a href="{{ route('search.index') }}" class="hover:text-(--color-primary)">Search</a>
             <span class="mx-1">/</span>
-            <span class="text-gray-700 font-medium">Search Result</span>
+            <span class="text-gray-700 font-medium">Search Results</span>
         </p>
 
         @if(!empty($searchNote))
@@ -23,7 +23,7 @@
                 {{-- Sort By Dropdown --}}
                 @include('search._sort', ['currentSort' => $currentSort ?? 'relevance'])
 
-                <a href="{{ request()->filled('keyword') ? route('search.keyword') : route('search.advance', request()->except(['search', 'page', 'sort'])) }}"
+                <a href="{{ $modifySearchUrl ?? route('search.advance') }}"
                     class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-(--color-primary) border border-(--color-primary) rounded-lg hover:bg-(--color-primary-light) transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                     Modify Search
@@ -35,7 +35,7 @@
                 {{-- Save search inline form --}}
                 <form method="POST" action="{{ route('saved-searches.store') }}" x-show="showSave" x-cloak class="flex items-center gap-2">
                     @csrf
-                    @foreach(request()->except(['search', 'page', '_token']) as $key => $value)
+                    @foreach(request()->except(['search', 'page', '_token', 'modify']) as $key => $value)
                         @if(is_array($value))
                             @foreach($value as $v)
                                 <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
@@ -70,7 +70,7 @@
                 </svg>
                 <p class="text-gray-600 font-medium">No profiles match your search criteria</p>
                 <p class="text-sm text-gray-400 mt-2">Try broadening your filters to see more results.</p>
-                <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 mt-4 px-6 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
+                <a href="{{ $modifySearchUrl ?? route('search.advance') }}" class="inline-flex items-center gap-2 mt-4 px-6 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                     Modify Search
                 </a>

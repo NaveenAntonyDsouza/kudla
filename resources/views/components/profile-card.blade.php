@@ -30,7 +30,8 @@
             : [];
     }
     $isShortlisted = $shortlistedIds !== null && in_array($p->id, $shortlistedIds);
-    $profileUrl = $isGuest ? route('login') : route('profile.view', $p);
+    // visitors are asked to log in, then land on this profile (url.intended)
+    $profileUrl = route('profile.view', $p);
 
     // Photo privacy — the shared rule (App\Support\PhotoVisibility), same as
     // the profile page. Applies to guests too: a hidden photo stays hidden
@@ -215,7 +216,7 @@
          message, so the member keeps their place in the results --}}
     @if($isGuest)
         <div style="padding: 0 12px 12px;">
-            <a href="{{ route('login') }}" class="pc-interest-btn">
+            <a href="{{ $profileUrl }}" class="pc-interest-btn">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
                 Send Interest
             </a>

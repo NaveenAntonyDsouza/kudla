@@ -310,3 +310,37 @@ it('hides from visitors the profiles shown only to premium members or to their o
         ->toContain("->where(fn(\$q) => \$q->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue'))")
         ->toContain("\$query = \$this->visitorBaseQuery();");
 });
+
+it('sends Modify Search back to the form the search came from, filled in', function () {
+    $url = function (array $query, string $fallback) {
+        app()->instance('request', \Illuminate\Http\Request::create('/search/results', 'GET', $query));
+        $m = new ReflectionMethod(\App\Http\Controllers\SearchController::class, 'modifySearchUrl');
+
+        return urldecode($m->invoke(null, $fallback));
+    };
+
+    expect($url(['search_type' => 'quick', 'gender' => 'female', 'age_from' => 25, 'sort' => 'newest', 'page' => 2], 'advance'))
+        ->toBe(route('search.quick') . '?gender=female&age_from=25')
+        ->and($url(['search_type' => 'advance', 'caste' => ['Bunts']], 'quick'))->toBe(route('search.advance') . '?caste[0]=Bunts')
+        ->and($url(['search_type' => 'keyword', 'keyword' => 'doctor'], 'quick'))->toBe(route('search.keyword') . '?keyword=doctor&modify=1')
+        ->and($url(['keyword' => 'doctor'], 'advance'))->toBe(route('search.keyword') . '?keyword=doctor&modify=1')
+        ->and($url(['age_from' => 25, 'search' => 1], 'advance'))->toBe(route('search.advance') . '?age_from=25');
+
+    $c = file_get_contents(app_path('Http/Controllers/SearchController.php'));
+    expect($c)->toContain("if (\$request->filled('keyword') && ! \$request->boolean('modify')) {")
+        ->toContain("request()->filled('keyword') && ! request()->boolean('modify')))")
+        ->and(file_get_contents(resource_path('views/search/index.blade.php')))
+        ->toContain('<input type="hidden" name="search_type" value="advance">')
+        ->toContain('<input type="hidden" name="search_type" value="keyword">');
+
+    $results = file_get_contents(resource_path('views/search/results.blade.php'));
+    expect(substr_count($results, "{{ \$modifySearchUrl ?? route('search.advance') }}"))->toBe(2)
+        ->and($results)->toContain('>Search Results</span>')->not->toContain('>Search Result</span>');
+});
+
+it('takes a visitor who clicks a card to that profile after logging in', function () {
+    $card = file_get_contents(resource_path('views/components/profile-card.blade.php'));
+    expect($card)->toContain("\$profileUrl = route('profile.view', \$p);")
+        ->toContain('<a href="{{ $profileUrl }}" class="pc-interest-btn">')
+        ->not->toContain("route('login')");
+});
