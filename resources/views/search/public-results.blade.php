@@ -44,6 +44,10 @@
             </div>
         </div>
 
+        @if(!empty($searchNote))
+            <p class="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-800">{{ $searchNote }}</p>
+        @endif
+
         {{-- Results Grid --}}
         @if($results->count() > 0)
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

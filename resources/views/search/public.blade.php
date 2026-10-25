@@ -416,6 +416,17 @@
                         <p class="text-sm text-gray-500 mb-6">Search profiles by name, profession, religion, or any keyword.</p>
                         <form method="GET" action="{{ route('search.results.public') }}" class="space-y-4">
                             <input type="hidden" name="search_type" value="keyword">
+                            {{-- visitors choose; members always see the opposite gender --}}
+                            @guest
+                            <div class="float-field">
+                                <select name="gender">
+                                    <option value="">Any</option>
+                                    <option value="male" {{ request('gender') === 'male' ? 'selected' : '' }}>Groom</option>
+                                    <option value="female" {{ request('gender') === 'female' ? 'selected' : '' }}>Bride</option>
+                                </select>
+                                <label>Looking for</label>
+                            </div>
+                            @endguest
                             <div class="float-field">
                                 <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">
                                 <label>Enter Keyword (e.g. Doctor, Bangalore, Catholic)</label>

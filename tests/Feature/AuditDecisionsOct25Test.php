@@ -275,3 +275,13 @@ it('starts visitors at every age, from the youngest allowed to 70', function () 
     expect(substr_count($view, "request('age_from', \$quickDefaults['age_from']"))->toBe(2)
         ->and(substr_count($view, "request('age_to', \$quickDefaults['age_to']"))->toBe(2);
 });
+it('gives visitors the keyword "any word" fallback and a Looking for choice', function () {
+    $c = file_get_contents(app_path('Http/Controllers/SearchController.php'));
+    expect(substr_count($c, "'No profile matched all your words, so these match at least one of them.'"))->toBe(2)
+        ->and($c)->toContain("compact('results', 'filterLabel', 'modifySearchUrl', 'currentSort', 'searchNote')")
+        ->and(file_get_contents(resource_path('views/search/public-results.blade.php')))->toContain('{{ $searchNote }}');
+
+    $view = file_get_contents(resource_path('views/search/public.blade.php'));
+    $keywordForm = substr($view, strpos($view, '<input type="hidden" name="search_type" value="keyword">'));
+    expect($keywordForm)->toContain("@guest\n                            <div class=\"float-field\">\n                                <select name=\"gender\">");
+});

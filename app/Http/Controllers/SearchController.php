@@ -478,9 +478,9 @@ class SearchController extends Controller
         if ($tongues = $this->multiParam('mother_tongue')) {
             $query->whereIn('mother_tongue', $tongues);
         }
-        if ($keyword = request('keyword')) {
-            self::applyKeyword($query, (string) $keyword);
-        }
+        // the keyword is applied after every other filter (below), so the
+        // "any word" fallback keeps those filters
+        $keyword = trim((string) request('keyword', ''));
         if ($matriId = request('matri_id')) {
             $query->where('matri_id', strtoupper($matriId));
         }
@@ -554,6 +554,19 @@ class SearchController extends Controller
                 )));
         }
 
+        // Keyword, as for members: every word must match; if nothing does, show
+        // profiles matching any of them and say so (Oct 2026)
+        $searchNote = null;
+        if ($keyword !== '') {
+            $allWords = self::applyKeyword(clone $query, $keyword);
+            if (count(self::keywordWords($keyword)) > 1 && (clone $allWords)->count() === 0) {
+                $query = self::applyKeyword($query, $keyword, matchAll: false);
+                $searchNote = 'No profile matched all your words, so these match at least one of them.';
+            } else {
+                $query = $allWords;
+            }
+        }
+
         $currentSort = in_array(request('sort'), ['newest', 'recently_active'], true) ? request('sort') : 'relevance';
         $results = $this->applySortOrder($query, $currentSort)->paginate(20)->withQueryString();
 
@@ -578,7 +591,7 @@ class SearchController extends Controller
             default => route('search.quick', request()->except(['page', 'search_type'])),
         };
 
-        return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl', 'currentSort'));
+        return view('search.public-results', compact('results', 'filterLabel', 'modifySearchUrl', 'currentSort', 'searchNote'));
     }
 
     /**
