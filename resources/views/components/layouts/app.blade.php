@@ -604,6 +604,66 @@
 
         {{-- ══ NON-LOGGED-IN FOOTER ══ --}}
         <footer class="bg-gray-900 text-gray-400 mt-16" style="background-color: {{ \App\Support\SiteContact::footerColour() }};">
+            {{-- Contact band (Oct 2026, like Chavara): call / WhatsApp, email, office, help — on every visitor page --}}
+            @php
+                $fPhone = \App\Support\SiteContact::phoneDisplay();
+                $fTel = \App\Support\SiteContact::phoneHref();
+                $fWa = \App\Support\SiteContact::whatsappHref();
+                $fEmail = \App\Support\SiteContact::email();
+                $fAddress = \App\Support\SiteContact::address();
+                $fBand = [];
+                if ($fTel || $fWa) {
+                    $fBand[] = ['label' => $fTel && $fWa ? 'Call / WhatsApp' : ($fTel ? 'Call us' : 'WhatsApp'), 'value' => $fPhone ?: 'Chat with us', 'href' => $fTel ?: $fWa, 'wa' => $fTel ? $fWa : null,
+                        'icon' => 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'];
+                }
+                if ($fEmail) {
+                    $fBand[] = ['label' => 'Email us', 'value' => $fEmail, 'href' => 'mailto:' . $fEmail, 'wa' => null,
+                        'icon' => 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'];
+                }
+                if ($fAddress) {
+                    $fBand[] = ['label' => 'Visit our office', 'value' => $fAddress, 'href' => null, 'wa' => null, 'small' => true,
+                        'icon' => 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z'];
+                }
+                if ($fBand) {
+                    $fBand[] = ['label' => 'Need help?', 'value' => 'Help & FAQ', 'href' => '/faq', 'wa' => null,
+                        'icon' => 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'];
+                }
+            @endphp
+            @if($fBand)
+                <style>
+                    .ft-band { background: rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.08); }
+                    .ft-band-grid { display: grid; grid-template-columns: 1fr; gap: 18px; padding-top: 22px; padding-bottom: 22px; }
+                    @media (min-width: 640px) { .ft-band-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+                    @media (min-width: 1024px) { .ft-band-grid { grid-template-columns: repeat({{ count($fBand) }}, minmax(0, 1fr)); } }
+                    .ft-band-item { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+                    .ft-band-icon { flex: none; width: 38px; height: 38px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); color: var(--color-secondary); }
+                    .ft-band-label { display: block; font-size: 12px; color: rgba(255,255,255,.6); }
+                    .ft-band-value { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; color: #fff; overflow-wrap: anywhere; }
+                    .ft-band-value.is-small { font-size: 12.5px; font-weight: 500; line-height: 1.45; color: rgba(255,255,255,.85); }
+                    a.ft-band-value:hover, .ft-band-wa:hover { text-decoration: underline; }
+                    .ft-band-wa { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 600; color: #4ade80; }
+                </style>
+                <div class="ft-band">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ft-band-grid">
+                        @foreach($fBand as $b)
+                            <div class="ft-band-item">
+                                <span class="ft-band-icon"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $b['icon'] }}"/></svg></span>
+                                <span style="min-width: 0;">
+                                    <span class="ft-band-label">{{ $b['label'] }}</span>
+                                    @if($b['href'])
+                                        <a href="{{ $b['href'] }}" class="ft-band-value{{ ! empty($b['small']) ? ' is-small' : '' }}" @if(str_starts_with($b['href'], 'https://wa.me')) target="_blank" rel="noopener" @endif>{{ $b['value'] }}</a>
+                                    @else
+                                        <span class="ft-band-value{{ ! empty($b['small']) ? ' is-small' : '' }}">{{ $b['value'] }}</span>
+                                    @endif
+                                    @if($b['wa'])
+                                        <a href="{{ $b['wa'] }}" target="_blank" rel="noopener" class="ft-band-wa">Chat on WhatsApp</a>
+                                    @endif
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                     <div>
@@ -666,21 +726,6 @@
                             <li><a href="/event" class="hover:text-white transition-colors">Events</a></li>
                             <li><a href="/add-with-us" class="hover:text-white transition-colors">Advertise With Us</a></li>
                         </ul>
-                        @php
-                            $fPhone = \App\Support\SiteContact::phoneDisplay();
-                            $fTel = \App\Support\SiteContact::phoneHref();
-                            $fWa = \App\Support\SiteContact::whatsappHref();
-                            $fEmail = \App\Support\SiteContact::email();
-                            $fAddress = \App\Support\SiteContact::address();
-                        @endphp
-                        @if($fTel || $fWa || $fEmail || $fAddress)
-                            <ul class="space-y-2 text-sm" style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.1);">
-                                @if($fTel)<li><a href="{{ $fTel }}" class="hover:text-white transition-colors">Call: <span style="color: #fff;">{{ $fPhone }}</span></a></li>@endif
-                                @if($fWa)<li><a href="{{ $fWa }}" target="_blank" rel="noopener" class="hover:text-white transition-colors">WhatsApp us</a></li>@endif
-                                @if($fEmail)<li><a href="mailto:{{ $fEmail }}" class="hover:text-white transition-colors" style="overflow-wrap: anywhere;">{{ $fEmail }}</a></li>@endif
-                                @if($fAddress)<li class="text-xs leading-relaxed" style="color: rgba(255,255,255,.55);">{{ $fAddress }}</li>@endif
-                            </ul>
-                        @endif
                     </div>
                 </div>
                 <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style="border-top: 1px solid rgba(255,255,255,.1);">
@@ -698,12 +743,16 @@
                         $sLi = \App\Models\SiteSetting::getValue('social_linkedin');
                     @endphp
                     @if($sFb || $sIg || $sYt || $sTw || $sLi)
-                        <div class="flex items-center gap-4">
-                            @if($sFb)<a href="{{ $sFb }}" target="_blank" class="hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>@endif
-                            @if($sIg)<a href="{{ $sIg }}" target="_blank" class="hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>@endif
-                            @if($sYt)<a href="{{ $sYt }}" target="_blank" class="hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>@endif
-                            @if($sTw)<a href="{{ $sTw }}" target="_blank" class="hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>@endif
-                            @if($sLi)<a href="{{ $sLi }}" target="_blank" aria-label="LinkedIn" class="hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>@endif
+                        <style>
+                            .ft-social { width: 36px; height: 36px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.08); color: rgba(255,255,255,.85); transition: background .15s, color .15s; }
+                            .ft-social:hover { background: var(--color-secondary); color: #fff; }
+                        </style>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            @if($sFb)<a href="{{ $sFb }}" target="_blank" rel="noopener" aria-label="Facebook" class="ft-social"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>@endif
+                            @if($sIg)<a href="{{ $sIg }}" target="_blank" rel="noopener" aria-label="Instagram" class="ft-social"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>@endif
+                            @if($sYt)<a href="{{ $sYt }}" target="_blank" rel="noopener" aria-label="YouTube" class="ft-social"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>@endif
+                            @if($sTw)<a href="{{ $sTw }}" target="_blank" rel="noopener" aria-label="X (Twitter)" class="ft-social"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>@endif
+                            @if($sLi)<a href="{{ $sLi }}" target="_blank" rel="noopener" aria-label="LinkedIn" class="ft-social"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>@endif
                         </div>
                     @endif
                 </div>

@@ -108,3 +108,13 @@ it('shows Forgot Password once on the login page, next to Remember me', function
     expect(substr_count($login, 'Forgot Password?'))->toBe(1)
         ->and($login)->toContain("<a href=\"{{ route('password.request') }}\" class=\"text-sm text-(--color-primary) hover:underline\">Forgot Password?</a>");
 });
+
+it('puts the contact details in one band at the top of the visitor footer, with round social buttons', function () {
+    $app = file_get_contents(resource_path('views/components/layouts/app.blade.php'));
+
+    expect($app)->toContain('<div class="ft-band">')
+        ->toContain("'label' => 'Visit our office'")->toContain("'label' => 'Need help?'")
+        ->not->toContain('WhatsApp us</a>')                      // the old list under Reach Us is gone
+        ->and(substr_count($app, 'class="ft-social"'))->toBe(5)
+        ->and(substr_count($app, 'SiteContact::address()'))->toBe(1);
+});
