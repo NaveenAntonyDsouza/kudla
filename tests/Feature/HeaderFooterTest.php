@@ -101,3 +101,10 @@ it('wires the headers and footers', function () {
         expect($blade)->toContain("@include('components.partials.signup-help')")->not->toContain('Call Us')->toContain('SiteContact::footerColour()');
     }
 });
+
+it('shows Forgot Password once on the login page, next to Remember me', function () {
+    $login = file_get_contents(resource_path('views/auth/login.blade.php'));
+
+    expect(substr_count($login, 'Forgot Password?'))->toBe(1)
+        ->and($login)->toContain("<a href=\"{{ route('password.request') }}\" class=\"text-sm text-(--color-primary) hover:underline\">Forgot Password?</a>");
+});

@@ -268,7 +268,7 @@
                         <input type="checkbox" name="remember" class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
                         Remember me
                     </label>
-                    <a href="/forgot-password" class="text-sm text-(--color-primary) hover:underline">Forgot Password?</a>
+                    <a href="{{ route('password.request') }}" class="text-sm text-(--color-primary) hover:underline">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="w-full bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-4 py-2.5 font-semibold text-sm transition-colors">
@@ -278,11 +278,8 @@
         </div>
     </div>
 
-    {{-- Forgot password + Register --}}
-    <p class="mt-4 text-center text-sm">
-        <a href="{{ route('password.request') }}" class="text-gray-500 hover:text-(--color-primary) hover:underline">Forgot Password?</a>
-    </p>
-    <p class="mt-2 text-center text-sm text-gray-500">
+    {{-- Register (Forgot Password sits next to Remember me on the Password tab) --}}
+    <p class="mt-4 text-center text-sm text-gray-500">
         New here? <a href="{{ route('register') }}" class="text-(--color-primary) font-semibold hover:underline">Register Free</a>
     </p>
 </x-layouts.auth>
