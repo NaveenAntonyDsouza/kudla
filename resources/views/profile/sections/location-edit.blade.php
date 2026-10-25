@@ -4,7 +4,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {{-- Country → State → District dropdowns, as at registration --}}
         <x-profile-location-fields kind="native" :country="$l?->native_country" :state="$l?->native_state" :district="$l?->native_district" :place="$l?->native_place" />
-        <div class="float-field"><input type="text" name="pin_zip_code" value="{{ $l?->pin_zip_code ?? '' }}" maxlength="10" placeholder=" "><label>PIN / ZIP Code</label></div>
+        <div class="float-field"><input type="text" name="pin_zip_code" :inputmode="residingCountry === 'India' ? 'numeric' : 'text'" value="{{ $l?->pin_zip_code ?? '' }}" maxlength="10" placeholder=" "><label>PIN / ZIP Code</label></div>
         <x-searchable-select name="residing_country" label="Residing Country" :options="config('reference_data.country_list', [])"
             :selected="$l?->residing_country" x-model="residingCountry" />
         <div x-show="residingCountry && residingCountry !== 'India'" class="float-field">

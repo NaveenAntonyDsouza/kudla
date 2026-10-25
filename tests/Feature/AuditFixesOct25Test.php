@@ -170,3 +170,22 @@ it('switches off every membership that has ended, not only yesterday\'s', functi
         ->toContain('$membership->ends_at->lt(now()->subDays(3))')
         ->not->toContain("whereDate('ends_at', now()->subDay()->toDateString())");
 });
+
+it('fixes what the phone form walk found', function () {
+    $step1 = file_get_contents(resource_path('views/auth/register-step1.blade.php'));
+    $step4 = file_get_contents(resource_path('views/auth/register-step4.blade.php'));
+    $onb2 = file_get_contents(resource_path('views/onboarding/step2.blade.php'));
+
+    // the sign-up consent line links to the real pages
+    expect($step1)->toContain("href=\"{{ route('privacy') }}\"")->toContain("href=\"{{ route('terms') }}\"")
+        ->not->toContain('you are agree')->not->toMatch('/<a href="#"[^>]*>(Privacy Policy|Terms of Use)/');
+    // stars only where the server really requires the field
+    expect(substr_count($step4, "x-show=\"nativeCountry === 'India'\">*</span>"))->toBe(4)
+        ->and($onb2)->not->toContain("Residing Country <span class=\"text-red-500\">*</span>")
+        ->not->toContain('Residential Status <span class="text-red-500">*</span>');
+    // keyboards and lists
+    expect(substr_count($onb2, ":inputmode=\"residingCountry === 'India' ? 'numeric' : 'text'\""))->toBe(3)
+        ->and($onb2)->toContain('<x-select-or-other name="custodian_relation"')
+        ->and(file_get_contents(resource_path('views/pages/contact.blade.php')))->toContain('<input type="tel" inputmode="tel" name="phone"')
+        ->and(file_get_contents(resource_path('views/settings/index.blade.php')))->toContain('Use 6 to 64 characters.')->not->toContain('6 - 14 characters');
+});

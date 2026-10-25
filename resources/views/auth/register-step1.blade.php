@@ -191,9 +191,9 @@
 
                     {{-- Privacy Policy --}}
                     <p class="mt-4 text-center text-xs text-gray-500">
-                        By clicking on continue button, you are agree to our<br>
-                        <a href="#" class="text-(--color-primary) hover:underline">Privacy Policy</a> &
-                        <a href="#" class="text-(--color-primary) hover:underline">Terms of Use</a>
+                        By clicking Continue, you agree to our<br>
+                        <a href="{{ route('privacy') }}" target="_blank" class="text-(--color-primary) hover:underline">Privacy Policy</a> &
+                        <a href="{{ route('terms') }}" target="_blank" class="text-(--color-primary) hover:underline">Terms of Use</a>
                     </p>
 
                     {{-- Login Link --}}

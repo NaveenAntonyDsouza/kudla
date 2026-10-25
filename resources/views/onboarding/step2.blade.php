@@ -36,7 +36,7 @@
             {{-- Residing Country --}}
             <x-searchable-select name="residing_country" :options="config('reference_data.country_list', [])"
                 :selected="old('residing_country', $defaultResidingCountry)" x-model="residingCountry"
-                label='Residing Country <span class="text-red-500">*</span>'>
+                label='Residing Country'>
                 @error('residing_country') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </x-searchable-select>
 
@@ -48,7 +48,7 @@
                         <option value="{{ $opt }}" {{ old('residency_status', $locationInfo?->residency_status ?? '') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                     @endforeach
                 </select>
-                <label for="residency_status">Residential Status <span class="text-red-500">*</span></label>
+                <label for="residency_status">Residential Status</label>
                 @error('residency_status') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
 
@@ -90,7 +90,7 @@
 
             {{-- PIN/ZIP Code --}}
             <div class="float-field">
-                <input type="text" name="pin_zip_code" id="pin_zip_code" value="{{ old('pin_zip_code', $locationInfo?->pin_zip_code ?? $contactInfo?->pincode ?? '') }}" maxlength="10" placeholder=" ">
+                <input type="text" name="pin_zip_code" id="pin_zip_code" :inputmode="residingCountry === 'India' ? 'numeric' : 'text'" value="{{ old('pin_zip_code', $locationInfo?->pin_zip_code ?? $contactInfo?->pincode ?? '') }}" maxlength="10" placeholder=" ">
                 <label for="pin_zip_code">PIN/ZIP Code</label>
                 @error('pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
@@ -103,11 +103,7 @@
             </div>
 
             {{-- Custodian Relation --}}
-            <div class="float-field">
-                <input type="text" name="custodian_relation" id="custodian_relation" value="{{ old('custodian_relation', $contactInfo?->contact_relationship ?? '') }}" maxlength="100" placeholder=" ">
-                <label for="custodian_relation">Custodian Relation</label>
-                @error('custodian_relation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-            </div>
+            <x-select-or-other name="custodian_relation" label="Custodian Relation" :options="config('reference_data.custodian_relation_list', [])" :value="old('custodian_relation', $contactInfo?->contact_relationship)" :stacked="true" />
 
             {{-- Residential Phone Number --}}
             <x-phone-input name="residential_phone_number" label="Residential Phone Number" :value="$contactInfo?->residential_phone_number ?? ''" maxlength="20" />
@@ -160,7 +156,7 @@
                     @error('present_address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div class="float-field">
-                    <input type="text" name="present_pin_zip_code" id="present_pin_zip_code"
+                    <input type="text" name="present_pin_zip_code" id="present_pin_zip_code" :inputmode="residingCountry === 'India' ? 'numeric' : 'text'"
                         value="{{ old('present_pin_zip_code', $contactInfo?->present_pin_zip_code ?? '') }}" maxlength="10" placeholder=" ">
                     <label for="present_pin_zip_code">PIN/ZIP Code</label>
                     @error('present_pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -197,7 +193,7 @@
                     @error('permanent_address') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div class="float-field">
-                    <input type="text" name="permanent_pin_zip_code" id="permanent_pin_zip_code"
+                    <input type="text" name="permanent_pin_zip_code" id="permanent_pin_zip_code" :inputmode="residingCountry === 'India' ? 'numeric' : 'text'"
                         value="{{ old('permanent_pin_zip_code', $contactInfo?->permanent_pin_zip_code ?? '') }}" maxlength="10" placeholder=" ">
                     <label for="permanent_pin_zip_code">PIN/ZIP Code</label>
                     @error('permanent_pin_zip_code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

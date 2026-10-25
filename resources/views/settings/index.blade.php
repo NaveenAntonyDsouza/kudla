@@ -210,7 +210,7 @@
                                     <input type="password" name="new_password_confirmation" required placeholder=" ">
                                     <label>Confirm new password</label>
                                 </div>
-                                <p class="text-xs text-red-500">Use 6 - 14 characters with a mix of letters, numbers & symbols</p>
+                                <p class="text-xs text-red-500">Use 6 to 64 characters.</p>
                             </div>
                             <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Submit</button>
                         </form>

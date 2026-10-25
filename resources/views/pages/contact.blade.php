@@ -48,7 +48,7 @@
                             </div>
 
                             <div class="float-field">
-                                <input type="text" name="phone" value="{{ old('phone', auth()->user()?->phone) }}"
+                                <input type="tel" inputmode="tel" name="phone" value="{{ old('phone', auth()->user()?->phone) }}"
                                     class="w-full rounded-lg border-gray-300 focus:ring-(--color-primary) focus:border-(--color-primary) text-sm">
                                 <label>Phone Number</label>
                             </div>

@@ -219,13 +219,13 @@
                                 <option :value="st" x-text="st" :selected="st === nativeState"></option>
                             </template>
                         </select>
-                        <label for="native_state">Native State <span class="text-red-500">*</span></label>
+                        <label for="native_state">Native State <span class="text-red-500" x-show="nativeCountry === 'India'">*</span></label>
                     </div>
                 </template>
                 <template x-if="nativeStates.length === 0">
                     <div>
                         <input type="text" name="native_state" id="native_state" x-model="nativeState" @change="fetchNativePlaces()" placeholder=" ">
-                        <label for="native_state">Native State <span class="text-red-500">*</span></label>
+                        <label for="native_state">Native State <span class="text-red-500" x-show="nativeCountry === 'India'">*</span></label>
                     </div>
                 </template>
                 @error('native_state') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -244,13 +244,13 @@
                                 <option :value="district" x-text="district" :selected="district === nativeDistrict"></option>
                             </template>
                         </select>
-                        <label for="native_district">Native District <span class="text-red-500">*</span></label>
+                        <label for="native_district">Native District <span class="text-red-500" x-show="nativeCountry === 'India'">*</span></label>
                     </div>
                 </template>
                 <template x-if="nativeDistricts.length === 0">
                     <div>
                         <input type="text" name="native_district" id="native_district" x-model="nativeDistrict" @change="fetchNativePlaces()" placeholder=" ">
-                        <label for="native_district">Native District <span class="text-red-500">*</span></label>
+                        <label for="native_district">Native District <span class="text-red-500" x-show="nativeCountry === 'India'">*</span></label>
                     </div>
                 </template>
                 @error('native_district') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
