@@ -64,10 +64,12 @@
             {{-- ══ RIGHT: CONTENT ══ --}}
             <div class="flex-1 min-w-0">
 
-                {{-- Login CTA --}}
+                {{-- Login CTA (visitors only; members also open Quick Search here) --}}
+                @guest
                 <div class="bg-(--color-primary-light) rounded-lg p-4 mb-6">
                     <p class="text-sm text-gray-700"><a href="/register" class="font-semibold text-(--color-primary) hover:underline">Register free</a> or <a href="/login" class="font-semibold text-(--color-primary) hover:underline">login</a> to use advanced filters and view full profiles.</p>
                 </div>
+                @endguest
 
                 {{-- ── QUICK SEARCH TAB ── --}}
                 <div x-show="activeTab === 'partner'" x-cloak>

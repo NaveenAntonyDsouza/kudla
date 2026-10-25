@@ -187,3 +187,36 @@ it('calls the full search "Advanced Search" everywhere and offers With Photo Onl
         ->and(file_get_contents(app_path('Http/Controllers/SearchController.php')))
         ->toContain("COALESCE(NULLIF(profile_photo_privacy, ''), NULLIF(privacy_level, ''), 'visible_to_all') = 'visible_to_all'");
 });
+
+it('moved Advanced Search to /search/advanced-search and sends the old address there for good', function () {
+    expect(route('search.advance', [], false))->toBe('/search/advanced-search');
+
+    $this->get('/search/advance-search')->assertStatus(301)->assertRedirect('/search/advanced-search');
+    $this->get('/search/advance-search?gender=female&with_photo=1')->assertStatus(301)
+        ->assertRedirect('/search/advanced-search?gender=female&with_photo=1');
+});
+
+it('sends visitors who open /search to Quick Search, not the login page', function () {
+    $this->get('/search')->assertStatus(302)->assertRedirect('/search/quick-search');
+    $this->get('/search?gender=female')->assertRedirect('/search/quick-search?gender=female');
+    $this->get('/dashboard')->assertRedirect('/login'); // other member pages still ask to log in
+});
+
+it('shows the same Search menu to visitors and members', function () {
+    $layout = file_get_contents(resource_path('views/components/layouts/app.blade.php'));
+    $items = ["route('search.quick') }}", "route('search.advance') }}", "route('search.keyword') }}", "route('search.byid') }}", "route('discover.hub') }}"];
+
+    foreach ($items as $item) {
+        expect(substr_count($layout, $item))->toBeGreaterThanOrEqual(4); // desktop + phone, member + visitor
+    }
+    expect($layout)->not->toContain('>Id Search<')
+        ->not->toContain("route('search.index', ['tab' => 'keyword'])");
+
+    // members: Quick Search shows the same form; the others open their own search tabs;
+    // a filter search from the shared form opens as member results
+    $controller = file_get_contents(app_path('Http/Controllers/SearchController.php'));
+    expect($controller)->toContain("&& \$tab !== 'partner'")
+        ->toContain("['keyword' => 'keyword', 'byid' => 'byid'][\$tab]")
+        ->toContain("\$isFilterSearch ? ['search' => 1] : []")
+        ->and(file_get_contents(resource_path('views/search/public.blade.php')))->toContain("@guest\n                <div class=\"bg-(--color-primary-light)");
+});

@@ -326,9 +326,13 @@ class SearchController extends Controller
      */
     public function publicSearch(string $tab)
     {
-        // If logged in, redirect to the authenticated search with query params preserved
-        if (auth()->check() && auth()->user()->profile) {
-            return redirect()->route('search.index', request()->query());
+        // Members use the same Search menu as visitors (Oct 2026): Quick Search
+        // shows the same short form (its results open as member results);
+        // Advanced / Keyword / ID open that tab of the members' search page.
+        if (auth()->check() && auth()->user()->profile && $tab !== 'partner') {
+            $memberTab = ['keyword' => 'keyword', 'byid' => 'byid'][$tab] ?? null;
+
+            return redirect()->route('search.index', array_merge(request()->query(), $memberTab ? ['tab' => $memberTab] : []));
         }
 
         $activeTab = $tab;
@@ -358,9 +362,11 @@ class SearchController extends Controller
      */
     public function publicResults()
     {
-        // If logged in, redirect to the authenticated search
+        // If logged in, show the member results (a filter search needs the "search" flag)
         if (auth()->check() && auth()->user()->profile) {
-            return redirect()->route('search.index', request()->query());
+            $isFilterSearch = ! request()->filled('keyword') && ! request()->filled('matri_id');
+
+            return redirect()->route('search.index', array_merge(request()->query(), $isFilterSearch ? ['search' => 1] : []));
         }
 
         $query = Profile::where('is_active', true)
