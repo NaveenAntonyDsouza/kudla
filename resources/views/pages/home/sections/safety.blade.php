@@ -30,8 +30,6 @@
     .home-garland .g-tip { margin: 26px auto 0; max-width: 56rem; display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid rgba(var(--g-a-rgb), .35); border-left: 4px solid var(--g-a); border-radius: 12px; padding: 16px 18px; }
     .home-garland .g-tip svg { flex: none; color: var(--g-a-ink); margin-top: 1px; }
     .home-garland .g-tip p { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--g-ink); }
-    .home-garland .g-not-dating { margin: 18px auto 0; text-align: center; font-size: 0.88rem; color: var(--g-muted); }
-    .home-garland .g-not-dating a { color: var(--g-p); font-weight: 600; }
 </style>
 <section class="g-section g-ivory">
     <div class="g-wrap">
@@ -54,7 +52,6 @@
             <p><b>Stay safe:</b> {{ $safetySite }} will never ask for your password or OTP. Never send money to someone you have not met, and meet for the first time in a public place with your family.</p>
         </div>
 
-        {{-- "not a dating site" is in the footer of every page, so not repeated here (Oct 2026) --}}
-        <p class="g-not-dating"><a href="{{ route('report-misuse') }}">Report misuse</a> &middot; <a href="{{ route('privacy') }}">Privacy policy</a></p>
+        {{-- "Not a dating site", Report misuse and Privacy policy are in the footer of every page, so not repeated here (Oct 2026) --}}
     </div>
 </section>
