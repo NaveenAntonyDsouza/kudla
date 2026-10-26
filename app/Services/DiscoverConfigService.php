@@ -103,6 +103,25 @@ class DiscoverConfigService
     }
 
     /**
+     * Profession Matrimony — job titles grouped the way families search
+     * ("Doctors & Nurses", "Engineers & IT", config/profession_groups.php).
+     * Only titles on this site's occupation list are used.
+     */
+    public function professionGroups(): array
+    {
+        $onSite = collect(config('reference_data.occupation_category_list', []))->flatten()->all();
+
+        return collect(config('profession_groups.groups', []))
+            ->map(fn ($group) => [
+                'label' => "{$group['label']} Profiles",
+                'slug' => $group['slug'],
+                'filter' => ['occupation' => array_values(array_intersect($group['occupations'], $onSite))],
+            ])
+            ->filter(fn ($sub) => $sub['filter']['occupation'] !== [])
+            ->values()->all();
+    }
+
+    /**
      * Diocese Matrimony.
      */
     public function dioceses(): array

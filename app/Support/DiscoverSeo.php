@@ -20,6 +20,15 @@ class DiscoverSeo
 
     private const DESCRIPTION_BUDGET = 158;
 
+    /** "Doctors & Nurses" → "medicine, nursing and healthcare" (config/profession_groups.php). */
+    private static function professionAbout(string $name): string
+    {
+        $group = collect(config('profession_groups.groups', []))
+            ->first(fn ($g) => strcasecmp($g['label'], $name) === 0);
+
+        return $group['about'] ?? mb_strtolower($name);
+    }
+
     public static function region(): string
     {
         return trim((string) SiteSetting::getValue('seo_region', ''));
@@ -82,6 +91,11 @@ class DiscoverSeo
                 ["{$n} Matrimony – {$n} Brides & Grooms", "{$n} Matrimony – Brides & Grooms", "{$n} Matrimony"],
                 "{$n} Matrimony",
                 "Find {$n} brides and grooms{$from}.",
+            ],
+            'profession-matrimony' => [
+                ["{$n} Matrimony – Brides & Grooms", "{$n} Matrimony"],
+                "{$n} Matrimony",
+                "Find brides and grooms{$from} working in " . self::professionAbout($n) . '.',
             ],
             'second-marriage' => [
                 ["{$n} Brides & Grooms – Second Marriage", "{$n} – Second Marriage Matrimony"],

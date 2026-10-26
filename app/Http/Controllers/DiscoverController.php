@@ -211,7 +211,8 @@ class DiscoverController extends Controller
                 'jain_sect' => $query->whereHas('religiousInfo', fn($q) => $q->where('jain_sect', $value)),
                 'marital_status' => $query->where('marital_status', $value),
                 'mother_tongue' => $query->where('mother_tongue', $value),
-                'occupation' => $query->whereHas('educationDetail', fn($q) => $q->where('occupation', $value)),
+                // a list for a profession group ("Doctors & Nurses")
+                'occupation' => $query->whereHas('educationDetail', fn($q) => is_array($value) ? $q->whereIn('occupation', $value) : $q->where('occupation', $value)),
                 'native_state' => $query->whereHas('locationInfo', fn($q) => $q->where('native_state', $value)),
                 'native_district' => $query->whereHas('locationInfo', fn($q) => $q->where('native_district', $value)),
                 'residing_country' => $query->whereHas('locationInfo', fn($q) => $q->where('residing_country', $value)),

@@ -62,12 +62,12 @@ beforeEach(function () {
  |  GET /discover — hub
  | ================================================================== */
 
-it('hub returns all 13 categories from config', function () {
+it('hub returns all 14 categories from config', function () {
     $response = buildDiscoverController()->hub();
     $data = $response->getData(true)['data'];
 
     expect($response->getStatusCode())->toBe(200);
-    expect(count($data))->toBe(13);  // per config/discover.php
+    expect(count($data))->toBe(14);  // per config/discover.php (profession-matrimony added Oct 2026)
 });
 
 it('hub response includes the discriminator flags + show_search', function () {

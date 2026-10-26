@@ -56,6 +56,15 @@ return [
         'subcategories_source' => 'nonCatholicDenominations',
     ],
 
+    // job titles grouped the way families search (config/profession_groups.php, Oct 2026)
+    'profession-matrimony' => [
+        'label' => 'Profession Matrimony',
+        'seo_title' => 'Matrimony by Profession – Doctors, Engineers, Teachers',
+        'browse_by' => 'profession',
+        'show_search' => true,
+        'subcategories_source' => 'professionGroups',
+    ],
+
     'occupation-matrimony' => [
         'label' => 'Occupation Matrimony',
         'seo_title' => 'Matrimony by Profession – Brides & Grooms',

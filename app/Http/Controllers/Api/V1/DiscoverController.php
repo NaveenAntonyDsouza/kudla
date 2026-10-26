@@ -339,7 +339,8 @@ class DiscoverController extends BaseApiController
                 'occupation',
                 'education_level' => $query->whereHas(
                     'educationDetail',
-                    fn (Builder $q) => $q->where($key, $value),
+                    // a profession group filters on a list of job titles
+                    fn (Builder $q) => is_array($value) ? $q->whereIn($key, $value) : $q->where($key, $value),
                 ),
 
                 'native_country',
