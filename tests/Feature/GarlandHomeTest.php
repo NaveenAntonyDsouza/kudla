@@ -238,23 +238,28 @@ it('builds browse links from Discover pages that have members, without "Profiles
         ->and(\App\Http\Controllers\DiscoverController::homeLinks('kannadiga-matrimony'))->toBe([])
         ->and(\App\Http\Controllers\DiscoverController::homeLinks('no-such-page'))->toBe([]);
 
-    // Community is the first tab: castes and the groups of other religions in one list, biggest first
+    // Community is the first tab, Mother Tongue second: every community in one list (castes, Christian
+    // denominations, Muslim and Jain sects), biggest first, only groups with 3+ members (owner, 26 Oct 2026)
     Cache::forget('home.browse.tabs');
-    Cache::put('community_caste_list_all', ['Bunts', 'Billava', 'Roman Catholic'], 60);    // a site may list Roman Catholic as a community too
-    Cache::put('discover.counts.community-matrimony', ['bunts' => 30, 'billava' => 90, 'roman-catholic' => 12], 60);
-    Cache::put('discover.counts.catholic-matrimony', ['roman-catholic' => 40], 60);
-    Cache::put('discover.counts.muslim-matrimony', ['sunni' => 2], 60);
-    Cache::put('discover.counts.christian-matrimony', [], 60);
-    Cache::put('discover.counts.jain-matrimony', [], 60);
+    Cache::put('community_caste_list_all', ['Bunts', 'Billava', 'Beary'], 60);
+    Cache::put('community_caste_list_Muslim', ['Beary'], 60);
+    Cache::put('discover.counts.community-matrimony', ['bunts' => 30, 'billava' => 90, 'roman-catholic' => 40, 'sunni' => 5, 'beary' => 4, 'csi-christian' => 1], 60);
+    Cache::put('discover.counts.mother-tongue-matrimony', ['tulu' => 300], 60);
     $tabs = \App\Support\HomeBrowse::tabs();
     $community = collect($tabs['community']['links']);
-    expect(array_key_first($tabs))->toBe('community')
-        ->and($community->pluck('label')->take(3)->all())->toBe(['Billava', 'Roman Catholic', 'Bunts'])
-        ->and($community->where('label', 'Roman Catholic')->count())->toBe(1)                     // listed once, with its bigger page
-        ->and($community->firstWhere('label', 'Roman Catholic')['url'])->toBe(route('discover.results', ['catholic-matrimony', 'roman-catholic']))
-        ->and($community->last()['label'])->toBe('Sunni')
+    expect(array_slice(array_keys($tabs), 0, 2))->toBe(['community', 'language'])
+        ->and($community->pluck('label')->all())->toBe(['Billava', 'Roman Catholic', 'Bunts', 'Sunni', 'Beary'])   // CSI Christian: 1 member, "View all" only
+        ->and($community->firstWhere('label', 'Roman Catholic')['url'])->toBe(route('discover.results', ['catholic-matrimony', 'roman-catholic']))   // its own page
+        ->and($community->firstWhere('label', 'Billava')['url'])->toBe(route('discover.results', ['community-matrimony', 'billava']))
         ->and($tabs)->not->toHaveKey('religion')
         ->and($tabs['second']['links'][0]['label'])->toBe('Divorced');
+
+    // a site can leave a religion's groups out of the Community list (Kudla: Muslim)
+    SiteSetting::setValue('community_hidden_religions', json_encode(['Muslim']));
+    Cache::forget('home.browse.tabs');
+    expect(array_column(\App\Support\HomeBrowse::tabs()['community']['links'], 'label'))->toBe(['Billava', 'Roman Catholic', 'Bunts'])
+        ->and(array_column(app(\App\Services\DiscoverConfigService::class)->communities(), 'slug'))->not->toContain('sunni')->not->toContain('beary')->toContain('roman-catholic');
+    SiteSetting::setValue('community_hidden_religions', '[]');
 
     // the hourly rebuild only runs where the homepage shows the tabs
     SiteSetting::setValue('homepage_template', 'classic');

@@ -104,7 +104,9 @@ return [
         'seo_title' => 'Community Matrimony – Brides & Grooms by Caste',
         'browse_by' => 'community',
         'show_search' => true,
-        'subcategories_source' => 'allCastes',
+        // castes plus Christian denominations and Muslim / Jain sects, less any religion
+        // hidden in Homepage Content → Browse profiles by (Oct 2026)
+        'subcategories_source' => 'communities',
     ],
 
     'hindu-matrimony' => [

@@ -84,6 +84,7 @@ class HomepageSettings extends Page implements HasForms
             'show_plans_section' => ($settings['show_plans_section'] ?? '1') === '1',
             'show_safety_section' => ($settings['show_safety_section'] ?? '1') === '1',
             'show_browse_section' => ($settings['show_browse_section'] ?? '1') === '1',
+            'community_hidden_religions' => \App\Services\DiscoverConfigService::hiddenCommunityReligions(),
             'show_contact_section' => ($settings['show_contact_section'] ?? '1') === '1',
             'show_app_section' => ($settings['show_app_section'] ?? '1') === '1',
             'show_assisted_matchmaking' => ($settings['show_assisted_matchmaking'] ?? '0') === '1',
@@ -290,7 +291,12 @@ class HomepageSettings extends Page implements HasForms
                             ->helperText('How profiles, photos and contact details are protected, safety tips, and "for marriage, not dating".'),
                         Forms\Components\Toggle::make('show_browse_section')
                             ->label('Browse profiles by')
-                            ->helperText('Tabs for city & district, NRI, religion & community (all A–Z), mother tongue, profession, second marriage. Only links that have members.'),
+                            ->helperText('Tabs for community, mother tongue, city & district, NRI, profession and second marriage, biggest first. Only groups with at least 3 members get a link; "View all" lists every group with members.'),
+                        Forms\Components\CheckboxList::make('community_hidden_religions')
+                            ->label('Leave out of the Community list')
+                            ->options(['Christian' => 'Christian groups (Roman Catholic, CSI…)', 'Muslim' => 'Muslim groups (Sunni, Beary…)', 'Jain' => 'Jain groups'])
+                            ->columns(3)
+                            ->helperText('Their links are left out of "Browse profiles by" and the Community page. The members stay searchable as usual.'),
                         Forms\Components\Toggle::make('show_contact_section')
                             ->label('Contact & Help')
                             ->helperText('Phone, WhatsApp, email and office address from Site Settings.'),
@@ -506,6 +512,12 @@ class HomepageSettings extends Page implements HasForms
                 continue;
             } elseif ($key === 'why_choose_us') {
                 SiteSetting::setValue($key, json_encode($value));
+            } elseif ($key === 'community_hidden_religions') {
+                SiteSetting::setValue($key, json_encode(array_values((array) $value)));
+                // the Community lists are cached: rebuild them with the new choice
+                \Illuminate\Support\Facades\Cache::forget('discover.counts.community-matrimony');
+                \Illuminate\Support\Facades\Cache::forget('home.browse.tabs');
+                \Illuminate\Support\Facades\Cache::forget('sitemap.discover-populated');
             } elseif (in_array($key, $toggleFields)) {
                 SiteSetting::setValue($key, $value ? '1' : '0');
             } else {

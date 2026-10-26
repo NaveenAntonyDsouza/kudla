@@ -130,12 +130,55 @@ class DiscoverConfigService
     }
 
     /**
-     * Community Matrimony — all castes from DB.
+     * Religions whose groups a site leaves out of its Community list (setting
+     * community_hidden_religions, a JSON list; Kudla hides "Muslim", owner
+     * 26 Oct 2026). Members stay searchable; only these links are left out.
+     */
+    public static function hiddenCommunityReligions(): array
+    {
+        $value = json_decode((string) \App\Models\SiteSetting::getValue('community_hidden_religions', '[]'), true);
+
+        return is_array($value) ? array_values(array_filter($value, 'is_string')) : [];
+    }
+
+    /**
+     * Community Matrimony — every community in one list: the castes, then the
+     * Christian denominations and the Muslim and Jain sects (Oct 2026), so a
+     * Roman Catholic or Jain member has a community page too. A group that also
+     * has its own religion page carries canonical_category, and Google is told
+     * that page is the one to show.
+     */
+    public function communities(): array
+    {
+        $hidden = self::hiddenCommunityReligions();
+        $groups = [
+            'Christian' => ['catholic-matrimony' => $this->catholicDenominations(), 'christian-matrimony' => $this->nonCatholicDenominations()],
+            'Muslim' => ['muslim-matrimony' => $this->muslimSects()],
+            'Jain' => ['jain-matrimony' => $this->jainSects()],
+        ];
+
+        $list = collect($this->allCastes());
+        foreach ($groups as $religion => $sets) {
+            if (in_array($religion, $hidden, true)) {
+                continue;
+            }
+            foreach ($sets as $category => $subs) {
+                $list = $list->merge(collect($subs)->map(fn ($sub) => $sub + ['canonical_category' => $category]));
+            }
+        }
+
+        return $list->unique('slug')->values()->all();
+    }
+
+    /**
+     * Community Matrimony castes — all castes from DB, less those of a hidden religion.
      */
     public function allCastes(): array
     {
+        $hidden = collect(self::hiddenCommunityReligions())->flatMap(fn ($religion) => Community::getCasteList($religion))->all();
+
         return collect(Community::getCasteList())
-            ->reject(fn ($c) => \App\Models\ReligiousInfo::isOtherCaste($c))
+            ->reject(fn ($c) => \App\Models\ReligiousInfo::isOtherCaste($c) || in_array($c, $hidden, true))
             ->map(fn ($c) => [
                 'label' => "$c Profiles",
                 'slug' => Str::slug($c),

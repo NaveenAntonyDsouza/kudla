@@ -157,6 +157,13 @@ class DiscoverController extends Controller
             && collect(app(\App\Services\DiscoverConfigService::class)->allCastes())->contains('slug', $slug)) {
             return route('discover.results', ['community-matrimony', $slug]);
         }
+        // Community > Roman Catholic lists the same people as Catholic > Roman Catholic
+        if ($category === 'community-matrimony') {
+            $home = collect(app(\App\Services\DiscoverConfigService::class)->communities())->firstWhere('slug', $slug)['canonical_category'] ?? null;
+            if ($home) {
+                return route('discover.results', [$home, $slug]);
+            }
+        }
 
         return route('discover.results', [$category, $slug]);
     }
@@ -230,11 +237,11 @@ class DiscoverController extends Controller
                 continue;
             }
             foreach (array_keys(self::profileCounts($category)) as $slug) {
-                $urls[] = route('discover.results', [$category, $slug]);
+                $urls[] = self::canonicalUrl($category, $slug);   // e.g. Community > Roman Catholic → Catholic > Roman Catholic
             }
         }
 
-        return $urls;
+        return array_values(array_unique($urls));
     }
 
     /**
@@ -293,7 +300,7 @@ class DiscoverController extends Controller
 
         return collect($subs)->map(fn ($sub) => [
             'label' => trim(preg_replace('/\s+Profiles$/i', '', $sub['label'])),
-            'url' => route('discover.results', [$category, $sub['slug']]),
+            'url' => self::canonicalUrl($category, $sub['slug']),   // the page Google is told to show
             'count' => (int) $sub['count'],
         ])->values()->all();
     }
