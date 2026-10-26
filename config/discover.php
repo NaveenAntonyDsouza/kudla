@@ -59,7 +59,7 @@ return [
     // job titles grouped the way families search (config/profession_groups.php, Oct 2026)
     'profession-matrimony' => [
         'label' => 'Profession Matrimony',
-        'seo_title' => 'Matrimony by Profession – Doctors, Engineers, Teachers',
+        'seo_title' => 'Matrimony by Profession – Doctors, Engineers',
         'browse_by' => 'profession',
         'show_search' => true,
         'subcategories_source' => 'professionGroups',
@@ -67,7 +67,7 @@ return [
 
     'occupation-matrimony' => [
         'label' => 'Occupation Matrimony',
-        'seo_title' => 'Matrimony by Profession – Brides & Grooms',
+        'seo_title' => 'Matrimony by Job Title – Brides & Grooms',
         'browse_by' => 'profession',
         'show_search' => true,
         'subcategories_source' => 'occupations',
