@@ -344,3 +344,11 @@ it('takes a visitor who clicks a card to that profile after logging in', functio
         ->toContain('<a href="{{ $profileUrl }}" class="pc-interest-btn">')
         ->not->toContain("route('login')");
 });
+
+it('lists members who visited in the last 30 days before those who stopped visiting', function () {
+    $model = file_get_contents(app_path('Models/Profile.php'));
+
+    expect($model)->toContain("->completedFirst()\n            // active in the last 30 days before members who stopped visiting")
+        ->toContain("->orderByRaw('COALESCE((SELECT last_login_at FROM users WHERE users.id = profiles.user_id), profiles.created_at) >= ? DESC', [now()->subDays(30)->format('Y-m-d H:i:s')])")
+        ->and(file_exists(app_path('Support/ReplyHabit.php')))->toBeFalse();      // owner: no "replies within a day" line
+});

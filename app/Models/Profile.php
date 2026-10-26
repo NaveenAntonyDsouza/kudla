@@ -234,6 +234,9 @@ class Profile extends Model
             ->communityFirst($viewer)
             ->paidBoostsFirst()
             ->completedFirst()
+            // active in the last 30 days before members who stopped visiting
+            // (weekly review, Oct 2026: interests to them go unanswered)
+            ->orderByRaw('COALESCE((SELECT last_login_at FROM users WHERE users.id = profiles.user_id), profiles.created_at) >= ? DESC', [now()->subDays(30)->format('Y-m-d H:i:s')])
             ->photoFirst()
             ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) IS NULL ASC')
             ->orderByRaw('(SELECT last_login_at FROM users WHERE users.id = profiles.user_id) DESC')
