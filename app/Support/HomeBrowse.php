@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\Cache;
 /**
  * The homepage "Browse profiles by" tabs (Oct 2026, Garland / Harmony designs;
  * Admin → Homepage Content → "Browse profiles by"). Built from the Discover
- * pages, so every link lands on a page that has members. Religions and
- * communities are listed A–Z and side by side, so no group comes first; places,
- * languages and professions are biggest first. Cached for two hours and
- * rebuilt hourly in the background (routes/console.php), so visitors never
- * wait for the member counts behind it.
+ * pages, so every link lands on a page that has members. Community comes
+ * first (owner, 26 Oct 2026): one list, biggest first, that also holds the
+ * groups of other religions (e.g. Roman Catholic, Sunni), so no member is left
+ * without a link. Places, languages and professions are biggest first too.
+ * Cached for two hours and rebuilt hourly in the background
+ * (routes/console.php), so visitors never wait for the member counts behind it.
  */
 class HomeBrowse
 {
@@ -21,14 +22,8 @@ class HomeBrowse
 
     private const CACHE_KEY = 'home.browse.tabs';
 
-    /** Religion pages, by the name shown on the chip. */
-    private const RELIGIONS = [
-        'Catholic' => 'catholic-matrimony',
-        'Christian' => 'christian-matrimony',
-        'Hindu' => 'hindu-matrimony',
-        'Jain' => 'jain-matrimony',
-        'Muslim' => 'muslim-matrimony',
-    ];
+    /** Religion pages whose groups (denominations, sects) join the Community list. */
+    private const OTHER_RELIGIONS = ['catholic-matrimony', 'christian-matrimony', 'muslim-matrimony', 'jain-matrimony'];
 
     /**
      * Tabs that have at least one link: [key => ['label', 'links' => [[label, url]], 'all' => url]].
@@ -59,24 +54,35 @@ class HomeBrowse
 
     private static function build(): array
     {
-        $religions = collect(self::RELIGIONS)
-            ->filter(fn ($category) => config("discover.{$category}") && DiscoverController::profileCounts($category) !== [])
-            ->map(fn ($category, $name) => ['label' => $name, 'url' => route('discover.category', $category)])
-            ->values()
-            ->all();
-
         $tabs = [
+            'community' => ['label' => 'Community', 'links' => self::communityLinks(), 'all' => 'community-matrimony'],
             'location' => ['label' => 'City & District', 'links' => DiscoverController::homeLinks('karnataka-matrimony', 18), 'all' => 'karnataka-matrimony'],
             'nri' => ['label' => 'NRI', 'links' => DiscoverController::homeLinks('nri-matrimony', 18), 'all' => 'nri-matrimony'],
-            'religion' => ['label' => 'Religion & Community', 'religions' => $religions, 'links' => DiscoverController::homeLinks('community-matrimony', 0, true), 'all' => 'community-matrimony'],
             'language' => ['label' => 'Mother Tongue', 'links' => DiscoverController::homeLinks('mother-tongue-matrimony', 18), 'all' => 'mother-tongue-matrimony'],
             'profession' => ['label' => 'Profession', 'links' => DiscoverController::homeLinks('occupation-matrimony', 18), 'all' => 'occupation-matrimony'],
             'second' => ['label' => 'Second Marriage', 'links' => DiscoverController::homeLinks('second-marriage'), 'all' => 'second-marriage'],
         ];
 
         return collect($tabs)
-            ->filter(fn ($tab) => ! empty($tab['links']) || ! empty($tab['religions']))
-            ->map(fn ($tab) => $tab + ['religions' => [], 'all_url' => route('discover.category', $tab['all'])])
+            ->filter(fn ($tab) => ! empty($tab['links']))
+            ->map(fn ($tab) => $tab + ['all_url' => route('discover.category', $tab['all'])])
+            ->all();
+    }
+
+    /**
+     * Communities and the groups of other religions in one list, biggest first
+     * (Billava, Kulal, Bunts, … Roman Catholic, …). A group listed twice keeps
+     * its bigger page.
+     */
+    private static function communityLinks(): array
+    {
+        return collect(DiscoverController::homeLinkCounts('community-matrimony'))
+            ->merge(collect(self::OTHER_RELIGIONS)->flatMap(fn ($category) => DiscoverController::homeLinkCounts($category)))
+            ->sortByDesc('count')
+            ->unique(fn ($link) => mb_strtolower($link['label']))
+            ->sortBy([['count', 'desc'], ['label', 'asc']])
+            ->map(fn ($link) => ['label' => $link['label'], 'url' => $link['url']])
+            ->values()
             ->all();
     }
 }

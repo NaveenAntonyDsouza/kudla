@@ -210,17 +210,17 @@ it('shows plans, safety and contact by default, and personal matchmaking only wh
         ->not->toContain('<h2 class="g-h2">Membership Plans</h2>')->not->toContain('Your Safety Comes First')->not->toContain("We're Here to Help");
 });
 
-it('lists every religion and community side by side in "Browse profiles by"', function () {
+it('shows Community first in "Browse profiles by", without a separate religion list', function () {
     Cache::put('home.browse.tabs', [
-        'religion' => ['label' => 'Religion & Community', 'religions' => [['label' => 'Christian', 'url' => '/discover/christian-matrimony'], ['label' => 'Muslim', 'url' => '/discover/muslim-matrimony']],
-            'links' => [['label' => 'Bunts', 'url' => '/discover/community-matrimony/bunts']], 'all' => 'community-matrimony', 'all_url' => '/discover/community-matrimony'],
-        'nri' => ['label' => 'NRI', 'religions' => [], 'links' => [['label' => 'United Arab Emirates', 'url' => '/discover/nri-matrimony/uae']], 'all' => 'nri-matrimony', 'all_url' => '/discover/nri-matrimony'],
+        'community' => ['label' => 'Community', 'links' => [['label' => 'Bunts', 'url' => '/discover/community-matrimony/bunts'], ['label' => 'Roman Catholic', 'url' => '/discover/catholic-matrimony/roman-catholic']],
+            'all' => 'community-matrimony', 'all_url' => '/discover/community-matrimony'],
+        'nri' => ['label' => 'NRI', 'links' => [['label' => 'United Arab Emirates', 'url' => '/discover/nri-matrimony/uae']], 'all' => 'nri-matrimony', 'all_url' => '/discover/nri-matrimony'],
     ], 60);
     $html = ($this->home)('harmony');
 
     expect($html)->toContain('Browse Profiles By')->toContain('role="tablist"')
-        ->toContain('>Religion &amp; Community</button>')->toContain('>NRI</button>')
-        ->toContain('<a href="/discover/muslim-matrimony" class="g-chip">Muslim</a>')
+        ->toContain('>Community</button>')->toContain('>NRI</button>')->not->toContain('Religion &amp; Community')
+        ->toContain('<a href="/discover/catholic-matrimony/roman-catholic" class="g-chip">Roman Catholic</a>')
         ->toContain('<a href="/discover/nri-matrimony/uae" class="g-chip">United Arab Emirates</a>');   // every tab is in the HTML
 
     SiteSetting::setValue('show_browse_section', '0');
@@ -238,16 +238,23 @@ it('builds browse links from Discover pages that have members, without "Profiles
         ->and(\App\Http\Controllers\DiscoverController::homeLinks('kannadiga-matrimony'))->toBe([])
         ->and(\App\Http\Controllers\DiscoverController::homeLinks('no-such-page'))->toBe([]);
 
-    // religions with members get a chip each, A–Z (24 Oct: an array union once dropped them all)
+    // Community is the first tab: castes and the groups of other religions in one list, biggest first
     Cache::forget('home.browse.tabs');
+    Cache::put('community_caste_list_all', ['Bunts', 'Billava', 'Roman Catholic'], 60);    // a site may list Roman Catholic as a community too
+    Cache::put('discover.counts.community-matrimony', ['bunts' => 30, 'billava' => 90, 'roman-catholic' => 12], 60);
+    Cache::put('discover.counts.catholic-matrimony', ['roman-catholic' => 40], 60);
     Cache::put('discover.counts.muslim-matrimony', ['sunni' => 2], 60);
-    Cache::put('discover.counts.hindu-matrimony', ['bunts' => 30], 60);
+    Cache::put('discover.counts.christian-matrimony', [], 60);
     Cache::put('discover.counts.jain-matrimony', [], 60);
     $tabs = \App\Support\HomeBrowse::tabs();
-    expect(array_column($tabs['religion']['religions'], 'label'))->toBe(['Hindu', 'Muslim'])
-        ->and($tabs['religion']['religions'][1]['url'])->toBe(route('discover.category', 'muslim-matrimony'))
-        ->and($tabs['second']['links'][0]['label'])->toBe('Divorced')
-        ->and($tabs['second']['religions'])->toBe([]);
+    $community = collect($tabs['community']['links']);
+    expect(array_key_first($tabs))->toBe('community')
+        ->and($community->pluck('label')->take(3)->all())->toBe(['Billava', 'Roman Catholic', 'Bunts'])
+        ->and($community->where('label', 'Roman Catholic')->count())->toBe(1)                     // listed once, with its bigger page
+        ->and($community->firstWhere('label', 'Roman Catholic')['url'])->toBe(route('discover.results', ['catholic-matrimony', 'roman-catholic']))
+        ->and($community->last()['label'])->toBe('Sunni')
+        ->and($tabs)->not->toHaveKey('religion')
+        ->and($tabs['second']['links'][0]['label'])->toBe('Divorced');
 
     // the hourly rebuild only runs where the homepage shows the tabs
     SiteSetting::setValue('homepage_template', 'classic');

@@ -256,12 +256,27 @@ class DiscoverController extends Controller
     /**
      * Homepage "Browse profiles by" links (Oct 2026): the subcategories of a
      * category that have members, as ['label' => 'Bunts', 'url' => …] with
-     * "Profiles" dropped from the label. Biggest first, or A–Z when asked
-     * (religion and community lists are A–Z so no group comes first).
+     * "Profiles" dropped from the label. Biggest first, or A–Z when asked.
      *
      * @return array<int, array{label: string, url: string}>
      */
     public static function homeLinks(string $category, int $limit = 0, bool $alphabetical = false): array
+    {
+        $links = collect(self::homeLinkCounts($category))->map(fn ($link) => ['label' => $link['label'], 'url' => $link['url']]);
+        if ($alphabetical) {
+            $links = $links->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE);
+        }
+
+        return ($limit > 0 ? $links->take($limit) : $links)->values()->all();
+    }
+
+    /**
+     * The same links with their member counts, biggest first:
+     * [['label' => 'Bunts', 'url' => …, 'count' => 59], …].
+     *
+     * @return array<int, array{label: string, url: string, count: int}>
+     */
+    public static function homeLinkCounts(string $category): array
     {
         $config = config("discover.{$category}");
         if (! $config || isset($config['direct_filter'])) {
@@ -276,15 +291,11 @@ class DiscoverController extends Controller
             return [];
         }
 
-        $links = collect($subs)->map(fn ($sub) => [
+        return collect($subs)->map(fn ($sub) => [
             'label' => trim(preg_replace('/\s+Profiles$/i', '', $sub['label'])),
             'url' => route('discover.results', [$category, $sub['slug']]),
-        ]);
-        if ($alphabetical) {
-            $links = $links->sortBy('label', SORT_NATURAL | SORT_FLAG_CASE);
-        }
-
-        return ($limit > 0 ? $links->take($limit) : $links)->values()->all();
+            'count' => (int) $sub['count'],
+        ])->values()->all();
     }
 
     /**
