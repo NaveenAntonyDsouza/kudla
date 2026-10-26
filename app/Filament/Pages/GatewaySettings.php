@@ -50,14 +50,15 @@ class GatewaySettings extends Page implements HasForms
             'mail_host' => $settings['mail_host'] ?? config('mail.mailers.smtp.host'),
             'mail_port' => $settings['mail_port'] ?? config('mail.mailers.smtp.port'),
             'mail_username' => $settings['mail_username'] ?? config('mail.mailers.smtp.username'),
-            'mail_password' => '', // never sent to the browser; empty keeps the saved one
+            // secrets are never sent to the browser; empty keeps the saved one
+            'mail_password' => '',
             'mail_encryption' => $settings['mail_encryption'] ?? config('mail.mailers.smtp.encryption'),
             'mail_from_address' => $settings['mail_from_address'] ?? config('mail.from.address'),
             'mail_from_name' => $settings['mail_from_name'] ?? config('mail.from.name'),
 
             // SMS (Fast2SMS)
             'sms_provider' => $settings['sms_provider'] ?? 'fast2sms',
-            'sms_api_key' => $settings['sms_api_key'] ?? config('services.fast2sms.api_key', ''),
+            'sms_api_key' => '',
             'sms_sender_id' => $settings['sms_sender_id'] ?? config('services.fast2sms.sender_id', ''),
             'otp_length' => $settings['otp_length'] ?? '6',
             'otp_expiry_minutes' => $settings['otp_expiry_minutes'] ?? '10',
@@ -65,21 +66,21 @@ class GatewaySettings extends Page implements HasForms
             // Razorpay
             'razorpay_enabled' => ($settings['razorpay_enabled'] ?? '1') === '1',
             'razorpay_key_id' => $settings['razorpay_key_id'] ?? config('services.razorpay.key', ''),
-            'razorpay_key_secret' => $settings['razorpay_key_secret'] ?? '',
-            'razorpay_webhook_secret' => $settings['razorpay_webhook_secret'] ?? '',
+            'razorpay_key_secret' => '',
+            'razorpay_webhook_secret' => '',
             'razorpay_mode' => $settings['razorpay_mode'] ?? 'test',
 
             // Stripe
             'stripe_enabled' => ($settings['stripe_enabled'] ?? '1') === '1',
             'stripe_key' => $settings['stripe_key'] ?? config('services.stripe.key', ''),
-            'stripe_secret' => $settings['stripe_secret'] ?? '',
-            'stripe_webhook_secret' => $settings['stripe_webhook_secret'] ?? '',
+            'stripe_secret' => '',
+            'stripe_webhook_secret' => '',
             'stripe_mode' => $settings['stripe_mode'] ?? 'test',
 
             // PayPal
             'paypal_enabled' => ($settings['paypal_enabled'] ?? '1') === '1',
             'paypal_client_id' => $settings['paypal_client_id'] ?? config('services.paypal.client_id', ''),
-            'paypal_secret' => $settings['paypal_secret'] ?? '',
+            'paypal_secret' => '',
             'paypal_webhook_id' => $settings['paypal_webhook_id'] ?? config('services.paypal.webhook_id', ''),
             'paypal_mode' => $settings['paypal_mode'] ?? config('services.paypal.mode', 'sandbox'),
             'paypal_currency' => $settings['paypal_currency'] ?? config('services.paypal.currency', 'USD'),
@@ -87,7 +88,7 @@ class GatewaySettings extends Page implements HasForms
             // Paytm
             'paytm_enabled' => ($settings['paytm_enabled'] ?? '1') === '1',
             'paytm_mid' => $settings['paytm_mid'] ?? config('services.paytm.mid', ''),
-            'paytm_key' => $settings['paytm_key'] ?? '',
+            'paytm_key' => '',
             'paytm_mode' => $settings['paytm_mode'] ?? config('services.paytm.mode', 'sandbox'),
             'paytm_website' => $settings['paytm_website'] ?? config('services.paytm.website', 'WEBSTAGING'),
             'paytm_industry_type' => $settings['paytm_industry_type'] ?? config('services.paytm.industry_type', 'Retail'),
@@ -96,11 +97,11 @@ class GatewaySettings extends Page implements HasForms
             // PhonePe (V2 Standard Checkout)
             'phonepe_enabled' => ($settings['phonepe_enabled'] ?? '1') === '1',
             'phonepe_client_id' => $settings['phonepe_client_id'] ?? config('services.phonepe.client_id', ''),
-            'phonepe_client_secret' => $settings['phonepe_client_secret'] ?? '',
+            'phonepe_client_secret' => '',
             'phonepe_client_version' => $settings['phonepe_client_version'] ?? config('services.phonepe.client_version', '1'),
             'phonepe_mode' => $settings['phonepe_mode'] ?? config('services.phonepe.mode', 'sandbox'),
             'phonepe_webhook_username' => $settings['phonepe_webhook_username'] ?? config('services.phonepe.webhook_username', ''),
-            'phonepe_webhook_password' => $settings['phonepe_webhook_password'] ?? '',
+            'phonepe_webhook_password' => '',
 
             // Per-gateway "Show in mobile app" visibility (default ON; PhonePe
             // OFF because its hosted checkout only offers a cross-device UPI QR
@@ -261,7 +262,7 @@ class GatewaySettings extends Page implements HasForms
                             ->label('Webhook Secret')
                             ->password()
                             ->revealable()
-                            ->helperText('Optional. Used to verify webhook signatures.'),
+                            ->helperText('Optional. Used to verify webhook signatures. Leave empty to keep existing.'),
                     ])
                     ->columns(2),
 
@@ -500,8 +501,9 @@ class GatewaySettings extends Page implements HasForms
                 continue;
             }
 
-            // the mailbox password is stored encrypted (Oct 2026)
-            if ($key === 'mail_password') {
+            // passwords and secret keys are stored encrypted, and never
+            // sent back to the browser (Oct 2026)
+            if (in_array($key, \App\Support\SecretSetting::KEYS, true)) {
                 \App\Support\SecretSetting::put($key, (string) $value);
                 continue;
             }

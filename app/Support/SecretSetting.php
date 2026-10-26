@@ -15,6 +15,15 @@ final class SecretSetting
 {
     private const PREFIX = 'enc:';
 
+    /** Site settings stored this way: mailbox, SMS and payment gateway secrets. */
+    public const KEYS = [
+        'mail_password', 'sms_api_key',
+        'razorpay_key_secret', 'razorpay_webhook_secret',
+        'stripe_secret', 'stripe_webhook_secret',
+        'paypal_secret', 'paytm_key',
+        'phonepe_client_secret', 'phonepe_webhook_password',
+    ];
+
     public static function put(string $key, string $value): void
     {
         SiteSetting::setValue($key, self::seal($value));

@@ -240,7 +240,7 @@ class GatewayConfigProvider extends ServiceProvider
     protected function overrideSmsConfig(array $settings): void
     {
         if (!empty($settings['sms_api_key'])) {
-            config(['services.fast2sms.api_key' => $settings['sms_api_key']]);
+            config(['services.fast2sms.api_key' => \App\Support\SecretSetting::reveal($settings['sms_api_key'])]);
         }
 
         if (!empty($settings['sms_sender_id'])) {
@@ -255,11 +255,11 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['razorpay_key_secret'])) {
-            config(['services.razorpay.secret' => $settings['razorpay_key_secret']]);
+            config(['services.razorpay.secret' => \App\Support\SecretSetting::reveal($settings['razorpay_key_secret'])]);
         }
 
         if (!empty($settings['razorpay_webhook_secret'])) {
-            config(['services.razorpay.webhook_secret' => $settings['razorpay_webhook_secret']]);
+            config(['services.razorpay.webhook_secret' => \App\Support\SecretSetting::reveal($settings['razorpay_webhook_secret'])]);
         }
 
         // Admin enable/disable toggle. Stored as '1' / '0' string. Unset
@@ -277,11 +277,11 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['stripe_secret'])) {
-            config(['services.stripe.secret' => $settings['stripe_secret']]);
+            config(['services.stripe.secret' => \App\Support\SecretSetting::reveal($settings['stripe_secret'])]);
         }
 
         if (!empty($settings['stripe_webhook_secret'])) {
-            config(['services.stripe.webhook_secret' => $settings['stripe_webhook_secret']]);
+            config(['services.stripe.webhook_secret' => \App\Support\SecretSetting::reveal($settings['stripe_webhook_secret'])]);
         }
 
         if (array_key_exists('stripe_enabled', $settings)) {
@@ -296,7 +296,7 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['paypal_secret'])) {
-            config(['services.paypal.secret' => $settings['paypal_secret']]);
+            config(['services.paypal.secret' => \App\Support\SecretSetting::reveal($settings['paypal_secret'])]);
         }
 
         if (!empty($settings['paypal_mode'])) {
@@ -323,7 +323,7 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['paytm_key'])) {
-            config(['services.paytm.key' => $settings['paytm_key']]);
+            config(['services.paytm.key' => \App\Support\SecretSetting::reveal($settings['paytm_key'])]);
         }
 
         if (!empty($settings['paytm_mode'])) {
@@ -354,7 +354,7 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['phonepe_client_secret'])) {
-            config(['services.phonepe.client_secret' => $settings['phonepe_client_secret']]);
+            config(['services.phonepe.client_secret' => \App\Support\SecretSetting::reveal($settings['phonepe_client_secret'])]);
         }
 
         if (!empty($settings['phonepe_client_version'])) {
@@ -370,7 +370,7 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['phonepe_webhook_password'])) {
-            config(['services.phonepe.webhook_password' => $settings['phonepe_webhook_password']]);
+            config(['services.phonepe.webhook_password' => \App\Support\SecretSetting::reveal($settings['phonepe_webhook_password'])]);
         }
 
         if (array_key_exists('phonepe_enabled', $settings)) {
