@@ -50,7 +50,7 @@ class GatewaySettings extends Page implements HasForms
             'mail_host' => $settings['mail_host'] ?? config('mail.mailers.smtp.host'),
             'mail_port' => $settings['mail_port'] ?? config('mail.mailers.smtp.port'),
             'mail_username' => $settings['mail_username'] ?? config('mail.mailers.smtp.username'),
-            'mail_password' => $settings['mail_password'] ?? '',
+            'mail_password' => '', // never sent to the browser; empty keeps the saved one
             'mail_encryption' => $settings['mail_encryption'] ?? config('mail.mailers.smtp.encryption'),
             'mail_from_address' => $settings['mail_from_address'] ?? config('mail.from.address'),
             'mail_from_name' => $settings['mail_from_name'] ?? config('mail.from.name'),
@@ -500,6 +500,12 @@ class GatewaySettings extends Page implements HasForms
                 continue;
             }
 
+            // the mailbox password is stored encrypted (Oct 2026)
+            if ($key === 'mail_password') {
+                \App\Support\SecretSetting::put($key, (string) $value);
+                continue;
+            }
+
             SiteSetting::setValue($key, $value ?? '');
         }
 
@@ -574,7 +580,7 @@ class GatewaySettings extends Page implements HasForms
             if (!empty($data['mail_password'])) {
                 config(['mail.mailers.smtp.password' => $data['mail_password']]);
             } else {
-                $storedPassword = SiteSetting::getValue('mail_password');
+                $storedPassword = \App\Support\SecretSetting::reveal(SiteSetting::getValue('mail_password'));
                 if ($storedPassword) {
                     config(['mail.mailers.smtp.password' => $storedPassword]);
                 }

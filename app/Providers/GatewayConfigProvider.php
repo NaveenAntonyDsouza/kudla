@@ -225,7 +225,7 @@ class GatewayConfigProvider extends ServiceProvider
         }
 
         if (!empty($settings['mail_password'])) {
-            config(['mail.mailers.smtp.password' => $settings['mail_password']]);
+            config(['mail.mailers.smtp.password' => \App\Support\SecretSetting::reveal($settings['mail_password'])]);
         }
 
         if (!empty($settings['mail_from_address'])) {
