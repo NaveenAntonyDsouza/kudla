@@ -311,6 +311,15 @@ Route::get('/resubscribe/{user}/{preference}', [\App\Http\Controllers\Unsubscrib
     ->middleware('signed')
     ->name('unsubscribe.resubscribe');
 
+// Accept / Decline from the interest emails without logging in (Oct 2026): the
+// link shows the two buttons, a button POSTs here
+Route::get('/interest-reply/{interest}', [\App\Http\Controllers\InterestEmailReplyController::class, 'show'])
+    ->middleware('signed')
+    ->name('interests.email-reply');
+Route::post('/interest-reply/{interest}', [\App\Http\Controllers\InterestEmailReplyController::class, 'store'])
+    ->middleware(['signed', 'throttle:10,1'])
+    ->name('interests.email-reply.store');
+
 // "Confirm my email" from the registration emails: the link shows a button,
 // the button POSTs here (mail scanners open links, so GET changes nothing)
 Route::get('/confirm-email/{user}', [\App\Http\Controllers\EmailConfirmLinkController::class, 'show'])

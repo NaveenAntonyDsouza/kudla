@@ -52,6 +52,24 @@ class Interest extends Model
         return $this->belongsTo(Profile::class, 'sender_profile_id');
     }
 
+    /**
+     * Accept / Decline from the email without logging in (Oct 2026): a signed
+     * link to a page with the two buttons. It dies when the interest is
+     * answered, the receiver's email changes, or after 30 days.
+     */
+    public function emailReplyUrl(string $reply): string
+    {
+        return \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'interests.email-reply',
+            now()->addDays(30),
+            [
+                'interest' => $this->id,
+                'reply' => $reply,
+                'e' => User::emailFingerprint((string) $this->receiverProfile?->user?->email),
+            ]
+        );
+    }
+
     public function receiverProfile(): BelongsTo
     {
         return $this->belongsTo(Profile::class, 'receiver_profile_id');

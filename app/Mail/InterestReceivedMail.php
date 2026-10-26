@@ -24,14 +24,14 @@ class InterestReceivedMail extends DatabaseMailable
     {
         $page = route('interests.show', $this->interest);
 
+        // Accept / Decline open a page with the two buttons — no login needed
+        // (Oct 2026). A link alone never answers: mail scanners open links too.
         return [
             'RECEIVER_NAME' => MemberName::first($this->interest->receiverProfile->full_name) ?: $this->interest->receiverProfile->full_name,
             'SENDER_MATRI_ID' => $this->interest->senderProfile->matri_id,
             'SENDER_SUMMARY' => MemberSummary::line($this->interest->senderProfile),
-            // Open the interest page with that reply chosen; the member confirms
-            // there. A link alone never answers: mail scanners open links too.
-            'ACCEPT_URL' => $page . '?reply=accept#reply',
-            'DECLINE_URL' => $page . '?reply=decline#reply',
+            'ACCEPT_URL' => $this->interest->emailReplyUrl('accept'),
+            'DECLINE_URL' => $this->interest->emailReplyUrl('decline'),
             'ACTION_URL' => $page,
         ];
     }

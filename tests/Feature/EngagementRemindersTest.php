@@ -168,8 +168,8 @@ it('puts Accept and Decline in the interest email, and names the sender only by 
     $mail = new InterestReceivedMail($interest);
     $vars = (fn () => $this->templateVariables())->call($mail);
 
-    expect($vars['ACCEPT_URL'])->toEndWith("/interests/{$interest->id}?reply=accept#reply")
-        ->and($vars['DECLINE_URL'])->toEndWith("/interests/{$interest->id}?reply=decline#reply")
+    expect($vars['ACCEPT_URL'])->toContain("/interest-reply/{$interest->id}?")->toContain('reply=accept')->toContain('signature=')
+        ->and($vars['DECLINE_URL'])->toContain("/interest-reply/{$interest->id}?")->toContain('reply=decline')
         ->and($vars['SENDER_SUMMARY'])->toBe('27 yrs · Udupi · Nurse')
         ->and(implode(' ', $vars))->not->toContain('Asha Priya KM200001')
         ->and($mail->headers()->text['List-Unsubscribe'])->toContain("/unsubscribe/{$receiver->id}/email_interest");
@@ -253,4 +253,41 @@ it('sends the ends-tomorrow and has-ended membership emails', function () {
     Mail::assertQueued(MembershipEndingTomorrowMail::class, fn ($mail) => $mail->hasTo($tomorrow->email));
     Mail::assertQueued(MembershipExpiredMail::class, fn ($mail) => $mail->hasTo($ended->email));
     expect(DB::table('user_memberships')->where('user_id', $ended->id)->value('is_active'))->toBeFalsy();
+});
+
+it('lets a member accept or decline from the email without logging in, only by pressing a button', function () {
+    [, $sender] = erMember('KM400001');
+    [$receiver, $receiverProfile] = erMember('KM400002');
+    $interest = Interest::find(erInterest($sender, $receiverProfile, 1));
+    $url = $interest->emailReplyUrl('accept');
+
+    // opening the link (as a mail scanner would) changes nothing
+    $this->get($url)->assertOk()->assertSee('Reply to this interest')->assertSee('KM400001')
+        ->assertSee('Accept to connect: you can chat, call and WhatsApp each other.');
+    expect(Interest::find($interest->id)->status)->toBe('pending');
+
+    // a changed link is refused
+    $this->get(str_replace('reply=accept', 'reply=decline', $url))->assertForbidden();
+
+    // the button answers through the same service as the site
+    $service = Mockery::mock(\App\Services\InterestService::class);
+    $service->shouldReceive('accept')->once()->andReturnUsing(function (Interest $i) {
+        DB::table('interests')->where('id', $i->id)->update(['status' => 'accepted']);
+
+        return new \App\Models\InterestReply();
+    });
+    app()->instance(\App\Services\InterestService::class, $service);
+
+    $this->post($url, ['choice' => 'accept'])->assertOk()->assertSee('You are connected');
+    expect(Interest::find($interest->id)->status)->toBe('accepted');
+
+    // answered: the link only says so
+    $this->get($url)->assertOk()->assertSee('You have already accepted this interest');
+    $this->post($url, ['choice' => 'decline'])->assertOk()->assertSee('You have already accepted this interest');
+
+    // a new email address on the account retires old links
+    $other = Interest::find(erInterest($sender, $receiverProfile, 1));
+    $otherUrl = $other->emailReplyUrl('decline');
+    $receiver->forceFill(['email' => 'new@example.test'])->save();
+    $this->get($otherUrl)->assertOk()->assertSee('This link has expired');
 });
