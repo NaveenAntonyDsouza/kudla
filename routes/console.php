@@ -61,6 +61,10 @@ Schedule::command('interests:expire', ['--scheduled'])->dailyAt('07:30')->withou
 // privacy policy: personal data erased 90 days after "Delete Account" (App\Services\MemberErasure)
 Schedule::command('members:erase-deleted')->dailyAt('03:15')->withoutOverlapping();
 
+// Uptime alarm: emails the owner when a site on the other server stops loading
+// (site settings uptime_watch_urls + uptime_alert_email; nothing when unset)
+Schedule::command('uptime:watch')->everyFiveMinutes()->withoutOverlapping(10);
+
 // Homepage "Browse profiles by" links (Garland / Harmony designs): rebuilt in the
 // background so no visitor waits for the ~600 member counts behind them
 Schedule::call(fn () => \App\Support\HomeBrowse::refresh())->hourly()->name('home-browse-refresh')->withoutOverlapping();
