@@ -87,7 +87,7 @@
                             {{-- Religion with cascading --}}
                             <div class="mt-5">
                                 <x-multi-select name="religion" label="Religion"
-                                    :options="['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other']"
+                                    :options="config('reference_data.religion_list', [])"
                                     :selected="(array) request('religion', [])"
                                     emitTo="religions" />
                             </div>
@@ -254,7 +254,7 @@
                             <input type="hidden" name="tab" value="keyword">
                             <div class="float-field">
                                 <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">
-                                <label>Enter Keyword (e.g. Doctor, Bangalore, Catholic)</label>
+                                <label>Enter Keyword (e.g. {{ \App\Models\SiteSetting::getValue('keyword_search_examples', '') ?: 'Doctor, Bangalore, Catholic' }})</label>
                             </div>
                             <button type="submit" class="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
                                 Search

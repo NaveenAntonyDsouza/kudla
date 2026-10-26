@@ -24,20 +24,21 @@
     </div>
 </div>
 
-{{-- ── Sibling Details ── --}}
+{{-- ── Sibling Details ── (Priest / Nun only for Christian members, or if filled in) --}}
+@php $showClergy = $profile->religiousInfo?->religion === 'Christian' || ($f->brothers_priest ?? 0) > 0 || ($f->sisters_nun ?? 0) > 0; @endphp
 <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6 mb-6">
     <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Sibling Details</h3>
     <h4 class="text-sm font-semibold text-(--color-primary) mb-3">No. of Brothers</h4>
     <div class="grid grid-cols-3 gap-4 mb-5">
         <div><p class="text-xs text-gray-500">Married</p><p class="text-sm font-semibold text-gray-900">{{ $f->brothers_married ?? 0 }}</p></div>
         <div><p class="text-xs text-gray-500">UnMarried</p><p class="text-sm font-semibold text-gray-900">{{ $f->brothers_unmarried ?? 0 }}</p></div>
-        <div><p class="text-xs text-gray-500">Priest</p><p class="text-sm font-semibold text-gray-900">{{ $f->brothers_priest ?? 0 }}</p></div>
+        @if($showClergy)<div><p class="text-xs text-gray-500">Priest</p><p class="text-sm font-semibold text-gray-900">{{ $f->brothers_priest ?? 0 }}</p></div>@endif
     </div>
     <h4 class="text-sm font-semibold text-(--color-primary) mb-3">No. of Sisters</h4>
     <div class="grid grid-cols-3 gap-4 mb-5">
         <div><p class="text-xs text-gray-500">Married</p><p class="text-sm font-semibold text-gray-900">{{ $f->sisters_married ?? 0 }}</p></div>
         <div><p class="text-xs text-gray-500">UnMarried</p><p class="text-sm font-semibold text-gray-900">{{ $f->sisters_unmarried ?? 0 }}</p></div>
-        <div><p class="text-xs text-gray-500">Nun</p><p class="text-sm font-semibold text-gray-900">{{ $f->sisters_nun ?? 0 }}</p></div>
+        @if($showClergy)<div><p class="text-xs text-gray-500">Nun</p><p class="text-sm font-semibold text-gray-900">{{ $f->sisters_nun ?? 0 }}</p></div>@endif
     </div>
     <div class="border-t border-gray-100 pt-4 space-y-3">
         <div><p class="text-xs text-gray-500">Candidate's Asset Details</p><p class="text-sm font-semibold text-gray-900">{{ $nm($f->candidate_asset_details) }}</p></div>

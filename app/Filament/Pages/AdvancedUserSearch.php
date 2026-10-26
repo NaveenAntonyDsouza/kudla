@@ -128,7 +128,7 @@ class AdvancedUserSearch extends Page implements HasForms
 
                     // Religion
                     Forms\Components\Select::make('religion')
-                        ->options(['Christian' => 'Christian', 'Hindu' => 'Hindu', 'Muslim' => 'Muslim', 'Jain' => 'Jain', 'No Religion' => 'No Religion', 'Other' => 'Other'])
+                        ->options(collect(config('reference_data.religion_list', []))->mapWithKeys(fn ($r) => [$r => $r])->all())
                         ->placeholder('All'),
                     Forms\Components\Select::make('denomination')
                         ->options(fn () => self::flatOptions('denomination_list'))

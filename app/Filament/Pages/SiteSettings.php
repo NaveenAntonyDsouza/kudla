@@ -61,6 +61,7 @@ class SiteSettings extends Page implements HasForms
             'photo_via_whatsapp' => ($settings['photo_via_whatsapp'] ?? '0') === '1',
             'address' => $settings['address'] ?? '',
             'copyright_year_start' => $settings['copyright_year_start'] ?? date('Y'),
+            'keyword_search_examples' => $settings['keyword_search_examples'] ?? '',
             'google_maps_embed_url' => $settings['google_maps_embed_url'] ?? '',
             'google_maps_api_key' => $settings['google_maps_api_key'] ?? '',
             'google_maps_lat' => $settings['google_maps_lat'] ?? '',
@@ -122,6 +123,12 @@ class SiteSettings extends Page implements HasForms
                             ->label('Tagline')
                             ->maxLength(200)
                             ->helperText('Shown on homepage hero section. e.g., "Find Your Life Partner"'),
+
+                        Forms\Components\TextInput::make('keyword_search_examples')
+                            ->label('Keyword search examples')
+                            ->maxLength(80)
+                            ->placeholder('Doctor, Bangalore, Catholic')
+                            ->helperText('Shown in the keyword search box: "Enter Keyword (e.g. ...)". Use words your members search for, e.g. a job, a town and a community.'),
 
                         Forms\Components\Toggle::make('blog_enabled')
                             ->label('Blog')

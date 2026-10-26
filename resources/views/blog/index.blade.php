@@ -3,7 +3,7 @@
     $blogTitle = $category ? "{$category} – Blog" : 'Blog – Marriage Advice & Wedding Guides';
     $blogDescription = $category
         ? "Articles on " . mb_strtolower($category) . " from {$siteName}: practical advice for families and couples."
-        : "Advice on finding a life partner, marriage preparation, church weddings and family life, from {$siteName}.";
+        : "Advice on finding a life partner, marriage preparation, weddings and family life, from {$siteName}.";
 @endphp
 <x-layouts.app :title="$blogTitle" :metaDescription="$blogDescription"
     :robots="$posts->total() === 0 ? 'noindex, follow' : null"

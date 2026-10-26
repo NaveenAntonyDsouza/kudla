@@ -152,7 +152,7 @@
                                 <div class="float-field">
                                     <select name="religion" x-model="selectedReligion" @change="fetchCommunities()">
                                         <option value="">Any Religion</option>
-                                        @foreach(['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other'] as $r)
+                                        @foreach(config('reference_data.religion_list', []) as $r)
                                             <option value="{{ $r }}">{{ $r }}</option>
                                         @endforeach
                                     </select>
@@ -318,7 +318,7 @@
                                     <select name="religion" x-model="advReligion"
                                         @change="$dispatch('multiselect-clear', { name: 'denomination' }); $dispatch('multiselect-clear', { name: 'caste' })">
                                         <option value="">Any Religion</option>
-                                        @foreach(['Christian', 'Hindu', 'Muslim', 'Jain', 'Sikh', 'Buddhist', 'Other'] as $r)
+                                        @foreach(config('reference_data.religion_list', []) as $r)
                                             <option value="{{ $r }}">{{ $r }}</option>
                                         @endforeach
                                     </select>
@@ -429,7 +429,7 @@
                             @endguest
                             <div class="float-field">
                                 <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder=" " required minlength="3" maxlength="100">
-                                <label>Enter Keyword (e.g. Doctor, Bangalore, Catholic)</label>
+                                <label>Enter Keyword (e.g. {{ \App\Models\SiteSetting::getValue('keyword_search_examples', '') ?: 'Doctor, Bangalore, Catholic' }})</label>
                             </div>
                             <button type="submit" class="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">
                                 Search

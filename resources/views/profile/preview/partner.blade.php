@@ -15,7 +15,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
         <div><p class="text-xs text-gray-500">Age Preferred</p><p class="text-sm font-semibold text-gray-900">{{ $pp->age_from && $pp->age_to ? $pp->age_from . ' Yrs - ' . $pp->age_to . ' Yrs' : 'Any' }}</p></div>
         <div><p class="text-xs text-gray-500">Height Preferred</p><p class="text-sm font-semibold text-gray-900">{{ $pp->height_from_cm && $pp->height_to_cm ? $pp->height_from_cm . ' - ' . $pp->height_to_cm : 'Any' }}</p></div>
-        <div><p class="text-xs text-gray-500">Denomination</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->denomination) }}</p></div>
+        <div><p class="text-xs text-gray-500">Religion</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->religions) }}</p></div>
+        @if(in_array('Christian', (array) $pp->religions, true) || ! empty($pp->denomination))
+            <div><p class="text-xs text-gray-500">Denomination</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->denomination) }}</p></div>
+        @endif
+        @if(! empty($pp->caste))
+            <div><p class="text-xs text-gray-500">Caste</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->caste) }}</p></div>
+        @endif
         <div><p class="text-xs text-gray-500">Complexion</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->complexion) }}</p></div>
         <div><p class="text-xs text-gray-500">Body Type</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->body_type) }}</p></div>
         <div><p class="text-xs text-gray-500">Marital Status</p><p class="text-sm font-semibold text-gray-900">{{ $arrAny($pp->marital_status) }}</p></div>

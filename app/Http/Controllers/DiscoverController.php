@@ -36,9 +36,10 @@ class DiscoverController extends Controller
      */
     public function hub()
     {
-        // Only sections that have members (Oct 2026)
+        // Only sections that have members, biggest first (Oct 2026)
         $categories = collect(config('discover'))
             ->filter(fn ($cat, $slug) => self::profileCounts($slug) !== [])
+            ->sortByDesc(fn ($cat, $slug) => array_sum(self::profileCounts($slug)))
             ->map(fn($cat, $slug) => [
                 'label' => $cat['label'],
                 'slug' => $slug,
@@ -72,6 +73,7 @@ class DiscoverController extends Controller
         $otherCategories = collect(config('discover'))
             ->except($category)
             ->filter(fn ($cat, $slug) => self::profileCounts($slug) !== [])
+            ->sortByDesc(fn ($cat, $slug) => array_sum(self::profileCounts($slug)))   // biggest first
             ->map(fn($cat, $slug) => ['label' => $cat['label'], 'slug' => $slug])
             ->values()
             ->take(6);

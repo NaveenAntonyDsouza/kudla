@@ -160,7 +160,7 @@
         <div class="space-y-5 mb-10">
             {{-- Religion --}}
             <x-multi-select name="religions" label="Religion"
-                :options="['Christian', 'Hindu', 'Muslim', 'Jain', 'No Religion', 'Other']"
+                :options="config('reference_data.religion_list', [])"
                 :selected="$defaultReligions" :emitTo="true" />
 
             {{-- Christian: Denomination --}}
