@@ -157,7 +157,7 @@ class DiscoverConfigService
             'Jain' => ['jain-matrimony' => $this->jainSects()],
         ];
 
-        $list = collect($this->allCastes());
+        $list = collect();
         foreach ($groups as $religion => $sets) {
             if (in_array($religion, $hidden, true)) {
                 continue;
@@ -167,7 +167,9 @@ class DiscoverConfigService
             }
         }
 
-        return $list->unique('slug')->values()->all();
+        // A group wins over a caste of the same name: Kudla's caste list also has
+        // "Roman Catholic", but Catholic members record it as their denomination.
+        return $list->merge($this->allCastes())->unique('slug')->values()->all();
     }
 
     /**

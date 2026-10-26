@@ -241,7 +241,7 @@ it('builds browse links from Discover pages that have members, without "Profiles
     // Community is the first tab, Mother Tongue second: every community in one list (castes, Christian
     // denominations, Muslim and Jain sects), biggest first, only groups with 3+ members (owner, 26 Oct 2026)
     Cache::forget('home.browse.tabs');
-    Cache::put('community_caste_list_all', ['Bunts', 'Billava', 'Beary'], 60);
+    Cache::put('community_caste_list_all', ['Bunts', 'Billava', 'Beary', 'Roman Catholic'], 60);   // Kudla's caste list also has Roman Catholic
     Cache::put('community_caste_list_Muslim', ['Beary'], 60);
     Cache::put('discover.counts.community-matrimony', ['bunts' => 30, 'billava' => 90, 'roman-catholic' => 40, 'sunni' => 5, 'beary' => 4, 'csi-christian' => 1], 60);
     Cache::put('discover.counts.mother-tongue-matrimony', ['tulu' => 300], 60);
