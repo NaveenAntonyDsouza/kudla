@@ -29,6 +29,13 @@ class SiteSetting extends Model
             return $setting ? $setting->value : self::NOT_SET;
         });
 
+        // "Hide phone and WhatsApp" switch (Oct 2026): every page, email and the
+        // app read the site's number through here, so one switch hides it all
+        // while the saved number stays (the admin form reads the table directly).
+        if (in_array($key, ['phone', 'whatsapp', 'support_phone', 'support_whatsapp'], true) && is_string($value) && $value !== '' && static::getValue('hide_phone_whatsapp', '0') === '1') {
+            return '';
+        }
+
         return $value === self::NOT_SET ? $default : $value;
     }
 

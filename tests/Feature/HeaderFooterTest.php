@@ -148,3 +148,23 @@ it('moves the WhatsApp button out of the way of homepage sign-up forms', functio
         ->toContain("document.querySelectorAll('[data-hides-wa-fab]')")
         ->toContain('.wa-fab.wa-fab-away { opacity: 0; pointer-events: none; }');
 });
+
+it('hides the phone and WhatsApp everywhere with one switch, keeping the saved numbers', function () {
+    SiteSetting::setValue('phone', '7760020186');
+    SiteSetting::setValue('whatsapp', '7760020186');
+    SiteSetting::setValue('support_phone', '7760020186');
+    SiteSetting::setValue('hide_phone_whatsapp', '1');
+
+    expect(SiteContact::phoneDisplay())->toBe('')->and(SiteContact::phoneHref())->toBeNull()
+        ->and(SiteContact::whatsappHref())->toBeNull()
+        ->and(\App\Support\WhatsApp::link('Hi'))->toBeNull()
+        ->and(SiteSetting::getValue('support_phone', ''))->toBe('')
+        ->and(SiteSetting::where('key', 'phone')->value('value'))->toBe('7760020186');   // still saved for the admin form
+
+    $strip = view('components.partials.contact-strip')->render();
+    expect($strip)->not->toContain('77600')->not->toContain('wa.me');
+
+    SiteSetting::setValue('hide_phone_whatsapp', '0');
+    expect(SiteContact::phoneDisplay())->toBe('+91 77600 20186')
+        ->and(SiteContact::whatsappHref())->toBe('https://wa.me/917760020186');
+});

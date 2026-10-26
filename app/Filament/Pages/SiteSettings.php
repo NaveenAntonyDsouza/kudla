@@ -56,6 +56,7 @@ class SiteSettings extends Page implements HasForms
             'email' => $settings['email'] ?? '',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
+            'hide_phone_whatsapp' => ($settings['hide_phone_whatsapp'] ?? '0') === '1',
             'whatsapp_button_enabled' => ($settings['whatsapp_button_enabled'] ?? '0') === '1',
             'photo_via_whatsapp' => ($settings['photo_via_whatsapp'] ?? '0') === '1',
             'address' => $settings['address'] ?? '',
@@ -145,6 +146,10 @@ class SiteSettings extends Page implements HasForms
                             ->label('WhatsApp Number')
                             ->tel()
                             ->helperText('WhatsApp chat link on contact page, footer and the chat button. Indian numbers work with or without +91.'),
+
+                        Forms\Components\Toggle::make('hide_phone_whatsapp')
+                            ->label('Hide phone and WhatsApp for now')
+                            ->helperText('Turn on while nobody can answer the phone. The number and WhatsApp disappear from every page, email and the app (members see the email address and contact form instead); the numbers above stay saved. Turn off to show them again.'),
 
                         Forms\Components\Toggle::make('whatsapp_button_enabled')
                             ->label('WhatsApp chat button')
@@ -401,7 +406,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_profiles', 'auto_approve_profile_photos',
             'auto_approve_album_photos', 'auto_approve_family_photos',
             'auto_approve_documents',
-            'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled',
+            'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
         ];
 
         $jsonFields = ['canned_responses'];
