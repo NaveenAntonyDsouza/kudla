@@ -80,6 +80,35 @@ class StaticPage extends Model
     }
 
     /**
+     * Region / tradition pages ("Mangalorean Catholic Matrimony", Oct 2026):
+     * any page whose slug ends in "-matrimony" is served at /{slug}, listed in
+     * the sitemap and linked from the footer (LandingPageController).
+     */
+    public static function isLanding(string $slug): bool
+    {
+        return (bool) preg_match('/^[a-z0-9-]+-matrimony$/', $slug);
+    }
+
+    /** Active region pages as [slug, title] arrays (cached). */
+    public static function getLandingPages(): array
+    {
+        $load = fn () => static::where('is_active', true)
+            ->where('slug', 'like', '%-matrimony')
+            ->orderBy('sort_order')->orderBy('title')
+            ->get(['slug', 'title'])
+            ->filter(fn ($p) => static::isLanding($p->slug))
+            ->values()->toArray();
+
+        try {
+            $pages = Cache::remember('static_pages.landing', 3600, $load);
+        } catch (\Throwable) {
+            return []; // e.g. no static_pages table yet: the footer must still render
+        }
+
+        return is_array($pages) ? $pages : $load();
+    }
+
+    /**
      * Clear cache when page is saved.
      */
     public static function clearCache(?string $slug = null): void
@@ -88,6 +117,7 @@ class StaticPage extends Model
             Cache::forget("static_page.{$slug}");
         }
         Cache::forget('static_pages.footer');
+        Cache::forget('static_pages.landing');
     }
 
     /**

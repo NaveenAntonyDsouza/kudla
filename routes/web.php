@@ -342,3 +342,9 @@ Route::get('/still-looking/{user}', [\App\Http\Controllers\StillLookingControlle
 Route::post('/still-looking/{user}', [\App\Http\Controllers\StillLookingController::class, 'store'])
     ->middleware(['signed', 'throttle:10,1'])
     ->name('still-looking.store');
+
+// Region / tradition pages written in admin → Static Pages, e.g.
+// /mangalorean-catholic-matrimony (only slugs ending in "-matrimony"; LAST route)
+Route::get('/{slug}', [\App\Http\Controllers\LandingPageController::class, 'show'])
+    ->where('slug', '[a-z0-9-]+-matrimony')
+    ->name('landing');

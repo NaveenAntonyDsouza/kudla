@@ -742,6 +742,15 @@
                         </ul>
                     </div>
                 </div>
+                {{-- Region / tradition pages (admin → Static Pages, slug ending "-matrimony") --}}
+                @if($fLanding = \App\Models\StaticPage::getLandingPages())
+                    <div style="padding: 0 0 1.25rem; font-size: .8125rem; line-height: 1.9;">
+                        <span class="text-white font-semibold" style="margin-right: .5rem;">Find a match:</span>
+                        @foreach($fLanding as $lp)
+                            <a href="/{{ $lp['slug'] }}" class="hover:text-white transition-colors">{{ $lp['title'] }}</a>@if(! $loop->last)<span style="margin: 0 .4rem; opacity: .4;">·</span>@endif
+                        @endforeach
+                    </div>
+                @endif
                 <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style="border-top: 1px solid rgba(255,255,255,.1);">
                     <div class="text-xs">
                         <p>&copy; {{ date('Y') }} {{ $siteName }}. All rights reserved.</p>

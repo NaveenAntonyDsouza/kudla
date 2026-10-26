@@ -66,6 +66,11 @@ class SitemapController extends Controller
             $urls->push(['url' => $url, 'priority' => '0.6', 'changefreq' => 'weekly']);
         }
 
+        // Region / tradition pages (e.g. /mangalorean-catholic-matrimony)
+        foreach (StaticPage::getLandingPages() as $landing) {
+            $urls->push(['url' => url('/' . $landing['slug']), 'priority' => '0.8', 'changefreq' => 'monthly']);
+        }
+
         // WhatsApp channel page (people search "<site> whatsapp group link")
         if (\App\Support\WhatsApp::channelUrl()) {
             $urls->push(['url' => route('whatsapp'), 'priority' => '0.5', 'changefreq' => 'monthly']);
