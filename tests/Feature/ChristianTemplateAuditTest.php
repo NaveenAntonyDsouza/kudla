@@ -57,3 +57,26 @@ it('lists the other directories biggest first', function () {
 
     expect(collect($other)->pluck('slug')->all())->toBe(['mother-tongue-matrimony', 'karnataka-matrimony', 'catholic-matrimony', 'christian-matrimony']);
 });
+
+it('keeps the Help & FAQ page true to how the site works today', function () {
+    $faq = file_get_contents(resource_path('views/pages/faq.blade.php'));
+
+    expect($faq)->not->toContain('3x more responses')                       // unsupported claim
+        ->not->toContain('Contact support if you need permanent deletion')   // erased after 90 days now
+        ->not->toContain('Currently, you can load your saved partner preferences')   // saved searches exist
+        ->not->toContain('5-step registration')
+        ->not->toContain('case-by-case')
+        ->toContain('Search > Saved Searches')
+        ->toContain('permanently deleted after 90 days')
+        ->toContain('\App\Models\User::freeMembershipEnabled()')
+        ->toContain('\App\Support\PaidPlans::comingSoon()')
+        ->toContain('\App\Services\InterestService::FREE_DAILY_LIMIT');
+
+    // the page compiles to valid PHP
+    $compiled = \Illuminate\Support\Facades\Blade::compileString($faq);
+    $file = tempnam(sys_get_temp_dir(), 'faq') . '.php';
+    file_put_contents($file, $compiled);
+    exec(PHP_BINARY . ' -l ' . escapeshellarg($file), $out, $code);
+    @unlink($file);
+    expect($code)->toBe(0);
+});
