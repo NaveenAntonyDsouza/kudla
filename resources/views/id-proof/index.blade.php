@@ -55,7 +55,7 @@
                                         </p>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ Storage::disk('public')->url($proof->document_url) }}" target="_blank" class="text-xs text-(--color-primary) hover:underline">View</a>
+                                        <a href="{{ \App\Support\IdProofFiles::url($proof) }}" target="_blank" rel="noopener" class="text-xs text-(--color-primary) hover:underline">View</a>
                                         <form method="POST" action="{{ route('idproof.destroy', $proof) }}" onsubmit="return confirm('Remove this document?')">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="text-xs text-red-500 hover:underline">Remove</button>

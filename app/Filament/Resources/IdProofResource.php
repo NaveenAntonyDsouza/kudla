@@ -71,17 +71,22 @@ class IdProofResource extends Resource
     {
         return $table
             ->columns([
+                // scans are private: shown through short-lived signed links
                 Tables\Columns\ImageColumn::make('document_url')
                     ->label('Front')
-                    ->disk('public')
+                    ->state(fn (IdProof $record) => \App\Support\IdProofFiles::url($record, 'front'))
                     ->size(80)
                     ->square(),
 
                 Tables\Columns\ImageColumn::make('document_back_url')
                     ->label('Back')
-                    ->disk('public')
+                    ->state(fn (IdProof $record) => \App\Support\IdProofFiles::url($record, 'back'))
                     ->size(80)
                     ->square(),
+
+                Tables\Columns\TextColumn::make('document_number')
+                    ->label('Number (last 4)')
+                    ->placeholder('—'),
 
                 Tables\Columns\TextColumn::make('profile.matri_id')
                     ->label('Matri ID')
@@ -153,7 +158,7 @@ class IdProofResource extends Resource
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->color('gray')
-                    ->url(fn (IdProof $record) => $record->document_url ? asset('storage/' . $record->document_url) : null, shouldOpenInNewTab: true),
+                    ->url(fn (IdProof $record) => \App\Support\IdProofFiles::url($record, 'front'), shouldOpenInNewTab: true),
 
                 // Approve
                 \Filament\Actions\Action::make('approve')

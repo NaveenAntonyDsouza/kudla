@@ -311,6 +311,13 @@ Route::get('/resubscribe/{user}/{preference}', [\App\Http\Controllers\Unsubscrib
     ->middleware('signed')
     ->name('unsubscribe.resubscribe');
 
+// ID proof scans are private; members, staff and the app open them through
+// short-lived signed links (App\Support\IdProofFiles::url)
+Route::get('/id-proof-file/{idProof}/{side}', [\App\Http\Controllers\IdProofFileController::class, 'show'])
+    ->middleware('signed')
+    ->whereIn('side', ['front', 'back'])
+    ->name('id-proof.file');
+
 // Accept / Decline from the interest emails without logging in (Oct 2026): the
 // link shows the two buttons, a button POSTs here
 Route::get('/interest-reply/{interest}', [\App\Http\Controllers\InterestEmailReplyController::class, 'show'])

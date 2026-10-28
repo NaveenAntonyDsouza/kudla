@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\IdProof;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Support\IdProofFiles;
 
 class IdProofController extends Controller
 {
@@ -26,17 +26,17 @@ class IdProofController extends Controller
         ]);
 
         $profile = auth()->user()->profile;
-        $folder = 'id-proofs/' . $profile->id;
 
-        $frontPath = $request->file('document_front')->store($folder, 'public');
+        // private disk, opened only through signed links (App\Support\IdProofFiles)
+        $frontPath = IdProofFiles::store($request->file('document_front'), $profile->id);
         $backPath = $request->hasFile('document_back')
-            ? $request->file('document_back')->store($folder, 'public')
+            ? IdProofFiles::store($request->file('document_back'), $profile->id)
             : null;
 
         IdProof::create([
             'profile_id' => $profile->id,
             'document_type' => $request->document_type,
-            'document_number' => $request->document_number,
+            'document_number' => IdProofFiles::maskNumber($request->document_number),   // last 4 only
             'document_url' => $frontPath,
             'document_back_url' => $backPath,
             'verification_status' => 'pending',
@@ -50,9 +50,8 @@ class IdProofController extends Controller
         $profile = auth()->user()->profile;
         if ($idProof->profile_id !== $profile->id) abort(403);
 
-        if ($idProof->document_url && Storage::disk('public')->exists($idProof->document_url)) {
-            Storage::disk('public')->delete($idProof->document_url);
-        }
+        IdProofFiles::delete($idProof->document_url);
+        IdProofFiles::delete($idProof->document_back_url);
 
         $idProof->delete();
         return back()->with('success', 'ID Proof removed.');

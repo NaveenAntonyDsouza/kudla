@@ -57,10 +57,14 @@ class MemberErasure
                 report($e);
             }
         }
-        $files = array_merge(
+        // ID proof scans: private disk (or public, if saved before Oct 2026)
+        foreach (array_merge(
             $this->column('id_proofs', 'document_url', 'profile_id', $pid),
-            $this->column('religious_info', 'jathakam_upload_url', 'profile_id', $pid),
-        );
+            $this->column('id_proofs', 'document_back_url', 'profile_id', $pid),
+        ) as $path) {
+            \App\Support\IdProofFiles::delete($path);
+        }
+        $files = $this->column('religious_info', 'jathakam_upload_url', 'profile_id', $pid);
         foreach (array_filter($files) as $path) {
             try {
                 if (! str_starts_with((string) $path, 'http')) {

@@ -79,6 +79,7 @@ beforeEach(function () {
         });
     }
     Storage::fake('public');
+    Storage::fake('local');   // ID scans are private since Oct 2026
 });
 
 afterEach(function () {
@@ -132,7 +133,8 @@ it('show returns the latest submission for the viewer', function () {
     expect($idProof['document_type'])->toBe('passport');
     expect($idProof['verification_status'])->toBe('pending');
     expect($idProof['rejection_reason'])->toBeNull();
-    expect($idProof['document_url'])->toContain('id-proofs/100/new.jpg');
+    // a short-lived signed link, never the storage path (the scan is private)
+    expect($idProof['document_url'])->toContain('/id-proof-file/')->toContain('signature=')->not->toContain('id-proofs/100');
 });
 
 it('show only returns the viewers own submission (multi-tenant safety)', function () {
@@ -173,7 +175,8 @@ it('store uploads file + persists row + returns 201', function () {
     expect($row)->not->toBeNull();
     expect($row->document_type)->toBe('aadhaar');
     expect($row->document_url)->toStartWith('id-proofs/100/');
-    Storage::disk('public')->assertExists($row->document_url);
+    Storage::disk('local')->assertExists($row->document_url);
+    Storage::disk('public')->assertMissing($row->document_url);
 });
 
 it('store replaces previous submission — old row + file removed', function () {

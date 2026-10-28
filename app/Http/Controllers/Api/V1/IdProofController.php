@@ -6,7 +6,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\IdProof;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Support\IdProofFiles;
 
 /**
  * KYC ID-proof endpoints.
@@ -46,10 +46,6 @@ class IdProofController extends BaseApiController
     ];
 
     /** Storage disk — public so the URL is reachable by Filament admin reviewers. */
-    private const DISK = 'public';
-
-    /** Per-profile upload directory under the disk. */
-    private const STORAGE_PREFIX = 'id-proofs';
 
     /* ==================================================================
      |  GET /id-proof
@@ -134,10 +130,7 @@ class IdProofController extends BaseApiController
         // new files in storage.
         $this->removeExistingFor($viewer->id);
 
-        $path = $request->file('document')->store(
-            self::STORAGE_PREFIX.'/'.$viewer->id,
-            self::DISK,
-        );
+        $path = IdProofFiles::store($request->file('document'), $viewer->id);
 
         $idProof = IdProof::create([
             'profile_id' => $viewer->id,
@@ -206,9 +199,9 @@ class IdProofController extends BaseApiController
      | ================================================================== */
 
     /**
-     * API shape for a single IdProof row. Document URL is rendered
-     * absolute via Storage::url so Flutter doesn't need to know the
-     * disk's public-path convention.
+     * API shape for a single IdProof row. Document URL is a short-lived
+     * signed link (the scan is on the private disk, Oct 2026), so the app
+     * should fetch it when it shows it rather than store it.
      *
      * @return array<string,mixed>
      */
@@ -217,7 +210,7 @@ class IdProofController extends BaseApiController
         return [
             'id' => (int) $p->id,
             'document_type' => (string) $p->document_type,
-            'document_url' => $p->document_url ? Storage::disk(self::DISK)->url($p->document_url) : null,
+            'document_url' => IdProofFiles::url($p),   // short-lived signed link; the scan itself is private
             'verification_status' => (string) $p->verification_status,
             'rejection_reason' => $p->rejection_reason,
             'submitted_at' => $p->created_at?->toUtcIso(),
@@ -246,6 +239,7 @@ class IdProofController extends BaseApiController
         $previous = IdProof::where('profile_id', $profileId)->get();
         foreach ($previous as $row) {
             $this->deleteFile($row->document_url);
+            $this->deleteFile($row->document_back_url);
             $row->delete();
         }
     }
@@ -261,11 +255,7 @@ class IdProofController extends BaseApiController
             return;
         }
 
-        try {
-            Storage::disk(self::DISK)->delete($path);
-        } catch (\Throwable $e) {
-            // Tolerated — the row deletion is what matters for the user.
-        }
+        IdProofFiles::delete($path);   // tolerant: the row deletion is what matters for the user
     }
 
     private function profileRequired(): JsonResponse
