@@ -80,3 +80,11 @@ it('keeps the Help & FAQ page true to how the site works today', function () {
     @unlink($file);
     expect($code)->toBe(0);
 });
+
+it('shows the answer rate next to the acceptance rate in Engagement Reports', function () {
+    $page = file_get_contents(app_path('Filament/Pages/EngagementReports.php'));
+    $view = file_get_contents(resource_path('views/filament/pages/engagement-reports.blade.php'));
+
+    expect($page)->toContain("'answer_rate' => \$answerable > 0 ? round((\$responded / \$answerable) * 100, 1) : 0,")
+        ->and($view)->toContain("['label' => 'Answer Rate'")->toContain('Accepted, of interests answered');
+});

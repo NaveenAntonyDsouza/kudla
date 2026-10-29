@@ -97,9 +97,21 @@ class EngagementReports extends Page
         $declined = Interest::where('status', 'declined')->count();
         $responded = $accepted + $declined;
 
+        // Answer rate (Oct 2026: the owner read "Acceptance Rate" as how many
+        // get answered): answered, of interests not withdrawn by the sender.
+        $answerable = $totalInterests - Interest::where('status', 'cancelled')->count();
+        $since = now()->subDays(30);
+        $recent = Interest::where('created_at', '>=', $since)->where('status', '!=', 'cancelled');
+        $recentTotal = (clone $recent)->count();
+        $recentAccepted = (clone $recent)->where('status', 'accepted')->count();
+        $recentAnswered = (clone $recent)->whereIn('status', ['accepted', 'declined'])->count();
+
         $this->stats = [
             'total_interests' => $totalInterests,
+            'answer_rate' => $answerable > 0 ? round(($responded / $answerable) * 100, 1) : 0,
+            'answer_rate_30d' => $recentTotal > 0 ? round(($recentAnswered / $recentTotal) * 100) : 0,
             'acceptance_rate' => $responded > 0 ? round(($accepted / $responded) * 100, 1) : 0,
+            'acceptance_rate_30d' => $recentAnswered > 0 ? round(($recentAccepted / $recentAnswered) * 100) : 0,
             'total_views' => ProfileView::count(),
             'total_shortlists' => Shortlist::count(),
             'pending_interests' => Interest::where('status', 'pending')->count(),

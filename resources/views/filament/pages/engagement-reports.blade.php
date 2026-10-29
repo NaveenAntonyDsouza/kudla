@@ -1,9 +1,12 @@
 <x-filament-panels::page>
     {{-- Stats Row --}}
-    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px;">
         @foreach([
             ['label' => 'Total Interests', 'value' => number_format($stats['total_interests']), 'color' => '#8B1D91'],
-            ['label' => 'Acceptance Rate', 'value' => $stats['acceptance_rate'] . '%', 'color' => '#10B981'],
+            ['label' => 'Answer Rate', 'value' => $stats['answer_rate'] . '%', 'color' => '#0EA5E9',
+                'note' => 'Answered (accepted or declined), of interests sent · last 30 days: ' . $stats['answer_rate_30d'] . '%'],
+            ['label' => 'Acceptance Rate', 'value' => $stats['acceptance_rate'] . '%', 'color' => '#10B981',
+                'note' => 'Accepted, of interests answered · last 30 days: ' . $stats['acceptance_rate_30d'] . '%'],
             ['label' => 'Pending', 'value' => number_format($stats['pending_interests']), 'color' => '#F59E0B'],
             ['label' => 'Profile Views', 'value' => number_format($stats['total_views']), 'color' => '#3B82F6'],
             ['label' => 'Shortlists', 'value' => number_format($stats['total_shortlists']), 'color' => '#6366F1'],
@@ -11,6 +14,7 @@
         <div style="background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.2); border-radius: 8px; padding: 16px; text-align: center;">
             <div style="font-size: 24px; font-weight: 700; color: {{ $stat['color'] }};">{{ $stat['value'] }}</div>
             <div style="font-size: 12px; opacity: 0.6; margin-top: 4px;">{{ $stat['label'] }}</div>
+            @if(! empty($stat['note']))<div style="font-size: 11px; opacity: 0.55; margin-top: 6px; line-height: 1.35;">{{ $stat['note'] }}</div>@endif
         </div>
         @endforeach
     </div>
