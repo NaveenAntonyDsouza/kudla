@@ -57,7 +57,7 @@ beforeEach(function () {
         'password' => Hash::make('Admin@1234'), 'created_at' => now(), 'updated_at' => now(),
     ]);
     $this->admin = User::find(1);
-    $this->actingAs($this->admin);
+    $this->actingAs($this->admin, 'admin');
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 });
 

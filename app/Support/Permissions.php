@@ -27,7 +27,9 @@ class Permissions
             return true;
         }
 
-        $user = auth()->user();
+        // Inside the admin panel the default guard is the panel's; on the public
+        // site (e.g. a blog draft preview) staff are signed in to "admin" only.
+        $user = auth()->user() ?? auth('admin')->user();
 
         if (!$user) {
             return false;

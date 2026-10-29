@@ -213,7 +213,7 @@ it('does nothing while switched off', function () {
 });
 
 it('saves secrets encrypted and keeps them when left empty', function () {
-    $this->actingAs(User::find(1));
+    $this->actingAs(User::find(1), 'admin');
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
     Livewire::test(WhatsAppSettings::class)
@@ -234,7 +234,7 @@ it('saves secrets encrypted and keeps them when left empty', function () {
 
 function waInboxAsAdmin()
 {
-    test()->actingAs(User::find(1));
+    test()->actingAs(User::find(1), 'admin');
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 }
 

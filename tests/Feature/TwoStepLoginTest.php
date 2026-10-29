@@ -33,7 +33,7 @@ beforeEach(function () {
 afterEach(fn () => Schema::dropIfExists('users'));
 
 it('accepts the set-up code on both checks of the wizard', function () {
-    $this->actingAs(User::find(1));
+    $this->actingAs(User::find(1), 'admin');
     $auth = AppAuthentication::make();
     $secret = app(Google2FA::class)->generateSecretKey(16);
     $code = app(Google2FA::class)->getCurrentOtp($secret);
@@ -46,7 +46,7 @@ it('still refuses a code used twice once the secret is saved', function () {
     $user = User::find(1);
     $secret = app(Google2FA::class)->generateSecretKey(16);
     $user->saveAppAuthenticationSecret($secret);
-    $this->actingAs($user->fresh());
+    $this->actingAs($user->fresh(), 'admin');
     $auth = AppAuthentication::make();
     $code = app(Google2FA::class)->getCurrentOtp($secret);
 
@@ -64,4 +64,14 @@ it('keeps the secret and recovery codes encrypted and out of JSON', function () 
     expect($raw->app_authentication_secret)->not->toContain('JBSWY3DPEHPK3PXP')
         ->and($user->fresh()->getAppAuthenticationRecoveryCodes())->toBe(['aaa-bbb', 'ccc-ddd'])
         ->and($user->fresh()->toArray())->not->toHaveKey('app_authentication_secret');
+});
+
+it('signs staff in to the admin panel separately from the member site', function () {
+    expect(Filament::getPanel('admin')->getAuthGuard())->toBe('admin');
+
+    // staff signed in to the panel only: the member site sees a visitor,
+    // permission checks (e.g. a blog draft preview) still know them
+    $this->actingAs(User::find(1), 'admin');
+    expect(auth('web')->check())->toBeFalse()
+        ->and(\App\Support\Permissions::can('manage_content'))->toBeTrue();
 });

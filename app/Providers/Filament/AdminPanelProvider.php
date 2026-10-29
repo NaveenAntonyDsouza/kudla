@@ -64,6 +64,9 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path(config('app.admin_path', 'admin'))
             ->login()
+            // Own sign-in, separate from members' (config/auth.php): staff can open the
+            // public site in the same browser and see it as a visitor.
+            ->authGuard('admin')
             // "My Profile" in the avatar menu — admins change their own password here.
             ->profile(\App\Filament\Pages\Auth\EditAdminProfile::class, isSimple: false)
             // Two-step login: each person sets up an authenticator app under My Profile

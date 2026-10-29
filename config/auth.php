@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // The admin panel signs staff in separately from the member site (Oct 2026):
+        // with one shared sign-in, staff opening the site in the same browser were
+        // treated as members without a profile and sent to /register.
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*
