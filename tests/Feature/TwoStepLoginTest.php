@@ -75,3 +75,29 @@ it('signs staff in to the admin panel separately from the member site', function
     expect(auth('web')->check())->toBeFalse()
         ->and(\App\Support\Permissions::can('manage_content'))->toBeTrue();
 });
+
+it('ends an old member-site sign-in of a staff account, keeping the admin panel one', function () {
+    Schema::dropIfExists('profiles');
+    Schema::create('profiles', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('user_id');
+        $t->softDeletes();
+        $t->timestamps();
+    });
+    DB::table('users')->insert(['id' => 2, 'name' => 'Member', 'email' => 'member@example.test', 'role' => 'user']);
+    DB::table('profiles')->insert(['user_id' => 2]);
+
+    // staff: signed in on both sides, the member side from before 29 Oct
+    $this->actingAs(User::find(1), 'web')->actingAs(User::find(1), 'admin');
+    $this->get('/health/jobs')->assertOk();
+    expect(auth('web')->check())->toBeFalse()
+        ->and(auth('admin')->id())->toBe(1);
+
+    // a member stays signed in
+    auth('admin')->logout();
+    $this->actingAs(User::find(2), 'web');
+    $this->get('/health/jobs')->assertOk();
+    expect(auth('web')->id())->toBe(2);
+
+    Schema::dropIfExists('profiles');
+});

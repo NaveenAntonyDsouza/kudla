@@ -58,6 +58,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Affiliate tracking — captures ?ref=CODE on every public web request
         $middleware->web(append: [
             \App\Http\Middleware\CaptureAffiliateRef::class,
+            // Staff see the member site as visitors (the admin panel signs them in separately)
+            \App\Http\Middleware\SignOutStaffFromMemberSite::class,
             // Keeps last_login_at = "last active" (see the class doc)
             \App\Http\Middleware\TrackMemberActivity::class,
         ]);
