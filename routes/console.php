@@ -68,3 +68,11 @@ Schedule::command('uptime:watch')->everyFiveMinutes()->withoutOverlapping(10);
 // Homepage "Browse profiles by" links (Garland / Harmony designs): rebuilt in the
 // background so no visitor waits for the ~600 member counts behind them
 Schedule::call(fn () => \App\Support\HomeBrowse::refresh())->hourly()->name('home-browse-refresh')->withoutOverlapping();
+
+// Silent-failure alarm: new errors in the log (and 5+ wrong staff passwords in an hour)
+// → one email to error_alert_email / uptime_alert_email; the same error at most daily
+Schedule::command('alerts:site-errors')->hourly()->withoutOverlapping();
+
+// "Scheduled jobs are running" stamp, read by /health/jobs: the uptime alarm on the
+// other server warns when it stops moving (cron removed, PHP broken, account suspended)
+Schedule::call(fn () => \Illuminate\Support\Facades\Cache::forever('scheduler:last-run', now()->toIso8601String()))->everyFiveMinutes()->name('scheduler-heartbeat');

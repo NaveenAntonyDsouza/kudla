@@ -58,6 +58,10 @@ class AppServiceProvider extends ServiceProvider
             [\App\Support\EmailLogger::class, 'sent'],
         );
 
+        // Staff sign-ins and wrong staff passwords → Login History (members are logged by LoginController)
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Login::class, [\App\Support\AdminLoginTrail::class, 'login']);
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Failed::class, [\App\Support\AdminLoginTrail::class, 'failed']);
+
         // Addresses that bounced permanently are not emailed again (returns false = don't send)
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Mail\Events\MessageSending::class,

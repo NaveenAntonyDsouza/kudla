@@ -2,7 +2,7 @@
     <table style="width: 100%;">
         <tr style="border-bottom: 1px solid #f3f4f6;">
             <td style="padding: 0.5rem 0; color: #6b7280; width: 30%;">Admin</td>
-            <td style="padding: 0.5rem 0; font-weight: 500;">{{ $record->admin?->name ?? 'Unknown' }}</td>
+            <td style="padding: 0.5rem 0; font-weight: 500;">{{ $record->actor_name }}</td>
         </tr>
         <tr style="border-bottom: 1px solid #f3f4f6;">
             <td style="padding: 0.5rem 0; color: #6b7280;">Action</td>

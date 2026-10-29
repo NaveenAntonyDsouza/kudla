@@ -32,24 +32,13 @@ class AdminActivityLog extends Model
     }
 
     /**
-     * Actions the system takes by itself (scheduled jobs, a member answering
-     * an email) have no admin. admin_user_id is NOT NULL in the live schema,
-     * so those rows failed silently (kudla, 5–7 Oct 2026); they're recorded
-     * under the site's main admin account, as the reminder commands already did.
+     * Actions the site takes by itself (scheduled jobs, a member answering an
+     * email) have no admin: admin_user_id stays empty and the Activity Log
+     * shows "System" (29 Oct 2026; until then they were filed under the main
+     * admin account, so the log couldn't tell a person from a job).
      */
-    protected static function booted(): void
+    public function getActorNameAttribute(): string
     {
-        static::creating(function (self $log) {
-            $log->admin_user_id ??= self::systemAdminId();
-        });
-    }
-
-    public static function systemAdminId(): ?int
-    {
-        try {
-            return User::where('role', 'admin')->orderBy('id')->value('id');
-        } catch (\Throwable) {
-            return null;
-        }
+        return $this->admin?->name ?? 'System';
     }
 }

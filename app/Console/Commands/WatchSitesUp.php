@@ -53,10 +53,53 @@ class WatchSitesUp extends Command
                 $minutes = (int) \Illuminate\Support\Carbon::parse($downSince)->diffInMinutes(now());
                 $this->notifyOwner($to, "{$host} is back up", "{$url} is loading again (down for about {$minutes} minutes).");
             }
-            $this->line($host . ': ' . ($problem ?? 'ok'));
+            $jobs = null;
+            if ($problem === null) { // a site that is down can't say anything about its jobs
+                $jobs = $this->jobsStoppedSince($url);
+                $this->watchJobs($to, $url, $host, $jobs);
+            }
+
+            $this->line($host . ': ' . ($problem ?? 'ok') . ($jobs ? ", jobs stopped since {$jobs}" : ''));
         }
 
         return self::SUCCESS;
+    }
+
+    /** Hours of silence before scheduled jobs count as stopped (Bluehost's cron runs every 15 min). */
+    private const JOBS_STOPPED_AFTER_HOURS = 2;
+
+    /**
+     * When the site's scheduled jobs (emails, reminders, error alerts) last ran,
+     * if that was more than 2 hours ago; null when they're running, the site
+     * never had them (no cron, e.g. GCM) or it can't say.
+     */
+    private function jobsStoppedSince(string $url): ?string
+    {
+        try {
+            $origin = preg_replace('#^(https?://[^/]+).*$#', '$1', $url);
+            $lastRun = Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 uptime-watch'])
+                ->timeout(15)->get($origin . '/health/jobs')->json('last_run');
+        } catch (\Throwable) {
+            return null;
+        }
+        if (! is_string($lastRun) || $lastRun === '') {
+            return null;
+        }
+        $at = \Illuminate\Support\Carbon::parse($lastRun);
+
+        return $at->lt(now()->subHours(self::JOBS_STOPPED_AFTER_HOURS)) ? $at->timezone(config('app.timezone'))->format('d M, h:i A') : null;
+    }
+
+    private function watchJobs(string $to, string $url, string $host, ?string $stoppedSince): void
+    {
+        $key = 'uptime-jobs-stopped:' . md5($url);
+        if ($stoppedSince !== null && ! Cache::get($key)) {
+            Cache::forever($key, now()->toIso8601String());
+            $this->notifyOwner($to, "{$host}: scheduled jobs stopped", "{$host} loads, but its scheduled jobs (emails, reminders, error alerts) last ran {$stoppedSince}.\n\nUsually the cron job on the hosting account was removed or is failing. You'll get another email when they run again.");
+        } elseif ($stoppedSince === null && Cache::get($key)) {
+            Cache::forget($key);
+            $this->notifyOwner($to, "{$host}: scheduled jobs running again", "{$host}'s scheduled jobs are running again.");
+        }
     }
 
     /** Null when the page loads, else a short reason. */

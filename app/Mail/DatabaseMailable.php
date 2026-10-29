@@ -133,12 +133,30 @@ abstract class DatabaseMailable extends Mailable
             Cache::lock('mail-pace', 30)->block(60, function () use ($gap) {
                 $wait = (float) Cache::get('mail-pace-last', 0) + $gap - microtime(true);
                 if ($wait > 0) {
+                    // Hostinger drops an SMTP connection idle for ~10 s, and the next
+                    // email on it failed "421 timeout exceeded" (kudla, 26 a week at
+                    // a 20 s gap, Oct 2026): hang up first, the send reconnects.
+                    if ($wait >= 5) {
+                        self::closeSmtpConnection();
+                    }
                     usleep((int) (min($wait, $gap) * 1_000_000));
                 }
                 Cache::put('mail-pace-last', microtime(true), 3600);
             });
         } catch (\Throwable) {
             // Never block an email because pacing could not get its lock.
+        }
+    }
+
+    private static function closeSmtpConnection(): void
+    {
+        try {
+            $transport = app('mail.manager')->mailer()->getSymfonyTransport();
+            if ($transport instanceof \Symfony\Component\Mailer\Transport\Smtp\SmtpTransport) {
+                $transport->stop();
+            }
+        } catch (\Throwable) {
+            // the send will still try; at worst it fails as before
         }
     }
 

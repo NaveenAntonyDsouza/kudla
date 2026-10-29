@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -15,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery
 {
     /** @use HasFactory<UserFactory> */
     use BranchScopable, HasApiTokens, HasFactory, HasRoles, Notifiable;
@@ -44,6 +46,8 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
     ];
 
     protected function casts(): array
@@ -53,6 +57,8 @@ class User extends Authenticatable implements FilamentUser
             'terms_accepted_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',
+            'app_authentication_secret' => 'encrypted',
+            'app_authentication_recovery_codes' => 'encrypted:array',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'last_reengagement_sent_at' => 'datetime',
@@ -504,5 +510,37 @@ class User extends Authenticatable implements FilamentUser
 
         // Legacy fallback — role='admin' still works for backward compat
         return $this->role === 'admin';
+    }
+
+    /*
+     * Two-step login for the admin panel (29 Oct 2026): an authenticator app
+     * code after the password, set up under My Profile. Saved quietly so no
+     * model hooks (member emails) fire.
+     */
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->app_authentication_secret;
+    }
+
+    public function saveAppAuthenticationSecret(?string $secret): void
+    {
+        $this->app_authentication_secret = $secret;
+        $this->saveQuietly();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email ?: (string) $this->name;
+    }
+
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        return $this->app_authentication_recovery_codes;
+    }
+
+    public function saveAppAuthenticationRecoveryCodes(?array $codes): void
+    {
+        $this->app_authentication_recovery_codes = $codes;
+        $this->saveQuietly();
     }
 }

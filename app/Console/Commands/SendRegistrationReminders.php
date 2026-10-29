@@ -99,7 +99,7 @@ class SendRegistrationReminders extends Command
                 return self::SUCCESS; // hourly runs with nobody due leave no record
             }
             AdminActivityLog::create([
-                'admin_user_id' => DB::table('users')->where('role', 'admin')->orderBy('id')->value('id'),
+                'admin_user_id' => null, // System
                 'action' => 'registration_reminders_sent',
                 'model_type' => null,
                 'model_id' => null,

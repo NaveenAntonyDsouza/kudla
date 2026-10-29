@@ -143,7 +143,7 @@ class MemberErasure
 
         try {
             AdminActivityLog::create([
-                'admin_user_id' => AdminActivityLog::systemAdminId(),
+                'admin_user_id' => null, // System
                 'action' => 'member_data_erased',
                 'model_type' => Profile::class,
                 'model_id' => $pid,

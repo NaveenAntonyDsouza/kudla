@@ -66,6 +66,7 @@ class ActivityLogResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('admin.name')
                     ->label('Admin')
+                    ->placeholder('System') // scheduled jobs and other things the site does by itself
                     ->searchable()
                     ->sortable(),
 
@@ -113,7 +114,8 @@ class ActivityLogResource extends Resource
 
                 Tables\Filters\SelectFilter::make('admin_user_id')
                     ->label('Admin')
-                    ->options(fn () => User::whereHas('roles')
+                    ->options(fn () => User::where(fn ($q) => $q->whereNotNull('staff_role_id')->orWhere('role', 'admin'))
+                        ->orderBy('name')
                         ->pluck('name', 'id')
                         ->toArray()
                     ),

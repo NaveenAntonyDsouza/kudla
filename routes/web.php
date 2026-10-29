@@ -30,6 +30,12 @@ Route::get('/r/{code}', function (string $code) {
     return redirect('/?ref=' . strtoupper($code));
 })->name('affiliate.short')->where('code', '[A-Za-z0-9_-]{1,20}');
 
+// When the scheduled jobs last ran (null = never on this site); read by the
+// uptime alarm on the other server (App\Console\Commands\WatchSitesUp)
+Route::get('/health/jobs', fn () => response()->json([
+    'last_run' => \Illuminate\Support\Facades\Cache::get('scheduler:last-run'),
+])->header('Cache-Control', 'no-store'))->middleware('throttle:30,1')->name('health.jobs');
+
 // Static pages served from database (editable from admin panel)
 Route::get('/privacy-policy', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'privacy-policy')->name('privacy');
 Route::get('/terms-condition', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'terms-condition')->name('terms');

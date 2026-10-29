@@ -66,6 +66,19 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             // "My Profile" in the avatar menu — admins change their own password here.
             ->profile(\App\Filament\Pages\Auth\EditAdminProfile::class, isSimple: false)
+            // Two-step login: each person sets up an authenticator app under My Profile
+            // (8 one-time recovery codes for a lost phone). Site Settings → Alerts & admin
+            // security can make it required: everyone without it is sent to set it up first.
+            ->multiFactorAuthentication(
+                [\App\Filament\Auth\AppAuthentication::make()->recoverable()],
+                isRequired: function (): bool {
+                    try {
+                        return \App\Models\SiteSetting::getValue('admin_two_step_required', '0') === '1';
+                    } catch (\Throwable) {
+                        return false; // no settings table yet (fresh install, tests)
+                    }
+                },
+            )
             ->brandName(($theme?->site_name ?? 'Matrimony') . ' Admin')
             ->colors([
                 'primary' => $this->hexToFilamentColor($theme?->primary_color ?? '#8B1D91'),

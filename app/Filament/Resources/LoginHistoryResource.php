@@ -77,12 +77,16 @@ class LoginHistoryResource extends Resource
                         'password' => 'Password',
                         'mobile_otp' => 'Mobile OTP',
                         'email_otp' => 'Email OTP',
+                        'admin' => 'Admin panel',
+                        'admin_failed' => 'Admin: wrong password',
                         default => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'password' => 'info',
                         'mobile_otp' => 'success',
                         'email_otp' => 'warning',
+                        'admin' => 'primary',
+                        'admin_failed' => 'danger',
                         default => 'gray',
                     })
                     ->sortable(),
@@ -121,7 +125,16 @@ class LoginHistoryResource extends Resource
                         'password' => 'Password',
                         'mobile_otp' => 'Mobile OTP',
                         'email_otp' => 'Email OTP',
+                        'admin' => 'Admin panel',
+                        'admin_failed' => 'Admin: wrong password',
                     ]),
+
+                Tables\Filters\TernaryFilter::make('staff')
+                    ->label('Staff only')
+                    ->queries(
+                        true: fn ($q) => $q->whereIn('login_method', ['admin', 'admin_failed']),
+                        false: fn ($q) => $q->whereNotIn('login_method', ['admin', 'admin_failed']),
+                    ),
 
                 Tables\Filters\SelectFilter::make('user_id')
                     ->label('User')

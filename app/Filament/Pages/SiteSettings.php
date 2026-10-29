@@ -54,6 +54,11 @@ class SiteSettings extends Page implements HasForms
             AdminModules::LEADS => ($settings[AdminModules::LEADS] ?? '0') === '1',
             AdminModules::STAFF_TARGETS => ($settings[AdminModules::STAFF_TARGETS] ?? '0') === '1',
 
+            // Alerts
+            'error_alert_email' => $settings['error_alert_email'] ?? '',
+            'uptime_alert_email' => $settings['uptime_alert_email'] ?? '',
+            'admin_two_step_required' => ($settings['admin_two_step_required'] ?? '0') === '1',
+
             // Legal pages
             'grievance_officer_name' => $settings['grievance_officer_name'] ?? '',
             'legal_courts_city' => $settings['legal_courts_city'] ?? '',
@@ -158,6 +163,26 @@ class SiteSettings extends Page implements HasForms
                             ->helperText('Monthly targets and bonuses per staff member, and the Staff Performance report.'),
                     ])
                     ->columns(3),
+
+                \Filament\Schemas\Components\Section::make('Alerts & admin security')
+                    ->description('Emails to the owner when something goes wrong, and how staff sign in.')
+                    ->schema([
+                        Forms\Components\TextInput::make('error_alert_email')
+                            ->label('Error alerts go to')
+                            ->email()
+                            ->placeholder('Blank: the uptime alarm address')
+                            ->helperText('Once an hour, any new error in the site log, and 5 or more wrong passwords typed for a staff account. The same error is reported at most once a day. Nothing is sent when all is well.'),
+
+                        Forms\Components\TextInput::make('uptime_alert_email')
+                            ->label('Uptime alarm goes to')
+                            ->email()
+                            ->helperText('Used when this site watches other sites (they stop loading, or their scheduled jobs stop running).'),
+
+                        Forms\Components\Toggle::make('admin_two_step_required')
+                            ->label('Two-step login required for everyone in the admin panel')
+                            ->helperText('After the password, a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator). Each person sets it up under My Profile (top right). When this is on, anyone who hasn\'t set it up is asked to before they can continue. Set up your own first.'),
+                    ])
+                    ->columns(2),
 
                 \Filament\Schemas\Components\Section::make('Contact Information')
                     ->description('Shown on contact page, footer, and structured data.')
@@ -438,6 +463,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_documents',
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
+            'admin_two_step_required',
         ];
 
         $jsonFields = ['canned_responses'];
