@@ -27,7 +27,7 @@ class StaffTargetResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::staffTargets() && Permissions::can('manage_staff');
     }
 
     /**
@@ -36,7 +36,7 @@ class StaffTargetResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return \App\Support\Permissions::can('manage_staff');
+        return \App\Support\AdminModules::staffTargets() && \App\Support\Permissions::can('manage_staff');
     }
 
     public static function canViewAny(): bool

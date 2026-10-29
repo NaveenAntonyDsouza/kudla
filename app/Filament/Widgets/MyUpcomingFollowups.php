@@ -16,6 +16,9 @@ class MyUpcomingFollowups extends TableWidget
 
     public static function canView(): bool
     {
+        if (! \App\Support\AdminModules::leads()) {
+            return false;
+        }
         $user = auth()->user();
         if (!$user || !$user->staff_role_id) {
             return false;

@@ -86,7 +86,15 @@ class StaffResource extends Resource
         if (!$isSuperAdmin) {
             $roleQuery->where('slug', '!=', 'super_admin');
         }
-        $roleOptions = $roleQuery->orderBy('sort_order')->pluck('name', 'id')->toArray();
+        // Roles for switched-off tools (Branch Manager, Telecaller…) aren't
+        // offered; someone who already holds one keeps it (added back below).
+        $allRoleOptions = $roleQuery->orderBy('sort_order')->pluck('name', 'id')->toArray();
+        $hiddenRoleIds = StaffRole::whereIn('slug', \App\Support\AdminModules::hiddenRoleSlugs())->pluck('id')->all();
+        $roleOptions = fn ($record) => array_filter(
+            $allRoleOptions,
+            fn ($id) => ! in_array($id, $hiddenRoleIds) || $id == $record?->staff_role_id,
+            ARRAY_FILTER_USE_KEY,
+        );
 
         return $form->schema([
             \Filament\Schemas\Components\Section::make('Account Details')
@@ -112,7 +120,7 @@ class StaffResource extends Resource
                 ])
                 ->columns(3),
 
-            \Filament\Schemas\Components\Section::make('Role & Branch')
+            \Filament\Schemas\Components\Section::make(\App\Support\AdminModules::branches() ? 'Role & Branch' : 'Role')
                 ->schema([
                     Forms\Components\Select::make('staff_role_id')
                         ->label('Staff Role')

@@ -18,6 +18,9 @@ class MyBranchAffiliateStats extends StatsOverviewWidget
 
     public static function canView(): bool
     {
+        if (! \App\Support\AdminModules::branches()) {
+            return false;
+        }
         $user = auth()->user();
         if (!$user || !$user->staff_role_id) {
             return false;

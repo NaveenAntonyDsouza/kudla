@@ -32,7 +32,8 @@ class BranchTableComponents
             ->badge()
             ->color('info')
             ->placeholder('Global')
-            ->toggleable(isToggledHiddenByDefault: true);
+            ->toggleable(isToggledHiddenByDefault: true)
+            ->visible(fn () => \App\Support\AdminModules::branches());
     }
 
     /**
@@ -52,6 +53,9 @@ class BranchTableComponents
             )
             ->searchable()
             ->visible(function () {
+                if (! \App\Support\AdminModules::branches()) {
+                    return false;
+                }
                 $user = auth()->user();
                 // Hide filter from branch users — they only see their branch anyway
                 return !$user || $user->isSuperAdmin() || $user->branch_id === null;

@@ -22,7 +22,7 @@ class StaffPerformanceReport extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Permissions::can('view_engagement_reports');
+        return \App\Support\AdminModules::staffTargets() && Permissions::can('view_engagement_reports');
     }
 
     /**
@@ -31,7 +31,7 @@ class StaffPerformanceReport extends Page
      */
     public static function canAccess(): bool
     {
-        return \App\Support\Permissions::can('view_engagement_reports');
+        return \App\Support\AdminModules::staffTargets() && \App\Support\Permissions::can('view_engagement_reports');
     }
 
     public function mount(): void

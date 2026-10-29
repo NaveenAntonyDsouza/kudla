@@ -65,6 +65,10 @@ class BranchFormField
             $field->disabled()->dehydrated();
         }
 
+        // Branches switched off: no field, but new records are still stamped
+        // with the default (Head Office) so the data is right if they come back.
+        $field->visible(fn () => \App\Support\AdminModules::branches())->dehydratedWhenHidden();
+
         return $field;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
 use App\Models\ThemeSetting;
+use App\Support\AdminModules;
 use App\Traits\LogsAdminActivity;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -47,6 +48,11 @@ class SiteSettings extends Page implements HasForms
             'site_name' => $settings['site_name'] ?? '',
             'tagline' => $settings['tagline'] ?? '',
             'blog_enabled' => ($settings['blog_enabled'] ?? '1') === '1',
+
+            // Staff tools (AdminModules)
+            AdminModules::BRANCHES => ($settings[AdminModules::BRANCHES] ?? '0') === '1',
+            AdminModules::LEADS => ($settings[AdminModules::LEADS] ?? '0') === '1',
+            AdminModules::STAFF_TARGETS => ($settings[AdminModules::STAFF_TARGETS] ?? '0') === '1',
 
             // Legal pages
             'grievance_officer_name' => $settings['grievance_officer_name'] ?? '',
@@ -135,6 +141,23 @@ class SiteSettings extends Page implements HasForms
                             ->helperText('The Blog at /blog and Content Management → Blog Posts. The footer link and sitemap entry appear once a post is published. Off: no blog at all.'),
                     ])
                     ->columns(2),
+
+                \Filament\Schemas\Components\Section::make('Staff tools')
+                    ->description('Tools for a bigger team. Switching one off only hides it: nothing is deleted, and switching it back on brings it back as it was.')
+                    ->schema([
+                        Forms\Components\Toggle::make(AdminModules::BRANCHES)
+                            ->label('Branches')
+                            ->helperText('Second offices, franchises or agents paid on commission: Branches, Branch Payouts, branch links and QR codes, the branch field on staff, coupons and payments, and the Branch Manager and Branch Staff roles.'),
+
+                        Forms\Components\Toggle::make(AdminModules::LEADS)
+                            ->label('Leads & telecalling')
+                            ->helperText('Enquiries from people who are not members yet: Leads, call logs, convert to member, the telecaller dashboard and the Telecaller role.'),
+
+                        Forms\Components\Toggle::make(AdminModules::STAFF_TARGETS)
+                            ->label('Staff targets & performance')
+                            ->helperText('Monthly targets and bonuses per staff member, and the Staff Performance report.'),
+                    ])
+                    ->columns(3),
 
                 \Filament\Schemas\Components\Section::make('Contact Information')
                     ->description('Shown on contact page, footer, and structured data.')
@@ -414,6 +437,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_album_photos', 'auto_approve_family_photos',
             'auto_approve_documents',
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
+            AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
         ];
 
         $jsonFields = ['canned_responses'];

@@ -38,7 +38,7 @@ class LeadResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Permissions::can('view_lead');
+        return \App\Support\AdminModules::leads() && Permissions::can('view_lead');
     }
 
     /**
@@ -47,7 +47,7 @@ class LeadResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return \App\Support\Permissions::can('view_lead');
+        return \App\Support\AdminModules::leads() && \App\Support\Permissions::can('view_lead');
     }
 
     public static function canViewAny(): bool

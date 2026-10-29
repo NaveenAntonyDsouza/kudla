@@ -67,7 +67,8 @@ class BulkImportResource extends Resource
                     ->badge()
                     ->color('info')
                     ->placeholder('—')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->visible(fn () => \App\Support\AdminModules::branches()),
 
                 Tables\Columns\TextColumn::make('status')
                     ->badge()

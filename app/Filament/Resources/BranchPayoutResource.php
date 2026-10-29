@@ -28,12 +28,12 @@ class BranchPayoutResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Permissions::can('manage_payouts');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_payouts');
     }
 
     public static function canAccess(): bool
     {
-        return Permissions::can('manage_payouts');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_payouts');
     }
 
     public static function canViewAny(): bool { return static::canAccess(); }

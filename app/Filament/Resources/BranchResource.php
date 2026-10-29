@@ -27,7 +27,7 @@ class BranchResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_staff');
     }
 
     /**
@@ -36,27 +36,27 @@ class BranchResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_staff');
     }
 
     public static function canViewAny(): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_staff');
     }
 
     public static function canCreate(): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_staff');
     }
 
     public static function canEdit($record): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_staff');
     }
 
     public static function canDelete($record): bool
     {
-        return Permissions::can('manage_staff');
+        return \App\Support\AdminModules::branches() && Permissions::can('manage_staff');
     }
 
     public static function form(Schema $form): Schema

@@ -15,6 +15,9 @@ class MyTargetProgress extends Widget
 
     public static function canView(): bool
     {
+        if (! \App\Support\AdminModules::staffTargets()) {
+            return false;
+        }
         $user = auth()->user();
         if (!$user || !$user->staff_role_id) {
             return false;

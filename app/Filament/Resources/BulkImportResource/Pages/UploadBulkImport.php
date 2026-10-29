@@ -69,7 +69,9 @@ class UploadBulkImport extends Page implements HasForms
                             )
                             ->required()
                             ->searchable()
-                            ->helperText('Branch attribution for rows where branch_code column is blank.'),
+                            ->helperText('Branch attribution for rows where branch_code column is blank.')
+                            ->visible(fn () => \App\Support\AdminModules::branches())
+                            ->dehydratedWhenHidden(),
 
                         Forms\Components\Toggle::make('send_welcome_email')
                             ->label('Send Welcome Email')
