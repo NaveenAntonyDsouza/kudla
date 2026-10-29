@@ -142,6 +142,28 @@ it('reports 5 wrong passwords for a staff account in an hour', function () {
         ->and($mails[0]['body'])->toContain('Owner (owner@example.test): 5 times');
 });
 
+it('warns once a day when the last off-site backup is over 3 days old', function () {
+    SiteSetting::setValue('error_alert_email', 'alerts@example.test');
+    $stamp = storage_path('app/' . AlertSiteErrors::BACKUP_STAMP);
+    $before = is_file($stamp) ? file_get_contents($stamp) : null;
+
+    try {
+        file_put_contents($stamp, now()->subDay()->utc()->format('Y-m-d\TH:i:s\Z'));
+        $this->artisan('alerts:site-errors')->assertSuccessful();
+        expect(alertMails())->toBe([]);   // yesterday's backup: fine
+
+        file_put_contents($stamp, now()->subDays(4)->utc()->format('Y-m-d\TH:i:s\Z'));
+        $this->artisan('alerts:site-errors')->assertSuccessful();
+        $this->artisan('alerts:site-errors')->assertSuccessful();   // told already today
+        $mails = alertMails();
+        expect($mails)->toHaveCount(1)
+            ->and($mails[0]['subject'])->toStartWith('Kudla Matrimony: no backup since ')
+            ->and($mails[0]['body'])->toContain('backup-log.txt');
+    } finally {
+        $before === null ? @unlink($stamp) : file_put_contents($stamp, $before);
+    }
+});
+
 it('tells the owner when a site\'s scheduled jobs stop, and when they run again', function () {
     SiteSetting::setValue('uptime_watch_urls', "https://amchi.example.test\nhttps://gcm.example.test");
     SiteSetting::setValue('uptime_alert_email', 'owner@example.test');

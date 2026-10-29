@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Mail;
  * sites for four months and nobody knew). Once an hour, reads the error
  * log written since the last run and emails the owner one summary of any
  * error not already reported in the last 24 hours, plus staff accounts with
- * 5+ wrong passwords in the hour. Quiet when nothing is new. Goes to
+ * 5+ wrong passwords in the hour, and (at most daily) a site whose last
+ * off-site backup is over 3 days old. Quiet when nothing is new. Goes to
  * `error_alert_email`, else the uptime alarm's `uptime_alert_email`.
  */
 class AlertSiteErrors extends Command
@@ -30,6 +31,10 @@ class AlertSiteErrors extends Command
 
     private const FAILED_LOGINS_ALERT = 5;
 
+    public const BACKUP_STAMP = 'offsite-backup-at.txt';
+
+    private const BACKUP_STALE_AFTER_DAYS = 3;
+
     /** Tests point this at their own file. */
     public static ?string $logPath = null;
 
@@ -43,8 +48,9 @@ class AlertSiteErrors extends Command
         $errors = collect(self::errorsSince($since))
             ->reject(fn ($e) => Cache::has('site-errors:told:' . $e['signature']));
         $failedLogins = $this->failedStaffLogins();
+        $backupAt = Cache::has('site-errors:told:backup') ? null : self::staleBackupAt();
 
-        if ($errors->isEmpty() && $failedLogins === []) {
+        if ($errors->isEmpty() && $failedLogins === [] && $backupAt === null) {
             Cache::forever('site-errors:last-scan', $scannedTo);
             $this->line('nothing new');
 
@@ -55,8 +61,9 @@ class AlertSiteErrors extends Command
         $subject = $site . ': ' . collect([
             $errors->isNotEmpty() ? $errors->count() . ' new ' . str('error')->plural($errors->count()) : null,
             $failedLogins !== [] ? 'wrong admin passwords' : null,
+            $backupAt !== null ? 'no backup since ' . $backupAt->format('j M') : null,
         ])->filter()->join(' and ');
-        $body = $this->body($site, $errors->all(), $failedLogins);
+        $body = $this->body($site, $errors->all(), $failedLogins, $backupAt);
 
         if ($this->option('dry-run') || $to === '') {
             $this->line($to === '' ? '(no alert email set)' : "To: {$to}");
@@ -80,6 +87,9 @@ class AlertSiteErrors extends Command
 
         foreach ($errors as $e) {
             Cache::put('site-errors:told:' . $e['signature'], 1, now()->addHours(self::REPEAT_AFTER_HOURS));
+        }
+        if ($backupAt !== null) {
+            Cache::put('site-errors:told:backup', 1, now()->addHours(self::REPEAT_AFTER_HOURS));
         }
         Cache::forever('site-errors:last-scan', $scannedTo);
         $this->line("sent to {$to}: {$subject}");
@@ -156,7 +166,28 @@ class AlertSiteErrors extends Command
         }
     }
 
-    private function body(string $site, array $errors, array $failedLogins): string
+    /**
+     * When the last off-site backup reached the owner's PC, if over 3 days ago.
+     * The daily backup (D:\matrimony\backups\auto\backup-all.sh) stamps
+     * storage/app/offsite-backup-at.txt after each whole database copy; a site
+     * without the stamp isn't backed up that way and says nothing.
+     */
+    public static function staleBackupAt(): ?\Illuminate\Support\Carbon
+    {
+        $stamp = storage_path('app/' . self::BACKUP_STAMP);
+        if (! is_file($stamp)) {
+            return null;
+        }
+        try {
+            $at = \Illuminate\Support\Carbon::parse(trim((string) file_get_contents($stamp)))->timezone(config('app.timezone'));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $at->lt(now()->subDays(self::BACKUP_STALE_AFTER_DAYS)) ? $at : null;
+    }
+
+    private function body(string $site, array $errors, array $failedLogins, ?\Illuminate\Support\Carbon $backupAt = null): string
     {
         $lines = [];
         if ($errors !== []) {
@@ -174,6 +205,10 @@ class AlertSiteErrors extends Command
                 $lines[] = "- {$who}: {$n} times";
             }
             $lines[] = "\nIf that wasn't them, change the password. Settings → Login History shows where the attempts came from.";
+        }
+        if ($backupAt !== null) {
+            $lines[] = ($lines !== [] ? "\n\n" : '') . 'The last off-site backup of this site reached your PC on ' . $backupAt->format('j M Y, h:i A') . '.'
+                . "\nThe daily backup runs on your PC at 2 pm, or when the PC is next switched on. Check that the PC is on, and see D:\\matrimony\\backups\\auto\\backup-log.txt.";
         }
 
         return implode("\n", $lines);
