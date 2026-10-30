@@ -55,7 +55,8 @@ it('lists the other directories biggest first', function () {
 
     $other = app(DiscoverController::class)->category('nri-matrimony')->getData()['otherCategories'];
 
-    expect(collect($other)->pluck('slug')->all())->toBe(['mother-tongue-matrimony', 'karnataka-matrimony', 'catholic-matrimony', 'christian-matrimony']);
+    // Christian (1 profile) has no button since 30 Oct 2026: a section needs 3+ profiles
+    expect(collect($other)->pluck('slug')->all())->toBe(['mother-tongue-matrimony', 'karnataka-matrimony', 'catholic-matrimony']);
 });
 
 it('keeps the Help & FAQ page true to how the site works today', function () {

@@ -1,4 +1,20 @@
-<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$categories->isEmpty() ? 'noindex, follow' : null">
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$groups->isEmpty() ? 'noindex, follow' : null">
+    {{-- Discover hub (Oct 2026): cards grouped under headings, each with its number
+         of profiles and three biggest entries. Scoped styles: the live sites don't
+         rebuild the Tailwind file, so new utility classes wouldn't exist there. --}}
+    <style>
+        .dh-section { margin-top: 1.75rem; }
+        .dh-section h2 { margin: 0 0 .6rem; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
+        .dh-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); }
+        .dh-card { display: block; padding: .9rem 1rem; background: #fff; border: 1px solid #e5e7eb; border-radius: .75rem; text-decoration: none; transition: border-color .15s, background-color .15s, box-shadow .15s; }
+        .dh-card:hover, .dh-card:focus-visible { border-color: var(--color-primary); background: var(--color-primary-light); box-shadow: 0 1px 3px rgba(0, 0, 0, .06); outline: none; }
+        .dh-head { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }
+        .dh-name { font-size: .95rem; font-weight: 600; color: #111827; }
+        .dh-card:hover .dh-name, .dh-card:focus-visible .dh-name { color: var(--color-primary); }
+        .dh-count { flex-shrink: 0; font-size: .8rem; color: #6b7280; }
+        .dh-top { display: block; margin-top: .3rem; overflow: hidden; font-size: .8rem; line-height: 1.35; color: #6b7280; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
@@ -11,20 +27,12 @@
         </p>
 
         <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
-        <p class="text-sm text-gray-600 mt-1 mb-6">{{ $seo['intro'] }}</p>
+        <p class="text-sm text-gray-600 mt-1">{{ $seo['intro'] }}</p>
 
-        @if($categories->isEmpty())
+        @if($groups->isEmpty())
             <p class="text-gray-600 py-8">Profiles will appear here as members join.</p>
         @endif
 
-        {{-- Category Grid --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-            @foreach($categories as $cat)
-                <a href="{{ route($cat['has_subcategories'] ? 'discover.category' : 'discover.category', $cat['slug']) }}"
-                    class="flex items-center justify-center px-6 py-3.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:border-(--color-primary) hover:text-(--color-primary) hover:bg-(--color-primary-light) transition-colors text-center">
-                    {{ $cat['label'] }}
-                </a>
-            @endforeach
-        </div>
+        @include('discover._hub-groups', ['groups' => $groups])
     </div>
 </x-layouts.app>

@@ -31,23 +31,56 @@ class DiscoverController extends Controller
     /** Its caste pages repeat Community Matrimony's (see canonicalUrl()). */
     private const DUPLICATE_OF_COMMUNITY = 'hindu-matrimony';
 
+    /** Discover hub sections, in this order (Oct 2026). */
+    public const HUB_GROUPS = [
+        'community' => 'Community & religion',
+        'language' => 'Language',
+        'place' => 'Place',
+        'work' => 'Work',
+        'life' => 'Life situation',
+    ];
+
+    /** A category needs this many live profiles for a button (like the homepage chips). */
+    public const HUB_MIN_PROFILES = 3;
+
     /**
-     * Level 1: Category hub — grid of all browsing categories.
+     * The categories that get a button — on the hub, the member dashboard and a
+     * category page's "other directories" (Oct 2026): not the ones that repeat
+     * another (hub => false), only with 3+ live profiles, biggest first.
+     *
+     * @return \Illuminate\Support\Collection<string, array{slug: string, label: string, hub_label: string, group: string, count: int}>
+     */
+    public static function hubSections(): \Illuminate\Support\Collection
+    {
+        return collect(config('discover'))
+            ->reject(fn ($cat) => ($cat['hub'] ?? true) === false)
+            ->map(fn ($cat, $slug) => [
+                'slug' => $slug,
+                'label' => $cat['label'],
+                'hub_label' => $cat['hub_label'] ?? $cat['label'],
+                'group' => $cat['hub_group'] ?? 'community',
+                'count' => array_sum(self::profileCounts($slug)),
+            ])
+            ->filter(fn ($s) => $s['count'] >= self::HUB_MIN_PROFILES)
+            ->sortByDesc('count');
+    }
+
+    /**
+     * Level 1: the Discover hub — cards grouped under headings, each with its
+     * number of profiles and its three biggest entries (Oct 2026).
      */
     public function hub()
     {
-        // Only sections that have members, biggest first (Oct 2026)
-        $categories = collect(config('discover'))
-            ->filter(fn ($cat, $slug) => self::profileCounts($slug) !== [])
-            ->sortByDesc(fn ($cat, $slug) => array_sum(self::profileCounts($slug)))
-            ->map(fn($cat, $slug) => [
-                'label' => $cat['label'],
-                'slug' => $slug,
-                'has_subcategories' => !isset($cat['direct_filter']),
-            ]);
+        $sections = self::hubSections()->map(fn ($s) => $s + [
+            'top' => collect(self::homeLinkCounts($s['slug']))->take(3)
+                ->map(fn ($link) => trim(preg_replace('/\s+Matrimony$/i', '', $link['label'])))->all(),
+        ]);
+        $groups = collect(self::HUB_GROUPS)
+            ->map(fn ($title, $key) => ['title' => $title, 'sections' => $sections->where('group', $key)->values()])
+            ->filter(fn ($group) => $group['sections']->isNotEmpty());
         $seo = \App\Support\DiscoverSeo::forHub();
 
-        return view('discover.hub', compact('categories', 'seo'));
+        return view('discover.hub', compact('groups', 'seo'));
     }
 
     /**
@@ -70,11 +103,9 @@ class DiscoverController extends Controller
         $showSearch = ($config['show_search'] ?? false) && count($subcategories) > 12;
 
         // Other directories (cross-links to other categories that have members)
-        $otherCategories = collect(config('discover'))
+        $otherCategories = self::hubSections()   // biggest first, no repeats
             ->except($category)
-            ->filter(fn ($cat, $slug) => self::profileCounts($slug) !== [])
-            ->sortByDesc(fn ($cat, $slug) => array_sum(self::profileCounts($slug)))   // biggest first
-            ->map(fn($cat, $slug) => ['label' => $cat['label'], 'slug' => $slug])
+            ->map(fn ($s) => ['label' => $s['label'], 'slug' => $s['slug']])
             ->values()
             ->take(6);
         $seo = \App\Support\DiscoverSeo::forCategory($category, $config);

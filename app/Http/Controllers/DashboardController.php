@@ -104,9 +104,10 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        // Discover categories (first 6 for dashboard widget)
-        $discoverCategories = collect(config('discover'))
-            ->map(fn($cat, $slug) => ['label' => $cat['label'], 'slug' => $slug])
+        // Discover: the 6 biggest sections, as on the hub (Oct 2026: was the first 6
+        // in the config file, members or not)
+        $discoverCategories = \App\Http\Controllers\DiscoverController::hubSections()
+            ->map(fn ($s) => ['label' => $s['hub_label'], 'slug' => $s['slug']])   // short titles, as on the hub
             ->values()
             ->take(6);
 

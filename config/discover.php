@@ -12,6 +12,10 @@
  *   direct_filter         — if set, category has no subcategories (shows results directly)
  *   seo_title, browse_by  — Google title and "Browse brides and grooms by …" wording
  *                           for the category page (App\Support\DiscoverSeo)
+ *   hub_label, hub_group  — card title and section on the Discover hub (Oct 2026):
+ *                           community | language | place | work | life
+ *   hub => false          — a category that repeats another: its pages stay, but no
+ *                           button on the hub, the dashboard or "other directories"
  *
  * Filter keys map to DB columns/relations:
  *   religion, denomination, caste, diocese, muslim_sect, muslim_community, jain_sect
@@ -26,6 +30,8 @@ return [
 
     'nri-matrimony' => [
         'label' => 'NRI Matrimony',
+        'hub_label' => 'Living abroad (NRI)',
+        'hub_group' => 'place',
         'seo_title' => 'NRI Matrimony – Brides & Grooms Abroad',
         'browse_by' => 'the country they live in',
         'show_search' => true,
@@ -34,6 +40,8 @@ return [
 
     'catholic-matrimony' => [
         'label' => 'Catholic Matrimony',
+        'hub_label' => 'Catholic',
+        'hub_group' => 'community',
         'seo_title' => 'Catholic Matrimony – Catholic Brides & Grooms',
         'browse_by' => 'Catholic rite',
         'show_search' => false,
@@ -42,6 +50,8 @@ return [
 
     'karnataka-matrimony' => [
         'label' => 'Karnataka Matrimony',
+        'hub_label' => 'Karnataka',
+        'hub_group' => 'place',
         'seo_title' => 'Karnataka Matrimony – Brides & Grooms by District',
         'browse_by' => 'native district',
         'show_search' => true,
@@ -50,6 +60,8 @@ return [
 
     'christian-matrimony' => [
         'label' => 'Christian Matrimony',
+        'hub_label' => 'Christian',
+        'hub_group' => 'community',
         'seo_title' => 'Christian Matrimony – Christian Brides & Grooms',
         'browse_by' => 'church',
         'show_search' => false,
@@ -59,6 +71,8 @@ return [
     // job titles grouped the way families search (config/profession_groups.php, Oct 2026)
     'profession-matrimony' => [
         'label' => 'Profession Matrimony',
+        'hub_label' => 'Profession',
+        'hub_group' => 'work',
         'seo_title' => 'Matrimony by Profession – Doctors, Engineers',
         'browse_by' => 'profession',
         'show_search' => true,
@@ -67,6 +81,8 @@ return [
 
     'occupation-matrimony' => [
         'label' => 'Occupation Matrimony',
+        'hub_label' => 'Job title',
+        'hub_group' => 'work',
         'seo_title' => 'Matrimony by Job Title – Brides & Grooms',
         'browse_by' => 'profession',
         'show_search' => true,
@@ -75,6 +91,8 @@ return [
 
     'diocese-matrimony' => [
         'label' => 'Diocese Matrimony',
+        'hub_label' => 'Diocese',
+        'hub_group' => 'community',
         'seo_title' => 'Diocese Matrimony – Catholic Brides & Grooms',
         'browse_by' => 'diocese',
         'show_search' => true,
@@ -83,12 +101,17 @@ return [
 
     'kannadiga-matrimony' => [
         'label' => 'Kannadiga Matrimony',
+        'hub_label' => 'Kannadiga',
+        'hub_group' => 'language',
+        'hub' => false, // repeats Mother tongue → Kannada: its pages stay, no hub button
         'show_search' => false,
         'direct_filter' => ['mother_tongue' => 'Kannada'],
     ],
 
     'second-marriage' => [
         'label' => 'Second Marriage Matrimony',
+        'hub_label' => 'Second marriage',
+        'hub_group' => 'life',
         'seo_title' => 'Second Marriage Matrimony – Divorced & Widowed',
         'browse_by' => 'marital status',
         'show_search' => false,
@@ -102,6 +125,8 @@ return [
 
     'mother-tongue-matrimony' => [
         'label' => 'Mother Tongue Matrimony',
+        'hub_label' => 'Mother tongue',
+        'hub_group' => 'language',
         'seo_title' => 'Mother Tongue Matrimony – Brides & Grooms',
         'browse_by' => 'mother tongue',
         'show_search' => false,
@@ -110,6 +135,8 @@ return [
 
     'community-matrimony' => [
         'label' => 'Community Matrimony',
+        'hub_label' => 'Community',
+        'hub_group' => 'community',
         'seo_title' => 'Community Matrimony – Brides & Grooms by Caste',
         'browse_by' => 'community',
         'show_search' => true,
@@ -120,6 +147,9 @@ return [
 
     'hindu-matrimony' => [
         'label' => 'Hindu Matrimony',
+        'hub_label' => 'Hindu',
+        'hub_group' => 'community',
+        'hub' => false, // repeats Community's caste pages: its pages stay, no hub button
         'seo_title' => 'Hindu Matrimony – Hindu Brides & Grooms',
         'browse_by' => 'community',
         'show_search' => true,
@@ -128,6 +158,8 @@ return [
 
     'muslim-matrimony' => [
         'label' => 'Muslim Matrimony',
+        'hub_label' => 'Muslim',
+        'hub_group' => 'community',
         'seo_title' => 'Muslim Matrimony – Muslim Brides & Grooms',
         'browse_by' => 'sect',
         'show_search' => false,
@@ -136,6 +168,8 @@ return [
 
     'jain-matrimony' => [
         'label' => 'Jain Matrimony',
+        'hub_label' => 'Jain',
+        'hub_group' => 'community',
         'seo_title' => 'Jain Matrimony – Jain Brides & Grooms',
         'browse_by' => 'sect',
         'show_search' => false,
