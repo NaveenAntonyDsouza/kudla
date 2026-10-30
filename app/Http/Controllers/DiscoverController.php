@@ -31,9 +31,12 @@ class DiscoverController extends Controller
     /** Its caste pages repeat Community Matrimony's (see canonicalUrl()). */
     private const DUPLICATE_OF_COMMUNITY = 'hindu-matrimony';
 
-    /** Discover hub sections, in this order (Oct 2026). */
+    /**
+     * Discover hub sections with cards, in this order, after the Communities
+     * chips (Oct 2026). "religion" cards (Catholic, Diocese, Muslim…) are not on
+     * the hub — the communities list holds them, as on the homepage.
+     */
     public const HUB_GROUPS = [
-        'community' => 'Community & religion',
         'language' => 'Language',
         'place' => 'Place',
         'work' => 'Work',
@@ -59,6 +62,7 @@ class DiscoverController extends Controller
                 'label' => $cat['label'],
                 'hub_label' => $cat['hub_label'] ?? $cat['label'],
                 'group' => $cat['hub_group'] ?? 'community',
+                'order' => $cat['hub_order'] ?? 99,
                 'count' => array_sum(self::profileCounts($slug)),
             ])
             ->filter(fn ($s) => $s['count'] >= self::HUB_MIN_PROFILES)
@@ -71,16 +75,25 @@ class DiscoverController extends Controller
      */
     public function hub()
     {
-        $sections = self::hubSections()->map(fn ($s) => $s + [
-            'top' => collect(self::homeLinkCounts($s['slug']))->take(3)
-                ->map(fn ($link) => trim(preg_replace('/\s+Matrimony$/i', '', $link['label'])))->all(),
-        ]);
+        // Communities first, as chips — the same list as the homepage's Community tab
+        // (castes, denominations and sects together; hidden religions left out)
+        $communities = collect(self::homeLinkCounts('community-matrimony'))
+            ->filter(fn ($link) => $link['count'] >= self::HUB_MIN_PROFILES)
+            ->values();
+
+        $sections = self::hubSections()
+            ->filter(fn ($s) => isset(self::HUB_GROUPS[$s['group']]))
+            ->map(fn ($s) => $s + [
+                'top' => collect(self::homeLinkCounts($s['slug']))->take(3)
+                    ->map(fn ($link) => trim(preg_replace('/\s+Matrimony$/i', '', $link['label'])))->all(),
+            ]);
         $groups = collect(self::HUB_GROUPS)
-            ->map(fn ($title, $key) => ['title' => $title, 'sections' => $sections->where('group', $key)->values()])
+            ->map(fn ($title, $key) => ['title' => $title, 'sections' => $sections->where('group', $key)
+                ->sortBy([['order', 'asc'], ['count', 'desc']])->values()])
             ->filter(fn ($group) => $group['sections']->isNotEmpty());
         $seo = \App\Support\DiscoverSeo::forHub();
 
-        return view('discover.hub', compact('groups', 'seo'));
+        return view('discover.hub', compact('communities', 'groups', 'seo'));
     }
 
     /**

@@ -1,4 +1,4 @@
-<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$groups->isEmpty() ? 'noindex, follow' : null">
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$groups->isEmpty() && $communities->isEmpty() ? 'noindex, follow' : null">
     {{-- Discover hub (Oct 2026): cards grouped under headings, each with its number
          of profiles and three biggest entries. Scoped styles: the live sites don't
          rebuild the Tailwind file, so new utility classes wouldn't exist there. --}}
@@ -12,7 +12,13 @@
         .dh-name { font-size: .95rem; font-weight: 600; color: #111827; }
         .dh-card:hover .dh-name, .dh-card:focus-visible .dh-name { color: var(--color-primary); }
         .dh-count { flex-shrink: 0; font-size: .8rem; color: #6b7280; }
-        .dh-top { display: block; margin-top: .3rem; overflow: hidden; font-size: .8rem; line-height: 1.35; color: #6b7280; text-overflow: ellipsis; white-space: nowrap; }
+        /* up to two lines, so long names show in full */
+        .dh-top { display: -webkit-box; margin-top: .3rem; overflow: hidden; font-size: .8rem; line-height: 1.35; color: #6b7280; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .dh-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .dh-chip { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .8rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 9999px; font-size: .85rem; color: #1f2937; text-decoration: none; transition: border-color .15s, background-color .15s, color .15s; }
+        .dh-chip:hover, .dh-chip:focus-visible { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary); outline: none; }
+        .dh-chip-n { font-size: .75rem; color: #6b7280; }
+        .dh-chip-all { border-style: dashed; font-weight: 600; color: var(--color-primary); }
     </style>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -29,10 +35,10 @@
         <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
         <p class="text-sm text-gray-600 mt-1">{{ $seo['intro'] }}</p>
 
-        @if($groups->isEmpty())
+        @if($groups->isEmpty() && $communities->isEmpty())
             <p class="text-gray-600 py-8">Profiles will appear here as members join.</p>
         @endif
 
-        @include('discover._hub-groups', ['groups' => $groups])
+        @include('discover._hub-groups', ['communities' => $communities, 'groups' => $groups])
     </div>
 </x-layouts.app>

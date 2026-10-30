@@ -13,7 +13,10 @@
  *   seo_title, browse_by  — Google title and "Browse brides and grooms by …" wording
  *                           for the category page (App\Support\DiscoverSeo)
  *   hub_label, hub_group  — card title and section on the Discover hub (Oct 2026):
- *                           community | language | place | work | life
+ *                           community (shown as the community chips, like the
+ *                           homepage) | religion (no hub card; still on the dashboard
+ *                           and in "other directories") | language | place | work | life
+ *   hub_order             — fixed order within a hub section (else biggest first)
  *   hub => false          — a category that repeats another: its pages stay, but no
  *                           button on the hub, the dashboard or "other directories"
  *
@@ -41,7 +44,7 @@ return [
     'catholic-matrimony' => [
         'label' => 'Catholic Matrimony',
         'hub_label' => 'Catholic',
-        'hub_group' => 'community',
+        'hub_group' => 'religion',
         'seo_title' => 'Catholic Matrimony – Catholic Brides & Grooms',
         'browse_by' => 'Catholic rite',
         'show_search' => false,
@@ -61,7 +64,7 @@ return [
     'christian-matrimony' => [
         'label' => 'Christian Matrimony',
         'hub_label' => 'Christian',
-        'hub_group' => 'community',
+        'hub_group' => 'religion',
         'seo_title' => 'Christian Matrimony – Christian Brides & Grooms',
         'browse_by' => 'church',
         'show_search' => false,
@@ -73,6 +76,7 @@ return [
         'label' => 'Profession Matrimony',
         'hub_label' => 'Profession',
         'hub_group' => 'work',
+        'hub_order' => 1, // the easier way in: 15 groups before 109 job titles
         'seo_title' => 'Matrimony by Profession – Doctors, Engineers',
         'browse_by' => 'profession',
         'show_search' => true,
@@ -83,6 +87,7 @@ return [
         'label' => 'Occupation Matrimony',
         'hub_label' => 'Job title',
         'hub_group' => 'work',
+        'hub_order' => 2,
         'seo_title' => 'Matrimony by Job Title – Brides & Grooms',
         'browse_by' => 'profession',
         'show_search' => true,
@@ -92,7 +97,7 @@ return [
     'diocese-matrimony' => [
         'label' => 'Diocese Matrimony',
         'hub_label' => 'Diocese',
-        'hub_group' => 'community',
+        'hub_group' => 'religion',
         'seo_title' => 'Diocese Matrimony – Catholic Brides & Grooms',
         'browse_by' => 'diocese',
         'show_search' => true,
@@ -159,7 +164,7 @@ return [
     'muslim-matrimony' => [
         'label' => 'Muslim Matrimony',
         'hub_label' => 'Muslim',
-        'hub_group' => 'community',
+        'hub_group' => 'religion',
         'seo_title' => 'Muslim Matrimony – Muslim Brides & Grooms',
         'browse_by' => 'sect',
         'show_search' => false,
@@ -169,7 +174,7 @@ return [
     'jain-matrimony' => [
         'label' => 'Jain Matrimony',
         'hub_label' => 'Jain',
-        'hub_group' => 'community',
+        'hub_group' => 'religion',
         'seo_title' => 'Jain Matrimony – Jain Brides & Grooms',
         'browse_by' => 'sect',
         'show_search' => false,
