@@ -2,8 +2,8 @@
     @php $profiles = $this->getProfiles(); @endphp
 
     <x-filament::section icon="heroicon-o-arrow-trending-up" icon-color="success">
-        <x-slot name="heading">Free Active Users ({{ $profiles->count() }})</x-slot>
-        <x-slot name="description">Free users sorted by recent activity — the most likely to convert. Reach out via WhatsApp to promote membership.</x-slot>
+        <x-slot name="heading">Members without a paid plan ({{ $profiles->count() }})</x-slot>
+        <x-slot name="description">Live profiles with no paid plan, the most recently active first: the most likely to buy one. Reach out on WhatsApp to tell them about the plans.</x-slot>
 
         @forelse ($profiles as $profile)
             <x-admin.member-row

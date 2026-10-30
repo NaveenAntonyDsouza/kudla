@@ -23,10 +23,12 @@ class StatsOverview extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $stats = Cache::remember('admin_dashboard_stats', 300, function () {
+        // v2 (Oct 2026): "Active Users" only meant not hidden — now Live Profiles, plus real activity
+        $stats = Cache::remember('admin_dashboard_stats_v2', 300, function () {
             return [
                 'totalUsers' => Profile::count(),
                 'activeUsers' => Profile::where('is_active', true)->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))->count(),
+                'activeMembers30' => Profile::where('is_active', true)->whereHas('user', fn ($q) => $q->whereNull('staff_role_id')->where('last_login_at', '>=', now()->subDays(30)))->count(),
                 'newToday' => Profile::whereDate('created_at', today())->count(),
                 'pendingIdProofs' => \App\Models\IdProof::where('verification_status', 'pending')->count(),
                 'activeSubscriptions' => UserMembership::where('is_active', true)->where(fn($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>', now()))->count(),
@@ -38,6 +40,7 @@ class StatsOverview extends StatsOverviewWidget
 
         $totalUsers = $stats['totalUsers'];
         $activeUsers = $stats['activeUsers'];
+        $activeMembers30 = $stats['activeMembers30'];
         $newToday = $stats['newToday'];
         $pendingIdProofs = $stats['pendingIdProofs'];
         $activeSubscriptions = $stats['activeSubscriptions'];
@@ -46,15 +49,20 @@ class StatsOverview extends StatsOverviewWidget
         $pendingApprovals = $stats['pendingApprovals'];
 
         return [
-            Stat::make('Total Users', number_format($totalUsers))
+            Stat::make('Total Profiles', number_format($totalUsers))
                 ->description('All registered profiles')
                 ->icon('heroicon-o-users')
                 ->color('primary'),
 
-            Stat::make('Active Users', number_format($activeUsers))
-                ->description('Not hidden or deleted')
+            Stat::make('Live Profiles', number_format($activeUsers))
+                ->description('Shown to members: not hidden or deleted')
                 ->icon('heroicon-o-check-circle')
                 ->color('success'),
+
+            Stat::make('Active Members', number_format($activeMembers30))
+                ->description('Used the site in the last 30 days')
+                ->icon('heroicon-o-bolt')
+                ->color('primary'),
 
             Stat::make('New Today', number_format($newToday))
                 ->description('Registered today')

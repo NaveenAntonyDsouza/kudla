@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Filament\Pages\DeleteRequests;
-use App\Filament\Pages\EmailActivity;
 use App\Filament\Pages\FollowUpReport;
 use App\Filament\Pages\UnlistedCommunities;
 use App\Filament\Pages\WhatsAppInbox;
@@ -144,11 +143,12 @@ class WorkQueue
                 'measure' => fn () => $pending(Subscription::where('payment_status', 'failed')->where('created_at', '>=', now()->subDays(7))),
             ],
             'bounced' => [
-                'label' => 'Email addresses that bounced, last 30 days (ask for the right one)',
+                'label' => 'Members whose email bounced (phone them for the right address)',
                 'target_hours' => 24 * 7, 'target' => '1 week',
-                'can' => fn () => EmailActivity::canAccess(),
-                'url' => self::url(fn () => EmailActivity::getUrl()),
-                'measure' => fn () => $pending(User::whereNull('staff_role_id')->where('email_undeliverable_at', '>=', now()->subDays(30)), 'email_undeliverable_at'),
+                'can' => fn () => UserResource::canAccess(),
+                'url' => self::url(fn () => UserResource::getUrl('index', ['tableFilters' => ['email_bounced' => ['isActive' => true]]])),
+                // live members only; the line clears when their address is corrected
+                'measure' => fn () => $pending(User::whereNull('staff_role_id')->whereNotNull('email_undeliverable_at')->whereHas('profile'), 'email_undeliverable_at'),
             ],
             'unlisted' => [
                 'label' => 'Castes and religions typed in by members (add to the lists)',

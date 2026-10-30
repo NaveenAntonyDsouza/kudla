@@ -454,6 +454,13 @@ class UserResource extends Resource
                     ->query(fn (Builder $query) => $query->whereHas('primaryPhoto'))
                     ->toggle(),
 
+                // Their email bounced: no email reaches them until staff get the right
+                // address (Today → Work Queue links here, Oct 2026)
+                Tables\Filters\Filter::make('email_bounced')
+                    ->label('Email bounced')
+                    ->query(fn (Builder $query) => $query->whereHas('user', fn ($u) => $u->whereNotNull('email_undeliverable_at')))
+                    ->toggle(),
+
                 // Members who typed an "Other" caste / religion / denomination —
                 // the queue of values to add to the managed dropdowns. The Religion
                 // column already shows the typed value (display_caste / _denomination).
