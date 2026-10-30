@@ -27,8 +27,8 @@ class WhatsAppInbox extends Page
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'WhatsApp Inbox';
     protected static ?string $title = 'WhatsApp Inbox';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 9;
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
+    protected static ?int $navigationSort = 2;
     protected string $view = 'filament.pages.whatsapp-inbox';
 
     #[Url(as: 'chat')]

@@ -18,8 +18,8 @@ class NotificationTemplateResource extends Resource
     protected static ?string $navigationLabel = 'Notification Templates';
     protected static ?string $modelLabel = 'Notification Template';
     protected static ?string $pluralModelLabel = 'Notification Templates';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 5;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 10;
 
     public static function shouldRegisterNavigation(): bool
     {

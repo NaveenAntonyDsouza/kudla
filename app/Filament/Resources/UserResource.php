@@ -27,7 +27,7 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'All Members';
     protected static ?string $modelLabel = 'User';
     protected static ?string $pluralModelLabel = 'Users';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
+    protected static \UnitEnum|string|null $navigationGroup = 'Members';
     protected static ?int $navigationSort = 1;
 
     public static function shouldRegisterNavigation(): bool

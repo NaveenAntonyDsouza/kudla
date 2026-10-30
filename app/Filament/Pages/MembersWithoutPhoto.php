@@ -40,8 +40,8 @@ class MembersWithoutPhoto extends Page implements HasTable
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Members Without Photo';
     protected static ?string $title = 'Members Without Photo';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 8;
+    protected static \UnitEnum|string|null $navigationGroup = 'Members';
+    protected static ?int $navigationSort = 3;
     protected string $view = 'filament.pages.members-without-photo';
 
     public static function shouldRegisterNavigation(): bool

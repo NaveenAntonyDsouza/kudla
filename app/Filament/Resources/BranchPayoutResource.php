@@ -23,8 +23,8 @@ class BranchPayoutResource extends Resource
     protected static ?string $navigationLabel = 'Branch Payouts';
     protected static ?string $modelLabel = 'Branch Payout';
     protected static ?string $pluralModelLabel = 'Branch Payouts';
-    protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
-    protected static ?int $navigationSort = 5;
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
+    protected static ?int $navigationSort = 9;
 
     public static function shouldRegisterNavigation(): bool
     {

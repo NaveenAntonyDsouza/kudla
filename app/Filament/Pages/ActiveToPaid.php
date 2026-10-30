@@ -12,8 +12,8 @@ class ActiveToPaid extends Page
 {
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Active to Paid';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
+    protected static ?int $navigationSort = 6;
     protected static ?string $title = 'Active to Paid — Conversion Targets';
     protected string $view = 'filament.pages.active-to-paid';
 

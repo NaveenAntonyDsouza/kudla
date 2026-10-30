@@ -92,14 +92,15 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => Color::Orange,
             ])
             ->navigationGroups([
-                NavigationGroup::make('Dashboard')->icon('heroicon-o-home')->collapsed(),
-                NavigationGroup::make('User Management')->icon('heroicon-o-users')->collapsed(),
-                NavigationGroup::make('Verification')->icon('heroicon-o-shield-check')->collapsed(),
-                NavigationGroup::make('Membership & Payments')->icon('heroicon-o-credit-card')->collapsed(),
-                NavigationGroup::make('Interests & Reports')->icon('heroicon-o-heart')->collapsed(),
-                NavigationGroup::make('Content Management')->icon('heroicon-o-document-text')->collapsed(),
-                NavigationGroup::make('Reports')->icon('heroicon-o-chart-bar')->collapsed(),
-                NavigationGroup::make('Settings')->icon('heroicon-o-cog-6-tooth')->collapsed(),
+                // Seven groups, one job each (admin audit, Oct 2026). Today — the work
+                // waiting for someone — is open; the rest start folded.
+                NavigationGroup::make('Today')->icon('heroicon-o-inbox-stack'),
+                NavigationGroup::make('Members')->icon('heroicon-o-users')->collapsed(),
+                NavigationGroup::make('Engagement')->icon('heroicon-o-heart')->collapsed(),
+                NavigationGroup::make('Money')->icon('heroicon-o-credit-card')->collapsed(),
+                NavigationGroup::make('Site & Content')->icon('heroicon-o-document-text')->collapsed(),
+                NavigationGroup::make('Insights')->icon('heroicon-o-chart-bar')->collapsed(),
+                NavigationGroup::make('Admin & Security')->icon('heroicon-o-lock-closed')->collapsed(),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

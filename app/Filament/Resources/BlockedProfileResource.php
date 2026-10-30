@@ -19,8 +19,8 @@ class BlockedProfileResource extends Resource
     protected static ?string $navigationLabel = 'Blocked Users';
     protected static ?string $modelLabel = 'Block';
     protected static ?string $pluralModelLabel = 'Blocked Users';
-    protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Members';
+    protected static ?int $navigationSort = 4;
 
     public static function shouldRegisterNavigation(): bool
     {

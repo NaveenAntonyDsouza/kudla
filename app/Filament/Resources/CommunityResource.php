@@ -18,8 +18,8 @@ class CommunityResource extends Resource
     protected static ?string $navigationLabel = 'Communities';
     protected static ?string $modelLabel = 'Community';
     protected static ?string $pluralModelLabel = 'Communities';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 1;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 8;
 
     public static function shouldRegisterNavigation(): bool
     {

@@ -17,8 +17,8 @@ class StorageSettings extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Photo Storage';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 7;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 10;
     protected static ?string $title = 'Photo Storage Driver';
     protected string $view = 'filament.pages.storage-settings';
 

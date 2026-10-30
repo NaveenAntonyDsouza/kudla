@@ -20,8 +20,8 @@ class BulkImportResource extends Resource
     protected static ?string $navigationLabel = 'Bulk Import';
     protected static ?string $modelLabel = 'Bulk Import';
     protected static ?string $pluralModelLabel = 'Bulk Imports';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 8;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 11;
 
     public static function shouldRegisterNavigation(): bool
     {

@@ -20,8 +20,8 @@ class EmailTemplateResource extends Resource
     protected static ?string $navigationLabel = 'Email Templates';
     protected static ?string $modelLabel = 'Email Template';
     protected static ?string $pluralModelLabel = 'Email Templates';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 4;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 9;
 
     public static function shouldRegisterNavigation(): bool
     {

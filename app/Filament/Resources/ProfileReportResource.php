@@ -21,8 +21,8 @@ class ProfileReportResource extends Resource
     protected static ?string $navigationLabel = 'Profile Reports';
     protected static ?string $modelLabel = 'Report';
     protected static ?string $pluralModelLabel = 'Profile Reports';
-    protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
-    protected static ?int $navigationSort = 2;
+    protected static \UnitEnum|string|null $navigationGroup = 'Today';
+    protected static ?int $navigationSort = 6;
 
     public static function shouldRegisterNavigation(): bool
     {

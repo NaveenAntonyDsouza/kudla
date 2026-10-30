@@ -23,6 +23,12 @@ class AdminModules
     /** Staff Targets, Staff Performance report, target progress widget. */
     public const STAFF_TARGETS = 'module_staff_targets_enabled';
 
+    /** Advertisements (banner ads sold to businesses); no site had one in Oct 2026. */
+    public const ADVERTISEMENTS = 'module_advertisements_enabled';
+
+    /** Recommend Matches (staff suggest matches to a member: assisted matchmaking). */
+    public const RECOMMENDATIONS = 'module_recommendations_enabled';
+
     public static function branches(): bool
     {
         return SiteSetting::getValue(self::BRANCHES, '0') === '1';
@@ -36,6 +42,16 @@ class AdminModules
     public static function staffTargets(): bool
     {
         return SiteSetting::getValue(self::STAFF_TARGETS, '0') === '1';
+    }
+
+    public static function advertisements(): bool
+    {
+        return SiteSetting::getValue(self::ADVERTISEMENTS, '0') === '1';
+    }
+
+    public static function recommendations(): bool
+    {
+        return SiteSetting::getValue(self::RECOMMENDATIONS, '0') === '1';
     }
 
     /**

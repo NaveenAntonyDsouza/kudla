@@ -22,8 +22,8 @@ class BranchResource extends Resource
     protected static ?string $navigationLabel = 'Branches';
     protected static ?string $modelLabel = 'Branch';
     protected static ?string $pluralModelLabel = 'Branches';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 12;
 
     public static function shouldRegisterNavigation(): bool
     {

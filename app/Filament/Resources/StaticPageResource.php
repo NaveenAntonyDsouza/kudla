@@ -18,8 +18,8 @@ class StaticPageResource extends Resource
     protected static ?string $navigationLabel = 'Static Pages';
     protected static ?string $modelLabel = 'Page';
     protected static ?string $pluralModelLabel = 'Static Pages';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 6;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 4;
 
     public static function shouldRegisterNavigation(): bool
     {

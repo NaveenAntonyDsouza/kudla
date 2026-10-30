@@ -13,8 +13,8 @@ class EmailActivity extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Email Activity';
-    protected static \UnitEnum|string|null $navigationGroup = 'Reports';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
+    protected static ?int $navigationSort = 7;
     protected static ?string $title = 'Email Activity';
     protected string $view = 'filament.pages.email-activity';
 

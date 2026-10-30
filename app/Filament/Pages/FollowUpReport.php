@@ -16,7 +16,7 @@ class FollowUpReport extends Page
 {
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Follow-up Report';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
+    protected static \UnitEnum|string|null $navigationGroup = 'Today';
     protected static ?int $navigationSort = 7;
     protected static ?string $title = 'Follow-up Report';
     protected string $view = 'filament.pages.follow-up-report';

@@ -24,8 +24,8 @@ class ContactSubmissionResource extends Resource
     protected static ?string $navigationLabel = 'Contact Inbox';
     protected static ?string $modelLabel = 'Inquiry';
     protected static ?string $pluralModelLabel = 'Contact Inbox';
-    protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
-    protected static ?int $navigationSort = 4;
+    protected static \UnitEnum|string|null $navigationGroup = 'Today';
+    protected static ?int $navigationSort = 5;
 
     public static function shouldRegisterNavigation(): bool
     {

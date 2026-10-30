@@ -11,8 +11,8 @@ class ReengagementDashboard extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Re-engagement';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 9;
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
+    protected static ?int $navigationSort = 5;
     protected static ?string $title = 'Re-engagement Emails';
     protected string $view = 'filament.pages.reengagement-dashboard';
 

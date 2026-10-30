@@ -20,8 +20,8 @@ class BlogPostResource extends Resource
     protected static ?string $navigationLabel = 'Blog Posts';
     protected static ?string $modelLabel = 'Blog Post';
     protected static ?string $pluralModelLabel = 'Blog Posts';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 5;
 
     public static function shouldRegisterNavigation(): bool
     {

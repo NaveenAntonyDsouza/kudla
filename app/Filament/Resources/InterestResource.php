@@ -19,7 +19,7 @@ class InterestResource extends Resource
     protected static ?string $navigationLabel = 'All Interests';
     protected static ?string $modelLabel = 'Interest';
     protected static ?string $pluralModelLabel = 'Interests';
-    protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
     protected static ?int $navigationSort = 1;
 
     public static function shouldRegisterNavigation(): bool

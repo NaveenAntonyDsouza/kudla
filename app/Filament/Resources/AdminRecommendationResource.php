@@ -20,12 +20,12 @@ class AdminRecommendationResource extends Resource
     protected static ?string $navigationLabel = 'Recommend Matches';
     protected static ?string $modelLabel = 'Recommendation';
     protected static ?string $pluralModelLabel = 'Recommendations';
-    protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
-    protected static ?int $navigationSort = 5;
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
+    protected static ?int $navigationSort = 8;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return \App\Support\Permissions::can('admin_recommendation');
+        return \App\Support\AdminModules::recommendations() && \App\Support\Permissions::can('admin_recommendation');
     }
 
     /**
@@ -34,7 +34,7 @@ class AdminRecommendationResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return \App\Support\Permissions::can('admin_recommendation');
+        return \App\Support\AdminModules::recommendations() && \App\Support\Permissions::can('admin_recommendation');
     }
 
     public static function canViewAny(): bool

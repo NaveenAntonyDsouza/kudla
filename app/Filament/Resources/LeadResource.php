@@ -33,8 +33,8 @@ class LeadResource extends Resource
     protected static ?string $navigationLabel = 'Leads';
     protected static ?string $modelLabel = 'Lead';
     protected static ?string $pluralModelLabel = 'Leads';
-    protected static \UnitEnum|string|null $navigationGroup = 'Leads';
-    protected static ?int $navigationSort = 1;
+    protected static \UnitEnum|string|null $navigationGroup = 'Members';
+    protected static ?int $navigationSort = 6;
 
     public static function shouldRegisterNavigation(): bool
     {

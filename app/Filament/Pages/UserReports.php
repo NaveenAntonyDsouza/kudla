@@ -13,8 +13,8 @@ class UserReports extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'User Reports';
-    protected static \UnitEnum|string|null $navigationGroup = 'Reports';
-    protected static ?int $navigationSort = 1;
+    protected static \UnitEnum|string|null $navigationGroup = 'Insights';
+    protected static ?int $navigationSort = 3;
     protected static ?string $title = 'User Reports';
     protected string $view = 'filament.pages.user-reports';
 

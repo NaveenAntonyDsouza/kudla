@@ -16,8 +16,8 @@ class GatewaySettings extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Email, SMS & Payment';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 7;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 8;
     protected static ?string $title = 'Email, SMS & Payment Settings';
     protected string $view = 'filament.pages.gateway-settings';
 

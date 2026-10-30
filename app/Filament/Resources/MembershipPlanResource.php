@@ -20,7 +20,7 @@ class MembershipPlanResource extends Resource
     protected static ?string $navigationLabel = 'Subscription Plans';
     protected static ?string $modelLabel = 'Plan';
     protected static ?string $pluralModelLabel = 'Subscription Plans';
-    protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
     protected static ?int $navigationSort = 1;
 
     public static function shouldRegisterNavigation(): bool

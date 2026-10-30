@@ -21,7 +21,7 @@ class AdvancedUserSearch extends Page implements HasForms
 
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Advanced Search';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
+    protected static \UnitEnum|string|null $navigationGroup = 'Members';
     protected static ?int $navigationSort = 2;
     protected string $view = 'filament.pages.advanced-user-search';
 

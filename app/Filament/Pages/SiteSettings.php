@@ -18,7 +18,7 @@ class SiteSettings extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'General Settings';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
     protected static ?int $navigationSort = 1;
     protected static ?string $title = 'General Settings';
     protected string $view = 'filament.pages.site-settings';
@@ -53,6 +53,8 @@ class SiteSettings extends Page implements HasForms
             AdminModules::BRANCHES => ($settings[AdminModules::BRANCHES] ?? '0') === '1',
             AdminModules::LEADS => ($settings[AdminModules::LEADS] ?? '0') === '1',
             AdminModules::STAFF_TARGETS => ($settings[AdminModules::STAFF_TARGETS] ?? '0') === '1',
+            AdminModules::ADVERTISEMENTS => ($settings[AdminModules::ADVERTISEMENTS] ?? '0') === '1',
+            AdminModules::RECOMMENDATIONS => ($settings[AdminModules::RECOMMENDATIONS] ?? '0') === '1',
 
             // Alerts
             'error_alert_email' => $settings['error_alert_email'] ?? '',
@@ -161,6 +163,14 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::STAFF_TARGETS)
                             ->label('Staff targets & performance')
                             ->helperText('Monthly targets and bonuses per staff member, and the Staff Performance report.'),
+
+                        Forms\Components\Toggle::make(AdminModules::ADVERTISEMENTS)
+                            ->label('Advertisements')
+                            ->helperText('Banner adverts sold to businesses (Site & Content → Advertisements).'),
+
+                        Forms\Components\Toggle::make(AdminModules::RECOMMENDATIONS)
+                            ->label('Recommend matches')
+                            ->helperText('Staff suggest matches to a member, for assisted matchmaking (Engagement → Recommend Matches).'),
                     ])
                     ->columns(3),
 
@@ -463,6 +473,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_documents',
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
+            AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS,
             'admin_two_step_required',
         ];
 

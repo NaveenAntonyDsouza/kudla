@@ -15,8 +15,8 @@ class MatchWeightConfig extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Match Weights';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 5;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 13;
     protected static ?string $title = 'Match Weight Configuration';
     protected string $view = 'filament.pages.match-weight-config';
 

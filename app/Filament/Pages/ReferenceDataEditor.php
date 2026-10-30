@@ -15,8 +15,8 @@ class ReferenceDataEditor extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Reference Data';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 7;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 11;
     protected static ?string $title = 'Reference Data Editor';
     protected string $view = 'filament.pages.reference-data-editor';
 

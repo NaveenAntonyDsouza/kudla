@@ -17,8 +17,8 @@ class SeoSettings extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'SEO Settings';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 4;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 3;
     protected static ?string $title = 'SEO Settings';
     protected string $view = 'filament.pages.seo-settings';
 

@@ -19,7 +19,7 @@ class ThemeBranding extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Theme & Branding';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
     protected static ?int $navigationSort = 2;
     protected static ?string $title = 'Theme & Branding';
     protected string $view = 'filament.pages.theme-branding';

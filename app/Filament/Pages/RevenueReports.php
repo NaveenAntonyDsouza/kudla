@@ -13,8 +13,8 @@ class RevenueReports extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Revenue Reports';
-    protected static \UnitEnum|string|null $navigationGroup = 'Reports';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
+    protected static ?int $navigationSort = 8;
     protected static ?string $title = 'Revenue Reports';
     protected string $view = 'filament.pages.revenue-reports';
 

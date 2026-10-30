@@ -11,8 +11,8 @@ class WeeklyMatchesDashboard extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Weekly Matches';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 10;
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
+    protected static ?int $navigationSort = 4;
     protected static ?string $title = 'Weekly Match Suggestion Emails';
     protected string $view = 'filament.pages.weekly-matches-dashboard';
 

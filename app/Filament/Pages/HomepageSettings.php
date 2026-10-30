@@ -16,8 +16,8 @@ class HomepageSettings extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Homepage Content';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 1;
     protected static ?string $title = 'Homepage Content';
     protected string $view = 'filament.pages.homepage-settings';
 

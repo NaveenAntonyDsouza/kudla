@@ -19,8 +19,8 @@ class DocumentApprovalResource extends Resource
     protected static ?string $navigationLabel = 'Horoscope / Baptism';
     protected static ?string $modelLabel = 'Document';
     protected static ?string $pluralModelLabel = 'Documents';
-    protected static \UnitEnum|string|null $navigationGroup = 'Verification';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Today';
+    protected static ?int $navigationSort = 4;
 
     public static function shouldRegisterNavigation(): bool
     {

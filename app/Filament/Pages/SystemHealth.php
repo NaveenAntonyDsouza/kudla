@@ -13,8 +13,8 @@ class SystemHealth extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'System Health';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 6;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 7;
     protected static ?string $title = 'System Health & Maintenance';
     protected string $view = 'filament.pages.system-health';
 

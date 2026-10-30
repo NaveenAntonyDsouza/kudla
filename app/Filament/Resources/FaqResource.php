@@ -18,8 +18,8 @@ class FaqResource extends Resource
     protected static ?string $navigationLabel = 'FAQs';
     protected static ?string $modelLabel = 'FAQ';
     protected static ?string $pluralModelLabel = 'FAQs';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 2;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 7;
 
     public static function shouldRegisterNavigation(): bool
     {

@@ -10,8 +10,8 @@ class ExpiredMembers extends Page
 {
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Expired Members';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 5;
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
+    protected static ?int $navigationSort = 7;
     protected static ?string $title = 'Expired & Expiring Memberships';
     protected string $view = 'filament.pages.expired-members';
 

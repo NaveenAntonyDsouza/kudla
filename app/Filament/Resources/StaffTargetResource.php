@@ -22,8 +22,8 @@ class StaffTargetResource extends Resource
     protected static ?string $navigationLabel = 'Staff Targets';
     protected static ?string $modelLabel = 'Staff Target';
     protected static ?string $pluralModelLabel = 'Staff Targets';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 4;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 13;
 
     public static function shouldRegisterNavigation(): bool
     {

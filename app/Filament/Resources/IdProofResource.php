@@ -19,8 +19,8 @@ class IdProofResource extends Resource
     protected static ?string $navigationLabel = 'ID Verification';
     protected static ?string $modelLabel = 'ID Proof';
     protected static ?string $pluralModelLabel = 'ID Proofs';
-    protected static \UnitEnum|string|null $navigationGroup = 'Verification';
-    protected static ?int $navigationSort = 2;
+    protected static \UnitEnum|string|null $navigationGroup = 'Today';
+    protected static ?int $navigationSort = 3;
 
     public static function shouldRegisterNavigation(): bool
     {

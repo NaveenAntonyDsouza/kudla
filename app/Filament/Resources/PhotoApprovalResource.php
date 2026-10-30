@@ -24,8 +24,8 @@ class PhotoApprovalResource extends Resource
     protected static ?string $navigationLabel = 'Photo Approvals';
     protected static ?string $modelLabel = 'Photo';
     protected static ?string $pluralModelLabel = 'Photo Approvals';
-    protected static \UnitEnum|string|null $navigationGroup = 'Verification';
-    protected static ?int $navigationSort = 1;
+    protected static \UnitEnum|string|null $navigationGroup = 'Today';
+    protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool
     {

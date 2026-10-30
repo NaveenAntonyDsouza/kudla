@@ -20,8 +20,8 @@ class TestimonialResource extends Resource
     protected static ?string $navigationLabel = 'Success Stories';
     protected static ?string $modelLabel = 'Success Story';
     protected static ?string $pluralModelLabel = 'Success Stories';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 3;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 6;
 
     public static function shouldRegisterNavigation(): bool
     {

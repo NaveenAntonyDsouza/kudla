@@ -12,8 +12,8 @@ class UnlistedCommunities extends Page
 {
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Unlisted Caste / Religion';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 8;
+    protected static \UnitEnum|string|null $navigationGroup = 'Members';
+    protected static ?int $navigationSort = 5;
     protected static ?string $title = 'Unlisted Caste / Religion entries';
     protected string $view = 'filament.pages.unlisted-communities';
 

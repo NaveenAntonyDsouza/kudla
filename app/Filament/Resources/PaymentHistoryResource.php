@@ -19,7 +19,7 @@ class PaymentHistoryResource extends Resource
     protected static ?string $navigationLabel = 'Payment History';
     protected static ?string $modelLabel = 'Payment';
     protected static ?string $pluralModelLabel = 'Payment History';
-    protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
     protected static ?int $navigationSort = 3;
 
     public static function shouldRegisterNavigation(): bool

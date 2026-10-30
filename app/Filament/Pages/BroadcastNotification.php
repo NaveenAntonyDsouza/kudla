@@ -18,8 +18,8 @@ class BroadcastNotification extends Page implements HasForms
 
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Broadcast Notification';
-    protected static \UnitEnum|string|null $navigationGroup = 'Interests & Reports';
-    protected static ?int $navigationSort = 6;
+    protected static \UnitEnum|string|null $navigationGroup = 'Engagement';
+    protected static ?int $navigationSort = 3;
     protected static ?string $title = 'Broadcast Notification';
     protected string $view = 'filament.pages.broadcast-notification';
 

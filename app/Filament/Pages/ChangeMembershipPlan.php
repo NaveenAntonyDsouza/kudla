@@ -22,8 +22,8 @@ class ChangeMembershipPlan extends Page implements HasForms
 
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Change Plan';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 4;
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
+    protected static ?int $navigationSort = 5;
     protected static ?string $title = 'Change Membership Plan';
     protected string $view = 'filament.pages.change-membership-plan';
 

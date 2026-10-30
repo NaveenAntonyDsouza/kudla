@@ -18,8 +18,8 @@ class LoginHistoryResource extends Resource
     protected static ?string $navigationLabel = 'Login History';
     protected static ?string $modelLabel = 'Login';
     protected static ?string $pluralModelLabel = 'Login History';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 9;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 5;
 
     public static function canCreate(): bool
     {

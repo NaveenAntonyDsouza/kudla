@@ -19,7 +19,7 @@ class CouponResource extends Resource
     protected static ?string $navigationLabel = 'Discount Coupons';
     protected static ?string $modelLabel = 'Coupon';
     protected static ?string $pluralModelLabel = 'Coupons';
-    protected static \UnitEnum|string|null $navigationGroup = 'Membership & Payments';
+    protected static \UnitEnum|string|null $navigationGroup = 'Money';
     protected static ?int $navigationSort = 4;
 
     public static function shouldRegisterNavigation(): bool

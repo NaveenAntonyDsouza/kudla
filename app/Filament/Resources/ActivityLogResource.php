@@ -18,8 +18,8 @@ class ActivityLogResource extends Resource
     protected static ?string $navigationLabel = 'Activity Log';
     protected static ?string $modelLabel = 'Activity Log';
     protected static ?string $pluralModelLabel = 'Activity Logs';
-    protected static \UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 8;
+    protected static \UnitEnum|string|null $navigationGroup = 'Admin & Security';
+    protected static ?int $navigationSort = 4;
 
     public static function canCreate(): bool
     {

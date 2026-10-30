@@ -18,12 +18,12 @@ class AdvertisementResource extends Resource
     protected static ?string $navigationLabel = 'Advertisements';
     protected static ?string $modelLabel = 'Advertisement';
     protected static ?string $pluralModelLabel = 'Advertisements';
-    protected static \UnitEnum|string|null $navigationGroup = 'Content Management';
-    protected static ?int $navigationSort = 8;
+    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
+    protected static ?int $navigationSort = 15;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return \App\Support\Permissions::can('manage_content');
+        return \App\Support\AdminModules::advertisements() && \App\Support\Permissions::can('manage_content');
     }
 
     /**
@@ -32,7 +32,7 @@ class AdvertisementResource extends Resource
      */
     public static function canAccess(): bool
     {
-        return \App\Support\Permissions::can('manage_content');
+        return \App\Support\AdminModules::advertisements() && \App\Support\Permissions::can('manage_content');
     }
 
     public static function canViewAny(): bool
