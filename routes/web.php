@@ -36,6 +36,11 @@ Route::get('/health/jobs', fn () => response()->json([
     'last_run' => \Illuminate\Support\Facades\Cache::get('scheduler:last-run'),
 ])->header('Cache-Control', 'no-store'))->middleware('throttle:30,1')->name('health.jobs');
 
+// Admin Insights, Oct 2026: Site Overview and User Reports became Members Overview;
+// old bookmarks still land there
+Route::permanentRedirect('/' . config('app.admin_path', 'admin') . '/overview', '/' . config('app.admin_path', 'admin') . '/members-overview');
+Route::permanentRedirect('/' . config('app.admin_path', 'admin') . '/user-reports', '/' . config('app.admin_path', 'admin') . '/members-overview');
+
 // Static pages served from database (editable from admin panel)
 Route::get('/privacy-policy', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'privacy-policy')->name('privacy');
 Route::get('/terms-condition', [\App\Http\Controllers\StaticPageController::class, 'show'])->defaults('slug', 'terms-condition')->name('terms');

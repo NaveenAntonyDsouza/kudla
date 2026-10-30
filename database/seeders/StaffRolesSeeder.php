@@ -169,6 +169,9 @@ class StaffRolesSeeder extends Seeder
                 'advanced_search' => 'yes',
                 'match_making' => 'all',
                 'admin_recommendation' => 'yes',
+                // Insights (owner, 30 Oct 2026) — not the CSV downloads (export_member_data)
+                'view_user_reports' => 'yes',
+                'view_engagement_reports' => 'yes',
             ],
 
             // Branch Staff: own branch only

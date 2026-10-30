@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\DB;
 class EngagementReports extends Page
 {
     protected static \BackedEnum|string|null $navigationIcon = null;
-    protected static ?string $navigationLabel = 'Engagement Reports';
+    protected static ?string $navigationLabel = 'Engagement';
     protected static \UnitEnum|string|null $navigationGroup = 'Insights';
-    protected static ?int $navigationSort = 6;
-    protected static ?string $title = 'Engagement Reports';
+    protected static ?int $navigationSort = 5;
+    protected static ?string $title = 'Engagement';
     protected string $view = 'filament.pages.engagement-reports';
 
     public array $stats = [];
@@ -26,6 +26,7 @@ class EngagementReports extends Page
     public array $mostShortlisted = [];
     public array $mostActiveSenders = [];
     public array $chatStats = [];
+    public array $byGender = [];
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -50,6 +51,12 @@ class EngagementReports extends Page
         $this->loadMostShortlisted();
         $this->loadMostActiveSenders();
         $this->loadChatStats();
+        try {
+            // men and women: who sends, who answers (Oct 2026)
+            $this->byGender = \App\Support\MemberMix::interestsByGender(90);
+        } catch (\Throwable) {
+            $this->byGender = [];
+        }
     }
 
     /**
@@ -199,6 +206,9 @@ class EngagementReports extends Page
 
     public function exportCsv()
     {
+        // members' names and interest messages: its own permission (Oct 2026)
+        abort_unless(\App\Support\Permissions::can('export_member_data'), 403);
+
         return CsvExportService::exportInterests();
     }
 }

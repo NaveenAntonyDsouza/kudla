@@ -94,6 +94,9 @@ return [
         'view_engagement_reports' => ['label' => 'View Engagement Reports', 'type' => 'simple', 'category' => 'reports'],
         'view_revenue_reports' => ['label' => 'View Revenue Reports', 'type' => 'simple', 'category' => 'reports'],
         'view_activity_log' => ['label' => 'View Activity Log', 'type' => 'simple', 'category' => 'reports'],
+        // Oct 2026: the CSV downloads hold every member's email and phone, or their
+        // interest messages, so they have their own permission (owner only by default)
+        'export_member_data' => ['label' => 'Export Member Lists (CSV)', 'type' => 'simple', 'category' => 'reports'],
 
         // ── Settings & System (10 simple) ──
         'manage_content' => ['label' => 'Manage Content (Pages, FAQs, Stories)', 'type' => 'simple', 'category' => 'settings'],

@@ -30,6 +30,11 @@ class SignupSources extends Page
         return Permissions::can('view_engagement_reports');
     }
 
+    protected function getFooterWidgets(): array
+    {
+        return [\App\Filament\Widgets\SourcesByMonthChart::class];
+    }
+
     protected function getViewData(): array
     {
         $days = in_array($this->days, [30, 90, 365], true) ? $this->days : 90;

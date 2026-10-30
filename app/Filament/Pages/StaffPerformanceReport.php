@@ -12,7 +12,7 @@ class StaffPerformanceReport extends Page
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Staff Performance';
     protected static \UnitEnum|string|null $navigationGroup = 'Insights';
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 6;
     protected static ?string $title = 'Staff Performance Report';
     protected string $view = 'filament.pages.staff-performance-report';
 

@@ -36,7 +36,8 @@ class CasteDenominationChart extends ChartWidget
     {
         $filter = $this->filter;
 
-        $query = ReligiousInfo::query();
+        // live profiles only (Oct 2026)
+        $query = ReligiousInfo::query()->whereHas('profile', fn ($q) => $q->where('is_active', true));
 
         if ($filter === 'all') {
             // Combined: show caste/denomination across all religions
@@ -77,18 +78,14 @@ class CasteDenominationChart extends ChartWidget
                 ->get();
         }
 
-        $colors = [
-            '#8B1D91', '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-            '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#84CC16',
-            '#06B6D4', '#A855F7', '#D946EF', '#0EA5E9', '#64748B',
-        ];
-
         return [
             'datasets' => [
                 [
                     'label' => 'Profiles',
                     'data' => $data->pluck('total')->toArray(),
-                    'backgroundColor' => array_slice($colors, 0, $data->count()),
+                    // one series, one colour (a colour per bar suggested a meaning it didn't have)
+                    'backgroundColor' => \App\Support\ChartColors::SINGLE,
+                    'borderRadius' => 4,
                     'borderWidth' => 0,
                 ],
             ],

@@ -28,11 +28,11 @@ it('puts every menu page in one of the seven groups', function () {
     }
 });
 
-it('opens on Today, with the old dashboard under Insights', function () {
+it('opens on Today, with the members charts under Insights', function () {
     expect(\App\Filament\Pages\Dashboard::getNavigationLabel())->toBe('Work Queue')
         ->and((new \App\Filament\Pages\Dashboard)->getTitle())->toBe('Today')
         ->and((new \App\Filament\Pages\Dashboard)->getWidgets())->toContain(\App\Filament\Widgets\TodayQueue::class)
-        ->and((new \App\Filament\Pages\SiteOverview)->getWidgets())->toContain(\App\Filament\Widgets\StatsOverview::class);
+        ->and((new \App\Filament\Pages\MembersOverview)->getWidgets())->toContain(\App\Filament\Widgets\MembersStats::class, \App\Filament\Widgets\GenderBalanceChart::class);
 });
 
 describe('work queue', function () {

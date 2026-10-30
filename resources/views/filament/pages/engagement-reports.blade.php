@@ -19,6 +19,45 @@
         @endforeach
     </div>
 
+    {{-- Men and women: who sends interests and who answers (Oct 2026). Colours = the Insights charts. --}}
+    @if(!empty($byGender))
+    @php
+        $pct = fn ($v) => $v === null ? '—' : $v . '%';
+        $dot = fn ($c) => '<span style="display:inline-block;width:.6rem;height:.6rem;border-radius:9999px;background:' . $c . ';margin-right:.35rem;"></span>';
+    @endphp
+    <div style="font-size: 14px; font-weight: 600; margin: 4px 0 10px;">Men and women</div>
+    <div style="background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; overflow-x: auto;">
+        <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <thead>
+                <tr style="opacity: .7; font-size: 12px; text-align: right;">
+                    <th style="text-align: left; padding: 6px 6px 6px 0; font-weight: 600;"></th>
+                    <th style="padding: 6px; font-weight: 600;">{!! $dot(\App\Support\ChartColors::MEN) !!}Sent by men</th>
+                    <th style="padding: 6px 0 6px 6px; font-weight: 600;">{!! $dot(\App\Support\ChartColors::WOMEN) !!}Sent by women</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ([
+                    ['Interests sent, last 90 days', fn ($g) => number_format($byGender[$g]['sent'])],
+                    ['Answered (accepted or declined)', fn ($g) => $pct($byGender[$g]['answered_pct'])],
+                    ['Accepted, of those answered', fn ($g) => $pct($byGender[$g]['accepted_pct'])],
+                ] as [$label, $value])
+                    <tr style="border-top: 1px solid rgba(128,128,128,0.15);">
+                        <td style="padding: 7px 6px 7px 0;">{{ $label }}</td>
+                        <td style="padding: 7px 6px; text-align: right; font-weight: 700;">{{ $value('male') }}</td>
+                        <td style="padding: 7px 0 7px 6px; text-align: right; font-weight: 700;">{{ $value('female') }}</td>
+                    </tr>
+                @endforeach
+                <tr style="border-top: 1px solid rgba(128,128,128,0.15);">
+                    <td style="padding: 7px 6px 7px 0;">Interests each active member received, last 30 days</td>
+                    <td style="padding: 7px 6px; text-align: right; font-weight: 700;">{{ $byGender['male']['received_per_active'] ?? '—' }} <span style="font-weight: 400; opacity: .6;">per man</span></td>
+                    <td style="padding: 7px 0 7px 6px; text-align: right; font-weight: 700;">{{ $byGender['female']['received_per_active'] ?? '—' }} <span style="font-weight: 400; opacity: .6;">per woman</span></td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="font-size: 11px; opacity: .6; margin-top: 8px;">Withdrawn interests left out. "Active" = used the site in the last 30 days. The site's men-to-women balance is on Insights → Members Overview.</div>
+    </div>
+    @endif
+
     {{-- Chats & where interests are sent from — last 30 days (Oct 2026) --}}
     @if(!empty($chatStats))
     <div style="font-size: 14px; font-weight: 600; margin: 4px 0 10px;">Last 30 days — chats and interest buttons</div>
@@ -105,12 +144,14 @@
         </div>
     </div>
 
-    {{-- Export --}}
+    {{-- Export (own permission: members' names and messages) --}}
+    @if (\App\Support\Permissions::can('export_member_data'))
     <div style="margin-top: 16px;">
         <x-filament::button wire:click="exportCsv" icon="heroicon-o-arrow-down-tray">
             Export Interests CSV
         </x-filament::button>
     </div>
+    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script>

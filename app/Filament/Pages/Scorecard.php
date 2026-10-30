@@ -24,6 +24,21 @@ class Scorecard extends Page
         return Permissions::can('view_engagement_reports');
     }
 
+    /** Three small charts under the table: the last 12 weeks, each measure on its own scale. */
+    protected function getFooterWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\WeeklyTrendChart::make(['metric' => 'signups']),
+            \App\Filament\Widgets\WeeklyTrendChart::make(['metric' => 'interests']),
+            \App\Filament\Widgets\WeeklyTrendChart::make(['metric' => 'connections']),
+        ];
+    }
+
+    public function getFooterWidgetsColumns(): int|array
+    {
+        return ['default' => 1, 'lg' => 3];
+    }
+
     protected function getViewData(): array
     {
         $showMoney = Permissions::can('view_payment_history');

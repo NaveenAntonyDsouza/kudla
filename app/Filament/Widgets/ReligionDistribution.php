@@ -22,17 +22,21 @@ class ReligionDistribution extends ChartWidget
 
     protected function getData(): array
     {
-        return Cache::remember('admin_religion_dist', 300, function () {
+        // live profiles only (deleted members' rows used to count too), validated colours (Oct 2026)
+        return Cache::remember('admin_religion_dist_v2', 300, function () {
             $religions = ReligiousInfo::select('religion', DB::raw('COUNT(*) as total'))
-                ->whereNotNull('religion')
+                ->whereHas('profile', fn ($q) => $q->where('is_active', true))
+                ->whereNotNull('religion')->where('religion', '!=', '')
                 ->groupBy('religion')
                 ->orderByDesc('total')
                 ->get();
 
-            $colors = [
-                '#8B1D91', '#3B82F6', '#10B981', '#F59E0B',
-                '#EF4444', '#6366F1', '#EC4899', '#14B8A6',
-            ];
+            // seven colours in a fixed order; an eighth religion and beyond fold into "Other"
+            if ($religions->count() > 7) {
+                $rest = $religions->slice(6)->sum('total');
+                $religions = $religions->take(6)->push((object) ['religion' => 'Other', 'total' => $rest]);
+            }
+            $colors = \App\Support\ChartColors::SERIES;
 
             return [
                 'datasets' => [

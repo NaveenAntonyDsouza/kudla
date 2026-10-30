@@ -14,7 +14,7 @@ class RegistrationChart extends ChartWidget
     protected static ?int $sort = 2;
     protected static bool $isLazy = true;
     protected ?string $maxHeight = '300px';
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = 'full';
 
     public ?string $filter = '30d';
 
