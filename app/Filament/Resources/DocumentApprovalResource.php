@@ -26,15 +26,24 @@ class DocumentApprovalResource extends Resource
      * Named after what this site's members upload (Oct 2026): Christians a
      * baptism certificate, everyone else a horoscope. "Horoscope / Baptism"
      * only where the site has both (Kudla); "Baptism Certificates" on the
-     * Christian sites; "Horoscopes" where there are no Christians.
+     * Christian sites; "Horoscopes" where there are no Christians. Counts
+     * live members; a site with none yet goes by its community list.
      */
     public static function getNavigationLabel(): string
     {
         $religions = \Illuminate\Support\Facades\Cache::remember('document-approval-religions', 3600, function () {
             try {
+                $religions = ReligiousInfo::query()
+                    ->whereHas('profile') // live profiles only (not deleted)
+                    ->whereNotNull('religion')->where('religion', '!=', '')
+                    ->distinct()->pluck('religion');
+                if ($religions->isEmpty()) {
+                    $religions = \App\Models\Community::active()->whereNotNull('religion')->distinct()->pluck('religion');
+                }
+
                 return [
-                    'christian' => ReligiousInfo::where('religion', 'Christian')->exists(),
-                    'other' => ReligiousInfo::whereNotNull('religion')->where('religion', '!=', '')->where('religion', '!=', 'Christian')->exists(),
+                    'christian' => $religions->contains('Christian'),
+                    'other' => $religions->contains(fn ($r) => $r !== 'Christian'),
                 ];
             } catch (\Throwable) {
                 return ['christian' => true, 'other' => true];

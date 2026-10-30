@@ -183,3 +183,58 @@ describe('scorecard', function () {
         expect($rows->has('revenue'))->toBeFalse();
     });
 });
+
+describe('document approvals label', function () {
+    beforeEach(function () {
+        foreach (['profiles', 'religious_info', 'communities'] as $t) {
+            Schema::dropIfExists($t);
+        }
+        Schema::create('profiles', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('user_id')->default(1);
+            $t->softDeletes();
+            $t->timestamps();
+        });
+        Schema::create('religious_info', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('profile_id');
+            $t->string('religion')->nullable();
+            $t->timestamps();
+        });
+        Schema::create('communities', function (Blueprint $t) {
+            $t->id();
+            $t->string('religion')->nullable();
+            $t->boolean('is_active')->default(true);
+            $t->timestamps();
+        });
+        Cache::flush();
+    });
+
+    afterEach(function () {
+        foreach (['profiles', 'religious_info', 'communities'] as $t) {
+            Schema::dropIfExists($t);
+        }
+    });
+
+    $label = fn () => \App\Filament\Resources\DocumentApprovalResource::getNavigationLabel();
+
+    it('names the menu after the live members\' religions', function () use ($label) {
+        DB::table('profiles')->insert([['id' => 1, 'deleted_at' => null], ['id' => 2, 'deleted_at' => now()]]);
+        DB::table('religious_info')->insert([['profile_id' => 1, 'religion' => 'Christian'], ['profile_id' => 2, 'religion' => 'Muslim']]);
+        expect($label())->toBe('Baptism Certificates');   // the Muslim profile was deleted
+
+        Cache::flush();
+        DB::table('profiles')->insert(['id' => 3]);
+        DB::table('religious_info')->insert(['profile_id' => 3, 'religion' => 'Hindu']);
+        expect($label())->toBe('Horoscope / Baptism');
+
+        Cache::flush();
+        DB::table('religious_info')->where('religion', 'Christian')->delete();
+        expect($label())->toBe('Horoscopes');
+    });
+
+    it('goes by the community list on a site with no members yet', function () use ($label) {
+        DB::table('communities')->insert([['religion' => 'Christian'], ['religion' => 'Christian']]);
+        expect($label())->toBe('Baptism Certificates');
+    });
+});
