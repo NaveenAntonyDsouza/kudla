@@ -63,6 +63,10 @@ class ProfileController extends Controller
 
     public function printProfile(Profile $profile)
     {
+        if (Profile::routeUsedOldKey($profile)) {
+            return redirect()->route('profile.print', $profile, 301);
+        }
+
         $isOwn = auth()->id() === $profile->user_id;
 
         if (!$isOwn && auth()->user()->profile->gender === $profile->gender) {
@@ -83,6 +87,11 @@ class ProfileController extends Controller
 
     public function viewProfile(Profile $profile)
     {
+        // /profile/857 (old links in emails) → /profile/KM100855, keeping ?tab=
+        if (Profile::routeUsedOldKey($profile)) {
+            return redirect()->route('profile.view', ['profile' => $profile, ...request()->query()], 301);
+        }
+
         $user = $profile->user;
         $isOwn = auth()->id() === $user->id;
 

@@ -16,7 +16,7 @@
                     :photo="$profile->primaryPhoto?->photo_url"
                     :name="$profile->full_name"
                     :subtitle="'(' . $profile->matri_id . ')'"
-                    :href="route('filament.admin.resources.users.view', $profile->id)"
+                    :href="route('filament.admin.resources.users.view', $profile)"
                     :first="$loop->first">
                     <x-admin.pill color="warning">{{ $membership->plan?->plan_name ?? 'Plan' }}</x-admin.pill>
                     <span>Expires {{ $membership->ends_at?->format('d M Y') }} ({{ $membership->ends_at?->diffForHumans() }})</span>
@@ -50,7 +50,7 @@
                     :photo="$profile->primaryPhoto?->photo_url"
                     :name="$profile->full_name"
                     :subtitle="'(' . $profile->matri_id . ')'"
-                    :href="route('filament.admin.resources.users.view', $profile->id)"
+                    :href="route('filament.admin.resources.users.view', $profile)"
                     :first="$loop->first">
                     <x-admin.pill color="gray">{{ $membership->plan?->plan_name ?? 'Plan' }}</x-admin.pill>
                     <span style="color:#dc2626;">Expired {{ $membership->ends_at?->format('d M Y') }} ({{ $membership->ends_at?->diffForHumans() }})</span>

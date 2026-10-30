@@ -16,7 +16,7 @@
                 :photo="$note->profile?->primaryPhoto?->photo_url"
                 :name="$note->profile?->full_name ?? '—'"
                 :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
+                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) : null"
                 :first="$loop->first">
                 <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                 <span style="color:#dc2626;font-weight:500;">Follow-up {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
@@ -30,7 +30,7 @@
                     @endif
                     @if ($note->profile)
                         {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) }}">View Profile</x-filament::button>
                         {{ ($this->markDoneAction)(['note' => $note->id]) }}
                     @else
                         <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
@@ -52,7 +52,7 @@
                 :photo="$note->profile?->primaryPhoto?->photo_url"
                 :name="$note->profile?->full_name ?? '—'"
                 :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
+                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) : null"
                 :first="$loop->first">
                 <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                 <span style="font-weight:500;">Follow-up: Today</span>
@@ -66,7 +66,7 @@
                     @endif
                     @if ($note->profile)
                         {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) }}">View Profile</x-filament::button>
                         {{ ($this->markDoneAction)(['note' => $note->id]) }}
                     @else
                         <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
@@ -88,7 +88,7 @@
                 :photo="$note->profile?->primaryPhoto?->photo_url"
                 :name="$note->profile?->full_name ?? '—'"
                 :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
+                :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) : null"
                 :first="$loop->first">
                 <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                 <span>Follow-up {{ $note->follow_up_date->format('d M Y') }} ({{ $note->follow_up_date->diffForHumans() }})</span>
@@ -97,7 +97,7 @@
                 <x-slot name="actions">
                     @if ($note->profile)
                         {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) }}">View Profile</x-filament::button>
                         {{ ($this->markDoneAction)(['note' => $note->id]) }}
                     @else
                         <span style="font-size:.75rem;opacity:.55;font-style:italic;">Member deleted</span>
@@ -120,7 +120,7 @@
                     :photo="$note->profile?->primaryPhoto?->photo_url"
                     :name="$note->profile?->full_name ?? '—'"
                     :subtitle="$note->profile ? '(' . $note->profile->matri_id . ')' : null"
-                    :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile_id) : null"
+                    :href="$note->profile ? route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) : null"
                     :first="$loop->first">
                     <span style="width:100%;opacity:.9;">{{ $note->note }}</span>
                     <span style="color:#059669;font-weight:500;">✓ Done {{ $note->follow_up_completed_at?->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('g:i A') }}</span>
@@ -129,7 +129,7 @@
                     <x-slot name="actions">
                         @if ($note->profile)
                             {{ ($this->notesAction)(['profile' => $note->profile_id]) }}
-                            <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile_id) }}">View Profile</x-filament::button>
+                            <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $note->profile ?? $note->profile_id) }}">View Profile</x-filament::button>
                         @endif
                         {{ ($this->undoFollowUpAction)(['note' => $note->id]) }}
                     </x-slot>

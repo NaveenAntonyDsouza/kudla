@@ -106,6 +106,37 @@ class Profile extends Model
         ];
     }
 
+    /**
+     * Profile addresses use the Matri ID (30 Oct 2026): /profile/KM100855,
+     * not the database number /profile/857 — what members and staff say on
+     * the phone, and no counting through members by number. The old number
+     * still finds the profile (links in emails already sent), as does an ID
+     * from before a prefix rename (MT100010 on Crasta → CR100010).
+     */
+    public function getRouteKey(): mixed
+    {
+        return $this->matri_id ?: $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field !== null) {
+            return parent::resolveRouteBinding($value, $field);
+        }
+
+        return ctype_digit((string) $value)
+            ? $this->whereKey($value)->first()
+            : $this->where('matri_id', \App\Support\MatriId::current((string) $value))->first();
+    }
+
+    /** True when the address used the old number or an old prefix: the page redirects to the Matri ID one. */
+    public static function routeUsedOldKey(Profile $profile, string $parameter = 'profile'): bool
+    {
+        $typed = (string) request()->route()?->originalParameter($parameter);
+
+        return $profile->matri_id && $typed !== $profile->matri_id;
+    }
+
     protected static function boot(): void
     {
         parent::boot();

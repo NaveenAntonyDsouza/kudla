@@ -1870,6 +1870,23 @@ class UserResource extends Resource
         ];
     }
 
+    /**
+     * Member pages are addressed by Matri ID (30 Oct 2026): /console/users/KM100855
+     * instead of the database number /console/users/857, same as on the site
+     * (Profile::getRouteKey). Old number links, and IDs from before a prefix
+     * rename, still open.
+     */
+    public static function resolveRecordRouteBinding(int | string $key, ?\Closure $modifyQuery = null): ?\Illuminate\Database\Eloquent\Model
+    {
+        if (ctype_digit((string) $key)) {
+            return parent::resolveRecordRouteBinding($key, $modifyQuery);
+        }
+
+        $profileId = Profile::withTrashed()->where('matri_id', \App\Support\MatriId::current((string) $key))->value('id');
+
+        return $profileId ? parent::resolveRecordRouteBinding($profileId, $modifyQuery) : null;
+    }
+
     public static function getPages(): array
     {
         return [
@@ -1907,7 +1924,7 @@ class UserResource extends Resource
      */
     public static function profileViewUrl(?\App\Models\Profile $profile): ?string
     {
-        return $profile ? static::getUrl('view', ['record' => $profile->getKey()]) : null;
+        return $profile ? static::getUrl('view', ['record' => $profile]) : null;
     }
 
     /**

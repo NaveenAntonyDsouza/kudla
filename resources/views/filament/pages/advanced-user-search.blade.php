@@ -22,7 +22,7 @@
                     :photo="$profile->primaryPhoto?->photo_url"
                     :name="$profile->full_name"
                     :subtitle="'(' . $profile->matri_id . ')'"
-                    :href="route('filament.admin.resources.users.view', $profile->id)"
+                    :href="route('filament.admin.resources.users.view', $profile)"
                     :first="$loop->first">
                     <x-admin.pill :color="$profile->gender === 'male' ? 'info' : 'pink'">{{ ucfirst($profile->gender) }}</x-admin.pill>
                     <x-admin.pill :color="$membership ? 'success' : 'gray'">{{ $membership?->plan?->plan_name ?? 'Free' }}</x-admin.pill>
@@ -40,8 +40,8 @@
                     <span>Registered {{ $profile->created_at?->format('d M Y') }}</span>
 
                     <x-slot name="actions">
-                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $profile->id) }}">View</x-filament::button>
-                        <x-filament::button tag="a" size="sm" color="gray" icon="heroicon-o-pencil-square" href="{{ route('filament.admin.resources.users.edit', $profile->id) }}">Edit</x-filament::button>
+                        <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $profile) }}">View</x-filament::button>
+                        <x-filament::button tag="a" size="sm" color="gray" icon="heroicon-o-pencil-square" href="{{ route('filament.admin.resources.users.edit', $profile) }}">Edit</x-filament::button>
                         @if ($profile->user?->phone)
                             @php $phone = preg_replace('/[^0-9]/', '', $profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
                             <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>

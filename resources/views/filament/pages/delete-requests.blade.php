@@ -63,7 +63,7 @@
                 </div>
 
                 <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye"
-                    href="{{ route('filament.admin.resources.users.view', $profile->id) }}">
+                    href="{{ route('filament.admin.resources.users.view', $profile) }}">
                     View
                 </x-filament::button>
             </div>

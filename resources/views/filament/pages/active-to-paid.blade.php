@@ -10,7 +10,7 @@
                 :photo="$profile->primaryPhoto?->photo_url"
                 :name="$profile->full_name"
                 :subtitle="'(' . $profile->matri_id . ')'"
-                :href="route('filament.admin.resources.users.view', $profile->id)"
+                :href="route('filament.admin.resources.users.view', $profile)"
                 :first="$loop->first">
                 <x-admin.pill :color="$profile->gender === 'male' ? 'info' : 'pink'">{{ $profile->gender === 'male' ? 'Male' : 'Female' }}</x-admin.pill>
                 <span>{{ $profile->date_of_birth ? \Carbon\Carbon::parse($profile->date_of_birth)->age . ' yrs' : '—' }}</span>
@@ -31,7 +31,7 @@
                         @php $phone = preg_replace('/[^0-9]/', '', $profile->user->phone); if (strlen($phone) === 10) $phone = '91' . $phone; @endphp
                         <x-filament::button tag="a" size="sm" color="success" icon="heroicon-o-chat-bubble-left-right" href="https://wa.me/{{ $phone }}">WhatsApp</x-filament::button>
                     @endif
-                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $profile->id) }}">View</x-filament::button>
+                    <x-filament::button tag="a" size="sm" color="primary" icon="heroicon-o-eye" href="{{ route('filament.admin.resources.users.view', $profile) }}">View</x-filament::button>
                 </x-slot>
             </x-admin.member-row>
         @empty
