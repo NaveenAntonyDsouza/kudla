@@ -509,7 +509,7 @@ class ProfileController extends BaseApiController
     protected function findTargetByMatriId(string $matriId): ?Profile
     {
         try {
-            return Profile::where('matri_id', $matriId)->first();
+            return Profile::where('matri_id', \App\Support\MatriId::current($matriId))->first();
         } catch (\Throwable $e) {
             // Missing profiles table (test env) → 404 via the same path as
             // "truly not found". Production always has the table.

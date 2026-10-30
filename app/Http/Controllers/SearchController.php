@@ -452,7 +452,7 @@ class SearchController extends Controller
     /** A Matri ID typed any way ("km 100123", "KM-100123") → "KM100123". */
     public static function matriIdFromInput(string $input): string
     {
-        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $input));
+        return \App\Support\MatriId::current(preg_replace('/[^A-Za-z0-9]/', '', $input));
     }
 
     /**

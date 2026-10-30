@@ -198,3 +198,23 @@ it('app login asks for the login field when nothing is sent', function () {
         ->assertJsonPath('error.code', 'VALIDATION_FAILED')
         ->assertJsonStructure(['error' => ['fields' => ['login']]]);
 });
+
+it('logs in with the Matri ID from before the prefix was renamed (MT → CR, 30 Oct 2026)', function (string $typed) {
+    SiteSetting::setValue('profile_id_prefix', 'CR');
+    SiteSetting::setValue('matri_id_previous_prefix', 'MT');
+    $user = loginMember('CR100010', 'a@site.test', '9845012345');
+
+    $this->post('/login', ['login' => $typed, 'password' => 'secret123'])->assertRedirect('/dashboard');
+    $this->assertAuthenticatedAs($user);
+})->with(['CR100010', 'MT100010', 'mt 100010']);
+
+it('turns an old-prefix Matri ID into today\'s and leaves anything else alone', function () {
+    expect(\App\Support\MatriId::current('mt100010'))->toBe('MT100010');   // no rename on this site
+
+    SiteSetting::setValue('profile_id_prefix', 'GC');
+    SiteSetting::setValue('matri_id_previous_prefix', 'MT');
+    expect(\App\Support\MatriId::current('MT100703'))->toBe('GC100703')
+        ->and(\App\Support\MatriId::current('gc100703'))->toBe('GC100703')
+        ->and(\App\Support\MatriId::current('KM100001'))->toBe('KM100001')
+        ->and(\App\Support\MatriId::current('Mathew'))->toBe('MATHEW');
+});

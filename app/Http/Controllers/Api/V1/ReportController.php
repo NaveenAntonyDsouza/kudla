@@ -112,7 +112,7 @@ class ReportController extends BaseApiController
 
     protected function findTargetByMatriId(string $matriId): ?Profile
     {
-        return Profile::where('matri_id', $matriId)->first();
+        return Profile::where('matri_id', \App\Support\MatriId::current($matriId))->first();
     }
 
     /* ==================================================================

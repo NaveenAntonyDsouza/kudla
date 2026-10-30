@@ -98,7 +98,7 @@ class WhatsAppInbox extends Page
         $term = trim($this->search);
         if ($term !== '') {
             $digits = preg_replace('/\D/', '', $term);
-            $profileIds = Profile::where('matri_id', $term)->orWhere('full_name', 'like', "%{$term}%")->limit(50)->pluck('id');
+            $profileIds = Profile::where('matri_id', \App\Support\MatriId::current($term))->orWhere('full_name', 'like', "%{$term}%")->limit(50)->pluck('id');
             $rows->where(function ($q) use ($digits, $term, $profileIds) {
                 if (strlen($digits) >= 4) {
                     $q->orWhere('wa_id', 'like', "%{$digits}%");
@@ -252,7 +252,7 @@ class WhatsAppInbox extends Page
     public function linkMember(?string $matriId = null): void
     {
         $matriId = strtoupper(trim($matriId ?? $this->linkMatriId));
-        $profile = $matriId !== '' ? Profile::where('matri_id', $matriId)->first() : null;
+        $profile = $matriId !== '' ? Profile::where('matri_id', \App\Support\MatriId::current($matriId))->first() : null;
         if (! $this->selected || ! $profile) {
             Notification::make()->title('No member with that ID')->danger()->send();
 

@@ -151,7 +151,7 @@ class ChangeMembershipPlan extends Page implements HasForms
         $matches = Profile::query()
             ->whereNotNull('full_name')
             ->where(function ($q) use ($term) {
-                $q->where('matri_id', $term)
+                $q->where('matri_id', \App\Support\MatriId::current($term))
                     ->orWhere('full_name', 'like', "%{$term}%")
                     ->orWhereHas('user', fn ($u) => $u->where('phone', 'like', "%{$term}%")
                         ->orWhere('email', 'like', "%{$term}%"));

@@ -84,7 +84,7 @@ final class LoginIdentifier
             // withTrashed: a deleted member gets the same "account removed"
             // message as when they log in by email.
             $userId = Profile::withTrashed()
-                ->where('matri_id', strtoupper($m[1]) . $m[2])
+                ->where('matri_id', MatriId::current($m[1] . $m[2]))
                 ->value('user_id');
 
             return $userId ? User::whereKey($userId)->get() : collect();
