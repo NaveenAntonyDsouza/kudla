@@ -50,7 +50,7 @@
                 </table>
             </div>
             <p style="margin:1rem 0 0;font-size:.8rem;opacity:.7;">
-                Finished, With photo and Connected are shares of that source's own sign-ups. "Not answered": the question is optional.
+                Finished, With photo and Connected are shares of that source's own sign-ups. "Not answered": the question is optional and comes at step 4 of sign-up, so members who stopped earlier never saw it.
                 The answer list is in Site &amp; Content → Lists &amp; Options → Reference Data ("How Did You Hear Options").
             </p>
         @endif
