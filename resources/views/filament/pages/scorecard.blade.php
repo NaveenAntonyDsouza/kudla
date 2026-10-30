@@ -71,7 +71,8 @@
             </table>
         </div>
         <p style="margin:1rem 0 0;font-size:.8rem;opacity:.7;">
-            Coming next: how many of each month's new members are still active 1 and 3 months later, and where sign-ups come from.
+            More in Insights: <a href="{{ \App\Filament\Pages\FunnelRetention::getUrl() }}" style="text-decoration:underline;">Funnel &amp; Retention</a> (where new members drop off, and who is still around after 1 and 3 months) and
+            <a href="{{ \App\Filament\Pages\SignupSources::getUrl() }}" style="text-decoration:underline;">Sign-up Sources</a> (how members heard about the site, and how each source's members get on).
         </p>
     </x-filament::section>
 </x-filament-panels::page>

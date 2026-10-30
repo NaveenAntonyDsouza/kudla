@@ -14,7 +14,7 @@ class SiteOverview extends BaseDashboard
     protected static string $routePath = 'overview';
     protected static BackedEnum|string|null $navigationIcon = null;
     protected static \UnitEnum|string|null $navigationGroup = 'Insights';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
     protected static ?string $navigationLabel = 'Site Overview';
     protected static ?string $title = 'Site Overview';
 

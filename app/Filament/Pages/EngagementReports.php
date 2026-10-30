@@ -15,7 +15,7 @@ class EngagementReports extends Page
     protected static \BackedEnum|string|null $navigationIcon = null;
     protected static ?string $navigationLabel = 'Engagement Reports';
     protected static \UnitEnum|string|null $navigationGroup = 'Insights';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 6;
     protected static ?string $title = 'Engagement Reports';
     protected string $view = 'filament.pages.engagement-reports';
 
