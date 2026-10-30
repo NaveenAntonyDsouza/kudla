@@ -145,7 +145,7 @@ class SiteSettings extends Page implements HasForms
 
                         Forms\Components\Toggle::make('blog_enabled')
                             ->label('Blog')
-                            ->helperText('The Blog at /blog and Content Management → Blog Posts. The footer link and sitemap entry appear once a post is published. Off: no blog at all.'),
+                            ->helperText('The Blog at /blog and Site & Content → Blog Posts. The footer link and sitemap entry appear once a post is published. Off: no blog at all.'),
                     ])
                     ->columns(2),
 

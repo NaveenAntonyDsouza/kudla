@@ -13,4 +13,4 @@ WhatsApp only allows a free reply within 24 hours of the member's message.
 More messages from this number in the next {{ $quietMinutes }} minutes will not send another email.
 
 ---
-{{ \App\Models\SiteSetting::getValue('site_name', config('app.name')) }} admin alert. Turn it off in Settings -> WhatsApp API.
+{{ \App\Models\SiteSetting::getValue('site_name', config('app.name')) }} admin alert. Turn it off in the admin panel: Admin & Security → WhatsApp API.

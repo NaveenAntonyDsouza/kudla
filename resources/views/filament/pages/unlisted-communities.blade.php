@@ -1,11 +1,11 @@
 <x-filament-panels::page>
     @php
         $sections = [
-            ['Caste / Community', $this->getUnlistedCastes(),        'Add to Content Management → Communities (as a Community).'],
-            ['Sub-Caste',         $this->getUnlistedSubCastes(),     'Add as a sub-community under the right caste in Content Management → Communities.'],
-            ['Religion',          $this->getUnlistedReligions(),     'Add to Content Management → Reference Data (religion list) if it should be offered.'],
-            ['Denomination',      $this->getUnlistedDenominations(), 'Add to Content Management → Reference Data (denomination list).'],
-            ['Gotra / Bari',      $this->getUnlistedGotras(),        'Typed after "Other". When a name is real (ask the member or an elder if unsure), add it to Content Management → Reference Data (gothram) in the right group, e.g. "Common Tulu baris".'],
+            ['Caste / Community', $this->getUnlistedCastes(),        'Add to Site & Content → Communities (as a Community).'],
+            ['Sub-Caste',         $this->getUnlistedSubCastes(),     'Add as a sub-community under the right caste in Site & Content → Communities.'],
+            ['Religion',          $this->getUnlistedReligions(),     'Add to Site & Content → Lists & Options → Reference Data (religion list) if it should be offered.'],
+            ['Denomination',      $this->getUnlistedDenominations(), 'Add to Site & Content → Lists & Options → Reference Data (denomination list).'],
+            ['Gotra / Bari',      $this->getUnlistedGotras(),        'Typed after "Other". When a name is real (ask the member or an elder if unsure), add it to Site & Content → Lists & Options → Reference Data (gothram) in the right group, e.g. "Common Tulu baris".'],
         ];
     @endphp
 

@@ -300,6 +300,6 @@ class WhatsAppInbox extends Page
 
     public function getSubheading(): ?string
     {
-        return WhatsAppCloud::enabled() ? null : 'The WhatsApp API is switched off (Settings -> WhatsApp API). Messages below are from when it was on.';
+        return WhatsAppCloud::enabled() ? null : 'The WhatsApp API is switched off (Admin & Security → WhatsApp API). Messages below are from when it was on.';
     }
 }

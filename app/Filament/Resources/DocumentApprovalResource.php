@@ -22,6 +22,37 @@ class DocumentApprovalResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Today';
     protected static ?int $navigationSort = 4;
 
+    /**
+     * Named after what this site's members upload (Oct 2026): Christians a
+     * baptism certificate, everyone else a horoscope. "Horoscope / Baptism"
+     * only where the site has both (Kudla); "Baptism Certificates" on the
+     * Christian sites; "Horoscopes" where there are no Christians.
+     */
+    public static function getNavigationLabel(): string
+    {
+        $religions = \Illuminate\Support\Facades\Cache::remember('document-approval-religions', 3600, function () {
+            try {
+                return [
+                    'christian' => ReligiousInfo::where('religion', 'Christian')->exists(),
+                    'other' => ReligiousInfo::whereNotNull('religion')->where('religion', '!=', '')->where('religion', '!=', 'Christian')->exists(),
+                ];
+            } catch (\Throwable) {
+                return ['christian' => true, 'other' => true];
+            }
+        });
+
+        return match (true) {
+            $religions['christian'] && ! $religions['other'] => 'Baptism Certificates',
+            ! $religions['christian'] && $religions['other'] => 'Horoscopes',
+            default => 'Horoscope / Baptism',
+        };
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return static::getNavigationLabel();
+    }
+
     public static function shouldRegisterNavigation(): bool
     {
         return \App\Support\Permissions::can('horoscope_approval');

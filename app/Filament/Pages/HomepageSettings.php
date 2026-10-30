@@ -471,7 +471,7 @@ class HomepageSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('offer_banner_coupon_code')
                             ->label('Coupon Code')
                             ->maxLength(40)
-                            ->helperText('Shown for members to copy. IMPORTANT: also create a matching coupon under Membership & Payments → Discount Coupons so the code actually works at checkout. Leave blank for a message-only banner.'),
+                            ->helperText('Shown for members to copy. IMPORTANT: also create a matching coupon under Money → Discount Coupons so the code actually works at checkout. Leave blank for a message-only banner.'),
 
                         Forms\Components\TextInput::make('offer_banner_cta_text')
                             ->label('Button Text')

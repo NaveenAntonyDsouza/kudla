@@ -42,8 +42,9 @@ class ReferenceDataOptionResource extends Resource
     protected static ?string $navigationLabel = 'Dropdown Options';
     protected static ?string $modelLabel = 'Dropdown Option';
     protected static ?string $pluralModelLabel = 'Dropdown Options';
-    protected static \UnitEnum|string|null $navigationGroup = 'Site & Content';
-    protected static ?int $navigationSort = 12;
+    protected static ?string $cluster = \App\Filament\Clusters\ListsAndOptions::class;
+    protected static \UnitEnum|string|null $navigationGroup = null;
+    protected static ?int $navigationSort = 2;
 
     /**
      * Stable display labels for the categories this resource manages.

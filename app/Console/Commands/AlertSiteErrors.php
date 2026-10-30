@@ -196,7 +196,7 @@ class AlertSiteErrors extends Command
                 $when = $e['count'] > 1 ? "{$e['count']} times, {$e['first']} to {$e['last']}" : $e['first'];
                 $lines[] = "\n- {$e['message']}\n  {$when}";
             }
-            $lines[] = "\nThe full details are in the admin panel: Settings → System Health → recent log. The same error is reported again only after "
+            $lines[] = "\nThe full details are in the admin panel: Admin & Security → System Health → recent log. The same error is reported again only after "
                 . self::REPEAT_AFTER_HOURS . ' hours.';
         }
         if ($failedLogins !== []) {
@@ -204,7 +204,7 @@ class AlertSiteErrors extends Command
             foreach ($failedLogins as $who => $n) {
                 $lines[] = "- {$who}: {$n} times";
             }
-            $lines[] = "\nIf that wasn't them, change the password. Settings → Login History shows where the attempts came from.";
+            $lines[] = "\nIf that wasn't them, change the password. Admin & Security → Audit Trail → Login History shows where the attempts came from.";
         }
         if ($backupAt !== null) {
             $lines[] = ($lines !== [] ? "\n\n" : '') . 'The last off-site backup of this site reached your PC on ' . $backupAt->format('j M Y, h:i A') . '.'
