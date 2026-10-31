@@ -24,14 +24,16 @@ use Illuminate\Support\Str;
 class DiscoverConfigService
 {
     /**
-     * NRI Matrimony — all countries except India.
+     * NRI Matrimony — all countries except India. On a site that calls it
+     * "Country" (most members live abroad: NriWording) India is listed too.
      */
     public function nriCountries(): array
     {
+        $withIndia = \App\Support\NriWording::byCountry();
         $countries = [];
         foreach (config('reference_data.country_list', []) as $group => $list) {
             foreach ($list as $c) {
-                if ($c !== 'India') {
+                if ($c !== 'India' || $withIndia) {
                     $countries[] = [
                         'label' => "$c Profiles",
                         'slug' => Str::slug($c),

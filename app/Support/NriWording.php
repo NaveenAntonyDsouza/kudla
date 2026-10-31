@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Http\Controllers\DiscoverController;
 use App\Models\Profile;
 use Illuminate\Support\Facades\Cache;
 
@@ -10,7 +9,8 @@ use Illuminate\Support\Facades\Cache;
  * "NRI" means an Indian living abroad (Oct 2026). Global Catholic Match's
  * members live in the USA, Canada, the UK and elsewhere, so on a site where
  * most live profiles are outside India the NRI pages go by country instead:
- * "Country", "Brides & Grooms in USA". Kudla and the India sites keep "NRI".
+ * "Country", "Brides & Grooms in USA", with India listed like any other
+ * country. Kudla and the India sites keep "NRI".
  */
 class NriWording
 {
@@ -19,23 +19,26 @@ class NriWording
     /** Most of the site's live profiles live outside India. */
     public static function byCountry(): bool
     {
-        $abroad = array_sum(DiscoverController::profileCounts(self::CATEGORY));
-        if ($abroad === 0) {
-            return false;
-        }
-
         try {
-            // the same profiles the Discover counts are taken from
-            $live = Cache::remember('discover.counts.live', 3600, fn () => Profile::where('is_active', true)->approved()
-                ->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-                ->count());
+            // counted here, not from the category's country list: on a "Country" site that list includes India
+            ['live' => $live, 'abroad' => $abroad] = Cache::remember('discover.counts.live-abroad', 3600, function () {
+                // the same profiles the Discover counts are taken from
+                $live = fn () => Profile::where('is_active', true)->approved()
+                    ->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'));
+
+                return [
+                    'live' => $live()->count(),
+                    'abroad' => $live()->whereHas('locationInfo', fn ($q) => $q->whereNotNull('residing_country')
+                        ->where('residing_country', '!=', '')->where('residing_country', '!=', 'India'))->count(),
+                ];
+            });
         } catch (\Throwable $e) {
             report($e);
 
             return false;
         }
 
-        return $abroad * 2 > $live;
+        return $abroad > 0 && $abroad * 2 > $live;
     }
 
     /** A Discover category's config, in this site's words. */

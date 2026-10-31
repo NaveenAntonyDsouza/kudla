@@ -28,7 +28,7 @@ beforeEach(function () {
         Cache::forever("discover.counts.{$slug}", $counts[$slug] ?? []);
     }
     // a site like Kudla: 28 of 760 live profiles abroad, members of several religions
-    Cache::forever('discover.counts.live', 760);
+    Cache::forever('discover.counts.live-abroad', ['live' => 760, 'abroad' => 28]);
     Cache::forever('site-religions', ['christian' => true, 'other' => true]);
     Cache::forever('community_caste_list_all', ['Billava', 'Kulal', 'Bunts']);
     Cache::forever('site_setting.community_hidden_religions', '[]');
@@ -89,7 +89,7 @@ it('calls the NRI pages by country on a site whose members mostly live abroad', 
 
     // Global Catholic Match: 700 of 702 live in the USA, Canada, the UK…
     Cache::forever('discover.counts.nri-matrimony', ['usa' => 191, 'canada' => 105, 'united-kingdom' => 404]);
-    Cache::forever('discover.counts.live', 702);
+    Cache::forever('discover.counts.live-abroad', ['live' => 702, 'abroad' => 700]);
     $seo = DiscoverSeo::forResults('nri-matrimony', 'USA Profiles');
 
     expect(DiscoverController::hubSections()['nri-matrimony']['hub_label'])->toBe('Country')
@@ -98,6 +98,15 @@ it('calls the NRI pages by country on a site whose members mostly live abroad', 
         ->and($seo['heading'])->toBe('Brides & Grooms in USA')
         ->and($seo['title'])->toBe('Brides & Grooms in USA')
         ->and($seo['description'])->not->toContain('NRI');
+});
+
+it('lists India among the countries only on a site that calls them Country', function () {
+    $hasIndia = fn () => collect(app(\App\Services\DiscoverConfigService::class)->nriCountries())->contains('slug', 'india');
+
+    expect($hasIndia())->toBeFalse();   // Kudla: members in India browse by district
+
+    Cache::forever('discover.counts.live-abroad', ['live' => 702, 'abroad' => 700]);   // Global Catholic Match
+    expect($hasIndia())->toBeTrue();
 });
 
 it('shows the chip rows, then the groups as headed sections of cards', function () {
