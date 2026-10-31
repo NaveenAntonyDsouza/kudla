@@ -67,20 +67,26 @@ class DiscoverSeo
                 "{$n}-Speaking Brides & Grooms",
                 "Find {$n}-speaking brides and grooms{$from}.",
             ],
+            // home districts: Karnataka's and Kasaragod (Kerala)
             'karnataka-matrimony' => [
                 ["{$n} Matrimony – Brides & Grooms from {$n}", "{$n} Matrimony – Brides & Grooms"],
                 "{$n} Matrimony",
-                "Find brides and grooms from {$n} district in Karnataka.",
+                "Find brides and grooms from {$n} district.",
+            ],
+            'working-in' => [
+                ["Brides & Grooms Working in {$n}", "Working in {$n} – Matrimony"],
+                "Working in {$n}",
+                "Find brides and grooms{$from} working in {$n}.",
             ],
             // a site whose members mostly live abroad calls them by country, not "NRI" (NriWording)
             'nri-matrimony' => NriWording::byCountry() ? [
                 ["Brides & Grooms in {$n}", "{$n} Matrimony"],
                 "Brides & Grooms in {$n}",
-                "Find brides and grooms living in {$n}.",
+                "Find brides and grooms living or working in {$n}.",
             ] : [
                 ["NRI Brides & Grooms in {$n}", "NRI Matrimony – {$n}"],
                 "NRI Matrimony – {$n}",
-                "Find NRI brides and grooms{$from} living in {$n}.",
+                "Find NRI brides and grooms{$from} living or working in {$n}.",
             ],
             'catholic-matrimony', 'christian-matrimony' => [
                 [self::with($n, 'Christian', $category === 'christian-matrimony') . ' Matrimony – Brides & Grooms', self::with($n, 'Christian', $category === 'christian-matrimony') . ' Matrimony'],

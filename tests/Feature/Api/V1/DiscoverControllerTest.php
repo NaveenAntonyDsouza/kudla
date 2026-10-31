@@ -67,7 +67,7 @@ it('hub returns all 14 categories from config', function () {
     $data = $response->getData(true)['data'];
 
     expect($response->getStatusCode())->toBe(200);
-    expect(count($data))->toBe(14);  // per config/discover.php (profession-matrimony added Oct 2026)
+    expect(count($data))->toBe(15);  // per config/discover.php (profession-matrimony, then working-in added Oct 2026)
 });
 
 it('hub response includes the discriminator flags + show_search', function () {

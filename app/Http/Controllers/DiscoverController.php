@@ -31,28 +31,18 @@ class DiscoverController extends Controller
     /** Its caste pages repeat Community Matrimony's (see canonicalUrl()). */
     private const DUPLICATE_OF_COMMUNITY = 'hindu-matrimony';
 
-    /**
-     * Discover hub sections with cards, in this order, after the Communities
-     * chips (Oct 2026). "religion" cards (Catholic, Diocese, Muslim…) are not on
-     * the hub — the communities list holds them, as on the homepage, and the
-     * Catholic sites get their dioceses as chips too.
-     */
-    public const HUB_GROUPS = [
-        'language' => 'Language',
-        'place' => 'Place',
-        'work' => 'Work',
-        'life' => 'Life situation',
-    ];
-
-    /** A category needs this many live profiles for a button (like the homepage chips). */
+    /** A link needs this many live profiles (like the homepage chips). */
     public const HUB_MIN_PROFILES = 3;
 
+    /** Chips shown per hub row before its "All …" link (the communities row shows all). */
+    public const HUB_ROW_LIMIT = 12;
+
     /**
-     * The categories that get a button — on the hub, the member dashboard and a
+     * The categories that get a button — on the member dashboard and in a
      * category page's "other directories" (Oct 2026): not the ones that repeat
      * another (hub => false), only with 3+ live profiles, biggest first.
      *
-     * @return \Illuminate\Support\Collection<string, array{slug: string, label: string, hub_label: string, group: string, count: int}>
+     * @return \Illuminate\Support\Collection<string, array{slug: string, label: string, hub_label: string, count: int}>
      */
     public static function hubSections(): \Illuminate\Support\Collection
     {
@@ -62,8 +52,6 @@ class DiscoverController extends Controller
                 'slug' => $slug,
                 'label' => $cat['label'],
                 'hub_label' => $cat['hub_label'] ?? $cat['label'],
-                'group' => $cat['hub_group'] ?? 'community',
-                'order' => $cat['hub_order'] ?? 99,
                 'count' => array_sum(self::profileCounts($slug)),
             ])
             ->filter(fn ($s) => $s['count'] >= self::HUB_MIN_PROFILES)
@@ -71,39 +59,44 @@ class DiscoverController extends Controller
     }
 
     /**
-     * Level 1: the Discover hub — cards grouped under headings, each with its
-     * number of profiles and its three biggest entries (Oct 2026).
+     * Level 1: the Discover hub — every section a row of chips, biggest first
+     * within it (Oct 2026): communities first, as on the homepage, then where
+     * members are from, where they work, abroad, language, work, second marriage
+     * (config hub_row). Members use place most: on Kudla 3–30 Oct, Dakshina
+     * Kannada was the most-viewed Discover page.
      */
     public function hub()
     {
-        // Communities first, as chips — the same list as the homepage's Community tab
-        // (castes, denominations and sects together; hidden religions left out).
-        // One chip alone is no choice: on Crasta it is "Roman Catholic", nearly everyone.
-        $communities = collect(self::homeLinkCounts('community-matrimony'))
-            ->filter(fn ($link) => $link['count'] >= self::HUB_MIN_PROFILES)
-            ->values();
-        // the Catholic sites (every member Christian) browse by diocese as well
-        $dioceses = \App\Support\SiteReligions::christianOnly()
-            ? collect(self::homeLinkCounts('diocese-matrimony'))->filter(fn ($link) => $link['count'] >= self::HUB_MIN_PROFILES)->values()
-            : collect();
-        $chipRows = collect([
-            ['title' => 'Communities', 'links' => $communities->count() >= 2 ? $communities : collect(), 'all' => 'community-matrimony', 'all_label' => 'All communities'],
-            ['title' => 'Dioceses', 'links' => $dioceses, 'all' => 'diocese-matrimony', 'all_label' => 'All dioceses'],
-        ])->filter(fn ($row) => $row['links']->isNotEmpty())->values();
+        $christianOnly = \App\Support\SiteReligions::christianOnly();
+        $chipRows = collect(\App\Support\NriWording::all())
+            ->filter(fn ($cat) => isset($cat['hub_row']))
+            // the Catholic sites (every member Christian) browse by diocese as well
+            ->reject(fn ($cat, $slug) => $slug === 'diocese-matrimony' && ! $christianOnly)
+            ->sortBy('hub_row')
+            ->map(function ($cat, $slug) {
+                $links = collect(self::homeLinkCounts($slug))
+                    ->filter(fn ($link) => $link['count'] >= self::HUB_MIN_PROFILES)
+                    ->values();
+                if ($slug === 'community-matrimony') {
+                    // the homepage's whole list; one chip alone is no choice
+                    // (on Crasta it is "Roman Catholic", nearly everyone)
+                    $links = $links->count() >= 2 ? $links : collect();
+                } else {
+                    $links = $links->take(self::HUB_ROW_LIMIT);
+                }
 
-        $sections = self::hubSections()
-            ->filter(fn ($s) => isset(self::HUB_GROUPS[$s['group']]))
-            ->map(fn ($s) => $s + [
-                'top' => collect(self::homeLinkCounts($s['slug']))->take(3)
-                    ->map(fn ($link) => trim(preg_replace('/\s+Matrimony$/i', '', $link['label'])))->all(),
-            ]);
-        $groups = collect(self::HUB_GROUPS)
-            ->map(fn ($title, $key) => ['title' => $title, 'sections' => $sections->where('group', $key)
-                ->sortBy([['order', 'asc'], ['count', 'desc']])->values()])
-            ->filter(fn ($group) => $group['sections']->isNotEmpty());
+                return [
+                    'title' => $cat['hub_title'] ?? $cat['hub_label'] ?? $cat['label'],
+                    'links' => $links,
+                    'all' => $slug,
+                    'all_label' => $cat['hub_all'] ?? 'See all',
+                ];
+            })
+            ->filter(fn ($row) => $row['links']->isNotEmpty())
+            ->values();
         $seo = \App\Support\DiscoverSeo::forHub();
 
-        return view('discover.hub', compact('chipRows', 'groups', 'seo'));
+        return view('discover.hub', compact('chipRows', 'seo'));
     }
 
     /**
@@ -272,6 +265,13 @@ class DiscoverController extends Controller
                 'native_state' => $query->whereHas('locationInfo', fn($q) => $q->where('native_state', $value)),
                 'native_district' => $query->whereHas('locationInfo', fn($q) => $q->where('native_district', $value)),
                 'residing_country' => $query->whereHas('locationInfo', fn($q) => $q->where('residing_country', $value)),
+                // NRI (Oct 2026): lives there or works there — Gulf workers often give only the latter
+                'abroad_country' => $query->where(fn ($w) => $w
+                    ->whereHas('locationInfo', fn($q) => $q->where('residing_country', $value))
+                    ->orWhereHas('educationDetail', fn($q) => $q->where('working_country', $value))),
+                'working_state' => $query->whereHas('educationDetail', fn($q) => $q->where('working_state', $value)),
+                // a list for a place that spans districts (Bangalore Urban + Rural)
+                'working_district' => $query->whereHas('educationDetail', fn($q) => is_array($value) ? $q->whereIn('working_district', $value) : $q->where('working_district', $value)),
                 default => null,
             };
         }

@@ -16,7 +16,7 @@ class NriWording
 {
     public const CATEGORY = 'nri-matrimony';
 
-    /** Most of the site's live profiles live outside India. */
+    /** Most of the site's live profiles live or work outside India. */
     public static function byCountry(): bool
     {
         try {
@@ -25,11 +25,13 @@ class NriWording
                 // the same profiles the Discover counts are taken from
                 $live = fn () => Profile::where('is_active', true)->approved()
                     ->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'));
+                $outside = fn ($q, string $column) => $q->whereNotNull($column)->where($column, '!=', '')->where($column, '!=', 'India');
 
                 return [
                     'live' => $live()->count(),
-                    'abroad' => $live()->whereHas('locationInfo', fn ($q) => $q->whereNotNull('residing_country')
-                        ->where('residing_country', '!=', '')->where('residing_country', '!=', 'India'))->count(),
+                    'abroad' => $live()->where(fn ($w) => $w
+                        ->whereHas('locationInfo', fn ($q) => $outside($q, 'residing_country'))
+                        ->orWhereHas('educationDetail', fn ($q) => $outside($q, 'working_country')))->count(),
                 ];
             });
         } catch (\Throwable $e) {

@@ -125,17 +125,35 @@
             </div>
         </div>
 
-        {{-- Privacy reassurance --}}
-        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-2">
-            <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
-            <p class="text-xs text-amber-800">
-                Your photo is shown only to signed-in members by default. Fine-tune privacy any time at
-                <span class="font-medium">My Photos</span>.
-            </p>
-        </div>
+        @if ($profile->gender === 'female')
+            {{-- Who sees it, chosen right here (Oct 2026): on Kudla only 31 of 144 women showed
+                 a photo, and none had found this setting in My Photos. --}}
+            <fieldset class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <legend class="text-sm font-medium text-amber-800">Who can see your photo?</legend>
+                <label class="mt-2 flex items-start gap-2 text-sm text-gray-800">
+                    <input type="radio" name="photo_privacy" value="visible_to_all" checked class="mt-0.5" style="accent-color: var(--color-primary);">
+                    <span>All signed-in members</span>
+                </label>
+                <label class="mt-2 flex items-start gap-2 text-sm text-gray-800">
+                    <input type="radio" name="photo_privacy" value="interest_accepted" class="mt-0.5" style="accent-color: var(--color-primary);">
+                    <span>Only members whose interest I accept
+                        <span class="block text-xs text-gray-500">Others see a locked photo until you accept.</span></span>
+                </label>
+                <p class="mt-2 text-xs text-amber-800">You can change this any time in <span class="font-medium">My Photos</span>.</p>
+            </fieldset>
+        @else
+            {{-- Privacy reassurance --}}
+            <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-2">
+                <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <p class="text-xs text-amber-800">
+                    Your photo is shown only to signed-in members by default. Fine-tune privacy any time at
+                    <span class="font-medium">My Photos</span>.
+                </p>
+            </div>
+        @endif
 
         {{-- Photo on WhatsApp instead (site setting photo_via_whatsapp, Kudla, Oct 2026):
              the member sends it to the site's WhatsApp number; staff add it from the admin. --}}

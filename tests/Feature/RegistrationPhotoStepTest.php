@@ -345,3 +345,37 @@ it('lets the admin switch "photo by WhatsApp" on and off in Site Settings', func
         ->toContain("'photo_via_whatsapp' => (\$settings['photo_via_whatsapp'] ?? '0') === '1'")
         ->toContain("'whatsapp_button_enabled', 'photo_via_whatsapp',");
 });
+
+it('lets a woman choose who sees her photo as she uploads it', function () {
+    Schema::dropIfExists('photo_privacy_settings');
+    Schema::create('photo_privacy_settings', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id');
+        $t->string('privacy_level')->nullable();
+        $t->string('profile_photo_privacy')->nullable();
+        $t->timestamps();
+    });
+    actingAsRegistrationUser(userId: 6003, profileId: 6003);   // a woman
+    Cache::put('site_setting.photo_via_whatsapp', '0', 3600);
+    Cache::put('site_setting.whatsapp', '', 3600);
+
+    $this->get('/register/photo')->assertOk()
+        ->assertSee('Who can see your photo?')
+        ->assertSee('Only members whose interest I accept');
+    $this->post('/register/photo', ['photo' => UploadedFile::fake()->image('me.jpg', 800, 1000), 'photo_privacy' => 'interest_accepted'])
+        ->assertRedirect(route('register.verifyemail'));
+
+    expect(\DB::table('photo_privacy_settings')->where('profile_id', 6003)->value('profile_photo_privacy'))->toBe('interest_accepted');
+    Schema::dropIfExists('photo_privacy_settings');
+});
+
+it('keeps the plain privacy note on a man\'s photo step', function () {
+    $user = actingAsRegistrationUser(userId: 6004, profileId: 6004);
+    $user->profile->forceFill(['gender' => 'male']);
+    Cache::put('site_setting.photo_via_whatsapp', '0', 3600);
+    Cache::put('site_setting.whatsapp', '', 3600);
+
+    $this->get('/register/photo')->assertOk()
+        ->assertDontSee('Who can see your photo?')
+        ->assertSee('Fine-tune privacy any time at');
+});

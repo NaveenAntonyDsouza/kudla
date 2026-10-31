@@ -24,8 +24,10 @@ use Illuminate\Support\Str;
 class DiscoverConfigService
 {
     /**
-     * NRI Matrimony — all countries except India. On a site that calls it
-     * "Country" (most members live abroad: NriWording) India is listed too.
+     * NRI Matrimony — all countries except India, for members who live or work
+     * there (Oct 2026: many Gulf workers give only their working country). On a
+     * site that calls it "Country" (most members abroad: NriWording) India is
+     * listed too.
      */
     public function nriCountries(): array
     {
@@ -37,7 +39,7 @@ class DiscoverConfigService
                     $countries[] = [
                         'label' => "$c Profiles",
                         'slug' => Str::slug($c),
-                        'filter' => ['residing_country' => $c],
+                        'filter' => ['abroad_country' => $c],
                     ];
                 }
             }
@@ -69,7 +71,38 @@ class DiscoverConfigService
                 'label' => "$d Profiles",
                 'slug' => Str::slug($d),
                 'filter' => ['native_state' => 'Karnataka', 'native_district' => $d],
-            ])->values()->all();
+            ])
+            // Tulu Nadu reaches into Kerala: 33 Kudla members are from Kasaragod (Oct 2026)
+            ->push(['label' => 'Kasaragod Profiles', 'slug' => 'kasaragod', 'filter' => ['native_state' => 'Kerala', 'native_district' => 'Kasaragod']])
+            ->values()->all();
+    }
+
+    /** Districts that are one place to the people working there. */
+    private const WORK_PLACES_MERGED = [
+        'Bangalore' => ['state' => 'Karnataka', 'districts' => ['Bangalore Urban', 'Bangalore Rural']],
+        'Mumbai' => ['state' => 'Maharashtra', 'districts' => ['Mumbai City', 'Mumbai Suburban']],
+    ];
+
+    /**
+     * Working in — where members work in India, by district (Oct 2026: on Kudla
+     * Dakshina Kannada 208, Bangalore 89, Udupi 41). Abroad is the NRI list.
+     */
+    public function workPlaces(): array
+    {
+        $merged = collect(self::WORK_PLACES_MERGED)->flatMap(fn ($place) => $place['districts'])->all();
+        $places = [];
+        foreach (config('locations.state_district_map', []) as $state => $districts) {
+            foreach ($districts as $d) {
+                if (! in_array($d, $merged, true)) {
+                    $places[] = ['label' => "$d Profiles", 'slug' => Str::slug($d), 'filter' => ['working_state' => $state, 'working_district' => $d]];
+                }
+            }
+        }
+        foreach (self::WORK_PLACES_MERGED as $name => $place) {
+            $places[] = ['label' => "$name Profiles", 'slug' => Str::slug($name), 'filter' => ['working_state' => $place['state'], 'working_district' => $place['districts']]];
+        }
+
+        return $places;
     }
 
     /**

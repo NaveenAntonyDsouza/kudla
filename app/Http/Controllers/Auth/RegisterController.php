@@ -15,6 +15,7 @@ use App\Models\ContactInfo;
 use App\Models\EducationDetail;
 use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
+use App\Models\PhotoPrivacySetting;
 use App\Models\Profile;
 use App\Models\ProfilePhoto;
 use App\Models\ReligiousInfo;
@@ -386,6 +387,7 @@ class RegisterController extends Controller
         $maxKilobytes = (int) config('matrimony.max_photo_size_mb', 5) * 1024;
         $request->validate([
             'photo' => "required|image|mimes:jpg,jpeg,png,gif,webp|max:{$maxKilobytes}",
+            'photo_privacy' => 'nullable|in:'.PhotoPrivacySetting::LEVEL_VISIBLE_TO_ALL.','.PhotoPrivacySetting::LEVEL_INTEREST_ACCEPTED,
         ]);
 
         // Approval honours the existing site setting. Defaults to auto-approve
@@ -428,6 +430,14 @@ class RegisterController extends Controller
             'approval_status' => $approvalStatus,
             'approved_at' => $autoApprove ? now() : null,
         ]);
+
+        // who may see it — offered to women on this step (Oct 2026)
+        if ($request->filled('photo_privacy')) {
+            PhotoPrivacySetting::updateOrCreate(
+                ['profile_id' => $profile->id],
+                ['profile_photo_privacy' => $request->input('photo_privacy')]
+            );
+        }
 
         Analytics::track('photo_upload', ['source' => 'registration'], 'PhotoUploaded');
 

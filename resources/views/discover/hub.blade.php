@@ -1,19 +1,10 @@
-<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$groups->isEmpty() && $chipRows->isEmpty() ? 'noindex, follow' : null">
-    {{-- Discover hub (Oct 2026): cards grouped under headings, each with its number
-         of profiles and three biggest entries. Scoped styles: the live sites don't
-         rebuild the Tailwind file, so new utility classes wouldn't exist there. --}}
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$chipRows->isEmpty() ? 'noindex, follow' : null">
+    {{-- Discover hub (Oct 2026): every section a row of chips with its number of
+         profiles. Scoped styles: the live sites don't rebuild the Tailwind file, so
+         new utility classes wouldn't exist there. --}}
     <style>
         .dh-section { margin-top: 1.75rem; }
         .dh-section h2 { margin: 0 0 .6rem; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
-        .dh-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); }
-        .dh-card { display: block; padding: .9rem 1rem; background: #fff; border: 1px solid #e5e7eb; border-radius: .75rem; text-decoration: none; transition: border-color .15s, background-color .15s, box-shadow .15s; }
-        .dh-card:hover, .dh-card:focus-visible { border-color: var(--color-primary); background: var(--color-primary-light); box-shadow: 0 1px 3px rgba(0, 0, 0, .06); outline: none; }
-        .dh-head { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }
-        .dh-name { font-size: .95rem; font-weight: 600; color: #111827; }
-        .dh-card:hover .dh-name, .dh-card:focus-visible .dh-name { color: var(--color-primary); }
-        .dh-count { flex-shrink: 0; font-size: .8rem; color: #6b7280; }
-        /* up to two lines, so long names show in full */
-        .dh-top { display: -webkit-box; margin-top: .3rem; overflow: hidden; font-size: .8rem; line-height: 1.35; color: #6b7280; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .dh-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
         .dh-chip { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .8rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 9999px; font-size: .85rem; color: #1f2937; text-decoration: none; transition: border-color .15s, background-color .15s, color .15s; }
         .dh-chip:hover, .dh-chip:focus-visible { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary); outline: none; }
@@ -35,10 +26,10 @@
         <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
         <p class="text-sm text-gray-600 mt-1">{{ $seo['intro'] }}</p>
 
-        @if($groups->isEmpty() && $chipRows->isEmpty())
+        @if($chipRows->isEmpty())
             <p class="text-gray-600 py-8">Profiles will appear here as members join.</p>
         @endif
 
-        @include('discover._hub-groups', ['chipRows' => $chipRows, 'groups' => $groups])
+        @include('discover._hub-groups', ['chipRows' => $chipRows])
     </div>
 </x-layouts.app>
