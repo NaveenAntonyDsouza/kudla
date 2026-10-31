@@ -232,3 +232,10 @@ it('lets Staff open Insights but keeps the member CSV downloads for the owner', 
     Schema::dropIfExists('staff_role_permissions');
     Schema::dropIfExists('staff_roles');
 });
+
+it('gives the member CSV downloads to no role but the owner on a new site', function () {
+    $defaults = (fn () => $this->defaultPermissions())->call(new \Database\Seeders\StaffRolesSeeder);
+    $canExport = collect($defaults)->filter(fn ($perms) => ($perms['export_member_data'] ?? 'no') === 'yes')->keys()->all();
+
+    expect($canExport)->toBe(['super_admin']);
+});

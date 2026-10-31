@@ -85,6 +85,8 @@ class StaffRolesSeeder extends Seeder
                     'manage_super_admins' => 'no',
                     'database_backup' => 'no',
                     'system_health' => 'no',
+                    // member CSV downloads stay with the owner (30 Oct 2026)
+                    'export_member_data' => 'no',
                 ]
             ),
 
@@ -101,6 +103,7 @@ class StaffRolesSeeder extends Seeder
                     'manage_gateway_settings' => 'no',
                     'database_backup' => 'no',
                     'system_health' => 'no',
+                    'export_member_data' => 'no',
                     // No delete members
                     'delete_member' => 'none',
                     'delete_lead' => 'none',
