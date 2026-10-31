@@ -58,7 +58,7 @@ class HomeBrowse
             'community' => ['label' => 'Community', 'links' => self::links('community-matrimony'), 'all' => 'community-matrimony'],
             'language' => ['label' => 'Mother Tongue', 'links' => self::links('mother-tongue-matrimony', 18), 'all' => 'mother-tongue-matrimony'],
             'location' => ['label' => 'City & District', 'links' => self::links('karnataka-matrimony', 18), 'all' => 'karnataka-matrimony'],
-            'nri' => ['label' => 'NRI', 'links' => self::links('nri-matrimony', 18), 'all' => 'nri-matrimony'],
+            'nri' => ['label' => NriWording::byCountry() ? 'Country' : 'NRI', 'links' => self::links('nri-matrimony', 18), 'all' => 'nri-matrimony'],
             'profession' => ['label' => 'Profession', 'links' => self::links('profession-matrimony'), 'all' => 'profession-matrimony'],
             'second' => ['label' => 'Second Marriage', 'links' => self::links('second-marriage'), 'all' => 'second-marriage'],
         ];

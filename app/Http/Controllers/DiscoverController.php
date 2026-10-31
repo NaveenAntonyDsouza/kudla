@@ -34,7 +34,8 @@ class DiscoverController extends Controller
     /**
      * Discover hub sections with cards, in this order, after the Communities
      * chips (Oct 2026). "religion" cards (Catholic, Diocese, Muslim…) are not on
-     * the hub — the communities list holds them, as on the homepage.
+     * the hub — the communities list holds them, as on the homepage, and the
+     * Catholic sites get their dioceses as chips too.
      */
     public const HUB_GROUPS = [
         'language' => 'Language',
@@ -55,7 +56,7 @@ class DiscoverController extends Controller
      */
     public static function hubSections(): \Illuminate\Support\Collection
     {
-        return collect(config('discover'))
+        return collect(\App\Support\NriWording::all())
             ->reject(fn ($cat) => ($cat['hub'] ?? true) === false)
             ->map(fn ($cat, $slug) => [
                 'slug' => $slug,
@@ -76,10 +77,19 @@ class DiscoverController extends Controller
     public function hub()
     {
         // Communities first, as chips — the same list as the homepage's Community tab
-        // (castes, denominations and sects together; hidden religions left out)
+        // (castes, denominations and sects together; hidden religions left out).
+        // One chip alone is no choice: on Crasta it is "Roman Catholic", nearly everyone.
         $communities = collect(self::homeLinkCounts('community-matrimony'))
             ->filter(fn ($link) => $link['count'] >= self::HUB_MIN_PROFILES)
             ->values();
+        // the Catholic sites (every member Christian) browse by diocese as well
+        $dioceses = \App\Support\SiteReligions::christianOnly()
+            ? collect(self::homeLinkCounts('diocese-matrimony'))->filter(fn ($link) => $link['count'] >= self::HUB_MIN_PROFILES)->values()
+            : collect();
+        $chipRows = collect([
+            ['title' => 'Communities', 'links' => $communities->count() >= 2 ? $communities : collect(), 'all' => 'community-matrimony', 'all_label' => 'All communities'],
+            ['title' => 'Dioceses', 'links' => $dioceses, 'all' => 'diocese-matrimony', 'all_label' => 'All dioceses'],
+        ])->filter(fn ($row) => $row['links']->isNotEmpty())->values();
 
         $sections = self::hubSections()
             ->filter(fn ($s) => isset(self::HUB_GROUPS[$s['group']]))
@@ -93,7 +103,7 @@ class DiscoverController extends Controller
             ->filter(fn ($group) => $group['sections']->isNotEmpty());
         $seo = \App\Support\DiscoverSeo::forHub();
 
-        return view('discover.hub', compact('communities', 'groups', 'seo'));
+        return view('discover.hub', compact('chipRows', 'groups', 'seo'));
     }
 
     /**
@@ -102,7 +112,7 @@ class DiscoverController extends Controller
      */
     public function category(string $category)
     {
-        $config = config("discover.{$category}");
+        $config = \App\Support\NriWording::config($category);
         if (!$config) {
             abort(404, 'Category not found.');
         }
@@ -133,7 +143,7 @@ class DiscoverController extends Controller
      */
     public function results(string $category, string $slug)
     {
-        $config = config("discover.{$category}");
+        $config = \App\Support\NriWording::config($category);
         if (!$config) {
             abort(404, 'Category not found.');
         }
@@ -163,7 +173,7 @@ class DiscoverController extends Controller
     private function showResults(string $category, ?string $slug, string $title, array $filter)
     {
         $profile = auth()->check() ? auth()->user()->profile : null;
-        $config = config("discover.{$category}");
+        $config = \App\Support\NriWording::config($category);
 
         // Logged-in: use baseQuery (gender filter, blocked, visibility prefs)
         // Guest: simple public query (active profiles only)

@@ -82,7 +82,7 @@ class DiscoverController extends BaseApiController
      */
     protected function buildHubData(): array
     {
-        $categories = config('discover', []);
+        $categories = \App\Support\NriWording::all();
         if (! is_array($categories)) {
             return [];
         }
@@ -134,7 +134,7 @@ class DiscoverController extends BaseApiController
      */
     public function category(string $category): JsonResponse
     {
-        $config = config("discover.{$category}");
+        $config = \App\Support\NriWording::config($category);
         if (! $config) {
             return ApiResponse::error(
                 'NOT_FOUND',

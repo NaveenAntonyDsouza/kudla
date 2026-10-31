@@ -1,16 +1,17 @@
-{{-- Discover hub (DiscoverController::hub): the communities as chips — the same list as
-     the homepage's Community tab — then the cards, grouped. Styles: .dh-* in discover/hub. --}}
-@if($communities->isNotEmpty())
-    <section class="dh-section" aria-labelledby="dh-communities">
-        <h2 id="dh-communities">Communities</h2>
+{{-- Discover hub (DiscoverController::hub): rows of chips first — the communities, the same
+     list as the homepage's Community tab, and on the Catholic sites the dioceses — then the
+     cards, grouped. Styles: .dh-* in discover/hub. --}}
+@foreach($chipRows as $row)
+    <section class="dh-section" aria-labelledby="dh-chips-{{ $loop->index }}">
+        <h2 id="dh-chips-{{ $loop->index }}">{{ $row['title'] }}</h2>
         <div class="dh-chips">
-            @foreach($communities as $community)
-                <a href="{{ $community['url'] }}" class="dh-chip">{{ $community['label'] }} <span class="dh-chip-n">{{ number_format($community['count']) }}</span></a>
+            @foreach($row['links'] as $link)
+                <a href="{{ $link['url'] }}" class="dh-chip">{{ $link['label'] }} <span class="dh-chip-n">{{ number_format($link['count']) }}</span></a>
             @endforeach
-            <a href="{{ route('discover.category', 'community-matrimony') }}" class="dh-chip dh-chip-all">All communities →</a>
+            <a href="{{ route('discover.category', $row['all']) }}" class="dh-chip dh-chip-all">{{ $row['all_label'] }} →</a>
         </div>
     </section>
-@endif
+@endforeach
 
 @foreach($groups as $group)
     <section class="dh-section" aria-labelledby="dh-group-{{ $loop->index }}">

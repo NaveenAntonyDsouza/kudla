@@ -72,7 +72,12 @@ class DiscoverSeo
                 "{$n} Matrimony",
                 "Find brides and grooms from {$n} district in Karnataka.",
             ],
-            'nri-matrimony' => [
+            // a site whose members mostly live abroad calls them by country, not "NRI" (NriWording)
+            'nri-matrimony' => NriWording::byCountry() ? [
+                ["Brides & Grooms in {$n}", "{$n} Matrimony"],
+                "Brides & Grooms in {$n}",
+                "Find brides and grooms living in {$n}.",
+            ] : [
                 ["NRI Brides & Grooms in {$n}", "NRI Matrimony – {$n}"],
                 "NRI Matrimony – {$n}",
                 "Find NRI brides and grooms{$from} living in {$n}.",

@@ -31,24 +31,7 @@ class DocumentApprovalResource extends Resource
      */
     public static function getNavigationLabel(): string
     {
-        $religions = \Illuminate\Support\Facades\Cache::remember('document-approval-religions', 3600, function () {
-            try {
-                $religions = ReligiousInfo::query()
-                    ->whereHas('profile') // live profiles only (not deleted)
-                    ->whereNotNull('religion')->where('religion', '!=', '')
-                    ->distinct()->pluck('religion');
-                if ($religions->isEmpty()) {
-                    $religions = \App\Models\Community::active()->whereNotNull('religion')->distinct()->pluck('religion');
-                }
-
-                return [
-                    'christian' => $religions->contains('Christian'),
-                    'other' => $religions->contains(fn ($r) => $r !== 'Christian'),
-                ];
-            } catch (\Throwable) {
-                return ['christian' => true, 'other' => true];
-            }
-        });
+        $religions = \App\Support\SiteReligions::mix();
 
         return match (true) {
             $religions['christian'] && ! $religions['other'] => 'Baptism Certificates',

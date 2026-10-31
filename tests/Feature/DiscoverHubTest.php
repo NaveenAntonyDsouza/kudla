@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\DiscoverController;
+use App\Support\DiscoverSeo;
+use App\Support\NriWording;
 use Illuminate\Support\Facades\Cache;
 
 /*
@@ -25,6 +27,13 @@ beforeEach(function () {
     foreach (array_keys(config('discover')) as $slug) {
         Cache::forever("discover.counts.{$slug}", $counts[$slug] ?? []);
     }
+    // a site like Kudla: 28 of 760 live profiles abroad, members of several religions
+    Cache::forever('discover.counts.live', 760);
+    Cache::forever('site-religions', ['christian' => true, 'other' => true]);
+    Cache::forever('community_caste_list_all', ['Billava', 'Kulal', 'Bunts']);
+    Cache::forever('site_setting.community_hidden_religions', '[]');
+    Cache::forever('site_setting.seo_region', '');
+    Cache::forever('site_setting.site_name', 'Kudla Matrimony');
 });
 
 it('gives a button only to sections that are not repeats and have 3+ profiles, biggest first', function () {
@@ -50,11 +59,57 @@ it('puts every Discover category in a hub group, Profession before Job title', f
         ->and(config('discover.profession-matrimony.hub_order'))->toBeLessThan(config('discover.occupation-matrimony.hub_order'));
 });
 
-it('shows the communities as chips, then the groups as headed sections of cards', function () {
+it('keeps a row of two or more communities, and gives a site of several religions no dioceses', function () {
+    Cache::forever('discover.counts.diocese-matrimony', ['mangalore' => 14, 'udupi' => 4]);   // Kudla's Catholics
+
+    $rows = app(DiscoverController::class)->hub()->getData()['chipRows'];
+
+    expect($rows->pluck('title')->all())->toBe(['Communities'])
+        ->and($rows[0]['links']->pluck('label')->all())->toBe(['Billava', 'Kulal', 'Bunts']);
+});
+
+it('gives a Catholic site its dioceses as chips, and leaves out a lone community chip', function () {
+    // Crasta: every member Christian, nearly all "Roman Catholic"
+    Cache::forever('site-religions', ['christian' => true, 'other' => false]);
+    Cache::forever('community_caste_list_all', []);
+    Cache::forever('discover.counts.community-matrimony', ['roman-catholic' => 55]);
+    Cache::forever('discover.counts.diocese-matrimony', ['mangalore' => 6, 'bangalore' => 3, 'mysore' => 3, 'shimoga' => 2]);
+
+    $rows = app(DiscoverController::class)->hub()->getData()['chipRows'];
+
+    expect($rows->pluck('title')->all())->toBe(['Dioceses'])
+        ->and($rows[0]['links']->pluck('label')->all())->toBe(['Mangalore', 'Bangalore', 'Mysore'])   // 3+ profiles
+        ->and($rows[0]['all'])->toBe('diocese-matrimony');
+});
+
+it('calls the NRI pages by country on a site whose members mostly live abroad', function () {
+    // Kudla: 28 of 760 abroad, so "NRI"
+    expect(DiscoverController::hubSections()['nri-matrimony']['hub_label'])->toBe('Living abroad (NRI)')
+        ->and(DiscoverSeo::forResults('nri-matrimony', 'UAE Profiles')['heading'])->toBe('NRI Matrimony – UAE');
+
+    // Global Catholic Match: 700 of 702 live in the USA, Canada, the UK…
+    Cache::forever('discover.counts.nri-matrimony', ['usa' => 191, 'canada' => 105, 'united-kingdom' => 404]);
+    Cache::forever('discover.counts.live', 702);
+    $seo = DiscoverSeo::forResults('nri-matrimony', 'USA Profiles');
+
+    expect(DiscoverController::hubSections()['nri-matrimony']['hub_label'])->toBe('Country')
+        ->and(NriWording::config('nri-matrimony')['label'])->toBe('Matrimony by Country')
+        ->and(DiscoverSeo::forCategory('nri-matrimony', NriWording::config('nri-matrimony'))['title'])->toBe('Brides & Grooms by Country')
+        ->and($seo['heading'])->toBe('Brides & Grooms in USA')
+        ->and($seo['title'])->toBe('Brides & Grooms in USA')
+        ->and($seo['description'])->not->toContain('NRI');
+});
+
+it('shows the chip rows, then the groups as headed sections of cards', function () {
     $html = view('discover._hub-groups', [
-        'communities' => collect([
-            ['label' => 'Billava', 'url' => 'https://example.test/discover/community-matrimony/billava', 'count' => 165],
-            ['label' => 'Roman Catholic', 'url' => 'https://example.test/discover/catholic-matrimony/roman-catholic', 'count' => 27],
+        'chipRows' => collect([
+            ['title' => 'Communities', 'all' => 'community-matrimony', 'all_label' => 'All communities', 'links' => collect([
+                ['label' => 'Billava', 'url' => 'https://example.test/discover/community-matrimony/billava', 'count' => 165],
+                ['label' => 'Roman Catholic', 'url' => 'https://example.test/discover/catholic-matrimony/roman-catholic', 'count' => 27],
+            ])],
+            ['title' => 'Dioceses', 'all' => 'diocese-matrimony', 'all_label' => 'All dioceses', 'links' => collect([
+                ['label' => 'Mangalore', 'url' => 'https://example.test/discover/diocese-matrimony/mangalore', 'count' => 6],
+            ])],
         ]),
         'groups' => collect([
             'place' => ['title' => 'Place', 'sections' => collect([
@@ -70,9 +125,14 @@ it('shows the communities as chips, then the groups as headed sections of cards'
         ->toContain('Billava <span class="dh-chip-n">165</span>')
         ->toContain('discover/catholic-matrimony/roman-catholic')
         ->toContain('All communities')
+        ->toContain('>Dioceses</h2>')
+        ->toContain('Mangalore <span class="dh-chip-n">6</span>')
+        ->toContain('/discover/diocese-matrimony"')
+        ->toContain('All dioceses')
         ->toContain('479 profiles')
         ->toContain('Dakshina Kannada · Udupi · Chikkamagaluru')
         ->toContain('1 profile<')
         ->not->toContain('Community &amp; religion');
-    expect(strpos($html, 'Communities'))->toBeLessThan(strpos($html, 'Karnataka'));
+    expect(strpos($html, 'Communities'))->toBeLessThan(strpos($html, 'Dioceses'))
+        ->and(strpos($html, 'Dioceses'))->toBeLessThan(strpos($html, 'Karnataka'));
 });

@@ -1,4 +1,4 @@
-<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$groups->isEmpty() && $communities->isEmpty() ? 'noindex, follow' : null">
+<x-layouts.app :title="$seo['title']" :metaDescription="$seo['description']" :robots="$groups->isEmpty() && $chipRows->isEmpty() ? 'noindex, follow' : null">
     {{-- Discover hub (Oct 2026): cards grouped under headings, each with its number
          of profiles and three biggest entries. Scoped styles: the live sites don't
          rebuild the Tailwind file, so new utility classes wouldn't exist there. --}}
@@ -35,10 +35,10 @@
         <h1 class="text-xl font-semibold text-gray-900">{{ $seo['heading'] }}</h1>
         <p class="text-sm text-gray-600 mt-1">{{ $seo['intro'] }}</p>
 
-        @if($groups->isEmpty() && $communities->isEmpty())
+        @if($groups->isEmpty() && $chipRows->isEmpty())
             <p class="text-gray-600 py-8">Profiles will appear here as members join.</p>
         @endif
 
-        @include('discover._hub-groups', ['communities' => $communities, 'groups' => $groups])
+        @include('discover._hub-groups', ['chipRows' => $chipRows, 'groups' => $groups])
     </div>
 </x-layouts.app>
