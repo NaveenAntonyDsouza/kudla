@@ -54,6 +54,8 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
     protected function renderMatchCards(): string
     {
         $cards = [];
+        // the site's own colour, not the template default (and no failed email over a colour)
+        $buttonColor = e(rescue(fn () => $this->getPrimaryColor(), '#8B1D91', false));
 
         foreach ($this->matches as $match) {
             $photoUrl = $this->photoUrlFor($match);
@@ -103,7 +105,7 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
                         <span style="display:inline-block;padding:0.25rem 0.625rem;background:' . $badgeColor . ';color:white;border-radius:9999px;font-size:0.75rem;font-weight:600;">' . $badgeText . '</span>
                     </td>
                     <td style="padding:1rem;vertical-align:middle;text-align:right;">
-                        <a href="' . $profileUrl . '" style="display:inline-block;padding:8px 16px;background:#8b1d91;color:white;text-decoration:none;border-radius:6px;font-size:0.875rem;font-weight:600;">View Profile</a>
+                        <a href="' . $profileUrl . '" style="display:inline-block;padding:8px 16px;background:' . $buttonColor . ';color:white;text-decoration:none;border-radius:6px;font-size:0.875rem;font-weight:600;">View Profile</a>
                     </td>
                 </tr>
             </table>';

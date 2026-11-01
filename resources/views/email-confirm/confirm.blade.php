@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <title>Confirm your email — {{ \App\Models\SiteSetting::getValue('site_name', 'Matrimony') }}</title>
     @include('components.partials.tracking-head')
+    @php($theme = \App\Models\ThemeSetting::getTheme())
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; padding: 2rem 1rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f9fafb; color: #111827; }
@@ -13,8 +14,8 @@
         .tick { width: 64px; height: 64px; margin: 0 auto 1rem; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; }
         h1 { font-size: 1.5rem; margin: 0 0 0.5rem; }
         p.sub { color: #6b7280; margin: 0 0 1.75rem; line-height: 1.5; word-break: break-word; }
-        .button { display: block; width: 100%; padding: 0.85rem 1rem; font-size: 1rem; font-weight: 600; color: white; background: #8b1d91; border: 0; border-radius: 8px; cursor: pointer; text-decoration: none; }
-        .button:hover { background: #6b1571; }
+        .button { display: block; width: 100%; padding: 0.85rem 1rem; font-size: 1rem; font-weight: 600; color: white; background: {{ $theme->primary_color ?: '#8B1D91' }}; border: 0; border-radius: 8px; cursor: pointer; text-decoration: none; }
+        .button:hover { background: {{ $theme->primary_hover ?: '#6B1571' }}; }
         .footer { margin-top: 2rem; font-size: 0.75rem; color: #9ca3af; }
     </style>
 </head>

@@ -185,3 +185,18 @@ it('pauses between sends, not before the first', function () {
     Sleep::assertSleptTimes(2);
     Sleep::assertSequence([Sleep::for(3)->seconds(), Sleep::for(3)->seconds()]);
 });
+
+it('colours the profile buttons in the site\'s own colour', function () {
+    Schema::dropIfExists('theme_settings');
+    Schema::create('theme_settings', function (Blueprint $t) {
+        $t->id();
+        $t->string('primary_color')->nullable();
+        $t->timestamps();
+    });
+    \DB::table('theme_settings')->insert(['primary_color' => '#7B1FA2']);
+
+    $html = wmCards(wmMember()->user, [wmMember()]);
+    Schema::dropIfExists('theme_settings');
+
+    expect($html)->toContain('background:#7B1FA2;')->not->toContain('#8b1d91');
+});
