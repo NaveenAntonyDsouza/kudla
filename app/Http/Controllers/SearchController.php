@@ -42,12 +42,24 @@ class SearchController extends Controller
         // If search was submitted, show results page (at /search/results since Oct 2026)
         if ($request->has('search') || ($showResults && ! $request->filled('keyword'))) {
             $query = $this->buildSearchQuery($request, $profile);
+            $searchNote = null;
+            $closest = null;
+            // Nothing matches every choice? Show the closest profiles instead of an empty page, and say
+            // what was left out (weekly review, 4 Nov 2026: 6 of 21 searches that week found nothing).
+            if (! (clone $query)->exists()) {
+                $closest = self::closestSearchParams($request->query(),
+                    fn (array $params) => $this->buildSearchQuery($request->duplicate($params), $profile)->exists());
+                if ($closest) {
+                    $query = $this->buildSearchQuery($request->duplicate($closest['params']), $profile);
+                    $searchNote = self::closestNote($closest['left_out'], $closest['wider_age']);
+                }
+            }
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
-            $this->trackSearch('filters', $request, $results);
+            $this->trackSearch('filters', $request, $results, $closest);
             $modifySearchUrl = self::modifySearchUrl('advance');
-            return view('search.results', compact('profile', 'results', 'currentSort', 'modifySearchUrl'));
+            return view('search.results', compact('profile', 'results', 'currentSort', 'modifySearchUrl', 'searchNote'));
         }
 
         // Keyword search
@@ -323,7 +335,7 @@ class SearchController extends Controller
      * used and how many results — never the values or the keyword typed.
      * First page only, so paging through results isn't counted again.
      */
-    private function trackSearch(string $type, Request $request, $results): void
+    private function trackSearch(string $type, Request $request, $results, ?array $closest = null): void
     {
         if ($results->currentPage() !== 1) {
             return;
@@ -338,9 +350,90 @@ class SearchController extends Controller
             'tab' => $type === 'filters' ? $request->get('tab', 'partner') : null,
             'filters' => $filters->implode(','),
             'filter_count' => $filters->count(),
-            'results' => $results->total(),
+            // A search that found nothing still counts as finding nothing; the closest profiles
+            // shown instead are counted apart, so "searches finding nothing" stays honest
+            'results' => $closest ? 0 : $results->total(),
+            'closest_results' => $closest ? $results->total() : null,
+            'loosened' => $closest ? implode(',', array_merge($closest['left_out'], $closest['wider_age'] ? ['age'] : [])) : null,
             'sort' => $request->get('sort', 'relevance'),
         ], fn ($v) => $v !== null && $v !== ''));
+    }
+
+    /**
+     * When a search finds nothing, these choices are left out one group at a
+     * time, in this order, until someone matches; last, the age range widens
+     * by AGE_SLACK years each side. Religion, denomination, caste, mother
+     * tongue, marital status, physical status and "with photo" are never left
+     * out: they decide whom a member wants to marry, and a "closer" profile
+     * that ignores them is no match at all.
+     */
+    private const LOOSEN = [
+        [['diet', 'smoking', 'drinking'], 'lifestyle'],
+        [['body_type'], 'body type'],
+        [['annual_income'], 'income'],
+        [['occupation'], 'occupation'],
+        [['education'], 'education'],
+        [['family_status'], 'family status'],
+        [['working_country', 'working_state', 'working_district'], 'work place'],
+        [['native_country', 'native_state', 'native_district'], 'home place'],
+        [['height_from', 'height_to'], 'height'],
+    ];
+
+    private const AGE_SLACK = 3;
+
+    /**
+     * The search with the fewest choices left out that still finds someone.
+     *
+     * @param  array  $params  the search as asked
+     * @param  callable(array): bool  $finds  whether a search with these parameters finds anyone
+     * @return array{params: array, left_out: list<string>, wider_age: bool}|null  null: nothing comes close
+     */
+    public static function closestSearchParams(array $params, callable $finds): ?array
+    {
+        $chosen = fn ($value) => collect((array) $value)->contains(fn ($v) => filled($v) && $v !== 'Any');
+        $leftOut = [];
+
+        foreach (self::LOOSEN as [$keys, $label]) {
+            if (! collect($keys)->contains(fn ($k) => $chosen($params[$k] ?? null))) {
+                continue;   // not one of this search's choices
+            }
+            $params = array_diff_key($params, array_flip($keys));
+            $leftOut[] = $label;
+            if ($finds($params)) {
+                return ['params' => $params, 'left_out' => $leftOut, 'wider_age' => false];
+            }
+        }
+
+        if ($chosen($params['age_from'] ?? null) || $chosen($params['age_to'] ?? null)) {
+            if ($chosen($params['age_from'] ?? null)) {
+                $params['age_from'] = (string) max(18, (int) $params['age_from'] - self::AGE_SLACK);
+            }
+            if ($chosen($params['age_to'] ?? null)) {
+                $params['age_to'] = (string) ((int) $params['age_to'] + self::AGE_SLACK);
+            }
+            if ($finds($params)) {
+                return ['params' => $params, 'left_out' => $leftOut, 'wider_age' => true];
+            }
+        }
+
+        return null;
+    }
+
+    /** The line above the closest profiles: what was left out to find them. */
+    public static function closestNote(array $leftOut, bool $widerAge): string
+    {
+        $parts = [];
+        if ($leftOut) {
+            $list = count($leftOut) > 1
+                ? implode(', ', array_slice($leftOut, 0, -1)) . ' and ' . end($leftOut)
+                : $leftOut[0];
+            $parts[] = 'leave out your ' . $list . (count($leftOut) > 1 ? ' choices' : ' choice');
+        }
+        if ($widerAge) {
+            $parts[] = 'allow ' . self::AGE_SLACK . ' years either side of your age range';
+        }
+
+        return 'No profile matched all your choices, so these are the closest: they ' . implode(' and ', $parts) . '.';
     }
 
     private function prefsToSearchParams($prefs): array
