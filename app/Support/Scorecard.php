@@ -45,6 +45,9 @@ class Scorecard
 
         $joined = fn (Carbon $from, Carbon $to) => Profile::withTrashed()->whereNotNull('full_name')->where('created_at', '>=', $from)->where('created_at', '<', $to);
         $sent = fn (Carbon $from, Carbon $to) => Interest::where('created_at', '>=', $from)->where('created_at', '<', $to)->where('status', '!=', 'cancelled');
+        // Answers only: interest_replies also holds the chat messages
+        $answers = fn (Carbon $from, Carbon $to) => DB::table('interest_replies')->whereIn('reply_type', ['accept', 'decline'])
+            ->where('created_at', '>=', $from)->where('created_at', '<', $to);
 
         $add('signups', 'Sign-ups', 'New member accounts', fn ($f, $t) => $joined($f, $t)->count());
         $add('finished', 'Finished registration', 'Of that week\'s sign-ups, finished every step', fn ($f, $t) => self::pct($joined($f, $t)->where('onboarding_completed', true)->count(), $joined($f, $t)->count()), 'percent');
@@ -58,6 +61,10 @@ class Scorecard
         $add('answered', 'Answer rate', 'Of that week\'s interests, answered so far (recent weeks are still being answered)', fn ($f, $t) => self::pct($sent($f, $t)->whereIn('status', ['accepted', 'declined'])->count(), $sent($f, $t)->count()), 'percent');
         $add('accepted', 'Acceptance rate', 'Of that week\'s answered interests, accepted', fn ($f, $t) => self::pct($sent($f, $t)->where('status', 'accepted')->count(), $sent($f, $t)->whereIn('status', ['accepted', 'declined'])->count()), 'percent');
         $add('connections', 'Connections', 'Interests accepted that week', fn ($f, $t) => DB::table('interest_replies')->where('reply_type', 'accept')->where('created_at', '>=', $f)->where('created_at', '<', $t)->count());
+        $add('answered_by_email', 'Answered from the email', 'Of that week\'s answers, pressed Accept or Decline in the email instead of on the site', fn ($f, $t) => self::pct(
+            $answers($f, $t)->where('answered_via', 'email')->count(),
+            $answers($f, $t)->count()
+        ), 'percent');
         $add('paid', 'Paid plans bought', 'Payments received that week', fn ($f, $t) => Subscription::where('payment_status', 'paid')->where('created_at', '>=', $f)->where('created_at', '<', $t)->count(), money: true);
         $add('revenue', 'Revenue', 'Paid that week, in rupees', fn ($f, $t) => (int) round(Subscription::where('payment_status', 'paid')->where('created_at', '>=', $f)->where('created_at', '<', $t)->sum('amount') / 100), 'rupees', money: true);
         $add('backlog', 'Support backlog', 'Contact messages not answered + follow-ups overdue (today\'s figure)', fn ($f, $t) => ContactSubmission::where('status', 'new')->count()

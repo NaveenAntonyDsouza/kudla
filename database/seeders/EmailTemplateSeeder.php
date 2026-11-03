@@ -211,6 +211,15 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['USER_NAME', 'MATRI_ID', 'MEMBER_ID_LABEL', 'PHOTOS_URL', 'HELP_LINE', 'FORGOT_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
             ],
 
+            // ── No photo yet, sent to women: who may see it comes first ──
+            [
+                'slug' => 'photo-reminder-women',
+                'name' => 'Reminder — add a profile photo (women)',
+                'subject' => '{{USER_NAME}}, add a photo — you choose who can see it',
+                'body_html' => EmailTemplateBodies::PHOTO_REMINDER_WOMEN,
+                'variables' => ['USER_NAME', 'MATRI_ID', 'MEMBER_ID_LABEL', 'PHOTOS_URL', 'HELP_LINE', 'FORGOT_URL', 'UNSUBSCRIBE_URL', 'SITE_NAME', 'PRIMARY_COLOR'],
+            ],
+
             // ── Weekly Match Suggestions ──
             [
                 'slug' => 'weekly-match-suggestions',

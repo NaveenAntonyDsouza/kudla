@@ -11,6 +11,9 @@ class InterestReply extends Model
         'interest_id',
         'replier_profile_id',
         'reply_type',
+        // 'email' when the member pressed Accept or Decline in the interest
+        // email; null when they answered on the site or in the app
+        'answered_via',
         'template_id',
         'custom_message',
         'is_silent_decline',

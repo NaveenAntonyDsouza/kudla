@@ -136,19 +136,21 @@ class InterestService
     /**
      * Accept an interest and create a reply.
      */
-    public function accept(Interest $interest, ?string $templateId, ?string $customMessage): InterestReply
+    /** @param  ?string  $via  'email' when answered from the interest email; null on the site or in the app */
+    public function accept(Interest $interest, ?string $templateId, ?string $customMessage, ?string $via = null): InterestReply
     {
         if ($interest->status !== 'pending') {
             throw new \RuntimeException('This interest is no longer pending.');
         }
 
-        return DB::transaction(function () use ($interest, $templateId, $customMessage) {
+        return DB::transaction(function () use ($interest, $templateId, $customMessage, $via) {
             $interest->update(['status' => 'accepted']);
 
             $reply = InterestReply::create([
                 'interest_id' => $interest->id,
                 'replier_profile_id' => $interest->receiver_profile_id,
                 'reply_type' => 'accept',
+                'answered_via' => $via,
                 'template_id' => $templateId,
                 'custom_message' => $customMessage,
             ]);
@@ -176,19 +178,21 @@ class InterestService
     /**
      * Decline an interest and create a reply.
      */
-    public function decline(Interest $interest, ?string $templateId, ?string $customMessage, bool $silent = false): InterestReply
+    /** @param  ?string  $via  'email' when answered from the interest email; null on the site or in the app */
+    public function decline(Interest $interest, ?string $templateId, ?string $customMessage, bool $silent = false, ?string $via = null): InterestReply
     {
         if ($interest->status !== 'pending') {
             throw new \RuntimeException('This interest is no longer pending.');
         }
 
-        return DB::transaction(function () use ($interest, $templateId, $customMessage, $silent) {
+        return DB::transaction(function () use ($interest, $templateId, $customMessage, $silent, $via) {
             $interest->update(['status' => 'declined']);
 
             $reply = InterestReply::create([
                 'interest_id' => $interest->id,
                 'replier_profile_id' => $interest->receiver_profile_id,
                 'reply_type' => 'decline',
+                'answered_via' => $via,
                 'template_id' => $silent ? null : $templateId,
                 'custom_message' => $silent ? null : $customMessage,
                 'is_silent_decline' => $silent,

@@ -573,6 +573,7 @@
 
     <!-- Main Content -->
     <main>
+        @include('components.partials.email-bounced-banner')
         @if(request()->routeIs('home') || request()->routeIs('membership.index'))
             <x-offer-banner />
         @endif

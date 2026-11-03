@@ -41,6 +41,9 @@ abstract class DatabaseMailable extends Mailable
 
     public const SIGN_IN_LINK_DAYS = 7;
 
+    /** Seconds between one try at sending and the next (see sendWithRetries). */
+    private const RETRY_PAUSE_SECONDS = 5;
+
     /** Links that must never sign anyone in. */
     private const NO_SIGN_IN_PATHS = [
         '/unsubscribe', '/resubscribe', '/confirm-email', '/still-looking', '/go/',
@@ -106,13 +109,91 @@ abstract class DatabaseMailable extends Mailable
             self::paceBulkSending();
         }
 
-        try {
-            return parent::send($mailer);
-        } catch (\Throwable $e) {
-            // For admin → Reports → Email Activity; the caller still sees the error
-            EmailLogger::failed($this->templateSlug, $this->to, $e);
-            throw $e;
+        return $this->sendWithRetries(fn () => parent::send($mailer));
+    }
+
+    /**
+     * A send that trips over a passing fault — the mailbox timed out, the
+     * connection dropped — is tried again instead of being lost. 26 emails
+     * went that way on kudla in the week of 27 Oct 2026 and nothing picked
+     * them up. `mail_retry_attempts` (default 2, 0 = off) sets how many
+     * extra tries; each one hangs up first, so the send opens a fresh
+     * connection rather than reusing the one that just failed.
+     *
+     * Only the last failure is written to Email Activity, so the failed
+     * count there stays "emails that never arrived".
+     */
+    protected function sendWithRetries(callable $send)
+    {
+        $left = self::retryAttempts();
+        $tries = 1;
+
+        while (true) {
+            try {
+                return $send();
+            } catch (\Throwable $e) {
+                if ($left < 1 || ! self::worthRetrying($e)) {
+                    // For admin → Reports → Email Activity; the caller still sees the error
+                    EmailLogger::failed($this->templateSlug, $this->to, $e, $tries);
+                    throw $e;
+                }
+
+                $left--;
+                $tries++;
+                self::closeSmtpConnection();
+                if (! app()->runningUnitTests()) {
+                    sleep(self::RETRY_PAUSE_SECONDS);
+                }
+            }
         }
+    }
+
+    private static function retryAttempts(): int
+    {
+        return max(0, (int) SiteSetting::getValue('mail_retry_attempts', '2'));
+    }
+
+    /**
+     * Worth another try: a timeout, a dropped connection, or any other 4xx
+     * answer. A 5xx is the mailbox's final word, and a quota refusal is a
+     * limit that the next few seconds cannot change — both are left alone.
+     *
+     * The code is read from the mailbox's own answer, never from any other
+     * number in the message: a host written "smtp.example.com:587" must not
+     * be mistaken for a 5xx refusal.
+     */
+    private static function worthRetrying(\Throwable $e): bool
+    {
+        $message = $e->getMessage();
+
+        if (preg_match('/rate.?limit|quota|too much mail|too many/i', $message)) {
+            return false;
+        }
+
+        $code = self::smtpCode($message);
+
+        // No code to read: the connection dropped or never opened. Worth another try.
+        return $code === null
+            ? $e instanceof \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+            : $code >= 400 && $code < 500;
+    }
+
+    /** The status the mailbox answered with, if the message carries one. */
+    private static function smtpCode(string $message): ?int
+    {
+        $patterns = [
+            '/got code "(\d{3})"/',           // Symfony: Expected response code "250" but got code "421"
+            '/(?:^|")(\d{3}) \d+\.\d+\.\d+/', // a raw SMTP line: 451 4.7.1 ...
+            '/^(\d{3})\b/',                   // a bare leading code
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $message, $m)) {
+                return (int) $m[1];
+            }
+        }
+
+        return null;
     }
 
     /**

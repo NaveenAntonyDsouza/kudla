@@ -234,6 +234,14 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     Route::post('/submit-id-proof', [IdProofController::class, 'store'])->name('idproof.store');
     Route::delete('/submit-id-proof/{idProof}', [IdProofController::class, 'destroy'])->name('idproof.destroy');
 
+    // "Your email is not reaching you": a member whose address bounced gives a
+    // new one, confirmed by a code sent to that new address (Nov 2026)
+    Route::get('/email-not-reaching-you', [\App\Http\Controllers\FixEmailController::class, 'show'])->name('email.fix');
+    Route::post('/email-not-reaching-you/send-code', [\App\Http\Controllers\FixEmailController::class, 'sendCode'])
+        ->middleware('throttle:5,1')->name('email.fix.send');
+    Route::post('/email-not-reaching-you', [\App\Http\Controllers\FixEmailController::class, 'confirm'])
+        ->middleware('throttle:10,1')->name('email.fix.confirm');
+
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/filters', [SettingsController::class, 'updateFilters'])->name('settings.filters');

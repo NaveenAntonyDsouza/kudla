@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Mail\PhotoReminderMail;
+use App\Mail\PhotoReminderWomenMail;
 use App\Models\AdminActivityLog;
+use App\Models\EmailTemplate;
 use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -26,6 +28,20 @@ class SendPhotoReminders extends Command
      * 5 Oct 2026: at most 3).
      */
     public const GAPS_DAYS = [1 => 2, 2 => 7, 3 => 21];
+
+    /**
+     * Women get the version that leads with the choice of who may see the
+     * photo (2 Nov 2026: 31 of 144 women show one, against 43% of men).
+     * Where a site has not got that template, or an admin switched it off,
+     * everyone gets the general reminder as before.
+     */
+    private function mailFor(User $user): PhotoReminderMail
+    {
+        $women = $user->profile?->gender === 'female'
+            && EmailTemplate::findBySlug('photo-reminder-women') !== null;
+
+        return $women ? new PhotoReminderWomenMail($user) : new PhotoReminderMail($user);
+    }
 
     public function handle(): int
     {
@@ -89,7 +105,7 @@ class SendPhotoReminders extends Command
                 sleep($delay);
             }
             try {
-                Mail::to($user->email)->send(new PhotoReminderMail($user));
+                Mail::to($user->email)->send($this->mailFor($user));
                 User::whereKey($user->id)->toBase()->update([
                     'last_photo_reminder_at' => now(),
                     'photo_reminders_sent' => (int) $user->photo_reminders_sent + 1,
