@@ -32,15 +32,19 @@ final class EmailLogger
         });
     }
 
-    /** A DatabaseMailable whose send threw (mailbox refused, quota hit, network). */
-    public static function failed(string $type, array $recipients, \Throwable $e): void
+    /**
+     * A DatabaseMailable whose send threw (mailbox refused, quota hit, network).
+     * $tries counts the attempts made, so the report shows when retries were
+     * spent on an email that never arrived anyway.
+     */
+    public static function failed(string $type, array $recipients, \Throwable $e, int $tries = 1): void
     {
         self::write(fn () => EmailLog::create([
             'event' => 'failed',
             'email_type' => $type,
             'recipient' => $to = $recipients[0]['address'] ?? null,
             'user_id' => self::userIdFor($to),
-            'error' => Str::limit($e->getMessage(), 500),
+            'error' => Str::limit(($tries > 1 ? "after {$tries} tries: " : '') . $e->getMessage(), 500),
         ]));
     }
 

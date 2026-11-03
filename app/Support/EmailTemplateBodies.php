@@ -13,6 +13,24 @@ namespace App\Support;
  */
 final class EmailTemplateBodies
 {
+    /**
+     * "Add a photo" for women, with the locked-photo choice first (weekly
+     * review, 2 Nov 2026: 31 of 144 women show a photo against 43% of men,
+     * and the choice is buried in the fourth paragraph of the general
+     * reminder, named "Only after interest accepted").
+     */
+    public const PHOTO_REMINDER_WOMEN = '<h1>Hi {{USER_NAME}},</h1>'
+        . '<p>Your {{SITE_NAME}} profile ({{MATRI_ID}}) is ready, and one thing is still missing: a photo.</p>'
+        . '<p><strong>You decide who sees it.</strong> On your photos page you can choose <em>Only members whose interest I accept</em> — everyone else sees a locked photo until you say yes. Nobody can see your face unless you have accepted them.</p>'
+        . '<p style="text-align:center;margin:2rem 0;"><a href="{{PHOTOS_URL}}" style="display:inline-block;padding:12px 32px;background:{{PRIMARY_COLOR}};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">Add my photo</a></p>'
+        . '<p>Profiles with a photo are shown first in search, and members reply far more often to someone they can see. You can change the setting, or remove the photo, at any time.</p>'
+        . '<p>A clear, recent photo of your face, on your own, works best.</p>'
+        . '<p>You can log in with your email address, mobile number or {{MEMBER_ID_LABEL}} (<strong>{{MATRI_ID}}</strong>) and your password. Forgot your password? <a href="{{FORGOT_URL}}">Reset it here</a>.</p>'
+        . '<p>{{HELP_LINE}}</p>'
+        . '<p>Warm regards,<br>Team {{SITE_NAME}}</p>'
+        . '<hr style="border:none;border-top:1px solid #e5e7eb;margin:2rem 0 1rem;">'
+        . '<p style="font-size:0.75rem;color:#6b7280;">You\'re receiving this because your {{SITE_NAME}} profile has no photo yet. <a href="{{UNSUBSCRIBE_URL}}" style="color:#6b7280;">Unsubscribe from reminders</a>.</p>';
+
     /** The original welcome body, as seeded before October 2026. */
     public const WELCOME_V1 = '<h1>Welcome to {{SITE_NAME}}!</h1><p>Dear {{USER_NAME}},</p><p>Thank you for registering with {{SITE_NAME}}. Your Matri ID is <strong>{{MATRI_ID}}</strong>.</p><p>Here\'s what to do next:</p><ul><li>Complete your profile to get more visibility</li><li>Upload your photos</li><li>Set your partner preferences</li><li>Start browsing profiles</li></ul><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">Complete Your Profile</a></p><p>If you have any questions, feel free to contact us.</p><p>Warm regards,<br>{{SITE_NAME}} Team</p>';
 

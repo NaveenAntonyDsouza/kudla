@@ -37,6 +37,7 @@ beforeEach(function () {
         $t->unsignedBigInteger('user_id');
         $t->unsignedBigInteger('branch_id')->nullable();
         $t->string('matri_id')->nullable();
+        $t->string('gender')->nullable();
         $t->boolean('is_active')->default(true);
         $t->string('suspension_status')->nullable();
         $t->boolean('onboarding_completed')->default(true);
@@ -156,6 +157,43 @@ it('writes the name, ID, photos link, privacy choices and help phone', function 
         ->and(urldecode(html_entity_decode($html)))->toContain('to=/manage-photos') // a one-tap sign-in link
         ->and($html)->toContain('Only after interest accepted')
         ->and($html)->toContain('7760020186');
+});
+
+it('sends women the version that leads with who may see the photo', function () {
+    // KM11 already has a photo, so only KM12 and KM13 below are reminded
+    $html = (new \App\Mail\PhotoReminderWomenMail(prMember('KM11', photo: 'approved', user: ['name' => 'Asha'], profile: ['gender' => 'female'])))->render();
+
+    expect($html)->toContain('Hi Asha,')
+        ->and($html)->toContain('You decide who sees it.')
+        ->and($html)->toContain('Only members whose interest I accept')
+        ->and($html)->toContain('locked photo until you say yes')
+        // the general reminder's three-way privacy paragraph is not in this one
+        ->and($html)->not->toContain('Only after interest accepted');
+
+    // the choice itself: women get the women's email, men the general one
+    prMember('KM12', profile: ['gender' => 'female']);
+    prMember('KM13', profile: ['gender' => 'male']);
+    $this->artisan('members:remind-photo', ['--delay' => 0])->assertSuccessful();
+
+    $women = Mail::sent(\App\Mail\PhotoReminderWomenMail::class);
+    expect($women)->toHaveCount(1)
+        ->and($women->first()->hasTo('km12@site.test'))->toBeTrue();
+
+    $general = Mail::sent(PhotoReminderMail::class)
+        ->reject(fn ($m) => $m instanceof \App\Mail\PhotoReminderWomenMail);
+    expect($general)->toHaveCount(1)
+        ->and($general->first()->hasTo('km13@site.test'))->toBeTrue();
+});
+
+it('falls back to the general reminder where a site has no women template', function () {
+    DB::table('email_templates')->where('slug', 'photo-reminder-women')->delete();
+    \Illuminate\Support\Facades\Cache::forget('email_template.photo-reminder-women');
+
+    prMember('KM14', profile: ['gender' => 'female']);
+    $this->artisan('members:remind-photo', ['--delay' => 0])->assertSuccessful();
+
+    expect(Mail::sent(\App\Mail\PhotoReminderWomenMail::class))->toHaveCount(0)
+        ->and(Mail::sent(PhotoReminderMail::class))->toHaveCount(1);
 });
 
 it('sends at most 3 photo reminders, 2, 7 and 21 days apart, then never again', function () {

@@ -127,13 +127,24 @@ beforeEach(function () {
         $t->string('logo_url')->nullable();
         $t->timestamps();
     });
+    Schema::create('interest_replies', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('interest_id');
+        $t->unsignedBigInteger('replier_profile_id');
+        $t->string('reply_type');
+        $t->string('answered_via', 20)->nullable();
+        $t->string('template_id')->nullable();
+        $t->text('custom_message')->nullable();
+        $t->boolean('is_silent_decline')->default(false);
+        $t->timestamps();
+    });
 
     Mail::fake();
     Sleep::fake();
 });
 
 afterEach(function () {
-    foreach (['theme_settings', 'email_templates', 'site_settings', 'user_memberships', 'membership_plans', 'subscriptions', 'ignored_profiles', 'blocked_profiles', 'interests', 'education_details', 'location_info', 'profiles', 'users'] as $table) {
+    foreach (['interest_replies', 'theme_settings', 'email_templates', 'site_settings', 'user_memberships', 'membership_plans', 'subscriptions', 'ignored_profiles', 'blocked_profiles', 'interests', 'education_details', 'location_info', 'profiles', 'users'] as $table) {
         Schema::dropIfExists($table);
     }
 });
@@ -271,15 +282,23 @@ it('lets a member accept or decline from the email without logging in, only by p
 
     // the button answers through the same service as the site
     $service = Mockery::mock(\App\Services\InterestService::class);
-    $service->shouldReceive('accept')->once()->andReturnUsing(function (Interest $i) {
+    $service->shouldReceive('accept')->once()->andReturnUsing(function (Interest $i, $template, $message, $via = null) {
         DB::table('interests')->where('id', $i->id)->update(['status' => 'accepted']);
 
-        return new \App\Models\InterestReply();
+        return \App\Models\InterestReply::create([
+            'interest_id' => $i->id,
+            'replier_profile_id' => $i->receiver_profile_id,
+            'reply_type' => 'accept',
+            'answered_via' => $via,
+        ]);
     });
     app()->instance(\App\Services\InterestService::class, $service);
 
     $this->post($url, ['choice' => 'accept'])->assertOk()->assertSee('You are connected');
     expect(Interest::find($interest->id)->status)->toBe('accepted');
+
+    // the answer is marked as coming from the email, so the weekly review can count it
+    expect(DB::table('interest_replies')->where('interest_id', $interest->id)->value('answered_via'))->toBe('email');
 
     // answered: the link only says so
     $this->get($url)->assertOk()->assertSee('You have already accepted this interest');
@@ -290,4 +309,21 @@ it('lets a member accept or decline from the email without logging in, only by p
     $otherUrl = $other->emailReplyUrl('decline');
     $receiver->forceFill(['email' => 'new@example.test'])->save();
     $this->get($otherUrl)->assertOk()->assertSee('This link has expired');
+});
+
+it('records where an answer came from: the email, or the site', function () {
+    $this->mock(NotificationService::class)->shouldReceive('send');
+    $this->mock(\App\Services\MemberEmailService::class)->shouldReceive('interestDeclined')->shouldReceive('interestAccepted');
+    [, $sender] = erMember('KM410001');
+    [, $receiver] = erMember('KM410002');
+    $service = app(\App\Services\InterestService::class);
+
+    $fromEmail = Interest::find(erInterest($sender, $receiver, 1));
+    $service->decline($fromEmail, null, null, false, 'email');
+
+    $onSite = Interest::find(erInterest($sender, $receiver, 2));
+    $service->decline($onSite, null, null);
+
+    expect(DB::table('interest_replies')->where('interest_id', $fromEmail->id)->value('answered_via'))->toBe('email')
+        ->and(DB::table('interest_replies')->where('interest_id', $onSite->id)->value('answered_via'))->toBeNull();
 });

@@ -35,11 +35,13 @@ class InterestEmailReplyController extends Controller
         $done = null;
         if ($state['status'] === 'ready') {
             try {
+                // 'email' is recorded on the reply, so the weekly review can
+                // see whether these buttons are used at all
                 if ($request->input('choice') === 'accept') {
-                    $interests->accept($interest, null, null);
+                    $interests->accept($interest, null, null, via: 'email');
                     Analytics::track('interest_accepted', ['via' => 'email_link'], 'InterestAccepted');
                 } else {
-                    $interests->decline($interest, null, null);
+                    $interests->decline($interest, null, null, via: 'email');
                     Analytics::track('interest_declined', ['via' => 'email_link']);
                 }
                 $done = $request->input('choice');

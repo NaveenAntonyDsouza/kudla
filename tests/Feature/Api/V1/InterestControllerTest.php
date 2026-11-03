@@ -79,9 +79,9 @@ class FakeInterestService extends InterestService
         return $i;
     }
 
-    public function accept(Interest $interest, ?string $templateId, ?string $customMessage): \App\Models\InterestReply
+    public function accept(Interest $interest, ?string $templateId, ?string $customMessage, ?string $via = null): \App\Models\InterestReply
     {
-        $this->record('accept', ['interest_id' => $interest->id, 'template_id' => $templateId]);
+        $this->record('accept', ['interest_id' => $interest->id, 'template_id' => $templateId, 'via' => $via]);
         if ($this->nextThrowable) { $t = $this->nextThrowable; $this->nextThrowable = null; throw $t; }
         $interest->forceFill(['status' => 'accepted'])->syncOriginalAttribute('status');
         $reply = new \App\Models\InterestReply();
@@ -89,9 +89,9 @@ class FakeInterestService extends InterestService
         return $reply;
     }
 
-    public function decline(Interest $interest, ?string $templateId, ?string $customMessage, bool $silent = false): \App\Models\InterestReply
+    public function decline(Interest $interest, ?string $templateId, ?string $customMessage, bool $silent = false, ?string $via = null): \App\Models\InterestReply
     {
-        $this->record('decline', ['interest_id' => $interest->id, 'silent' => $silent]);
+        $this->record('decline', ['interest_id' => $interest->id, 'silent' => $silent, 'via' => $via]);
         if ($this->nextThrowable) { $t = $this->nextThrowable; $this->nextThrowable = null; throw $t; }
         $interest->forceFill(['status' => 'declined'])->syncOriginalAttribute('status');
         $reply = new \App\Models\InterestReply();
