@@ -40,19 +40,9 @@ class SendInterestReminders extends Command
         $dryRun = (bool) $this->option('dry-run');
         $cap = max(1, (int) SiteSetting::getValue('interest_reminders_daily_cap', '30'));
 
-        $byReceiver = Interest::query()
-            ->where('status', 'pending')
-            ->where('is_trashed_by_receiver', false)
+        // pending, from members still here, never between members who blocked or ignored each other
+        $byReceiver = Interest::waitingForReply()
             ->whereBetween('created_at', [now()->subDays(self::MAX_AGE_DAYS), now()->subDays(self::MIN_AGE_DAYS)])
-            // Only senders still on the site (soft-deleted profiles drop out of whereHas)
-            ->whereHas('senderProfile', fn ($q) => $q->where('is_active', true))
-            // Never remind someone about a member either of them blocked or ignored
-            ->whereNotExists(fn ($q) => $q->from('blocked_profiles')->where(fn ($w) => $w
-                ->where(fn ($a) => $a->whereColumn('blocked_profiles.profile_id', 'interests.receiver_profile_id')->whereColumn('blocked_profiles.blocked_profile_id', 'interests.sender_profile_id'))
-                ->orWhere(fn ($b) => $b->whereColumn('blocked_profiles.profile_id', 'interests.sender_profile_id')->whereColumn('blocked_profiles.blocked_profile_id', 'interests.receiver_profile_id'))))
-            ->whereNotExists(fn ($q) => $q->from('ignored_profiles')
-                ->whereColumn('ignored_profiles.profile_id', 'interests.receiver_profile_id')
-                ->whereColumn('ignored_profiles.ignored_profile_id', 'interests.sender_profile_id'))
             ->with(['senderProfile.locationInfo', 'senderProfile.educationDetail', 'receiverProfile.user'])
             ->orderBy('created_at')
             ->get()

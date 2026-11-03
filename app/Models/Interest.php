@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\PhotoVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -50,6 +51,27 @@ class Interest extends Model
     public function senderProfile(): BelongsTo
     {
         return $this->belongsTo(Profile::class, 'sender_profile_id');
+    }
+
+    /**
+     * Interests worth putting in front of their receiver for an answer: still
+     * pending, not in the receiver's bin, from a member still on the site, and
+     * never between two members where either blocked the other or the receiver
+     * ignored the sender. One rule for the reply reminder and the weekly match
+     * email (Nov 2026), so the two can never disagree.
+     */
+    public function scopeWaitingForReply(Builder $query): Builder
+    {
+        return $query->where('status', 'pending')
+            ->where('is_trashed_by_receiver', false)
+            // Only senders still on the site (soft-deleted profiles drop out of whereHas)
+            ->whereHas('senderProfile', fn ($q) => $q->where('is_active', true))
+            ->whereNotExists(fn ($q) => $q->from('blocked_profiles')->where(fn ($w) => $w
+                ->where(fn ($a) => $a->whereColumn('blocked_profiles.profile_id', 'interests.receiver_profile_id')->whereColumn('blocked_profiles.blocked_profile_id', 'interests.sender_profile_id'))
+                ->orWhere(fn ($b) => $b->whereColumn('blocked_profiles.profile_id', 'interests.sender_profile_id')->whereColumn('blocked_profiles.blocked_profile_id', 'interests.receiver_profile_id'))))
+            ->whereNotExists(fn ($q) => $q->from('ignored_profiles')
+                ->whereColumn('ignored_profiles.profile_id', 'interests.receiver_profile_id')
+                ->whereColumn('ignored_profiles.ignored_profile_id', 'interests.sender_profile_id'));
     }
 
     /**

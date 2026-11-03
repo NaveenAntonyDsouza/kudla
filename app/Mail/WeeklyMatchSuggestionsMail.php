@@ -2,8 +2,11 @@
 
 namespace App\Mail;
 
+use App\Console\Commands\SendInterestReminders;
+use App\Models\Interest;
 use App\Models\Profile;
 use App\Models\User;
+use App\Support\InterestReplyRows;
 use App\Support\MemberName;
 use App\Support\PhotoVisibility;
 use Illuminate\Support\Collection;
@@ -12,7 +15,7 @@ use Illuminate\Support\Collection;
  * WeeklyMatchSuggestionsMail — weekly digest email showing top N matches.
  *
  * Template: `weekly-match-suggestions` (seeded in EmailTemplateSeeder).
- * Variables: USER_NAME, MATCH_COUNT, MATCH_CARDS_HTML, MATCHES_URL, UNSUBSCRIBE_URL, SITE_NAME.
+ * Variables: USER_NAME, MATCH_COUNT, MATCH_CARDS_HTML, PENDING_REPLIES_HTML, MATCHES_URL, UNSUBSCRIBE_URL, SITE_NAME.
  *
  * The match cards are rendered to HTML here (rather than Blade partials in the template)
  * so the template stays editable in the admin panel as a single HTML field.
@@ -22,6 +25,9 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
     protected string $templateSlug = 'weekly-match-suggestions';
 
     protected ?string $unsubscribePreference = 'email_weekly_matches';
+
+    /** Waiting interests listed in the email; any more are counted. */
+    public const WAITING_LISTED = 3;
 
     protected function recipient(): ?User
     {
@@ -37,9 +43,55 @@ class WeeklyMatchSuggestionsMail extends DatabaseMailable
             'USER_NAME' => MemberName::first($this->user->name) ?: $this->user->name,
             'MATCH_COUNT' => (string) $this->matches->count(),
             'MATCH_CARDS_HTML' => $this->renderMatchCards(),
+            'PENDING_REPLIES_HTML' => $this->pendingRepliesHtml(),
             'MATCHES_URL' => url('/matches'),
             'UNSUBSCRIBE_URL' => $this->user->unsubscribeUrl('email_weekly_matches'),
         ];
+    }
+
+    /**
+     * Interests this member still owes an answer to, with Accept / Decline
+     * that work without signing in (weekly review, 4 Nov 2026: 7 of 68 answers
+     * came from those buttons in the interest email, and 263 interests were
+     * waiting). Interests from the last day are left out — their own email has
+     * only just gone. Empty when nothing is waiting or the member switched
+     * interest emails off; a fault here never stops the match email.
+     */
+    protected function pendingRepliesHtml(): string
+    {
+        return rescue(function () {
+            $profileId = $this->user->profile?->id;
+            if (! $profileId || ! $this->user->wantsNotification('email_interest')) {
+                return '';
+            }
+
+            $waiting = Interest::waitingForReply()
+                ->where('receiver_profile_id', $profileId)
+                ->whereBetween('created_at', [now()->subDays(SendInterestReminders::MAX_AGE_DAYS), now()->subDay()])
+                ->with(['senderProfile.locationInfo', 'senderProfile.educationDetail', 'receiverProfile.user'])
+                ->orderBy('created_at')
+                ->get();
+            if ($waiting->isEmpty()) {
+                return '';
+            }
+
+            $total = $waiting->count();
+            $listed = $waiting->take(self::WAITING_LISTED);
+            $more = $total - $listed->count();
+            $line = $total === 1
+                ? ($listed->first()->senderProfile?->matri_id ?? 'A member') . ' is waiting for your reply'
+                : "{$total} members are waiting for your reply";
+
+            return '<div style="margin:0 0 1.5rem;padding:1rem 1.25rem 0.25rem;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;">'
+                . '<p style="font-weight:600;color:#111827;margin:0 0 0.25rem;">' . e($line) . '</p>'
+                . '<p style="font-size:0.875rem;color:#6b7280;margin:0;">You can answer here, without signing in.</p>'
+                . '<table style="width:100%;border-collapse:collapse;margin:8px 0;">' . InterestReplyRows::html($listed) . '</table>'
+                . ($more > 0
+                    ? '<p style="font-size:0.875rem;color:#6b7280;margin:0 0 0.75rem;">And ' . e($more === 1 ? '1 more' : "{$more} more")
+                        . ' in <a href="' . e(route('interests.inbox')) . '" style="color:#6b7280;">your inbox</a>.</p>'
+                    : '')
+                . '</div>';
+        }, '');
     }
 
     protected function fallbackSubject(): string

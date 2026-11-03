@@ -327,3 +327,79 @@ it('records where an answer came from: the email, or the site', function () {
     expect(DB::table('interest_replies')->where('interest_id', $fromEmail->id)->value('answered_via'))->toBe('email')
         ->and(DB::table('interest_replies')->where('interest_id', $onSite->id)->value('answered_via'))->toBeNull();
 });
+
+/*
+| Weekly review, 4 Nov 2026: 7 of 68 answers came from the Accept / Decline
+| buttons in the interest email, and 263 interests were waiting. The weekly
+| match email now carries the same buttons for whoever owes an answer.
+*/
+
+/** The weekly match email's "waiting for your reply" block for this member. */
+function wmWaitingBlock(User $user): string
+{
+    $mail = new \App\Mail\WeeklyMatchSuggestionsMail($user, collect());
+    $block = new ReflectionMethod($mail, 'pendingRepliesHtml');
+    $block->setAccessible(true);
+
+    return $block->invoke($mail);
+}
+
+it('lists the interests a member still owes an answer to in the weekly match email, with Accept and Decline', function () {
+    [$me, $myProfile] = erMember('KM500001');
+    foreach (['KM500002' => 10, 'KM500003' => 5, 'KM500004' => 3, 'KM500005' => 2] as $matriId => $daysAgo) {
+        [, $sender] = erMember($matriId);
+        erInterest($sender, $myProfile, $daysAgo);
+    }
+    [, $today] = erMember('KM500006');
+    erInterest($today, $myProfile, 0);                       // its own email has just gone
+    [, $blocked] = erMember('KM500007');
+    erInterest($blocked, $myProfile, 4);
+    DB::table('blocked_profiles')->insert(['profile_id' => $myProfile, 'blocked_profile_id' => $blocked]);
+    [, $answered] = erMember('KM500008');
+    erInterest($answered, $myProfile, 6, 'accepted');
+
+    $html = wmWaitingBlock($me);
+
+    expect($html)->toContain('4 members are waiting for your reply')
+        ->toContain('KM500002')->toContain('KM500003')->toContain('KM500004')   // the three oldest
+        ->not->toContain('KM500005')->toContain('And 1 more')
+        ->not->toContain('KM500006')->not->toContain('KM500007')->not->toContain('KM500008')
+        ->toContain('/interest-reply/')->toContain('reply=accept')->toContain('reply=decline')
+        ->toContain('without signing in');
+});
+
+it('leaves the waiting block out when nothing is waiting or interest emails are off', function () {
+    [$nothing] = erMember('KM510001');
+    expect(wmWaitingBlock($nothing))->toBe('');
+
+    [$off, $offProfile] = erMember('KM510002', ['notification_preferences' => ['email_interest' => false]]);
+    [, $sender] = erMember('KM510003');
+    erInterest($sender, $offProfile, 5);
+    expect(wmWaitingBlock($off))->toBe('');
+});
+
+it('puts the waiting block straight after the match cards in the weekly match template, once', function () {
+    Schema::dropIfExists('email_templates');
+    Schema::create('email_templates', function (Blueprint $t) {
+        $t->id();
+        $t->string('slug')->unique();
+        $t->text('body_html')->nullable();
+        $t->json('variables')->nullable();
+        $t->boolean('is_active')->default(true);
+        $t->timestamps();
+    });
+    DB::table('email_templates')->insert([
+        'slug' => 'weekly-match-suggestions',
+        'body_html' => '<p>Here are your matches.</p>{{MATCH_CARDS_HTML}}<p><a href="{{MATCHES_URL}}">See all</a></p>',
+        'variables' => json_encode(['USER_NAME', 'MATCH_CARDS_HTML', 'MATCHES_URL']),
+    ]);
+    $migration = require database_path('migrations/2026_11_04_000001_add_pending_replies_to_weekly_match_email.php');
+
+    $migration->up();
+    $migration->up();   // safe to run twice
+
+    $row = DB::table('email_templates')->where('slug', 'weekly-match-suggestions')->first();
+    expect(substr_count($row->body_html, '{{PENDING_REPLIES_HTML}}'))->toBe(1)
+        ->and($row->body_html)->toContain('{{MATCH_CARDS_HTML}}{{PENDING_REPLIES_HTML}}<p>')
+        ->and(json_decode($row->variables, true))->toBe(['USER_NAME', 'MATCH_CARDS_HTML', 'PENDING_REPLIES_HTML', 'MATCHES_URL']);
+});

@@ -4,8 +4,8 @@ namespace App\Mail;
 
 use App\Models\Interest;
 use App\Models\User;
+use App\Support\InterestReplyRows;
 use App\Support\MemberName;
-use App\Support\MemberSummary;
 use Illuminate\Support\Collection;
 
 /**
@@ -53,20 +53,7 @@ class InterestReminderMail extends DatabaseMailable
     /** One row per interest. Every value is escaped here: this is *_HTML. */
     protected function listHtml(): string
     {
-        $rows = $this->interests->map(function (Interest $interest) {
-            $sender = $interest->senderProfile;
-            $summary = MemberSummary::line($sender);
-            $days = (int) $interest->created_at?->diffInDays(now());
-
-            return '<tr><td style="padding:12px 0;border-bottom:1px solid #e5e7eb;">'
-                . '<strong>' . e($sender?->matri_id) . '</strong>'
-                . ($summary !== '' ? ' <span style="color:#6b7280;">· ' . e($summary) . '</span>' : '')
-                . '<br><span style="font-size:13px;color:#6b7280;">Sent ' . e($days === 1 ? '1 day' : "{$days} days") . ' ago</span>'
-                . '</td><td style="padding:12px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;">'
-                . '<a href="' . e($interest->emailReplyUrl('accept')) . '" style="color:#15803d;font-weight:600;text-decoration:none;margin-right:12px;">Accept</a>'
-                . '<a href="' . e($interest->emailReplyUrl('decline')) . '" style="color:#b91c1c;font-weight:600;text-decoration:none;">Decline</a>'
-                . '</td></tr>';
-        })->implode('');
+        $rows = InterestReplyRows::html($this->interests);
 
         $more = $this->total - $this->interests->count();
 
