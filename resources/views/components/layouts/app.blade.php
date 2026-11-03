@@ -160,6 +160,11 @@
     @if($theme->favicon_url ?? false)
         <link rel="icon" href="{{ $theme->favicon_url }}" type="image/x-icon">
     @endif
+    {{-- iPhone home-screen icon (Nov 2026): a 180 px PNG set per site; without one, iOS draws its own.
+         (No inline php directive here: Blade would pair it with the fonts block below.) --}}
+    @if($touchIcon = \App\Models\SiteSetting::getValue('apple_touch_icon_url'))
+        <link rel="apple-touch-icon" href="{{ $touchIcon }}">
+    @endif
 
     <!-- Google Fonts (dynamic — built from ThemeSetting heading_font + body_font) -->
     @php

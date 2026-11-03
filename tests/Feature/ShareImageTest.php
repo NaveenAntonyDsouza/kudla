@@ -130,3 +130,19 @@ it('prints absolute images on a page that uses the main layout', function () {
         ->toContain('<meta name="twitter:card" content="summary_large_image">')
         ->toContain('"logo": "https://kudlamatrimony.com/storage/branding/kudla-logo-km-wordmark.png"');
 });
+
+it('links the iPhone home-screen icon only on a site that has one', function () {
+    foreach (['2026_04_16_180000_create_static_pages_table', '2026_04_16_190000_create_advertisements_table', '2026_10_15_000001_create_blog_posts_table'] as $migration) {
+        $m = require database_path("migrations/{$migration}.php");
+        $m->down();
+        $m->up();
+    }
+
+    // the other sites have none: iOS draws its own, as before
+    expect($this->withoutVite()->get('/faq')->assertOk()->getContent())->not->toContain('apple-touch-icon');
+
+    SiteSetting::setValue('apple_touch_icon_url', '/storage/branding/kudla-icon-2026v-180.png');
+
+    expect($this->withoutVite()->get('/faq')->assertOk()->getContent())
+        ->toContain('<link rel="apple-touch-icon" href="/storage/branding/kudla-icon-2026v-180.png">');
+});
