@@ -44,6 +44,17 @@ abstract class DatabaseMailable extends Mailable
     /** Seconds between one try at sending and the next (see sendWithRetries). */
     private const RETRY_PAUSE_SECONDS = 5;
 
+    /**
+     * Once this many emails in a row have failed despite their retries, the
+     * mail server is down rather than having a moment: later sends skip the
+     * retries until one gets through, so a bulk run (weekly matches,
+     * re-engagement) is not stretched by ten seconds an email.
+     */
+    private const STOP_RETRYING_AFTER = 3;
+
+    /** Emails in a row (this process) that failed on a passing-type fault even after retrying. */
+    private static int $failuresInARow = 0;
+
     /** Links that must never sign anyone in. */
     private const NO_SIGN_IN_PATHS = [
         '/unsubscribe', '/resubscribe', '/confirm-email', '/still-looking', '/go/',
@@ -121,18 +132,27 @@ abstract class DatabaseMailable extends Mailable
      * connection rather than reusing the one that just failed.
      *
      * Only the last failure is written to Email Activity, so the failed
-     * count there stays "emails that never arrived".
+     * count there stays "emails that never arrived". After STOP_RETRYING_AFTER
+     * emails in a row have failed anyway, sends fail at once until one gets
+     * through again.
      */
     protected function sendWithRetries(callable $send)
     {
-        $left = self::retryAttempts();
+        $left = self::$failuresInARow >= self::STOP_RETRYING_AFTER ? 0 : self::retryAttempts();
         $tries = 1;
 
         while (true) {
             try {
-                return $send();
+                $result = $send();
+                self::$failuresInARow = 0;
+
+                return $result;
             } catch (\Throwable $e) {
-                if ($left < 1 || ! self::worthRetrying($e)) {
+                $passing = self::worthRetrying($e);
+                if ($left < 1 || ! $passing) {
+                    if ($passing) {
+                        self::$failuresInARow++;   // a refused address says nothing about the server
+                    }
                     // For admin → Reports → Email Activity; the caller still sees the error
                     EmailLogger::failed($this->templateSlug, $this->to, $e, $tries);
                     throw $e;
@@ -151,6 +171,12 @@ abstract class DatabaseMailable extends Mailable
     private static function retryAttempts(): int
     {
         return max(0, (int) SiteSetting::getValue('mail_retry_attempts', '2'));
+    }
+
+    /** For tests: the failure count lives as long as the process, so each test starts from none. */
+    public static function forgetFailures(): void
+    {
+        self::$failuresInARow = 0;
     }
 
     /**

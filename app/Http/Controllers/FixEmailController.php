@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SiteSetting;
+use App\Models\User;
 use App\Support\Analytics;
 use App\Support\EmailSuppression;
 use App\Support\OtpResendNotice;
@@ -22,14 +23,37 @@ use Illuminate\Support\Str;
  */
 class FixEmailController extends Controller
 {
+    /**
+     * Only a member whose address bounced may use this page. It asks for no
+     * password, so for anyone else it would be a way to move a signed-in
+     * account — a borrowed phone, an office PC left signed in — to another
+     * mailbox and then reset the password (review of 3 Nov 2026: staff pass
+     * the profile check, so they could have changed their sign-in email here).
+     */
+    private function bounced(?User $user): bool
+    {
+        return $user !== null
+            && $user->email_undeliverable_at !== null
+            && $user->staff_role_id === null
+            && ! in_array($user->role, ['admin', 'moderator', 'support'], true);
+    }
+
     public function show()
     {
+        if (! $this->bounced(auth()->user())) {
+            return redirect()->route('dashboard');
+        }
+
         return view('settings.fix-email', ['user' => auth()->user()]);
     }
 
     public function sendCode(Request $request)
     {
         $user = auth()->user();
+        if (! $this->bounced($user)) {
+            return redirect()->route('dashboard');
+        }
+
         $request->validate([
             // No DNS check: the code we send to the address proves it works,
             // and a lookup only turns a slow resolver into a refused form
@@ -67,6 +91,10 @@ class FixEmailController extends Controller
 
     public function confirm(Request $request)
     {
+        if (! $this->bounced(auth()->user())) {
+            return redirect()->route('dashboard');
+        }
+
         $request->validate(['code' => 'required|digits:6']);
 
         $email = session('fix_email_address');
@@ -79,6 +107,15 @@ class FixEmailController extends Controller
         }
 
         $user = auth()->user();
+
+        // Another member may have taken the address since the code went out;
+        // each address can belong to one account only
+        if (User::whereRaw('LOWER(email) = ?', [$email])->whereKeyNot($user->id)->exists()) {
+            session()->forget(['fix_email_address', 'fix_email_code', 'fix_email_expires']);
+
+            return back()->withErrors(['email' => 'That email is already used by another member.']);
+        }
+
         $user->forceFill(['email' => $email, 'email_verified_at' => now()])->save();
 
         // The block was recorded against the old address; the member has just

@@ -164,3 +164,47 @@ it('refuses an address another member already uses', function () {
 
     expect(session('fix_email_address'))->toBeNull();
 });
+
+it('sends a member whose email works, and staff, to the dashboard instead', function () {
+    // the page asks for no password, so it is only for a member whose address bounced
+    $member = fixEmailMember('fine@live.test');
+    $this->actingAs($member)->get('/email-not-reaching-you')->assertRedirect('/dashboard');
+    $this->actingAs($member)->post('/email-not-reaching-you/send-code', ['email' => 'other@live.test'])
+        ->assertRedirect('/dashboard');
+
+    // staff without a member profile are signed out of the member site before they get here
+    $admin = User::create(['name' => 'S', 'email' => 'admin@dead.test', 'password' => 'x', 'role' => 'admin']);
+    $admin->forceFill(['email_undeliverable_at' => now()])->save();
+    $this->actingAs($admin->fresh())->post('/email-not-reaching-you/send-code', ['email' => 'mine@live.test'])
+        ->assertRedirect('/login');
+
+    // a staff account that also has a member profile does get here: its sign-in email must not change
+    $desk = fixEmailMember('desk@dead.test');
+    $desk->forceFill(['email_undeliverable_at' => now(), 'staff_role_id' => 1])->save();
+    $desk = $desk->fresh();
+    $this->actingAs($desk)->post('/email-not-reaching-you/send-code', ['email' => 'desk@live.test'])
+        ->assertRedirect('/dashboard');
+
+    expect(app('mailer')->getSymfonyTransport()->messages())->toHaveCount(0)
+        ->and(User::find($member->id)->email)->toBe('fine@live.test')
+        ->and(User::find($admin->id)->email)->toBe('admin@dead.test')
+        ->and(User::find($desk->id)->email)->toBe('desk@dead.test');
+});
+
+it('stops at the last step if another member took the address after the code went out', function () {
+    $user = bouncedMember();
+    $this->actingAs($user)->post('/email-not-reaching-you/send-code', ['email' => 'new@live.test'])->assertRedirect();
+    [, $body] = lastSentMail();
+    preg_match('/\b(\d{6})\b/', $body, $m);
+
+    fixEmailMember('new@live.test');   // someone else signs up with it meanwhile
+
+    $this->actingAs($user)->from('/email-not-reaching-you')
+        ->post('/email-not-reaching-you', ['code' => $m[1]])
+        ->assertRedirect('/email-not-reaching-you')
+        ->assertSessionHasErrors(['email']);
+
+    $fresh = User::find($user->id);
+    expect($fresh->email)->toBe('old@dead.test')
+        ->and($fresh->email_undeliverable_at)->not->toBeNull();
+});

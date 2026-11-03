@@ -173,3 +173,48 @@ it('does not try again when the mailbox is at its limit', function () {
 
     expect($count['tries'])->toBe(1);
 });
+
+it('stops waiting on retries once several emails in a row have failed', function () {
+    // three emails fail on every try: the mail server is down, not having a moment
+    foreach (range(1, 3) as $i) {
+        expect(fn () => retryMailable()->attempt(fn () => throw timeout()))->toThrow(RuntimeException::class);
+    }
+
+    // so the next one is tried once, not three times (a bulk run is not stretched ten seconds an email)
+    $count = retryCounter();
+    expect(fn () => retryMailable()->attempt(function () use ($count) {
+        $count['tries']++;
+        throw timeout();
+    }))->toThrow(RuntimeException::class);
+    expect($count['tries'])->toBe(1);
+
+    // one that gets through brings the retries back
+    expect(retryMailable()->attempt(fn () => 'sent'))->toBe('sent');
+    $count = retryCounter();
+    $sent = retryMailable()->attempt(function () use ($count) {
+        if (++$count['tries'] < 2) {
+            throw timeout();
+        }
+
+        return 'sent';
+    });
+    expect($sent)->toBe('sent')->and($count['tries'])->toBe(2);
+});
+
+it('does not count a refused address towards the server being down', function () {
+    foreach (range(1, 5) as $i) {
+        expect(fn () => retryMailable()->attempt(fn () => throw new RuntimeException('Expected response code "250" but got code "550", with message "550 5.1.1 No such user here".')))
+            ->toThrow(RuntimeException::class);
+    }
+
+    // a timeout right after five bad addresses is still retried
+    $count = retryCounter();
+    $sent = retryMailable()->attempt(function () use ($count) {
+        if (++$count['tries'] < 2) {
+            throw timeout();
+        }
+
+        return 'sent';
+    });
+    expect($sent)->toBe('sent')->and($count['tries'])->toBe(2);
+});
