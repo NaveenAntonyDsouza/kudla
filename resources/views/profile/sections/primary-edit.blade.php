@@ -21,10 +21,17 @@
             ['Date of Birth', $p->date_of_birth?->format('d/m/Y')],
             ['Age', $p->age ? $p->age . ' years' : ''],
         ] as [$lockedLabel, $lockedValue])
-            <div class="float-field">
+            {{-- A tap gets an answer (Nov 2026: 33 members tapped these 107 times in 30 days with nothing
+                 happening). The bubble floats over the page, so nothing moves and the look is unchanged. --}}
+            <div class="float-field" x-data="{ told: false, timer: null }"
+                 @click="told = true; clearTimeout(timer); timer = setTimeout(() => told = false, 3500)">
                 <input type="text" value="{{ $lockedValue }}" readonly tabindex="-1" aria-readonly="true" style="{{ $locked }}" placeholder=" ">
                 <label>{{ $lockedLabel }}</label>
                 <svg width="15" height="15" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" aria-hidden="true" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <div x-show="told" x-transition.opacity role="status"
+                     style="display: none; position: absolute; left: 0; top: calc(100% + 6px); z-index: 20; max-width: 100%; background: #111827; color: #fff; font-size: 12px; line-height: 1.4; padding: 6px 10px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0, 0, 0, .15);">
+                    Only our team can change this. See the note below.
+                </div>
             </div>
         @endforeach
     </div>

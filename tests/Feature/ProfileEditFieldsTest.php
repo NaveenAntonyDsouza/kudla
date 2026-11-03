@@ -184,3 +184,14 @@ it('asks for the date of birth as Day / Month / Year with nothing pre-filled', f
     expect(Blade::render('<form x-data="{ dob: \'\', gender: \'\' }"><x-dob-select /></form>'))
         ->toContain('return g === \'male\' ? 18 : (g === \'female\' ? 18 : 18)');
 });
+
+it('answers a tap on a locked field with a short floating note, without changing the look', function () {
+    // weekly review, 4 Nov 2026: 33 members tapped the locked fields 107 times in 30 days
+    $html = view('profile.sections.primary-edit', ['profile' => editProfile()])->render();
+
+    expect(substr_count($html, 'Only our team can change this. See the note below.'))->toBe(4)   // name, gender, birth date, age
+        ->and($html)->toContain('@click="told = true;')
+        ->toContain('role="status"')
+        ->toContain('style="display: none; position: absolute;')   // hidden until tapped, floats: nothing moves
+        ->toContain('value="Male" readonly');                     // the fields themselves unchanged
+});
