@@ -114,8 +114,9 @@
     }
 }" @click.away="open = false" @multiselect-clear.window="if ($event.detail.name === '{{ $name }}') { selected = []; }" class="relative">
 
-    {{-- Label --}}
-    <label class="{{ $labelClass }}">{{ $label }}</label>
+    {{-- Label. It, the "Any" pill and the chosen values open the list too: on Partner Preferences
+         15 members tapped something 59 times in 30 days with nothing happening (weekly review, 4 Nov 2026) --}}
+    <label class="{{ $labelClass }} cursor-pointer" @click="open = !open">{{ $label }}</label>
 
     {{-- Trigger --}}
     <button type="button" @click="open = !open"
@@ -127,7 +128,7 @@
     </button>
 
     {{-- Selected Tags --}}
-    <div x-show="selected.length > 0 && !isAny" class="flex flex-wrap gap-1.5 mt-2">
+    <div x-show="selected.length > 0 && !isAny" class="flex flex-wrap gap-1.5 mt-2 cursor-pointer" @click="open = true">
         <template x-for="val in selected.filter(v => v !== 'Any')" :key="val">
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-(--color-primary-light) text-(--color-primary)">
                 <span x-text="val" class="max-w-[120px] truncate"></span>
@@ -138,7 +139,7 @@
         </template>
     </div>
     <div x-show="isAny" class="mt-2">
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Any (All selected)</span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 cursor-pointer" @click="open = true">Any (All selected)</span>
     </div>
 
     {{-- Dropdown Panel --}}
