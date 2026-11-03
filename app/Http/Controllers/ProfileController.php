@@ -425,8 +425,7 @@ class ProfileController extends Controller
         // Strip "Any" from arrays
         foreach ($validated as $key => $value) {
             if (is_array($value)) {
-                $filtered = array_values(array_filter($value, fn($v) => $v !== 'Any'));
-                $validated[$key] = empty($filtered) ? null : $filtered;
+                $validated[$key] = PartnerPreference::listOrNull($value);
             }
         }
 

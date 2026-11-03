@@ -35,10 +35,14 @@
     }
 @endphp
 
+{{-- "Any" (Nov 2026) means no limit: nothing chosen, and it is what an untouched field shows. It used to
+     tick every option, so "Any" on income or occupation quietly left out members who never filled them in. --}}
 <div x-data="{
     open: false,
     search: '',
+    anyAllowed: {{ $showAny ? 'true' : 'false' }},
     selected: {{ Js::from(old($name, $selectedArr)) }},
+    hadChoice: false,
     // one copy of the options: a flat list, or groups (flattened in init)
     allOptions: {{ Js::from($isGrouped ? [] : $flatOptions) }},
     groupList: {{ Js::from($groupList) }},
@@ -48,27 +52,34 @@
     },
 
     get isAny() {
-        return this.selected.includes('Any');
+        return this.anyAllowed && (this.selected.length === 0 || this.selected.includes('Any'));
     },
 
     toggle(val) {
         if (val === 'Any') {
-            if (this.isAny) {
-                this.selected = [];
-            } else {
-                this.selected = ['Any', ...this.allOptions];
-            }
-        } else {
-            if (this.selected.includes(val)) {
-                this.selected = this.selected.filter(v => v !== val && v !== 'Any');
-            } else {
-                this.selected = this.selected.filter(v => v !== 'Any');
-                this.selected.push(val);
-                if (this.selected.length === this.allOptions.length) {
-                    this.selected = ['Any', ...this.allOptions];
-                }
-            }
+            this.selected = [];
+            return;
         }
+        if (this.selected.includes(val)) {
+            this.selected = this.selected.filter(v => v !== val && v !== 'Any');
+        } else {
+            this.selected = this.selected.filter(v => v !== 'Any');
+            this.selected.push(val);
+            this.anyIfAll();
+        }
+    },
+
+    // every option ticked is the same as no limit
+    anyIfAll() {
+        if (this.anyAllowed && this.allOptions.length && this.allOptions.every(o => this.selected.includes(o))) {
+            this.selected = [];
+        }
+    },
+
+    // what the form sends: the choices; for Any, nothing, or one 'Any' when it replaces earlier
+    // choices (pages that save only what is sent would otherwise keep the old ones)
+    get sent() {
+        return this.isAny ? (this.hadChoice ? ['Any'] : []) : this.selected;
     },
 
     remove(val) {
@@ -76,8 +87,8 @@
     },
 
     get displayText() {
-        if (this.selected.length === 0) return '';
         if (this.isAny) return 'Any';
+        if (this.selected.length === 0) return '';
         return this.selected.length + ' selected';
     },
 
@@ -90,9 +101,7 @@
         } else {
             items.forEach(i => { if (!this.selected.includes(i)) this.selected.push(i); });
         }
-        if (this.selected.length === this.allOptions.length) {
-            this.selected = ['Any', ...this.allOptions];
-        }
+        this.anyIfAll();
     },
 
     isGroupSelected(groupName) {
@@ -106,6 +115,10 @@
     },
     init() {
         if (this.groupList.length) this.allOptions = this.groupList.flatMap(g => g.items);
+        this.hadChoice = this.selected.length > 0;
+        // saved before Nov 2026: 'Any' plus every option
+        if (this.selected.includes('Any')) this.selected = [];
+        this.anyIfAll();
         this.$watch('selected', (val) => {
             @if($emitTo)
                 this.$dispatch('multiselect-change', { name: '{{ $name }}', value: val });
@@ -121,7 +134,7 @@
     {{-- Trigger --}}
     <button type="button" @click="open = !open"
         class="w-full flex items-center justify-between border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-left bg-white hover:border-gray-400 focus:border-(--color-primary) focus:ring-1 focus:ring-(--color-primary) transition-colors">
-        <span :class="selected.length === 0 ? 'text-gray-400' : 'text-gray-900'" x-text="displayText || 'Select'"></span>
+        <span :class="displayText ? 'text-gray-900' : 'text-gray-400'" x-text="displayText || 'Select'"></span>
         <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
@@ -139,7 +152,7 @@
         </template>
     </div>
     <div x-show="isAny" class="mt-2">
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 cursor-pointer" @click="open = true">Any (All selected)</span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 cursor-pointer" @click="open = true">Any</span>
     </div>
 
     {{-- Dropdown Panel --}}
@@ -197,7 +210,7 @@
     </div>
 
     {{-- Hidden inputs for form submission --}}
-    <template x-for="val in selected" :key="val">
+    <template x-for="val in sent" :key="val">
         <input type="hidden" :name="'{{ $name }}[]'" :value="val">
     </template>
 </div>

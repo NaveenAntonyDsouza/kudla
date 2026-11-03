@@ -105,6 +105,19 @@ class PartnerPreference extends Model
         ];
     }
 
+    /**
+     * A multi-choice preference as stored: null means no limit. An empty list
+     * is no limit, and so is "Any" anywhere in it (until Nov 2026 the forms
+     * sent "Any" with every option ticked, which saved the whole list and left
+     * out members who never filled that field in).
+     */
+    public static function listOrNull(array $values): ?array
+    {
+        $values = array_values($values);
+
+        return $values === [] || in_array('Any', $values, true) ? null : $values;
+    }
+
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);

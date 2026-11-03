@@ -93,27 +93,27 @@
         <div class="space-y-5 mb-10">
             <x-multi-select name="hobbies" label="Hobbies"
                 :options="config('reference_data.hobbies_list')" :searchable="true"
-                :selected="$lifestyle?->hobbies ?? []" />
+                :selected="$lifestyle?->hobbies ?? []" :showAny="false" />
 
             <x-multi-select name="favorite_music" label="Favorite Music"
                 :options="config('reference_data.music_list')"
-                :selected="$lifestyle?->favorite_music ?? []" />
+                :selected="$lifestyle?->favorite_music ?? []" :showAny="false" />
 
             <x-multi-select name="preferred_books" label="Preferred Books"
                 :options="config('reference_data.books_list')"
-                :selected="$lifestyle?->preferred_books ?? []" />
+                :selected="$lifestyle?->preferred_books ?? []" :showAny="false" />
 
             <x-multi-select name="preferred_movies" label="Preferred Movies"
                 :options="config('reference_data.movies_list')"
-                :selected="$lifestyle?->preferred_movies ?? []" />
+                :selected="$lifestyle?->preferred_movies ?? []" :showAny="false" />
 
             <x-multi-select name="sports_fitness_games" label="Sports / Fitness / Games"
                 :options="config('reference_data.sports_list')" :searchable="true"
-                :selected="$lifestyle?->sports_fitness_games ?? []" />
+                :selected="$lifestyle?->sports_fitness_games ?? []" :showAny="false" />
 
             <x-multi-select name="favorite_cuisine" label="Favorite Cuisine"
                 :options="config('reference_data.cuisine_list')"
-                :selected="$lifestyle?->favorite_cuisine ?? []" />
+                :selected="$lifestyle?->favorite_cuisine ?? []" :showAny="false" />
 
         </div>
 

@@ -47,7 +47,7 @@ class SearchController extends Controller
             // Nothing matches every choice? Show the closest profiles instead of an empty page, and say
             // what was left out (weekly review, 4 Nov 2026: 6 of 21 searches that week found nothing).
             if (! (clone $query)->exists()) {
-                $closest = self::closestSearchParams($request->query(),
+                $closest = self::closestSearchParams(self::withoutAny($request->query()),
                     fn (array $params) => $this->buildSearchQuery($request->duplicate($params), $profile)->exists());
                 if ($closest) {
                     $query = $this->buildSearchQuery($request->duplicate($closest['params']), $profile);
@@ -98,6 +98,7 @@ class SearchController extends Controller
 
     private function buildSearchQuery(Request $request, Profile $profile)
     {
+        $request = $request->duplicate(self::withoutAny($request->query()));
         $query = $this->baseQuery($profile);
 
         // Age filter
@@ -417,6 +418,17 @@ class SearchController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * The search without its "no limit" choices: a list holding "Any", or a
+     * plain "Any", is no filter at all (Nov 2026). Old links and saved searches
+     * carry "Any" with every option ticked, which used to filter on that whole
+     * list and leave out members who never filled the field in.
+     */
+    public static function withoutAny(array $params): array
+    {
+        return array_filter($params, fn ($v) => ! (is_array($v) ? in_array('Any', $v, true) : $v === 'Any'));
     }
 
     /** The line above the closest profiles: what was left out to find them. */

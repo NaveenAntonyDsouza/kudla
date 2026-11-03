@@ -345,8 +345,7 @@ class OnboardingController extends Controller
         ];
         foreach ($arrayFields as $field) {
             if (isset($validated[$field]) && is_array($validated[$field])) {
-                $filtered = array_values(array_filter($validated[$field], fn($v) => $v !== 'Any'));
-                $validated[$field] = empty($filtered) ? null : $filtered;
+                $validated[$field] = PartnerPreference::listOrNull($validated[$field]);
             }
         }
 

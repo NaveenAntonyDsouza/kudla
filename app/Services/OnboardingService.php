@@ -156,8 +156,7 @@ class OnboardingService
         ];
         foreach ($arrayFields as $field) {
             if (isset($data[$field]) && is_array($data[$field])) {
-                $filtered = array_values(array_filter($data[$field], fn ($v) => $v !== 'Any'));
-                $data[$field] = empty($filtered) ? null : $filtered;
+                $data[$field] = PartnerPreference::listOrNull($data[$field]);
             }
         }
 

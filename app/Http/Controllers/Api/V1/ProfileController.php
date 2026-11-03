@@ -481,11 +481,7 @@ class ProfileController extends BaseApiController
     {
         foreach ($validated as $key => $value) {
             if (is_array($value)) {
-                $filtered = array_values(array_filter(
-                    $value,
-                    fn ($v) => $v !== 'Any',
-                ));
-                $validated[$key] = empty($filtered) ? null : $filtered;
+                $validated[$key] = PartnerPreference::listOrNull($value);
             }
         }
 
