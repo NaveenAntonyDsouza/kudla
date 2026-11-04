@@ -144,6 +144,36 @@ class DiscoverSeo
     }
 
     /**
+     * A Brides or Grooms page (Nov 2026, after Chavara Matrimony's pages):
+     * "Billava Brides", "Tulu-Speaking Grooms", "Udupi Brides", "Grooms
+     * Working in Bangalore" — the words families type into Google.
+     *
+     * @param  'brides'|'grooms'  $side
+     * @return array{title: string, heading: string, intro: string, description: string}
+     */
+    public static function forSide(string $category, string $label, string $side): array
+    {
+        $base = self::forResults($category, $label);
+        $who = $side === 'brides' ? 'Brides' : 'Grooms';
+        $heading = match (true) {
+            str_contains($base['heading'], 'Brides & Grooms') => str_replace('Brides & Grooms', $who, $base['heading']),
+            str_starts_with($base['heading'], 'NRI Matrimony – ') => "NRI {$who} in " . mb_substr($base['heading'], mb_strlen('NRI Matrimony – ')),
+            str_ends_with($base['heading'], ' Matrimony') => mb_substr($base['heading'], 0, -mb_strlen(' Matrimony')) . " {$who}",
+            str_starts_with($base['heading'], 'Working in ') => "{$who} {$base['heading']}",
+            default => "{$base['heading']} – {$who}",
+        };
+        $intro = str_replace('brides and grooms', mb_strtolower($who), $base['intro']);
+
+        return [
+            // "Billava Brides – Billava Matrimony"; no repeat where the heading already says Brides & Grooms
+            'title' => self::fit(str_contains($base['heading'], 'Brides & Grooms') ? [$heading] : ["{$heading} – {$base['heading']}", $heading]),
+            'heading' => $heading,
+            'intro' => $intro,
+            'description' => self::describe($intro, 'View profiles, shortlist and send interest.'),
+        ];
+    }
+
+    /**
      * A category page that lists its communities / places / jobs.
      *
      * @return array{title: string, heading: string, intro: string, description: string}

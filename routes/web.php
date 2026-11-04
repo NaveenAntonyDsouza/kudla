@@ -117,6 +117,7 @@ Route::get('/search/save', [SearchController::class, 'saveForLater'])->name('sea
 Route::get('/discover', [DiscoverController::class, 'hub'])->name('discover.hub');
 Route::get('/discover/{category}', [DiscoverController::class, 'category'])->name('discover.category');
 Route::get('/discover/{category}/{slug}', [DiscoverController::class, 'results'])->name('discover.results');
+Route::get('/discover/{category}/{slug}/{side}', [DiscoverController::class, 'side'])->whereIn('side', ['brides', 'grooms'])->name('discover.side');
 
 // Forgot Password
 Route::get('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showForm'])->name('password.request');

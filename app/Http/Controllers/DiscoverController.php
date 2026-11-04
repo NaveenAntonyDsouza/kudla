@@ -38,6 +38,15 @@ class DiscoverController extends Controller
     public const HUB_ROW_LIMIT = 12;
 
     /**
+     * Brides / Grooms pages (Nov 2026, after Chavara Matrimony's): "Billava
+     * Brides", "Udupi Grooms" are what families type into Google. A side gets
+     * its own page only with this many profiles, so there are no thin pages.
+     */
+    public const SIDES = ['brides' => 'female', 'grooms' => 'male'];
+
+    public const SIDE_MIN = 10;
+
+    /**
      * The categories that get a button — on the member dashboard and in a
      * category page's "other directories" (Oct 2026): not the ones that repeat
      * another (hub => false), only with 3+ live profiles, biggest first.
@@ -160,10 +169,97 @@ class DiscoverController extends Controller
     }
 
     /**
+     * Level 3b: the brides or the grooms of one community / place / job.
+     * Too few of them, or a member asking for their own side: the plain page.
+     */
+    public function side(string $category, string $slug, string $side)
+    {
+        $config = \App\Support\NriWording::config($category);
+        if (! $config || ! isset(self::SIDES[$side])) {
+            abort(404, 'Category not found.');
+        }
+        $subcategory = collect($this->resolveSubcategories($config))->firstWhere('slug', $slug);
+        if (! $subcategory) {
+            // renamed or unknown: the plain page knows what to do with it
+            return redirect()->route('discover.results', [$category, $slug], 301);
+        }
+        $own = auth()->user()?->profile?->gender;
+        if ((self::sideCounts($category)[$slug][self::SIDES[$side]] ?? 0) < self::SIDE_MIN || $own === self::SIDES[$side]) {
+            return redirect()->route('discover.results', [$category, $slug]);
+        }
+
+        return $this->showResults($category, $slug, $subcategory['label'], $subcategory['filter'], $side);
+    }
+
+    /**
+     * The Brides / Grooms links of a results page, for guests (a member sees
+     * only the other side already): [['side' => 'brides', 'label' => 'Brides',
+     * 'count' => 85, 'url' => …], …].
+     *
+     * @return array<int, array{side: string, label: string, count: int, url: string}>
+     */
+    public static function sideLinks(string $category, string $slug): array
+    {
+        if (auth()->user()?->profile) {
+            return [];
+        }
+        $counts = self::sideCounts($category)[$slug] ?? [];
+
+        return collect(self::SIDES)
+            ->filter(fn ($gender) => ($counts[$gender] ?? 0) >= self::SIDE_MIN)
+            ->map(fn ($gender, $side) => [
+                'side' => $side,
+                'label' => ucfirst($side),
+                'count' => $counts[$gender],
+                'url' => route('discover.side', [$category, $slug, $side]),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Public profiles per side, for the subcategories with SIDE_MIN+ in all:
+     * [slug => ['female' => n, 'male' => n]]. Plain array, cached 1 hour.
+     *
+     * @return array<string, array<string, int>>
+     */
+    public static function sideCounts(string $category): array
+    {
+        $config = config("discover.{$category}");
+        if (! $config || isset($config['direct_filter'])) {
+            return [];
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Cache::remember("discover.side-counts.{$category}", 3600, function () use ($category, $config) {
+                $subs = collect(app(self::class)->resolveSubcategories($config))->keyBy('slug');
+
+                $counts = [];
+                foreach (self::profileCounts($category) as $slug => $total) {
+                    if ($total < self::SIDE_MIN || ! $subs->has($slug)) {
+                        continue;
+                    }
+                    $counts[$slug] = self::applyFilters(
+                        Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),
+                        $subs[$slug]['filter'] ?? []
+                    )->toBase()->selectRaw('profiles.gender, COUNT(*) AS n')->groupBy('profiles.gender')
+                        ->pluck('n', 'gender')->map(fn ($n) => (int) $n)->all();
+                }
+
+                return $counts;
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return []; // counting failed: no side links rather than a broken page
+        }
+    }
+
+    /**
      * Shared results logic for both direct-filter categories and subcategory results.
      * Works for both logged-in and guest users.
      */
-    private function showResults(string $category, ?string $slug, string $title, array $filter)
+    private function showResults(string $category, ?string $slug, string $title, array $filter, ?string $side = null)
     {
         $profile = auth()->check() ? auth()->user()->profile : null;
         $config = \App\Support\NriWording::config($category);
@@ -180,16 +276,24 @@ class DiscoverController extends Controller
         }
 
         self::applyFilters($query, $filter);
+        if ($side) {
+            $query->where('profiles.gender', self::SIDES[$side]);
+        }
 
         $sort = request()->get('sort', 'newest');
         $query = $this->applySortOrder($query, $sort);
         $results = $query->paginate(20)->withQueryString();
         $currentSort = $sort;
-        $seo = \App\Support\DiscoverSeo::forResults($category, $title);
-        $canonicalUrl = self::canonicalUrl($category, $slug);
+        $plainSeo = \App\Support\DiscoverSeo::forResults($category, $title);
+        $seo = $side ? \App\Support\DiscoverSeo::forSide($category, $title, $side) : $plainSeo;
+        $canonicalUrl = self::canonicalUrl($category, $slug) . ($side ? "/{$side}" : '');
+        $sideLinks = $slug ? self::sideLinks($category, $slug) : [];
+        $plainUrl = $slug ? route('discover.results', [$category, $slug]) : null;
+        $plainHeading = $plainSeo['heading'];
 
         return view('discover.results', compact(
-            'category', 'slug', 'title', 'config', 'results', 'currentSort', 'seo', 'canonicalUrl'
+            'category', 'slug', 'title', 'config', 'results', 'currentSort', 'seo', 'canonicalUrl',
+            'side', 'sideLinks', 'plainUrl', 'plainHeading'
         ));
     }
 
@@ -295,6 +399,14 @@ class DiscoverController extends Controller
             }
             foreach (array_keys(self::profileCounts($category)) as $slug) {
                 $urls[] = self::canonicalUrl($category, $slug);   // e.g. Community > Roman Catholic → Catholic > Roman Catholic
+            }
+            // the Brides / Grooms pages with SIDE_MIN+ profiles
+            foreach (self::sideCounts($category) as $slug => $bySide) {
+                foreach (self::SIDES as $side => $gender) {
+                    if (($bySide[$gender] ?? 0) >= self::SIDE_MIN) {
+                        $urls[] = self::canonicalUrl($category, $slug) . "/{$side}";
+                    }
+                }
             }
         }
 

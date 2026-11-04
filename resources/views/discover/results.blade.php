@@ -2,6 +2,7 @@
     :breadcrumbs="array_filter([
         ['name' => 'Discover Profiles', 'url' => route('discover.hub')],
         $slug ? ['name' => $config['label'], 'url' => route('discover.category', $category)] : null,
+        $side ? ['name' => $plainHeading, 'url' => $plainUrl] : null,
         ['name' => $seo['heading'], 'url' => $canonicalUrl],
     ])"
     :robots="$results->total() === 0 ? 'noindex, follow' : null">
@@ -17,6 +18,10 @@
             <span class="mx-1">/</span>
             @if($slug)
                 <a href="{{ route('discover.category', $category) }}" class="hover:text-(--color-primary)">{{ $config['label'] }}</a>
+                <span class="mx-1">/</span>
+            @endif
+            @if($side)
+                <a href="{{ $plainUrl }}" class="hover:text-(--color-primary)">{{ $plainHeading }}</a>
                 <span class="mx-1">/</span>
             @endif
             <span class="text-gray-700 font-medium">{{ $seo['heading'] }}</span>
@@ -75,6 +80,18 @@
                 @endif
             </div>
         </div>
+
+        {{-- Brides / Grooms pages (Nov 2026): shown to guests when a side has 10+ profiles --}}
+        @if(count($sideLinks))
+            <nav class="flex flex-wrap gap-2 -mt-2 mb-6 text-sm" aria-label="Brides or grooms">
+                <a href="{{ $plainUrl }}"
+                    class="px-3 py-1.5 rounded-full border {{ $side ? 'border-gray-300 text-gray-700 hover:border-(--color-primary)' : 'border-(--color-primary) bg-(--color-primary-light) text-(--color-primary) font-semibold' }}">All</a>
+                @foreach($sideLinks as $link)
+                    <a href="{{ $link['url'] }}"
+                        class="px-3 py-1.5 rounded-full border {{ $side === $link['side'] ? 'border-(--color-primary) bg-(--color-primary-light) text-(--color-primary) font-semibold' : 'border-gray-300 text-gray-700 hover:border-(--color-primary)' }}">{{ $link['label'] }} ({{ $link['count'] }})</a>
+                @endforeach
+            </nav>
+        @endif
 
         {{-- Results Grid --}}
         @if($results->count() > 0)
