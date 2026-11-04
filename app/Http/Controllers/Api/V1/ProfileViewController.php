@@ -166,6 +166,9 @@ class ProfileViewController extends BaseApiController
     {
         return ProfileView::query()
             ->where('viewed_profile_id', $viewer->id)
+            // only viewers this member may see (privacy bench, 4 Nov 2026: hidden, blocked
+            // and limited viewers showed here; the website's list was fixed the same day)
+            ->whereHas('viewerProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $viewer))
             ->with(['viewerProfile.religiousInfo', 'viewerProfile.educationDetail', 'viewerProfile.locationInfo', 'viewerProfile.primaryPhoto', 'viewerProfile.user'])
             ->orderByDesc('viewed_at')
             ->paginate($perPage);
@@ -175,6 +178,7 @@ class ProfileViewController extends BaseApiController
     {
         return ProfileView::query()
             ->where('viewer_profile_id', $viewer->id)
+            ->whereHas('viewedProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $viewer))
             ->with(['viewedProfile.religiousInfo', 'viewedProfile.educationDetail', 'viewedProfile.locationInfo', 'viewedProfile.primaryPhoto', 'viewedProfile.user'])
             ->orderByDesc('viewed_at')
             ->paginate($perPage);

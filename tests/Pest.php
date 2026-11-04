@@ -18,6 +18,12 @@ pest()->extend(TestCase::class)
  // ->use(RefreshDatabase::class)  // re-enable when test DB is set up (Phase 2a Week 2)
     ->in('Feature');
 
+// Privacy test-member bench (phpunit.privacy-bench.xml, local MySQL only): every test
+// rolls back its own test members
+pest()->extend(TestCase::class)
+    ->use(Illuminate\Foundation\Testing\DatabaseTransactions::class)
+    ->in('PrivacyBench');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

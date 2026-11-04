@@ -86,7 +86,9 @@ class ShortlistController extends BaseApiController
      */
     protected function paginateShortlistedProfiles(Profile $viewer, int $perPage): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return Profile::query()
+        // only members still visible to this member (privacy bench, 4 Nov 2026: a member
+        // who hid her profile stayed on others' shortlists here)
+        return \App\Support\ProfileVisibility::forMember(Profile::query(), $viewer)
             ->with(['religiousInfo', 'educationDetail', 'locationInfo', 'primaryPhoto', 'user'])
             ->join('shortlists', 'shortlists.shortlisted_profile_id', '=', 'profiles.id')
             ->where('shortlists.profile_id', $viewer->id)
