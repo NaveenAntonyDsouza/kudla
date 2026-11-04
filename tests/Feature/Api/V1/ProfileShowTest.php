@@ -233,7 +233,8 @@ it('returns 403 PREMIUM_REQUIRED when target show_profile_to=premium and viewer 
 
 it('returns 403 LOW_MATCH_SCORE when target show_profile_to=matches and viewer has no preferences', function () {
     $viewer = buildShowUser();
-    // Viewer has no partnerPreference → matchScoreAbove returns false → 403 LOW_MATCH_SCORE
+    // The TARGET saved no partner preferences, so nobody can be said to match them
+    // (ProfileVisibility::viewerMatches) → 403 LOW_MATCH_SCORE
     buildShowProfile($viewer, ['gender' => 'male']);
 
     $targetUser = buildShowUser(['id' => 8801]);

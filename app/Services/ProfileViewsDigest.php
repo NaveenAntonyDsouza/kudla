@@ -73,9 +73,10 @@ final class ProfileViewsDigest
 
         $blocked = $this->blockedIds($profile->id);
 
-        return Profile::query()->whereIn('id', $ids->diff($blocked))
-            ->whereNull('deleted_at')->where('is_active', true)
-            ->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+        // only viewers this member may see (privacy check, 4 Nov 2026: a viewer who
+        // chose "same religion only", "matches only"… was shown to anyone they viewed)
+        return \App\Support\ProfileVisibility::forMember(Profile::query(), $profile)
+            ->whereIn('id', $ids->diff($blocked))
             ->with(['locationInfo', 'educationDetail'])
             ->get()
             ->sortBy(fn (Profile $p) => $ids->search($p->id))

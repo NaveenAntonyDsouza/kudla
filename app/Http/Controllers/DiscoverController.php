@@ -240,7 +240,7 @@ class DiscoverController extends Controller
                         continue;
                     }
                     $counts[$slug] = self::applyFilters(
-                        Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),
+                        \App\Support\ProfileVisibility::forVisitors(Profile::query()),   // what visitors see (counts too)
                         $subs[$slug]['filter'] ?? []
                     )->toBase()->selectRaw('profiles.gender, COUNT(*) AS n')->groupBy('profiles.gender')
                         ->pluck('n', 'gender')->map(fn ($n) => (int) $n)->all();
@@ -269,9 +269,9 @@ class DiscoverController extends Controller
         if ($profile) {
             $query = $this->baseQuery($profile);
         } else {
-            $query = Profile::where('is_active', true)
-                ->approved()
-                ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+            // visitors meet no limit, so they see only members who set none (4 Nov 2026:
+            // this showed 77 Kudla members who chose "premium / matches / same religion only")
+            $query = \App\Support\ProfileVisibility::forVisitors(Profile::query())
                 ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
         }
 
@@ -498,7 +498,7 @@ class DiscoverController extends Controller
                 $counts = [];
                 foreach ($subs as $sub) {
                     $count = self::applyFilters(
-                        Profile::where('is_active', true)->approved()->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden')),
+                        \App\Support\ProfileVisibility::forVisitors(Profile::query()),   // what visitors see (counts too)
                         $sub['filter'] ?? []
                     )->count();
                     if ($count > 0) {

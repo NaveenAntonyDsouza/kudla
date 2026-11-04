@@ -42,7 +42,13 @@ beforeEach(function () {
         $t->date('date_of_birth')->nullable();
         $t->boolean('is_active')->default(true);
         $t->boolean('is_hidden')->default(false);
+        $t->boolean('is_approved')->default(true);
         $t->string('suspension_status')->nullable();
+        $t->string('show_profile_to')->default('all');
+        $t->boolean('only_same_religion')->default(false);
+        $t->boolean('only_same_denomination')->default(false);
+        $t->boolean('only_same_mother_tongue')->default(false);
+        $t->string('mother_tongue')->nullable();
         $t->boolean('onboarding_completed')->default(true);
         $t->softDeletes();
         $t->timestamps();
@@ -57,6 +63,13 @@ beforeEach(function () {
         $t->id();
         $t->unsignedBigInteger('profile_id');
         $t->unsignedBigInteger('blocked_profile_id');
+        $t->timestamps();
+    });
+    // the digest lists only viewers the member may see (ProfileVisibility::forMember, 4 Nov 2026)
+    Schema::create('ignored_profiles', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id');
+        $t->unsignedBigInteger('ignored_profile_id');
         $t->timestamps();
     });
     foreach (['location_info', 'education_details'] as $table) {
@@ -90,7 +103,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (['users', 'profiles', 'profile_views', 'blocked_profiles', 'location_info', 'education_details', 'site_settings', 'admin_activity_log', 'email_templates', 'theme_settings', 'user_memberships', 'membership_plans', 'profile_photos', 'photo_privacy_settings'] as $table) {
+    foreach (['users', 'profiles', 'profile_views', 'blocked_profiles', 'ignored_profiles', 'location_info', 'education_details', 'site_settings', 'admin_activity_log', 'email_templates', 'theme_settings', 'user_memberships', 'membership_plans', 'profile_photos', 'photo_privacy_settings'] as $table) {
         Schema::dropIfExists($table);
     }
 });
@@ -98,7 +111,8 @@ afterEach(function () {
 function pvdMember(string $matri, array $profile = []): User
 {
     $id = DB::table('users')->insertGetId(['name' => "{$matri} Rao", 'email' => strtolower($matri).'@site.test', 'created_at' => now(), 'updated_at' => now()]);
-    DB::table('profiles')->insert(array_merge(['user_id' => $id, 'matri_id' => $matri, 'full_name' => "{$matri} Rao", 'created_at' => now(), 'updated_at' => now()], $profile));
+    // KM1 is the member (a woman); the others are men who viewed her
+    DB::table('profiles')->insert(array_merge(['user_id' => $id, 'matri_id' => $matri, 'full_name' => "{$matri} Rao", 'gender' => $matri === 'KM1' ? 'female' : 'male', 'created_at' => now(), 'updated_at' => now()], $profile));
 
     return User::find($id);
 }

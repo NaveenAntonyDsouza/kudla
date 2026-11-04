@@ -85,6 +85,8 @@ class DashboardController extends Controller
 
         if ($isPremium) {
             $recentViews = $profile->viewedByOthers()
+                // only viewers this member may see (4 Nov 2026)
+                ->whereHas('viewerProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $profile))
                 ->with(['viewerProfile' => fn($q) => $q->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])])
                 ->orderByDesc('viewed_at')
                 ->limit(6)

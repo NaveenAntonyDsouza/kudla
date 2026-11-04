@@ -23,8 +23,7 @@ class NriWording
             // counted here, not from the category's country list: on a "Country" site that list includes India
             ['live' => $live, 'abroad' => $abroad] = Cache::remember('discover.counts.live-abroad', 3600, function () {
                 // the same profiles the Discover counts are taken from
-                $live = fn () => Profile::where('is_active', true)->approved()
-                    ->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'));
+                $live = fn () => ProfileVisibility::forVisitors(Profile::query());
                 $outside = fn ($q, string $column) => $q->whereNotNull($column)->where($column, '!=', '')->where($column, '!=', 'India');
 
                 return [

@@ -182,7 +182,9 @@ class DashboardService
                 ->map(fn ($rel) => 'viewerProfile.'.$rel)
                 ->all();
 
+            // only viewers this member may see (4 Nov 2026: a hidden or blocked viewer showed here)
             $viewers = ProfileView::where('viewed_profile_id', $profile->id)
+                ->whereHas('viewerProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $profile))
                 ->with($viewerProfileRels)
                 ->orderByDesc('viewed_at')
                 ->take(self::CAROUSEL_LIMIT)
@@ -202,12 +204,8 @@ class DashboardService
     public function buildNewlyJoined(Profile $profile): array
     {
         try {
-            $profiles = Profile::query()
-                ->where('gender', '!=', $profile->gender)
-                ->where('is_active', true)
-                ->where('is_approved', true)
-                ->where('is_hidden', false)
-                ->where('suspension_status', 'active')
+            // the member rule (4 Nov 2026: this skipped blocks and the limits others chose)
+            $profiles = \App\Support\ProfileVisibility::forMember(Profile::query(), $profile)
                 ->with(self::CARD_RELATIONS)
                 ->orderByDesc('created_at')
                 ->take(self::CAROUSEL_LIMIT)

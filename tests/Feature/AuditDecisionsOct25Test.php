@@ -303,12 +303,17 @@ it('finds a Matri ID typed any way and shows visitors the result on the Search b
 });
 
 it('hides from visitors the profiles shown only to premium members or to their own community', function () {
+    // since 4 Nov 2026 the visitor rule lives in one place for every visitor list (search,
+    // Discover, homepage, app); its behaviour is tested in ProfileVisibilityTest
     $c = file_get_contents(app_path('Http/Controllers/SearchController.php'));
-    expect($c)->toContain("->where(fn(\$q) => \$q->where('show_profile_to', '!=', 'premium')->orWhereNull('show_profile_to'))")
-        ->toContain("->where(fn(\$q) => \$q->where('only_same_religion', false)->orWhereNull('only_same_religion'))")
-        ->toContain("->where(fn(\$q) => \$q->where('only_same_denomination', false)->orWhereNull('only_same_denomination'))")
-        ->toContain("->where(fn(\$q) => \$q->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue'))")
+    expect($c)->toContain('return \App\Support\ProfileVisibility::forVisitors(Profile::query())')
         ->toContain("\$query = \$this->visitorBaseQuery();");
+
+    $rule = file_get_contents(app_path('Support/ProfileVisibility.php'));
+    expect($rule)->toContain("->orWhereNotIn('profiles.show_profile_to', ['premium', 'matches'])")
+        ->toContain("->where(fn (\$w) => \$w->where('profiles.only_same_religion', false)->orWhereNull('profiles.only_same_religion'))")
+        ->toContain("->where(fn (\$w) => \$w->where('profiles.only_same_denomination', false)->orWhereNull('profiles.only_same_denomination'))")
+        ->toContain("->where(fn (\$w) => \$w->where('profiles.only_same_mother_tongue', false)->orWhereNull('profiles.only_same_mother_tongue'))");
 });
 
 it('sends Modify Search back to the form the search came from, filled in', function () {

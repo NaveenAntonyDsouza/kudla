@@ -303,18 +303,18 @@ class DiscoverController extends BaseApiController
      * shape: active + approved + not hidden + filter columns mapped by
      * category convention.
      *
-     * NOTE: does NOT apply per-viewer privacy (blocked, hidden-from-me,
-     * visibility prefs). Matches web's public browsing path. Optional-
-     * auth retrofit (use baseQuery when a token is provided) is a
-     * Week-3 buffer task.
+     * Who is listed (privacy check, 4 Nov 2026 — this used to skip every
+     * per-viewer rule): a visitor sees only members who set no limit on who
+     * sees them; a signed-in member (Bearer token on this public route) gets
+     * the member rule — other gender, no block either way, and the limits
+     * others chose (App\Support\ProfileVisibility).
      */
     protected function buildGuestQuery(array $filters): Builder
     {
-        $query = Profile::query()
-            ->where('is_active', true)
-            ->where(fn ($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-            // approved() scope — same one the web uses.
-            ->where('is_approved', true)
+        $viewer = auth('sanctum')->user()?->profile;
+        $query = ($viewer
+                ? \App\Support\ProfileVisibility::forMember(Profile::query(), $viewer)
+                : \App\Support\ProfileVisibility::forVisitors(Profile::query()))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo', 'user.userMemberships']);
 
         // Map each filter key to the right column / relation. Mirrors the

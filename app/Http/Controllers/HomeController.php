@@ -79,9 +79,8 @@ class HomeController extends Controller
         $featuredCount = max(1, min((int) SiteSetting::getValue('featured_profiles_count', '8'), 24));
         $featuredManualOnly = SiteSetting::getValue('featured_profiles_manual_only', '0') === '1';
 
-        $featuredQuery = Profile::where('is_active', true)
-            ->approved()
-            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
+        // visitors see only members who set no limit on who sees them (ProfileVisibility, 4 Nov 2026)
+        $featuredQuery = \App\Support\ProfileVisibility::forVisitors(Profile::query())
             ->whereNotNull('full_name')
             ->when($featuredManualOnly, fn($q) => $q->where(fn($sub) => $sub->where('is_vip', true)->orWhere('is_featured', true)))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])

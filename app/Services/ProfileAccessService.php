@@ -15,14 +15,19 @@ use App\Models\Profile;
  * Gate order (important — some reasons mask others intentionally):
  *   1. Self     — viewer == target (allowed; same as OK)
  *   2. Gender   — same-gender view is never allowed (403)
- *   3. Suspension — target suspended/banned (404 to viewer — don't reveal state)
- *   4. Blocked  — either party has blocked the other (404 — don't reveal the block)
- *   5. Hidden   — target.is_hidden = true AND no pre-existing interest (404)
- *   6. Visibility — target.show_profile_to:
- *        'all'     → allow
- *        'premium' → require viewer.isPremium() (REASON_VISIBILITY_PREMIUM)
- *        'matches' → require match score ≥ threshold (REASON_VISIBILITY_MATCHES)
- *   7. OK       — all gates clear
+ *   3. Unavailable — target deactivated, not approved or deleted (404)
+ *   4. Suspension — target suspended/banned (404 to viewer — don't reveal state)
+ *   5. Blocked  — either party has blocked the other (404 — don't reveal the block)
+ *   6. Hidden   — target.is_hidden = true AND no pre-existing interest (404)
+ *   7. Visibility — the limits the target chose (App\Support\ProfileVisibility),
+ *      waived when the two already share an interest (either way):
+ *        show_profile_to 'premium' → viewer is premium (REASON_VISIBILITY_PREMIUM)
+ *        show_profile_to 'matches' → the VIEWER matches the TARGET's partner
+ *          preferences (REASON_VISIBILITY_MATCHES; until 4 Nov 2026 it scored the
+ *          target against the viewer's preferences, the wrong way round)
+ *        same religion / denomination / caste / sect / mother tongue only
+ *          (REASON_VISIBILITY_COMMUNITY, 4 Nov 2026)
+ *   8. OK       — all gates clear
  *
  * Controllers map reasons to envelope errors:
  *   REASON_SAME_GENDER        → 403 GENDER_MISMATCH
@@ -49,9 +54,11 @@ class ProfileAccessService
     public const REASON_SUSPENDED = 'suspended';
     public const REASON_VISIBILITY_PREMIUM = 'visibility_premium';
     public const REASON_VISIBILITY_MATCHES = 'visibility_matches';
+    public const REASON_VISIBILITY_COMMUNITY = 'visibility_community';
+    public const REASON_UNAVAILABLE = 'unavailable';
 
     /** Match-score threshold for target.show_profile_to = 'matches' gate. */
-    public const MATCH_GATE_THRESHOLD = 70;
+    public const MATCH_GATE_THRESHOLD = \App\Support\ProfileVisibility::MATCH_THRESHOLD;
 
     public function __construct(private MatchingService $matching) {}
 
@@ -69,6 +76,12 @@ class ProfileAccessService
             return self::REASON_SAME_GENDER;
         }
 
+        // deactivated / awaiting deletion, not approved yet, or deleted (4 Nov 2026:
+        // the web profile page opened these for anyone who typed the Matri ID)
+        if ($target->is_active === false || $target->is_approved === false || $target->trashed()) {
+            return self::REASON_UNAVAILABLE;
+        }
+
         if ($this->isSuspended($target)) {
             return self::REASON_SUSPENDED;
         }
@@ -77,19 +90,20 @@ class ProfileAccessService
             return self::REASON_BLOCKED;
         }
 
-        if ($this->isHidden($target) && ! $this->hasAnyInterest($viewer, $target)) {
+        // an interest either way (asked once, below) lets the two see each other
+        $connected = null;
+        $hasInterest = function () use (&$connected, $viewer, $target) {
+            return $connected ??= $this->hasAnyInterest($viewer, $target);
+        };
+
+        if ($this->isHidden($target) && ! $hasInterest()) {
             return self::REASON_HIDDEN;
         }
 
-        // Visibility setting: 'all' | 'premium' | 'matches'
-        $visibility = $target->show_profile_to ?? 'all';
-
-        if ($visibility === 'premium' && ! $this->isPremium($viewer)) {
-            return self::REASON_VISIBILITY_PREMIUM;
-        }
-
-        if ($visibility === 'matches' && ! $this->matchScoreAbove($viewer, $target, self::MATCH_GATE_THRESHOLD)) {
-            return self::REASON_VISIBILITY_MATCHES;
+        // the limits the target chose under Settings → "Show my profile to"
+        $limit = \App\Support\ProfileVisibility::limitsAllow($viewer, $target);
+        if ($limit !== null && ! $hasInterest()) {
+            return $limit;
         }
 
         return self::REASON_OK;
@@ -295,16 +309,4 @@ class ProfileAccessService
         }
     }
 
-    private function matchScoreAbove(Profile $viewer, Profile $target, int $threshold): bool
-    {
-        $prefs = $viewer->partnerPreference;
-        if (! $prefs) {
-            // No preferences set → can't gate by match score, deny per defensive default
-            return false;
-        }
-
-        $result = $this->matching->calculateScore($target, $prefs);
-
-        return (int) ($result['score'] ?? 0) >= $threshold;
-    }
 }

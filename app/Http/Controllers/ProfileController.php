@@ -69,8 +69,8 @@ class ProfileController extends Controller
 
         $isOwn = auth()->id() === $profile->user_id;
 
-        if (!$isOwn && auth()->user()->profile->gender === $profile->gender) {
-            abort(403, 'You cannot view this profile.');
+        if (! $isOwn && ($refused = $this->refusedProfilePage($profile))) {
+            return $refused;
         }
 
         $profile->load([
@@ -85,6 +85,23 @@ class ProfileController extends Controller
         return view('profile.print', compact('profile', 'user', 'isOwn', 'siteName'));
     }
 
+    /**
+     * Another member's profile (and its print view) opens only when the central check
+     * allows it (privacy check, 4 Nov 2026: this page checked gender only, so any
+     * member could open a hidden, blocked, deactivated or "matches only" profile by
+     * typing its Matri ID). Never says why, so nobody learns they were blocked.
+     */
+    private function refusedProfilePage(Profile $profile)
+    {
+        $reason = app(\App\Services\ProfileAccessService::class)->check(auth()->user()->profile, $profile);
+
+        return match ($reason) {
+            \App\Services\ProfileAccessService::REASON_OK, \App\Services\ProfileAccessService::REASON_SELF => null,
+            \App\Services\ProfileAccessService::REASON_SAME_GENDER => abort(403, 'You cannot view this profile.'),
+            default => response()->view('profile.unavailable', [], 404),
+        };
+    }
+
     public function viewProfile(Profile $profile)
     {
         // /profile/857 (old links in emails) → /profile/KM100855, keeping ?tab=
@@ -95,9 +112,8 @@ class ProfileController extends Controller
         $user = $profile->user;
         $isOwn = auth()->id() === $user->id;
 
-        // Block same-gender profile viewing (except own profile)
-        if (! $isOwn && auth()->user()->profile->gender === $profile->gender) {
-            abort(403, 'You cannot view this profile.');
+        if (! $isOwn && ($refused = $this->refusedProfilePage($profile))) {
+            return $refused;
         }
 
         $profile->load([

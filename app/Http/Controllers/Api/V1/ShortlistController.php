@@ -161,6 +161,9 @@ class ShortlistController extends BaseApiController
         if ($existing) {
             $existing->delete();
             $isShortlisted = false;
+        } elseif (! app(\App\Services\ProfileAccessService::class)->canAccess($viewer, $target)) {
+            // only a profile the member may see (privacy check, 4 Nov 2026); removing always works
+            return ApiResponse::error('NOT_FOUND', 'Profile not available.', null, 404);
         } else {
             Shortlist::create([
                 'profile_id' => $viewer->id,

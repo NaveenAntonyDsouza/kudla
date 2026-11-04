@@ -47,6 +47,12 @@ class PhotoRequestController extends Controller
             return back()->with('error', 'You cannot send a photo request to yourself.');
         }
 
+        // only to a profile the member may see: other gender, no block, not hidden or
+        // limited (privacy check, 4 Nov 2026: this checked nothing)
+        if (! app(\App\Services\ProfileAccessService::class)->canAccess($myProfile, $profile)) {
+            return back()->with('error', 'This profile is not available.');
+        }
+
         // Check if already sent
         $existing = PhotoRequest::where('requester_profile_id', $myProfile->id)
             ->where('target_profile_id', $profile->id)

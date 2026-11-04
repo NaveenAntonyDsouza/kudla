@@ -526,13 +526,9 @@ class SearchController extends Controller
      */
     private function visitorBaseQuery(): Builder
     {
-        return Profile::where('is_active', true)
-            ->approved()
-            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-            ->where(fn($q) => $q->where('show_profile_to', '!=', 'premium')->orWhereNull('show_profile_to'))
-            ->where(fn($q) => $q->where('only_same_religion', false)->orWhereNull('only_same_religion'))
-            ->where(fn($q) => $q->where('only_same_denomination', false)->orWhereNull('only_same_denomination'))
-            ->where(fn($q) => $q->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue'))
+        // ProfileVisibility::forVisitors (4 Nov 2026): also leaves out "matches only"
+        // and suspended members, which this list used to show
+        return \App\Support\ProfileVisibility::forVisitors(Profile::query())
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo']);
     }
 

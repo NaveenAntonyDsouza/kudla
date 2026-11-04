@@ -17,46 +17,12 @@ trait ProfileQueryFilters
      */
     protected function baseQuery(Profile $profile, bool $respectLineagePreference = true): Builder
     {
-        $query = Profile::query()
-            ->where('id', '!=', $profile->id)
-            ->where('is_active', true)
-            ->approved()
-            ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
-            ->where('gender', '!=', $profile->gender)
-            ->whereDoesntHave('blockedByOthers', fn($q) => $q->where('profile_id', $profile->id))
-            ->whereDoesntHave('blockedProfiles', fn($q) => $q->where('blocked_profile_id', $profile->id))
-            // Exclude ignored profiles
-            ->whereDoesntHave('ignoredByOthers', fn($q) => $q->where('profile_id', $profile->id))
-            // Enforce show_profile_to setting
-            ->where(function ($q) use ($profile) {
-                $q->where('show_profile_to', 'all')
-                    ->orWhereNull('show_profile_to')
-                    // "premium" — show only if I am a premium member
-                    ->orWhere(function ($q2) use ($profile) {
-                        $q2->where('show_profile_to', 'premium')
-                            ->whereRaw('? = 1', [auth()->user()?->isPremium() ? 1 : 0]);
-                    })
-                    // "matches" — ideally show only if I match their partner preferences.
-                    // Full reverse-matching is expensive (load each target's prefs + score).
-                    // Partially enforced via only_same_religion/denomination/mother_tongue toggles below.
-                    // Full enforcement deferred to v2 (use match_scores table for pre-calculated reverse matches).
-                    ->orWhere('show_profile_to', 'matches');
-            })
-            // Visibility preferences (religion, denomination, mother tongue)
-            ->where(function ($q) use ($profile) {
-                $q->where(function ($q2) use ($profile) {
-                    $q2->where('only_same_religion', false)->orWhereNull('only_same_religion')
-                        ->orWhereHas('religiousInfo', fn($q3) => $q3->where('religion', $profile->religiousInfo?->religion));
-                });
-                $q->where(function ($q2) use ($profile) {
-                    $q2->where('only_same_denomination', false)->orWhereNull('only_same_denomination')
-                        ->orWhereHas('religiousInfo', fn($q3) => $q3->where('denomination', $profile->religiousInfo?->denomination)->orWhere('caste', $profile->religiousInfo?->caste));
-                });
-                $q->where(function ($q2) use ($profile) {
-                    $q2->where('only_same_mother_tongue', false)->orWhereNull('only_same_mother_tongue')
-                        ->orWhere('mother_tongue', $profile->mother_tongue);
-                });
-            })
+        // Who this member may see: active, approved, not hidden or suspended, other
+        // gender, no block either way, not ignored, and every limit the others chose
+        // under Settings → "Show my profile to" (App\Support\ProfileVisibility, 4 Nov
+        // 2026: "matches only" was listed to everyone, "premium only" followed the
+        // signed-in user instead of this member, an empty caste counted as the same).
+        $query = \App\Support\ProfileVisibility::forMember(Profile::query(), $profile)
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo', 'user.userMemberships', 'photoPrivacySetting']);
 
         if ($respectLineagePreference) {

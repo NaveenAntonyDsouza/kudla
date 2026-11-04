@@ -43,6 +43,13 @@ class InterestService
             throw new \RuntimeException('Cannot send interest to this profile.');
         }
 
+        // Only to a profile the sender may see (privacy check, 4 Nov 2026): an interest
+        // opens a hidden or limited profile to the other side, so sending one by URL to
+        // a profile you can't see would have opened it. Same message as a block.
+        if (! app(ProfileAccessService::class)->canAccess($sender, $receiver)) {
+            throw new \RuntimeException('Cannot send interest to this profile.');
+        }
+
         // Check daily limit (plan-based). Typed exception so the API
         // controller can render the canonical DAILY_LIMIT_REACHED (429)
         // envelope instead of the generic INVALID_INTEREST (422) used
