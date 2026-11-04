@@ -28,8 +28,9 @@ class ContactController extends Controller
         // Bots: filled the hidden field, or posted without / too soon after
         // loading the form. They get the normal thank-you so they don't adapt;
         // nothing is saved or emailed.
-        if ($this->looksAutomated($request)) {
-            \Log::info('Contact form: automated submission dropped', ['ip' => $request->ip()]);
+        if ($reason = $this->looksAutomated($request)) {
+            \Log::info('Contact form: automated submission dropped', ['ip' => $request->ip(), 'reason' => $reason]);
+            self::countSpam($reason);
 
             return back()->with('success', $thanks);
         }
@@ -90,18 +91,58 @@ class ContactController extends Controller
         return back()->with('success', $thanks);
     }
 
-    private function looksAutomated(Request $request): bool
+    /** Why a submission looks automated, or null when it looks like a person. */
+    private function looksAutomated(Request $request): ?string
     {
         if (filled($request->input('website'))) {
-            return true;
+            return 'hidden_field';
         }
 
         try {
             $openedAt = (int) decrypt((string) $request->input('form_ts'));
         } catch (\Throwable) {
-            return true; // posted without loading our form
+            return 'no_form'; // posted without loading our form
         }
 
-        return now()->timestamp - $openedAt < self::MIN_SECONDS_ON_FORM;
+        return now()->timestamp - $openedAt < self::MIN_SECONDS_ON_FORM ? 'too_fast' : null;
+    }
+
+    /** Dropped bot messages are kept this many days, counted per day and reason. */
+    public const SPAM_COUNT_DAYS = 90;
+
+    public const SPAM_REASONS = ['hidden_field', 'no_form', 'too_fast'];
+
+    /**
+     * Count a dropped bot message (Nov 2026: the weekly review could not see
+     * them — the log line is info level and live sites keep errors only).
+     */
+    public static function countSpam(string $reason): void
+    {
+        try {
+            $key = 'contact-spam:' . now()->toDateString() . ':' . $reason;
+            \Illuminate\Support\Facades\Cache::add($key, 0, now()->addDays(self::SPAM_COUNT_DAYS));
+            \Illuminate\Support\Facades\Cache::increment($key);
+        } catch (\Throwable $e) {
+            report($e); // counting must never break the reply
+        }
+    }
+
+    /**
+     * Dropped bot messages for the last $days days, for the weekly review:
+     * ['2026-11-04' => ['hidden_field' => 3, 'no_form' => 0, 'too_fast' => 1], …], newest first.
+     *
+     * @return array<string, array<string, int>>
+     */
+    public static function spamCounts(int $days = 7): array
+    {
+        $out = [];
+        for ($i = 0; $i < $days; $i++) {
+            $date = now()->subDays($i)->toDateString();
+            foreach (self::SPAM_REASONS as $reason) {
+                $out[$date][$reason] = (int) \Illuminate\Support\Facades\Cache::get("contact-spam:{$date}:{$reason}", 0);
+            }
+        }
+
+        return $out;
     }
 }

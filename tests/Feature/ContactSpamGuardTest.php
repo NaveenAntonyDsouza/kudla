@@ -93,3 +93,19 @@ it('puts the hidden field and the timestamp on the form', function () {
 
     expect($form)->toContain('name="website"')->toContain('name="form_ts" value="{{ encrypt(now()->timestamp) }}"');
 });
+
+it('counts dropped bot messages per day and reason, for the weekly review', function () {
+    \Illuminate\Support\Facades\Cache::flush();
+    $post = fn (array $bot) => $this->from('/contact-us')->post('/contact-us', contactForm($bot));
+
+    $post(['website' => 'https://spam.example']);
+    $post(['website' => 'https://spam.example']);
+    $post(['form_ts' => null]);
+    $post(['form_ts' => encrypt(now()->timestamp)]);
+    $post([]); // a person: not counted
+
+    expect(ContactController::spamCounts(2))->toBe([
+        now()->toDateString() => ['hidden_field' => 2, 'no_form' => 1, 'too_fast' => 1],
+        now()->subDay()->toDateString() => ['hidden_field' => 0, 'no_form' => 0, 'too_fast' => 0],
+    ]);
+});
