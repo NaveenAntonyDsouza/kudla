@@ -27,9 +27,14 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => "We couldn't send the reset email right now. Please try again in a little while."])->withInput();
         }
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('success', 'Password reset link sent to your email!')
-            : back()->withErrors(['email' => __($status)]);
+        // One answer whether or not the email is registered (privacy check, 5 Nov 2026:
+        // "We can't find a user with that email address" told anyone who had a profile).
+        // A second request for the same email within a minute is quietly not resent.
+        if (! in_array($status, [Password::RESET_LINK_SENT, Password::INVALID_USER, Password::RESET_THROTTLED], true)) {
+            report(new \RuntimeException("Password reset link not sent: {$status}"));
+        }
+
+        return back()->with('success', 'If an account uses this email, we have sent it a link to reset the password. Please check your inbox and spam folder.');
     }
 
     public function showResetForm(Request $request, string $token)

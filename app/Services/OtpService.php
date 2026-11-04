@@ -34,6 +34,9 @@ class OtpService
     public const CHANNEL_PHONE = 'phone';
     public const CHANNEL_EMAIL = 'email';
 
+    /** Wrong codes allowed per destination before the code is cancelled. */
+    public const MAX_WRONG_GUESSES = 5;
+
     /**
      * Send an OTP to the given destination on the given channel.
      * Returns true on success (dispatch attempted without exception).
@@ -63,6 +66,9 @@ class OtpService
             'otp_code' => Hash::make($otp),
             'expires_at' => now()->addMinutes(config('matrimony.otp_expiry_minutes', 10)),
         ]);
+
+        // a new code starts with no wrong guesses
+        \Illuminate\Support\Facades\RateLimiter::clear('otp-wrong:' . $channel . ':' . sha1(mb_strtolower($destination)));
 
         if (app()->environment('local')) {
             Log::info("DEV OTP [{$channel}] for {$destination}: {$otp}");
@@ -95,10 +101,26 @@ class OtpService
             return false;
         }
 
-        if (! Hash::check($code, $record->otp_code)) {
+        // At most MAX_WRONG_GUESSES wrong codes per destination; then the code is
+        // cancelled and a new one must be sent (privacy check, 5 Nov 2026: only a
+        // per-address limit applied, so guesses from many addresses never stopped)
+        $guesses = 'otp-wrong:' . $channel . ':' . sha1(mb_strtolower($destination));
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($guesses, self::MAX_WRONG_GUESSES)) {
+            $record->update(['expires_at' => now()]);
+
             return false;
         }
 
+        if (! Hash::check($code, $record->otp_code)) {
+            \Illuminate\Support\Facades\RateLimiter::hit($guesses, 15 * 60);
+            if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($guesses, self::MAX_WRONG_GUESSES)) {
+                $record->update(['expires_at' => now()]);
+            }
+
+            return false;
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::clear($guesses);
         $record->update(['verified_at' => now()]);
 
         return true;
