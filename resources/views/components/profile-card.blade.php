@@ -7,16 +7,19 @@
 @php
     $p = $profile;
     $isGuest = !auth()->check();
+    // What families decide on first, in the three lines a phone shows (Nov 2026, after Chavara's
+    // cards): community, education, job and place used to be cut off behind skin tone and religion.
+    // Skin tone stays on the full profile; the religion shows only when no community is given;
+    // marital status only when it is not "Unmarried".
+    $community = $p->religiousInfo?->display_denomination ?? $p->religiousInfo?->display_caste;
     $desc = collect([
         $p->age ? $p->age . ' Yrs' : null,
         $p->height,
-        $p->complexion,
-        $p->marital_status,
-        $p->religiousInfo?->religion,
-        $p->religiousInfo?->display_denomination ?? $p->religiousInfo?->display_caste,
+        $community ?: $p->religiousInfo?->religion,
         $p->educationDetail?->highest_education,
         $p->educationDetail?->occupation,
         $p->locationInfo?->native_district ?? $p->locationInfo?->native_state ?? $p->locationInfo?->native_country,
+        $p->marital_status !== 'Unmarried' ? $p->marital_status : null,
     ])->filter()->implode(', ');
 
     // Cache shortlisted IDs to avoid N+1 queries
