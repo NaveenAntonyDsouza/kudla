@@ -143,10 +143,7 @@ class BlockController extends BaseApiController
             // without the inline schema) doesn't poison the block itself.
             try {
                 Interest::where('status', 'pending')
-                    ->where(function ($q) use ($viewer, $target) {
-                        $q->where(['sender_profile_id' => $viewer->id, 'receiver_profile_id' => $target->id])
-                            ->orWhere(['sender_profile_id' => $target->id, 'receiver_profile_id' => $viewer->id]);
-                    })
+                    ->where(fn ($q) => \App\Services\ProfileAccessService::eitherWay($q, 'sender_profile_id', 'receiver_profile_id', $viewer->id, $target->id))
                     ->update(['status' => 'cancelled', 'cancelled_at' => now()]);
             } catch (\Throwable $e) {
                 // Tolerated — the block itself succeeded.

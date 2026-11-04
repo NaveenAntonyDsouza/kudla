@@ -275,15 +275,8 @@ class ProfileCardResource extends JsonResource
             return null;
         }
 
-        $interest = Interest::where(function ($q) use ($profile) {
-            $q->where([
-                'sender_profile_id' => $this->viewer->id,
-                'receiver_profile_id' => $profile->id,
-            ])->orWhere([
-                'sender_profile_id' => $profile->id,
-                'receiver_profile_id' => $this->viewer->id,
-            ]);
-        })->latest()->first();
+        $interest = Interest::where(fn ($q) => \App\Services\ProfileAccessService::eitherWay($q, 'sender_profile_id', 'receiver_profile_id', $this->viewer->id, $profile->id))
+            ->latest()->first();
 
         if (! $interest) {
             return null;
@@ -309,14 +302,7 @@ class ProfileCardResource extends JsonResource
             return false;
         }
 
-        return BlockedProfile::where(function ($q) use ($profile) {
-            $q->where([
-                'profile_id' => $this->viewer->id,
-                'blocked_profile_id' => $profile->id,
-            ])->orWhere([
-                'profile_id' => $profile->id,
-                'blocked_profile_id' => $this->viewer->id,
-            ]);
-        })->exists();
+        return BlockedProfile::where(fn ($q) => \App\Services\ProfileAccessService::eitherWay($q, 'profile_id', 'blocked_profile_id', $this->viewer->id, $profile->id))
+            ->exists();
     }
 }

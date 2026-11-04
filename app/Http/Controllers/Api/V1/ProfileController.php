@@ -583,15 +583,8 @@ class ProfileController extends BaseApiController
     private function interestStatus(Profile $viewer, Profile $target): ?string
     {
         try {
-            $interest = Interest::where(function ($q) use ($viewer, $target) {
-                $q->where([
-                    'sender_profile_id' => $viewer->id,
-                    'receiver_profile_id' => $target->id,
-                ])->orWhere([
-                    'sender_profile_id' => $target->id,
-                    'receiver_profile_id' => $viewer->id,
-                ]);
-            })->latest()->first();
+            $interest = Interest::where(fn ($q) => \App\Services\ProfileAccessService::eitherWay($q, 'sender_profile_id', 'receiver_profile_id', $viewer->id, $target->id))
+                ->latest()->first();
 
             if (! $interest) {
                 return null;

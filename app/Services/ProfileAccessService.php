@@ -238,15 +238,7 @@ class ProfileAccessService
     public function isBlocked(Profile $a, Profile $b): bool
     {
         try {
-            return BlockedProfile::where(function ($q) use ($a, $b) {
-                $q->where([
-                    'profile_id' => $a->id,
-                    'blocked_profile_id' => $b->id,
-                ])->orWhere([
-                    'profile_id' => $b->id,
-                    'blocked_profile_id' => $a->id,
-                ]);
-            })->exists();
+            return BlockedProfile::where(fn ($q) => self::eitherWay($q, 'profile_id', 'blocked_profile_id', $a->id, $b->id))->exists();
         } catch (\Throwable $e) {
             // Defensive: missing table in test DB → treat as "no block exists"
             // In production the table always exists (migration), so this branch never fires.
@@ -257,15 +249,7 @@ class ProfileAccessService
     public function hasAnyInterest(Profile $a, Profile $b): bool
     {
         try {
-            return Interest::where(function ($q) use ($a, $b) {
-                $q->where([
-                    'sender_profile_id' => $a->id,
-                    'receiver_profile_id' => $b->id,
-                ])->orWhere([
-                    'sender_profile_id' => $b->id,
-                    'receiver_profile_id' => $a->id,
-                ]);
-            })->exists();
+            return Interest::where(fn ($q) => self::eitherWay($q, 'sender_profile_id', 'receiver_profile_id', $a->id, $b->id))->exists();
         } catch (\Throwable $e) {
             return false;
         }
@@ -275,19 +259,25 @@ class ProfileAccessService
     {
         try {
             return Interest::where('status', 'accepted')
-                ->where(function ($q) use ($a, $b) {
-                    $q->where([
-                        'sender_profile_id' => $a->id,
-                        'receiver_profile_id' => $b->id,
-                    ])->orWhere([
-                        'sender_profile_id' => $b->id,
-                        'receiver_profile_id' => $a->id,
-                    ]);
-                })
+                ->where(fn ($q) => self::eitherWay($q, 'sender_profile_id', 'receiver_profile_id', $a->id, $b->id))
                 ->exists();
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    /**
+     * (from = a AND to = b) OR (from = b AND to = a).
+     *
+     * Never an array inside orWhere: Laravel joins the pairs of an orWhere
+     * ARRAY with OR, so the second half read "from = b OR to = a".
+     * That opened a member's phone to every member once she had sent one
+     * accepted interest (Kudla, 25 Oct – 4 Nov 2026: 135 contact views).
+     */
+    public static function eitherWay($query, string $from, string $to, int $a, int $b)
+    {
+        return $query->where(fn ($w) => $w->where($from, $a)->where($to, $b))
+            ->orWhere(fn ($w) => $w->where($from, $b)->where($to, $a));
     }
 
     /**
