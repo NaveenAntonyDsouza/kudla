@@ -86,12 +86,14 @@
         </div>
     </div>
 
-    {{-- Export --}}
+    {{-- Export (own permission: members' names and email addresses; privacy check, 4 Nov 2026) --}}
+    @if (\App\Support\Permissions::can('export_member_data'))
     <div style="margin-top: 16px;">
         <x-filament::button wire:click="exportCsv" icon="heroicon-o-arrow-down-tray">
             Export Payments CSV
         </x-filament::button>
     </div>
+    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script>

@@ -63,7 +63,9 @@ class PhotoResource extends JsonResource
             'url'               => $locked ? null : $photo->full_url,     // absolute via accessor
             'thumbnail_url'     => $locked ? null : $photo->thumb_url,    // absolute via accessor
             'medium_url'        => $locked ? null : $photo->medium_url,   // absolute via accessor
-            'original_url'      => $isOwn ? $photo->original_full_url : null,  // only owner sees original
+            // originals are not served on the web (privacy check, 4 Nov 2026: full size,
+            // no watermark); kept in the shape so the app's model doesn't change
+            'original_url'      => null,
             'is_primary'        => (bool) $photo->is_primary,
             'is_visible'        => (bool) $photo->is_visible,
             'is_blurred'        => $locked,

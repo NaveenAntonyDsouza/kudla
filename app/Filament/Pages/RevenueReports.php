@@ -153,6 +153,11 @@ class RevenueReports extends Page
 
     public function exportCsv()
     {
+        // members' names and email addresses: the member-export permission, as the
+        // interests and member exports (privacy check, 4 Nov 2026: this checked only
+        // that the person could open the revenue report)
+        abort_unless(\App\Support\Permissions::can('export_member_data'), 403);
+
         return CsvExportService::exportPayments();
     }
 }

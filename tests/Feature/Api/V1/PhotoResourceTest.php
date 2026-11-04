@@ -215,14 +215,14 @@ it('medium_url falls back to full url when medium column is empty', function () 
  |  original_url — owner-only gate
  | ================================================================== */
 
-it('original_url is populated when viewer is the photo owner', function () {
+it('original_url is null even for the owner: originals are not served on the web (privacy check, 4 Nov 2026)', function () {
     $photo = buildPhoto(['profile_id' => 42]);
     $owner = wirePhotoProfile($photo);
 
     $data = (new PhotoResource($photo, viewer: $owner))->resolve();
 
-    expect($data['original_url'])->toBeString();
-    expect($data['original_url'])->toMatch('#^https?://#');
+    expect($data)->toHaveKey('original_url')
+        ->and($data['original_url'])->toBeNull();
 });
 
 it('original_url is null when viewer is NOT the photo owner', function () {

@@ -148,8 +148,10 @@ class ProfileResource extends JsonResource
             'religious_observance'  => $r->religious_observance,
             'jain_sect'             => $r->jain_sect,
             'other_religion_name'   => $r->other_religion_name,
-            'jathakam_url'          => $r->jathakam_upload_url
-                                          ? url($r->jathakam_upload_url)
+            // the member's own horoscope file only (privacy check, 4 Nov 2026: it went to
+            // anyone who could open the profile; the website shows it to the owner only)
+            'jathakam_url'          => ($r->jathakam_upload_url && $this->viewerProfile()?->id === $profile->id)
+                                          ? asset('storage/' . ltrim($r->jathakam_upload_url, '/'))
                                           : null,
         ];
     }

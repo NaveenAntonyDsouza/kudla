@@ -163,6 +163,7 @@ class OnboardingController extends Controller
 
         if (! empty($horoscope) || $request->hasFile('jathakam')) {
             if ($request->hasFile('jathakam')) {
+                \App\Support\PublicFolderRules::ensure('jathakam', \App\Support\PublicFolderRules::DOCUMENTS); // never indexed
                 $horoscope['jathakam_upload_url'] = $request->file('jathakam')->store('jathakam', 'public');
             }
             ReligiousInfo::updateOrCreate(['profile_id' => $profile->id], $horoscope);

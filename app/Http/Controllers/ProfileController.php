@@ -263,6 +263,7 @@ class ProfileController extends Controller
         );
 
         if ($request->hasFile('jathakam')) {
+            \App\Support\PublicFolderRules::ensure('jathakam', \App\Support\PublicFolderRules::DOCUMENTS); // never indexed
             $path = $request->file('jathakam')->store('jathakam', 'public');
             $profile->religiousInfo->update(['jathakam_upload_url' => $path]);
         }

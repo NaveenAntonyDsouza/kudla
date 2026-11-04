@@ -63,7 +63,12 @@ class ImageProcessingService
         $outputFormat = $this->getOutputFormat(); // 'webp' or 'jpg'
         $ext = $outputFormat === 'webp' ? 'webp' : 'jpg';
 
-        // 1. Preserve original (keep native format for archival)
+        // On the public disk: the folder's web rules (never indexed, originals never served)
+        if ($disk === 'public') {
+            \App\Support\PublicFolderRules::ensure($storagePath, \App\Support\PublicFolderRules::PHOTOS);
+        }
+
+        // 1. Preserve original (keep native format for archival; not served on the web)
         $originalExt = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $originalPath = "$storagePath/original/{$basename}.{$originalExt}";
         Storage::disk($disk)->put($originalPath, file_get_contents($file->getRealPath()));

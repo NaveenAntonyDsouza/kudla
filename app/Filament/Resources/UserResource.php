@@ -931,7 +931,9 @@ class UserResource extends Resource
                     ->deselectRecordsAfterCompletion()
                     ->successNotificationTitle('Profiles permanently deleted'),
 
-                \Filament\Actions\ExportBulkAction::make(),
+                // (no bulk "Export" here — privacy check, 4 Nov 2026: it had no exporter and
+                // no permission check; member exports are Members Overview → Export, which
+                // needs export_member_data)
             ])
             ->searchPlaceholder('Search by name, matri ID, email, phone...')
             ->poll('60s');
