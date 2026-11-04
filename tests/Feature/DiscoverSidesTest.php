@@ -64,3 +64,11 @@ it('sends a side with fewer than 10 profiles to the plain page', function () {
 it('only knows brides and grooms', function () {
     $this->get('/discover/karnataka-matrimony/udupi/couples')->assertNotFound();
 });
+
+it('shows no counts on the Brides / Grooms buttons (they showed the men-to-women imbalance)', function () {
+    $view = file_get_contents(resource_path('views/discover/results.blade.php'));
+    $nav = substr($view, strpos($view, 'aria-label="Brides or grooms"'), 1200);
+
+    expect($nav)->toContain("{{ \$link['label'] }}")
+        ->not->toContain("\$link['count']");
+});

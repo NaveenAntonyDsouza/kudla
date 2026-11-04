@@ -81,14 +81,15 @@
             </div>
         </div>
 
-        {{-- Brides / Grooms pages (Nov 2026): shown to guests when a side has 10+ profiles --}}
+        {{-- Brides / Grooms pages (Nov 2026): shown to guests when a side has 10+ profiles. No counts on
+             the buttons: side by side they showed the men-to-women imbalance (Kudla Billava 39 vs 126) --}}
         @if(count($sideLinks))
             <nav class="flex flex-wrap gap-2 -mt-2 mb-6 text-sm" aria-label="Brides or grooms">
                 <a href="{{ $plainUrl }}"
                     class="px-3 py-1.5 rounded-full border {{ $side ? 'border-gray-300 text-gray-700 hover:border-(--color-primary)' : 'border-(--color-primary) bg-(--color-primary-light) text-(--color-primary) font-semibold' }}">All</a>
                 @foreach($sideLinks as $link)
                     <a href="{{ $link['url'] }}"
-                        class="px-3 py-1.5 rounded-full border {{ $side === $link['side'] ? 'border-(--color-primary) bg-(--color-primary-light) text-(--color-primary) font-semibold' : 'border-gray-300 text-gray-700 hover:border-(--color-primary)' }}">{{ $link['label'] }} ({{ $link['count'] }})</a>
+                        class="px-3 py-1.5 rounded-full border {{ $side === $link['side'] ? 'border-(--color-primary) bg-(--color-primary-light) text-(--color-primary) font-semibold' : 'border-gray-300 text-gray-700 hover:border-(--color-primary)' }}">{{ $link['label'] }}</a>
                 @endforeach
             </nav>
         @endif
