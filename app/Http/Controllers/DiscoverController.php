@@ -282,7 +282,8 @@ class DiscoverController extends Controller
 
         $sort = request()->get('sort', 'newest');
         $query = $this->applySortOrder($query, $sort);
-        $results = $query->paginate(20)->withQueryString();
+        // visitors on a mixed page: a bride, then a groom… (members see only the other side)
+        $results = ($profile || $side ? $query->paginate(20) : \App\Support\AlternateGenders::paginate($query, 20))->withQueryString();
         $currentSort = $sort;
         $plainSeo = \App\Support\DiscoverSeo::forResults($category, $title);
         $seo = $side ? \App\Support\DiscoverSeo::forSide($category, $title, $side) : $plainSeo;

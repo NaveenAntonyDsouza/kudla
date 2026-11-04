@@ -714,7 +714,9 @@ class SearchController extends Controller
         }
 
         $currentSort = in_array(request('sort'), ['newest', 'recently_active'], true) ? request('sort') : 'relevance';
-        $results = $this->applySortOrder($query, $currentSort)->paginate(20)->withQueryString();
+        $query = $this->applySortOrder($query, $currentSort);
+        // no Bride / Groom chosen: a bride, then a groom… (AlternateGenders)
+        $results = ($gender ? $query->paginate(20) : \App\Support\AlternateGenders::paginate($query, 20))->withQueryString();
 
         // Pick a single human label for the results header, tolerating
         // array (multi-select) values for caste/denomination/religion.

@@ -79,15 +79,18 @@ class HomeController extends Controller
         $featuredCount = max(1, min((int) SiteSetting::getValue('featured_profiles_count', '8'), 24));
         $featuredManualOnly = SiteSetting::getValue('featured_profiles_manual_only', '0') === '1';
 
-        $featuredProfiles = Profile::where('is_active', true)
+        $featuredQuery = Profile::where('is_active', true)
             ->approved()
             ->where(fn($q) => $q->where('is_hidden', false)->orWhereNull('is_hidden'))
             ->whereNotNull('full_name')
             ->when($featuredManualOnly, fn($q) => $q->where(fn($sub) => $sub->where('is_vip', true)->orWhere('is_featured', true)))
             ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
-            ->defaultOrder() // paid boosts → finished → with photo → recently active → newest
-            ->limit($featuredCount)
-            ->get();
+            ->defaultOrder(); // paid boosts → finished → with photo → recently active → newest
+        // a bride, then a groom… (AlternateGenders): the top of each side, then alternated
+        $featuredProfiles = \App\Support\AlternateGenders::collection(
+            collect(\App\Support\AlternateGenders::ORDER)
+                ->flatMap(fn ($gender) => (clone $featuredQuery)->where('gender', $gender)->limit($featuredCount)->get())
+        )->take($featuredCount)->values();
 
         $totalProfiles = Profile::where('is_active', true)->count();
 
