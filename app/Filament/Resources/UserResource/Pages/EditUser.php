@@ -192,10 +192,16 @@ class EditUser extends EditRecord
         $digits = fn (?string $number): string => substr(preg_replace('/[^0-9]/', '', (string) $number), -10);
         $whatsapp = $cont?->whatsapp_number;
 
-        $place = collect([$loc?->native_place, $loc?->native_district])->filter()->unique()->implode(', ');
-        if (filled($loc?->residing_country) && $loc->residing_country !== 'India') {
-            $place = trim($place . ' · lives in ' . $loc->residing_country, ' ·');
-        }
+        // places say what they are (6 Nov 2026: "Mangalore, Bangalore" was native place + native
+        // district, read as where he lives; labelled, a mixed-up entry shows on the call)
+        $edu = $profile->educationDetail;
+        $from = collect([$loc?->native_place, $loc?->native_district])->filter()->unique()->implode(', ');
+        $worksIn = collect([
+            $edu?->working_city ?: $edu?->working_district,
+            filled($edu?->working_country) && $edu->working_country !== 'India' ? $edu->working_country : null,
+        ])->filter()->unique()->implode(', ');
+        $livesIn = filled($loc?->residing_country) && $loc->residing_country !== 'India' && ! str_contains($worksIn, $loc->residing_country)
+            ? $loc->residing_country : null;
 
         $membership = $user?->activeMembership();
         $pills = [
@@ -244,8 +250,10 @@ class EditUser extends EditRecord
                 $profile->gender ? ucfirst($profile->gender) : null,
                 \App\Support\MaritalStatus::toSiteValue($profile->marital_status),
                 collect([$rel?->religion, $rel?->caste ?: $rel?->denomination ?: $rel?->muslim_community])->filter()->implode(', ') ?: null,
-                $place ?: null,
-                $profile->educationDetail?->occupation,
+                $from !== '' ? 'from ' . $from : null,
+                $edu?->occupation,
+                $worksIn !== '' ? 'works in ' . $worksIn : null,
+                $livesIn ? 'lives in ' . $livesIn : null,
             ])->filter()->values()->all(),
             'pills' => $pills,
             'phone' => $phone !== '' ? $phone : null,
