@@ -61,17 +61,22 @@ class EditUser extends EditRecord
 
     private const LOGGED_WITHOUT_VALUES_FIELDS = ['Basic: creator contact number', 'Religion: jathakam upload url'];
 
-    /** Profile completion sections → the tab where staff fill them in (null: the Photos list below the tabs). */
+    /**
+     * Profile completion sections → [the tab where staff fill them in (null: the Photos list below
+     * the tabs), what the completion rule looks for there (ProfileCompletionService::sectionDoneMap)].
+     * 6 Nov 2026: the card said "Family" for a member whose Family tab was full except the
+     * father's name, the one field the rule checks.
+     */
     private const SECTION_TABS = [
-        'basic_info' => 'Basic',
-        'contact' => 'Contact',
-        'religious' => 'Religion & Community',
-        'education' => 'Education & Job',
-        'family_details' => 'Family',
-        'location' => 'Location',
-        'partner_preferences' => 'Partner Preferences',
-        'lifestyle' => 'Lifestyle',
-        'photo' => null,
+        'basic_info' => ['Basic', 'name, gender or date of birth'],
+        'contact' => ['Contact', 'contact person or WhatsApp'],
+        'religious' => ['Religion & Community', 'religion'],
+        'education' => ['Education & Job', 'education or job'],
+        'family_details' => ['Family', "father's name"],
+        'location' => ['Location', 'country'],
+        'partner_preferences' => ['Partner Preferences', 'age range or religion'],
+        'lifestyle' => ['Lifestyle', 'diet or hobbies'],
+        'photo' => [null, 'Photo (Photos list below)'],
     ];
 
     /** @var array<string, mixed> the values before Save (see logChangedFields) */
@@ -227,11 +232,11 @@ class EditUser extends EditRecord
         // what is still empty, in the order of the tabs
         $missing = app(ProfileCompletionService::class)->detectMissingSections($profile);
         $ask = [];
-        foreach (self::SECTION_TABS as $section => $tab) {
+        foreach (self::SECTION_TABS as $section => [$tab, $what]) {
             if (isset($missing[$section])) {
                 $ask[] = [
-                    'label' => $tab ?? 'Photo (Photos list below)',
-                    'tab' => $tab ? Str::slug($tab) . '::data::tab' : null,
+                    'label' => $tab ? "{$tab}: {$what}" : $what,
+                    'tab' => $tab ? UserResource::tabKey($tab) : null,
                 ];
             }
         }
@@ -242,6 +247,14 @@ class EditUser extends EditRecord
         $lastEdit = AdminActivityLog::where('action', 'member_profile_updated')->where('model_type', 'Profile')->where('model_id', $profile->id)
             ->with('admin')->latest()->first();
 
+        // what the member typed after "Other", marked as typed (6 Nov 2026: the card said
+        // "Hindu, Other / Not Listed" for a member who had typed "Shetty")
+        $typed = fn (?string $pick, ?string $typedValue, bool $isOther): ?string => $isOther && filled($typedValue) ? $typedValue . ' (typed in)' : $pick;
+        $religion = $typed($rel?->religion, $rel?->other_religion_name, $rel?->religion === 'Other');
+        $community = $typed($rel?->caste, $rel?->other_caste_name, ReligiousInfo::isOtherCaste($rel?->caste))
+            ?: $typed($rel?->denomination, $rel?->other_denomination_name, $rel?->denomination === 'Other')
+            ?: $rel?->muslim_community;
+
         return [
             'photo' => $profile->primaryPhoto?->thumb_url,
             'matriId' => $profile->matri_id,
@@ -249,7 +262,7 @@ class EditUser extends EditRecord
                 $profile->age ? $profile->age . ' yrs' : null,
                 $profile->gender ? ucfirst($profile->gender) : null,
                 \App\Support\MaritalStatus::toSiteValue($profile->marital_status),
-                collect([$rel?->religion, $rel?->caste ?: $rel?->denomination ?: $rel?->muslim_community])->filter()->implode(', ') ?: null,
+                collect([$religion, $community])->filter()->implode(', ') ?: null,
                 $from !== '' ? 'from ' . $from : null,
                 $edu?->occupation,
                 $worksIn !== '' ? 'works in ' . $worksIn : null,
@@ -259,7 +272,10 @@ class EditUser extends EditRecord
             'phone' => $phone !== '' ? $phone : null,
             'phoneHref' => $phone !== '' ? 'tel:' . preg_replace('/[^0-9+]/', '', $phone) : null,
             'whatsapp' => filled($whatsapp) && $digits($whatsapp) !== $digits($phone) ? $whatsapp : null,
-            'contactPerson' => collect([$cont?->contact_person, filled($cont?->contact_relationship) ? '(' . $cont->contact_relationship . ')' : null])->filter()->implode(' ') ?: null,
+            // "Ramesh (Father)", or just "Self" when there is no name
+            'contactPerson' => filled($cont?->contact_person)
+                ? trim($cont->contact_person . (filled($cont->contact_relationship) ? ' (' . $cont->contact_relationship . ')' : ''))
+                : ($cont?->contact_relationship ?: null),
             'callTime' => $cont?->preferred_call_time,
             'createdBy' => collect([filled($profile->created_by) ? ucfirst($profile->created_by) : null, $profile->creator_name])->filter()->unique()->implode(', ') ?: null,
             'lastLogin' => $user?->last_login_at ? $user->last_login_at->diffForHumans() : 'never',

@@ -473,13 +473,8 @@ class UserResource extends Resource
                 // column already shows the typed value (display_caste / _denomination).
                 Tables\Filters\Filter::make('unlisted_caste_religion')
                     ->label('Unlisted caste/religion ("Other")')
-                    ->query(fn (Builder $query) => $query->whereHas('religiousInfo', function ($q) {
-                        $q->where(function ($w) {
-                            foreach (['other_caste_name', 'other_religion_name', 'other_denomination_name'] as $col) {
-                                $w->orWhere(fn ($o) => $o->whereNotNull($col)->where($col, '!=', ''));
-                            }
-                        });
-                    }))
+                    // only while the pick is still "Other" (ReligiousInfo::TYPED_ENTRIES)
+                    ->query(fn (Builder $query) => $query->whereHas('religiousInfo', fn ($q) => $q->withUnlistedEntry()))
                     ->toggle(),
 
                 // Hidden
@@ -1617,10 +1612,19 @@ class UserResource extends Resource
                                     ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.denomination_list', []), $state))
                                     ->searchable()
                                     ->live()
+                                    // a listed denomination answers the typed-in one (6 Nov 2026: it kept
+                                    // the member on Unlisted Communities)
+                                    ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Set $set, ?string $state): void {
+                                        if ($state !== 'Other') {
+                                            $set('rel_other_denomination_name', null);
+                                        }
+                                    })
                                     ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
-                                // Free-text: only relevant when Denomination = "Other".
+                                // Free-text: only for Denomination = "Other", as on the member's page
+                                // (and while an older typed answer is still there, so it is never lost unseen).
                                 Forms\Components\TextInput::make('rel_other_denomination_name')->label('Denomination (specified)')->maxLength(100)
-                                    ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
+                                    ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'
+                                        && ($get('rel_denomination') === 'Other' || filled($get('rel_other_denomination_name')))),
                                 Forms\Components\Select::make('rel_diocese')->label('Diocese')
                                     ->options(fn (Get $get) => self::dioceseOptionsFor($get('rel_denomination'), $get('rel_diocese')))
                                     ->searchable()
@@ -1650,11 +1654,20 @@ class UserResource extends Resource
                                     ))
                                     ->searchable()
                                     ->live() // so Sub-Caste re-cascades when the caste changes
-                                    ->afterStateUpdated(fn (\Filament\Schemas\Components\Utilities\Set $set) => $set('rel_sub_caste', null))
+                                    ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Set $set, ?string $state): void {
+                                        $set('rel_sub_caste', null);
+                                        // a listed caste answers the typed-in one (6 Nov 2026: staff had to
+                                        // clear it by hand, or the member stayed on Unlisted Communities)
+                                        if (! \App\Models\ReligiousInfo::isOtherCaste($state)) {
+                                            $set('rel_other_caste_name', null);
+                                        }
+                                    })
                                     ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
-                                // Free-text: only relevant when Caste = "Other (not listed)" / "Other".
+                                // Free-text: only for Caste = "Other / Not Listed", as on the member's page
+                                // (and while an older typed answer is still there, so it is never lost unseen).
                                 Forms\Components\TextInput::make('rel_other_caste_name')->label('Caste (specified)')->maxLength(100)
-                                    ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
+                                    ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)
+                                        && (\App\Models\ReligiousInfo::isOtherCaste($get('rel_caste')) || filled($get('rel_other_caste_name')))),
                                 Forms\Components\Select::make('rel_sub_caste')->label('Sub-Caste')
                                     ->options(fn (Get $get) => self::optionsWithCurrent(
                                         \App\Models\Community::getSubCommunitiesFor($get('rel_caste'), $get('rel_religion')),
@@ -1970,6 +1983,29 @@ class UserResource extends Resource
     public static function profileViewUrl(?\App\Models\Profile $profile): ?string
     {
         return $profile ? static::getUrl('view', ['record' => $profile]) : null;
+    }
+
+    /**
+     * Where staff work on a member from a work list (follow-ups, unlisted castes, incomplete
+     * profiles…; 6 Nov 2026): the edit page, open on the given tab (its label, e.g. 'Religion &
+     * Community'), for staff who may edit; the view page otherwise, and for deleted members.
+     */
+    public static function profileWorkUrl(?\App\Models\Profile $profile, ?string $tab = null): ?string
+    {
+        if (! $profile) {
+            return null;
+        }
+        if ($profile->trashed() || ! static::canEdit($profile)) {
+            return static::getUrl('view', ['record' => $profile]);
+        }
+
+        return static::getUrl('edit', ['record' => $profile]) . ($tab ? '?' . http_build_query(['tab' => static::tabKey($tab)]) : '');
+    }
+
+    /** The address key of an edit-form tab (Filament: "<slug>::data::tab"), used as ?tab=… */
+    public static function tabKey(string $label): string
+    {
+        return \Illuminate\Support\Str::slug($label) . '::data::tab';
     }
 
     /**

@@ -70,6 +70,37 @@ class ReligiousInfo extends Model
     }
 
     /**
+     * Typed-in answers and the pick they belong to: [typed column => [pick column, its "Other" values]].
+     * A typed answer waits for a list entry only while its pick is still "Other" (or empty): once
+     * staff pick a listed value it is answered (6 Nov 2026: Kudla still listed 3 such members on
+     * Unlisted Communities, the Work Queue and the members-list filter).
+     */
+    public const TYPED_ENTRIES = [
+        'other_caste_name' => ['caste', self::OTHER_CASTE_VALUES],
+        'other_religion_name' => ['religion', ['Other']],
+        'other_denomination_name' => ['denomination', ['Other']],
+    ];
+
+    /** Rows whose typed $typedColumn still waits for a list entry (see TYPED_ENTRIES). */
+    public function scopeUnlistedIn(\Illuminate\Database\Eloquent\Builder $query, string $typedColumn): \Illuminate\Database\Eloquent\Builder
+    {
+        [$pick, $otherValues] = self::TYPED_ENTRIES[$typedColumn];
+
+        return $query->whereNotNull($typedColumn)->where($typedColumn, '!=', '')
+            ->where(fn ($w) => $w->whereNull($pick)->orWhere($pick, '')->orWhereIn($pick, $otherValues));
+    }
+
+    /** Rows with any typed caste / religion / denomination still waiting for a list entry. */
+    public function scopeWithUnlistedEntry(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where(function ($w) {
+            foreach (array_keys(self::TYPED_ENTRIES) as $typedColumn) {
+                $w->orWhere(fn ($o) => $o->unlistedIn($typedColumn));
+            }
+        });
+    }
+
+    /**
      * Display-friendly caste: returns the typed specify text when the member
      * picked an "Other" sentinel, else the canonical caste. Use in compact
      * contexts (cards, list rows) where you want "Mogaveera" not "Other".

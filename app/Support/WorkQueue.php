@@ -155,11 +155,8 @@ class WorkQueue
                 'target_hours' => 24 * 7, 'target' => '1 week',
                 'can' => fn () => UnlistedCommunities::canAccess(),
                 'url' => self::url(fn () => UnlistedCommunities::getUrl()),
-                'measure' => fn () => $pending(ReligiousInfo::query()->whereHas('profile')->where(function ($w) {
-                    foreach (['other_caste_name', 'other_religion_name', 'other_denomination_name'] as $col) {
-                        $w->orWhere(fn ($o) => $o->whereNotNull($col)->where($col, '!=', ''));
-                    }
-                }), 'updated_at'),
+                // only while the pick is still "Other" (ReligiousInfo::TYPED_ENTRIES)
+                'measure' => fn () => $pending(ReligiousInfo::query()->whereHas('profile')->withUnlistedEntry(), 'updated_at'),
             ],
             'deleted' => [
                 'label' => 'Accounts deleted, last 7 days (for your information)',

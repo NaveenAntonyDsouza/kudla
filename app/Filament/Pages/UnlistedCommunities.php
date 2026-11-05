@@ -29,14 +29,8 @@ class UnlistedCommunities extends Page
 
     public static function getNavigationBadge(): ?string
     {
-        $count = ReligiousInfo::query()
-            ->whereHas('profile')
-            ->where(function ($w) {
-                foreach (['other_caste_name', 'other_religion_name', 'other_denomination_name'] as $col) {
-                    $w->orWhere(fn ($o) => $o->whereNotNull($col)->where($col, '!=', ''));
-                }
-            })
-            ->count();
+        // only while the pick is still "Other" (ReligiousInfo::TYPED_ENTRIES)
+        $count = ReligiousInfo::query()->whereHas('profile')->withUnlistedEntry()->count();
 
         return $count > 0 ? (string) $count : null;
     }
@@ -45,7 +39,10 @@ class UnlistedCommunities extends Page
     private function grouped(string $column): Collection
     {
         return ReligiousInfo::query()
-            ->whereNotNull($column)->where($column, '!=', '')
+            // a typed caste / religion / denomination only while its pick is still "Other"
+            ->when(isset(ReligiousInfo::TYPED_ENTRIES[$column]),
+                fn ($q) => $q->unlistedIn($column),
+                fn ($q) => $q->whereNotNull($column)->where($column, '!=', ''))
             ->whereHas('profile')
             ->with('profile:id,matri_id,full_name')
             ->get()

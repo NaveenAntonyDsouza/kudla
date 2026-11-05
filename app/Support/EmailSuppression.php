@@ -88,6 +88,12 @@ final class EmailSuppression
         return true;
     }
 
+    /** The member's address changed away from the bounced one (User::booted): log it as cleared. */
+    public static function recordCleared(User $user, ?int $adminId = null): void
+    {
+        self::audit('email_undeliverable_cleared', $user, 'address changed', $adminId);
+    }
+
     private static function audit(string $action, User $user, ?string $reason, ?int $adminId): void
     {
         try {

@@ -37,7 +37,7 @@ class InactiveMembersTable extends TableWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('matri_id')->label('Matri ID')->weight('bold')->color('primary')
-                    ->url(fn (Profile $record) => UserResource::getUrl('view', ['record' => $record])),
+                    ->url(fn (Profile $record) => UserResource::profileWorkUrl($record)), // edit page for staff who may edit (6 Nov 2026)
                 Tables\Columns\TextColumn::make('full_name')->label('Name')->limit(22),
                 Tables\Columns\TextColumn::make('user.last_login_at')->label('Last seen')->since()->placeholder('Never'),
             ])

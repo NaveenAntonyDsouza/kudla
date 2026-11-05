@@ -50,6 +50,27 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'app_authentication_recovery_codes',
     ];
 
+    protected static function booted(): void
+    {
+        // A new address answers a bounce on the old one, however it is changed: staff on the
+        // member's edit page during a call, the member's own pages, the app (6 Nov 2026: a staff
+        // correction left the member on the Work Queue's "email bounced" line and the "Your email
+        // is not reaching you" banner up; sending already resumed, EmailSuppression checks the address).
+        static::updating(function (User $user): void {
+            if ($user->isDirty('email') && $user->email_undeliverable_at !== null
+                && strcasecmp((string) $user->email, (string) $user->email_undeliverable_address) !== 0) {
+                $user->email_undeliverable_at = null;
+                $user->email_undeliverable_address = null;
+                $user->email_undeliverable_reason = null;
+            }
+        });
+        static::updated(function (User $user): void {
+            if ($user->wasChanged('email_undeliverable_at') && $user->email_undeliverable_at === null) {
+                \App\Support\EmailSuppression::recordCleared($user, auth('admin')->id());
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

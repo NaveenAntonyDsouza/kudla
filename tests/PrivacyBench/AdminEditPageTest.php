@@ -131,6 +131,30 @@ it('shows each status button only to staff with that right, and the page only to
     Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])->assertForbidden();
 });
 
+it('clears the bounced-email mark when staff correct the address on a call, and only then', function () {
+    $p = editPageMember('Bounced Mail', 'bounced-old@bench.test', '9812300006');
+    DB::table('users')->where('id', $p->user_id)->update(['email_undeliverable_at' => now()->subDays(3),
+        'email_undeliverable_address' => 'bounced-old@bench.test', 'email_undeliverable_reason' => 'mailbox full']);
+
+    $this->actingAs($this->staff, 'admin');
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->fillForm(['full_name' => 'Bounced Mail Two'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+    expect($p->user->fresh()->email_undeliverable_at)->not->toBeNull(); // email untouched: still bouncing
+
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->fillForm(['user_email' => 'bounced-new@bench.test'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $u = $p->user->fresh();
+    expect($u->email)->toBe('bounced-new@bench.test')
+        ->and($u->email_undeliverable_at)->toBeNull()
+        ->and($u->email_undeliverable_address)->toBeNull()
+        ->and(AdminActivityLog::where('action', 'email_undeliverable_cleared')->where('model_id', $u->id)->where('admin_user_id', $this->staff->id)->exists())->toBeTrue();
+});
+
 it('shows the member card: Matri ID, what is still empty, the last call', function () {
     $p = editPageMember('Card Member', 'card-member@bench.test', '9812300005');
     ProfileNote::create(['profile_id' => $p->id, 'admin_user_id' => $this->staff->id, 'note_type' => 'call', 'note' => 'Asked about the partner age range']);
@@ -141,7 +165,8 @@ it('shows the member card: Matri ID, what is still empty, the last call', functi
     Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
         ->assertSee($p->matri_id)
         ->assertSee('from Kaup, Udupi · Engineer · works in Bengaluru · lives in United Arab Emirates')
-        ->assertSee('Still empty, ask on this call')
+        ->assertSee('Missing, ask on this call')
+        ->assertSee("Family: father's name")
         ->assertSee('Asked about the partner age range')
         ->assertSee('9812300005');
 });

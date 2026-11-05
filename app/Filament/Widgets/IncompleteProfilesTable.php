@@ -34,7 +34,7 @@ class IncompleteProfilesTable extends TableWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('matri_id')->label('Matri ID')->weight('bold')->color('primary')
-                    ->url(fn (Profile $record) => UserResource::getUrl('view', ['record' => $record])),
+                    ->url(fn (Profile $record) => UserResource::profileWorkUrl($record)), // edit page for staff who may edit (6 Nov 2026)
                 Tables\Columns\TextColumn::make('full_name')->label('Name')->limit(22),
                 Tables\Columns\TextColumn::make('profile_completion_pct')->label('Complete')->suffix('%'),
             ])

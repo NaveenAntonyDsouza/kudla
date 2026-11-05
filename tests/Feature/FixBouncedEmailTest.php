@@ -208,3 +208,19 @@ it('stops at the last step if another member took the address after the code wen
     expect($fresh->email)->toBe('old@dead.test')
         ->and($fresh->email_undeliverable_at)->not->toBeNull();
 });
+
+it('lifts the block when the address is changed any other way (staff on a call, the member\'s settings), and only then', function () {
+    $user = bouncedMember();
+
+    $user->update(['name' => 'Renamed Member']);  // other changes keep it
+    expect($user->fresh()->email_undeliverable_at)->not->toBeNull();
+
+    $user->update(['email' => 'OLD@dead.test']); // the same address in capitals is still the dead one
+    expect($user->fresh()->email_undeliverable_at)->not->toBeNull();
+
+    $user->update(['email' => 'fixed@live.test']);
+    $fresh = $user->fresh();
+    expect($fresh->email_undeliverable_at)->toBeNull()
+        ->and($fresh->email_undeliverable_address)->toBeNull()
+        ->and($fresh->email_undeliverable_reason)->toBeNull();
+});

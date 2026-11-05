@@ -24,7 +24,8 @@
                         <span style="opacity:.6;margin-left:.4rem;font-size:.8125rem;">— {{ $g->count }} member{{ $g->count === 1 ? '' : 's' }}@if(!empty($g->castes)) · {{ implode(', ', $g->castes) }}@endif</span>
                         <div style="margin-top:.3rem;display:flex;flex-wrap:wrap;gap:.3rem;">
                             @foreach($g->members as $m)
-                                @php $url = \App\Filament\Resources\UserResource::profileViewUrl($m); @endphp
+                                {{-- opens the member's edit page on the Religion & Community tab, where the caste is fixed (6 Nov 2026) --}}
+                                @php $url = \App\Filament\Resources\UserResource::profileWorkUrl($m, 'Religion & Community'); @endphp
                                 @if($url)
                                     <a href="{{ $url }}" title="{{ $m->full_name }}" style="font-size:.75rem;color:#8B1D91;text-decoration:none;border:1px solid rgba(139,29,145,.3);border-radius:9999px;padding:.05rem .55rem;">{{ $m->matri_id }}</a>
                                 @else

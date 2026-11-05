@@ -29,15 +29,23 @@ class DeleteRequests extends Page
         return \App\Support\Permissions::can('view_member');
     }
 
+    // deletions in the last 7 days, for information, as on the Work Queue (6 Nov 2026: the
+    // badge counted every deletion ever, 66 on Kudla, in red in the Today group, though
+    // there is nothing to do for them)
     public static function getNavigationBadge(): ?string
     {
-        $count = Profile::onlyTrashed()->whereNotNull('full_name')->count();
+        $count = Profile::onlyTrashed()->whereNotNull('full_name')->where('deleted_at', '>=', now()->subDays(7))->count();
         return $count > 0 ? (string) $count : null;
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        return 'danger';
+        return 'gray';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Accounts deleted in the last 7 days';
     }
 
     public function getDeletedProfiles()

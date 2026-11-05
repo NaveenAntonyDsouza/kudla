@@ -143,7 +143,7 @@ class MembersWithoutPhoto extends Page implements HasTable
                 Tables\Columns\TextColumn::make('matri_id')
                     ->label('Member ID')
                     ->searchable()
-                    ->url(fn (Profile $record) => UserResource::profileViewUrl($record)),
+                    ->url(fn (Profile $record) => UserResource::profileWorkUrl($record)),
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Name')
                     ->searchable(),
@@ -224,7 +224,7 @@ class MembersWithoutPhoto extends Page implements HasTable
                 Action::make('profile')
                     ->label('Open profile')
                     ->color('gray')
-                    ->url(fn (Profile $record) => UserResource::profileViewUrl($record)),
+                    ->url(fn (Profile $record) => UserResource::profileWorkUrl($record)),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkAction::make('sendRequests')

@@ -60,6 +60,8 @@ class UpcomingFollowups extends TableWidget
                     ->label('Note Date')
                     ->since(),
             ])
+            // a row opens the member's edit page: the card, Notes and every field for the call (6 Nov 2026)
+            ->recordUrl(fn (ProfileNote $record): ?string => \App\Filament\Resources\UserResource::profileWorkUrl($record->profile))
             ->emptyStateHeading('No follow-ups due')
             ->emptyStateDescription('Add notes with follow-up dates on user profiles to see them here.')
             ->paginated(false);

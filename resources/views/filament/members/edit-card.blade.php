@@ -8,12 +8,13 @@
     $chip = 'display:inline-flex;align-items:center;padding:.15rem .6rem;border-radius:9999px;font-size:.78rem;font-weight:600;line-height:1.4;white-space:nowrap;border:1px solid rgba(217,119,6,.45);background:rgba(217,119,6,.10);color:#b45309;';
     $muted = 'opacity:.62;';
 @endphp
-<div style="display:flex;gap:1rem;align-items:flex-start;padding:1rem 1.1rem;border:1px solid rgba(128,128,128,.22);border-radius:.75rem;background:rgba(128,128,128,.04);">
+{{-- flex-wrap: on a phone the facts go below the photo instead of squeezing beside it --}}
+<div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start;padding:1rem 1.1rem;border:1px solid rgba(128,128,128,.22);border-radius:.75rem;background:rgba(128,128,128,.04);">
     <img src="{{ $photo ?: url('/images/default-avatar.svg') }}" alt=""
         onerror="this.onerror=null;this.src='{{ url('/images/default-avatar.svg') }}'"
         style="width:4.25rem;height:4.25rem;border-radius:9999px;object-fit:cover;flex-shrink:0;background:rgba(128,128,128,.12);">
 
-    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:.55rem;font-size:.875rem;line-height:1.45;">
+    <div style="flex:1 1 15rem;min-width:0;display:flex;flex-direction:column;gap:.55rem;font-size:.875rem;line-height:1.45;">
         <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .7rem;">
             <span style="font-weight:700;font-size:1.05rem;">{{ $matriId }}</span>
             @if ($facts)
@@ -50,7 +51,7 @@
 
         @if ($ask)
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .4rem;">
-                <span style="font-weight:600;">Still empty, ask on this call:</span>
+                <span style="font-weight:600;">Missing, ask on this call:</span>
                 @foreach ($ask as $item)
                     @if ($item['tab'])
                         {{-- opens that tab (the tab buttons carry data-tab-key) --}}
