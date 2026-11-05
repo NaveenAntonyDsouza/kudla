@@ -72,3 +72,13 @@ it('shows no counts on the Brides / Grooms buttons (they showed the men-to-women
     expect($nav)->toContain("{{ \$link['label'] }}")
         ->not->toContain("\$link['count']");
 });
+
+it('shows both Brides and Grooms buttons or none: never one side alone', function () {
+    Cache::forever('discover.side-counts.karnataka-matrimony', [
+        'udupi' => ['female' => 30, 'male' => 75],
+        'mysore' => ['female' => 4, 'male' => 40],   // only grooms reach 10
+    ]);
+
+    expect(DiscoverController::sideLinks('karnataka-matrimony', 'mysore'))->toBe([])
+        ->and(collect(DiscoverController::sideLinks('karnataka-matrimony', 'udupi'))->pluck('label')->all())->toBe(['Brides', 'Grooms']);
+});

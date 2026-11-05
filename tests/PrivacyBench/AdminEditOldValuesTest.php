@@ -97,3 +97,17 @@ it('offers state and district dropdowns for India and typed boxes for other coun
         ->and((int) $p->partnerPreference->age_from)->toBe(24)
         ->and((int) $p->partnerPreference->age_to)->toBe(30);
 });
+
+it('lets staff type an answer that is not in the list, as members can with "Other"', function () {
+    $p = app(MemberCreationService::class)->create(['full_name' => 'Typed Other', 'gender' => 'female', 'date_of_birth' => '1995-01-01',
+        'email' => 'typed-other@bench.test', 'phone' => '9899999999', 'religion' => 'Christian'], ['temp_password' => 'edit-pass-321'])['profile'];
+
+    $this->actingAs($this->staff, 'admin');
+    $page = Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()]);
+    $page->callFormComponentAction('fam_father_occupation', 'createOption', ['value' => 'Toddy Tapper'])
+        ->callFormComponentAction('cont_custodian_relation', 'createOption', ['value' => 'Godmother'])
+        ->call('save')->assertHasNoFormErrors();
+
+    expect($p->fresh()->familyDetail->father_occupation)->toBe('Toddy Tapper')
+        ->and($p->fresh()->contactInfo->contact_relationship)->toBe('Godmother');
+});

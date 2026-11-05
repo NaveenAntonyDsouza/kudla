@@ -1548,7 +1548,8 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('cont_custodian_name')->label('Custodian Name')->maxLength(100),
                         Forms\Components\Select::make('cont_custodian_relation')
                             ->label('Custodian Relation')
-                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.custodian_relation_list', []), $state)),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.custodian_relation_list', []), $state))
+                            ->createOptionForm(self::typedOtherForm())->createOptionUsing(fn (array $data) => trim($data['value'])),
                         Forms\Components\Select::make('cont_preferred_call_time')
                             ->label('Preferred Call Time')
                             ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.preferred_call_time_list', []), $state)),
@@ -1560,7 +1561,8 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('cont_reference_name')->label('Reference Name')->maxLength(100),
                         Forms\Components\TextInput::make('cont_reference_mobile')->label('Reference Mobile')->maxLength(15),
                         Forms\Components\Select::make('cont_reference_relationship')->label('Reference Relationship')->searchable()
-                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.reference_relationship_list', []), $state)),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.reference_relationship_list', []), $state))
+                            ->createOptionForm(self::typedOtherForm())->createOptionUsing(fn (array $data) => trim($data['value'])),
                         Forms\Components\Textarea::make('cont_present_address')->label('Present Address')->rows(2)->maxLength(300)->columnSpan(2),
                         Forms\Components\TextInput::make('cont_present_pin_zip_code')->label('Present PIN/ZIP Code')->maxLength(10),
                         Forms\Components\Textarea::make('cont_permanent_address')->label('Permanent Address')->rows(2)->maxLength(300)->columnSpan(2),
@@ -1727,12 +1729,14 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('fam_father_name')->label('Father Name')->maxLength(100),
                         Forms\Components\Select::make('fam_father_occupation')->label('Father Occupation')->searchable()
-                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.parent_occupation_list', []), $state)),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.parent_occupation_list', []), $state))
+                            ->createOptionForm(self::typedOtherForm())->createOptionUsing(fn (array $data) => trim($data['value'])),
                         Forms\Components\TextInput::make('fam_father_house_name')->label('Father House Name')->maxLength(100),
                         Forms\Components\TextInput::make('fam_father_native_place')->label('Father Native Place')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_name')->label('Mother Name')->maxLength(100),
                         Forms\Components\Select::make('fam_mother_occupation')->label('Mother Occupation')->searchable()
-                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.parent_occupation_list', []), $state)),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.parent_occupation_list', []), $state))
+                            ->createOptionForm(self::typedOtherForm())->createOptionUsing(fn (array $data) => trim($data['value'])),
                         Forms\Components\TextInput::make('fam_mother_house_name')->label('Mother House Name')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_native_place')->label('Mother Native Place')->maxLength(100),
                         Forms\Components\Select::make('fam_family_status')->label('Family Status')
@@ -2117,6 +2121,16 @@ class UserResource extends Resource
             Forms\Components\TextInput::make("{$prefix}_district_text")->label("{$label} District")->maxLength(100)
                 ->visible(fn (Get $get) => ! $listed($get)),
         ];
+    }
+
+    /**
+     * "Other (type it)" for dropdowns where the member's page allows a typed answer
+     * (custodian relation, parents' occupations, reference relationship): the "+" next to
+     * the dropdown opens this, and the typed answer becomes the selected value.
+     */
+    private static function typedOtherForm(): array
+    {
+        return [Forms\Components\TextInput::make('value')->label('Other (type it)')->required()->maxLength(100)];
     }
 
     private static function districtsOf(?string $state): array

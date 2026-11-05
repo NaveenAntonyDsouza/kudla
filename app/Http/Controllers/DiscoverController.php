@@ -205,8 +205,13 @@ class DiscoverController extends Controller
         }
         $counts = self::sideCounts($category)[$slug] ?? [];
 
+        // both buttons or none (owner, 5 Nov 2026): a lone "Grooms" showed there were few brides
+        $qualifying = collect(self::SIDES)->filter(fn ($gender) => ($counts[$gender] ?? 0) >= self::SIDE_MIN);
+        if ($qualifying->count() < count(self::SIDES)) {
+            return [];
+        }
+
         return collect(self::SIDES)
-            ->filter(fn ($gender) => ($counts[$gender] ?? 0) >= self::SIDE_MIN)
             ->map(fn ($gender, $side) => [
                 'side' => $side,
                 'label' => ucfirst($side),
