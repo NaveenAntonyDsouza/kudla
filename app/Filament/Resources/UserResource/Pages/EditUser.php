@@ -3,34 +3,272 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Models\AdminActivityLog;
 use App\Models\ContactInfo;
 use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
 use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\PartnerPreference;
+use App\Models\Profile;
+use App\Models\ProfileNote;
 use App\Models\ReligiousInfo;
 use App\Models\SocialMediaLink;
+use App\Services\ProfileCompletionService;
+use App\Support\Permissions;
+use App\Traits\LogsAdminActivity;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Components\View as SchemaView;
+use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
+/*
+| Staff spend most of their working time on this page, often with the member on
+| the phone, checking and updating details during the call (member edit page
+| review, 5 Nov 2026). So: a member card above the tabs (who this is, how to
+| reach them, what is still empty, the last call); the status changes as header
+| buttons, each with a confirm and its own staff right (they were switches inside
+| the form that anyone who could edit could flip, unlogged); Save always in view,
+| and staying on this page; a warning before leaving with unsaved changes; and
+| every save logged with the fields it changed.
+*/
 class EditUser extends EditRecord
 {
+    use LogsAdminActivity;
+
     protected static string $resource = UserResource::class;
+
+    public static bool $formActionsAreSticky = true;
+
+    protected ?bool $hasUnsavedDataChangesAlert = true;
+
+    /** The profile's parts as named in the edit log ("Basic" = the profile itself, "Login" = the account). */
+    private const LOGGED_PARTS = [
+        'religiousInfo' => 'Religion',
+        'educationDetail' => 'Education & job',
+        'familyDetail' => 'Family',
+        'locationInfo' => 'Location',
+        'contactInfo' => 'Contact',
+        'differentlyAbledInfo' => 'Differently abled',
+        'lifestyleInfo' => 'Lifestyle',
+        'socialMediaLink' => 'Social media',
+        'partnerPreference' => 'Partner preferences',
+    ];
+
+    /** Parts and fields logged only as "changed": contact details, health details and documents stay out of the log. */
+    private const LOGGED_WITHOUT_VALUES = ['Login', 'Contact', 'Social media', 'Differently abled'];
+
+    private const LOGGED_WITHOUT_VALUES_FIELDS = ['Basic: creator contact number', 'Religion: jathakam upload url'];
+
+    /** Profile completion sections → the tab where staff fill them in (null: the Photos list below the tabs). */
+    private const SECTION_TABS = [
+        'basic_info' => 'Basic',
+        'contact' => 'Contact',
+        'religious' => 'Religion & Community',
+        'education' => 'Education & Job',
+        'family_details' => 'Family',
+        'location' => 'Location',
+        'partner_preferences' => 'Partner Preferences',
+        'lifestyle' => 'Lifestyle',
+        'photo' => null,
+    ];
+
+    /** @var array<string, mixed> the values before Save (see logChangedFields) */
+    private array $valuesBeforeSave = [];
+
+    public function getHeading(): string
+    {
+        return $this->record->full_name ?: (string) $this->record->matri_id;
+    }
+
+    /** The member card sits between the header and the tabs. */
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([
+            SchemaView::make('filament.members.edit-card')->viewData(fn (): array => $this->memberCard()),
+            $this->getFormContentComponent(),
+            $this->getRelationManagersContentComponent(),
+        ]);
+    }
 
     protected function getHeaderActions(): array
     {
         return [
+            // log the call while it happens: the shared Notes popup (history, Type, Note, Follow-up)
+            \App\Filament\Actions\ProfileNotesAction::make('notes'),
+
+            Actions\Action::make('whatsapp')
+                ->label('WhatsApp')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->color('success')
+                ->url(function (): ?string {
+                    $phone = preg_replace('/[^0-9]/', '', (string) $this->record->user?->phone);
+                    if (strlen($phone) === 10) {
+                        $phone = '91' . $phone;
+                    }
+
+                    return $phone !== '' ? 'https://wa.me/' . $phone : null;
+                })
+                ->openUrlInNewTab()
+                ->visible(fn (): bool => (bool) $this->record->user?->phone),
+
+            // the most common status change has its own button; the rest are under Status
+            $this->statusAction('approve', 'Approve', 'heroicon-o-check-badge', 'success', ['is_approved' => true], 'profile_approved', 'Profile approved',
+                'Other members will see this profile, and the member gets the "profile approved" email.')
+                ->visible(fn (): bool => ! $this->record->is_approved && Permissions::can('approve_member')),
+
+            Actions\ActionGroup::make([
+                $this->statusAction('unapprove', 'Mark as pending (unapprove)', 'heroicon-o-clock', 'warning', ['is_approved' => false], 'profile_unapproved', 'Marked as pending',
+                    'Other members stop seeing this profile until it is approved again.')
+                    ->visible(fn (): bool => $this->record->is_approved && Permissions::can('unapprove_member')),
+                $this->statusAction('hide', 'Hide profile', 'heroicon-o-eye-slash', 'gray', ['is_hidden' => true], 'profile_hidden', 'Profile hidden',
+                    'This is the member\'s own "Hide my profile" setting: other members stop seeing the profile. The member can still sign in, and can unhide it.')
+                    ->visible(fn (): bool => ! $this->record->is_hidden && Permissions::can('toggle_active')),
+                $this->statusAction('unhide', 'Unhide profile', 'heroicon-o-eye', 'gray', ['is_hidden' => false], 'profile_unhidden', 'Profile unhidden',
+                    'Turns off the member\'s "Hide my profile" setting: other members can see the profile again (if it is active and approved).')
+                    ->visible(fn (): bool => (bool) $this->record->is_hidden && Permissions::can('toggle_active')),
+                $this->statusAction('idVerified', 'Mark ID proof verified', 'heroicon-o-identification', 'success', ['id_proof_verified' => true], 'profile_id_verified', 'Marked ID proof verified',
+                    'Records that staff checked this member\'s ID proof.')
+                    ->visible(fn (): bool => ! $this->record->id_proof_verified && Permissions::can('id_proof_approval')),
+                $this->statusAction('idUnverified', 'Remove ID proof verified', 'heroicon-o-identification', 'gray', ['id_proof_verified' => false], 'profile_id_unverified', 'ID proof verified mark removed',
+                    'The profile is no longer marked as ID-proof verified.')
+                    ->visible(fn (): bool => (bool) $this->record->id_proof_verified && Permissions::can('id_proof_approval')),
+                $this->statusAction('deactivate', 'Deactivate', 'heroicon-o-x-circle', 'danger', ['is_active' => false], 'profile_deactivated', 'Profile deactivated',
+                    'Other members stop seeing this profile. The member can still sign in.')
+                    ->visible(fn (): bool => $this->record->is_active && Permissions::can('toggle_active')),
+                $this->statusAction('activate', 'Activate', 'heroicon-o-check-circle', 'success', ['is_active' => true], 'profile_activated', 'Profile activated',
+                    fn (): string => $this->record->account_deleted_at
+                        ? 'The member deleted this account; activating it cancels the deletion and the profile shows to other members again.'
+                        : 'Other members can see this profile again (if it is approved, not hidden and not suspended).')
+                    ->visible(fn (): bool => ! $this->record->is_active && Permissions::can('toggle_active')),
+            ])
+                ->label('Status')
+                ->icon('heroicon-m-chevron-down')
+                ->iconPosition('after')
+                ->button()
+                ->color('gray'),
+
+            // send a pending profile back with a reason (pending profiles only)
+            \App\Filament\Actions\RequestProfileChangesAction::make(),
+
             Actions\ViewAction::make(),
-            Actions\Action::make('toggleActive')
-                ->label(fn() => $this->record->is_active ? 'Deactivate User' : 'Activate User')
-                ->color(fn() => $this->record->is_active ? 'danger' : 'success')
-                ->icon(fn() => $this->record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                ->requiresConfirmation()
-                ->action(function () {
-                    $this->record->update(['is_active' => !$this->record->is_active]);
-                    $this->refreshFormData(['is_active']);
-                }),
+        ];
+    }
+
+    /**
+     * One status change: a confirm that says what happens, the change through the model
+     * (so its hooks run: the approval email, cancelling a deletion), and the activity log.
+     * Unsaved form edits stay on the page.
+     */
+    private function statusAction(string $name, string $label, string $icon, string $color, array $change, string $logAction, string $done, string | \Closure $description): Actions\Action
+    {
+        return Actions\Action::make($name)
+            ->label($label)
+            ->icon($icon)
+            ->color($color)
+            ->requiresConfirmation()
+            ->modalHeading(fn (): string => "{$label}: {$this->record->full_name} ({$this->record->matri_id})?")
+            ->modalDescription($description)
+            ->modalSubmitActionLabel($label)
+            ->action(function () use ($change, $logAction): void {
+                $this->record->update($change);
+                self::logActivity($logAction, $this->record);
+            })
+            ->successNotificationTitle($done);
+    }
+
+    /** Facts for the member card (resources/views/filament/members/edit-card.blade.php). */
+    private function memberCard(): array
+    {
+        $profile = $this->record;
+        $profile->loadMissing(['user', 'primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo', 'contactInfo']);
+        $user = $profile->user;
+        $rel = $profile->religiousInfo;
+        $loc = $profile->locationInfo;
+        $cont = $profile->contactInfo;
+
+        $phone = (string) ($user?->phone ?? '');
+        $digits = fn (?string $number): string => substr(preg_replace('/[^0-9]/', '', (string) $number), -10);
+        $whatsapp = $cont?->whatsapp_number;
+
+        $place = collect([$loc?->native_place, $loc?->native_district])->filter()->unique()->implode(', ');
+        if (filled($loc?->residing_country) && $loc->residing_country !== 'India') {
+            $place = trim($place . ' · lives in ' . $loc->residing_country, ' ·');
+        }
+
+        $membership = $user?->activeMembership();
+        $pills = [
+            $profile->is_active ? ['Active', 'success'] : ['Inactive', 'danger'],
+            $profile->is_approved ? ['Approved', 'success'] : ['Pending approval', 'warning'],
+        ];
+        if ($profile->is_hidden) {
+            $pills[] = ['Hidden', 'warning'];
+        }
+        if (in_array($profile->suspension_status, ['suspended', 'banned'], true)) {
+            $pills[] = [ucfirst($profile->suspension_status), 'danger'];
+        }
+        if ($profile->account_deleted_at) {
+            $pills[] = ['Account deleted ' . $profile->account_deleted_at->displayTz()->format('j M Y'), 'danger'];
+        }
+        $pills[] = $profile->id_proof_verified ? ['ID proof verified', 'success'] : ['ID proof not verified', 'gray'];
+        $pills[] = $membership
+            ? [($membership->plan?->plan_name ?? 'Paid') . ($membership->ends_at ? ' till ' . $membership->ends_at->format('j M Y') : ''), 'primary']
+            : ['Free plan', 'gray'];
+        $pct = (int) $profile->profile_completion_pct;
+        $pills[] = ["Profile {$pct}% filled", $pct >= 80 ? 'success' : ($pct >= 50 ? 'warning' : 'danger')];
+
+        // what is still empty, in the order of the tabs
+        $missing = app(ProfileCompletionService::class)->detectMissingSections($profile);
+        $ask = [];
+        foreach (self::SECTION_TABS as $section => $tab) {
+            if (isset($missing[$section])) {
+                $ask[] = [
+                    'label' => $tab ?? 'Photo (Photos list below)',
+                    'tab' => $tab ? Str::slug($tab) . '::data::tab' : null,
+                ];
+            }
+        }
+
+        $lastCall = ProfileNote::where('profile_id', $profile->id)->where('note_type', 'call')->with('adminUser')->latest()->first();
+        $followUp = ProfileNote::where('profile_id', $profile->id)->whereNotNull('follow_up_date')->whereNull('follow_up_completed_at')
+            ->orderBy('follow_up_date')->first();
+        $lastEdit = AdminActivityLog::where('action', 'member_profile_updated')->where('model_type', 'Profile')->where('model_id', $profile->id)
+            ->with('admin')->latest()->first();
+
+        return [
+            'photo' => $profile->primaryPhoto?->thumb_url,
+            'matriId' => $profile->matri_id,
+            'facts' => collect([
+                $profile->age ? $profile->age . ' yrs' : null,
+                $profile->gender ? ucfirst($profile->gender) : null,
+                \App\Support\MaritalStatus::toSiteValue($profile->marital_status),
+                collect([$rel?->religion, $rel?->caste ?: $rel?->denomination ?: $rel?->muslim_community])->filter()->implode(', ') ?: null,
+                $place ?: null,
+                $profile->educationDetail?->occupation,
+            ])->filter()->values()->all(),
+            'pills' => $pills,
+            'phone' => $phone !== '' ? $phone : null,
+            'phoneHref' => $phone !== '' ? 'tel:' . preg_replace('/[^0-9+]/', '', $phone) : null,
+            'whatsapp' => filled($whatsapp) && $digits($whatsapp) !== $digits($phone) ? $whatsapp : null,
+            'contactPerson' => collect([$cont?->contact_person, filled($cont?->contact_relationship) ? '(' . $cont->contact_relationship . ')' : null])->filter()->implode(' ') ?: null,
+            'callTime' => $cont?->preferred_call_time,
+            'createdBy' => collect([filled($profile->created_by) ? ucfirst($profile->created_by) : null, $profile->creator_name])->filter()->unique()->implode(', ') ?: null,
+            'lastLogin' => $user?->last_login_at ? $user->last_login_at->diffForHumans() : 'never',
+            'ask' => $ask,
+            'lastCall' => $lastCall ? [
+                'when' => $lastCall->created_at->displayTz()->format('j M Y, g:i A'),
+                'by' => $lastCall->adminUser?->name,
+                'note' => Str::limit((string) $lastCall->note, 90),
+            ] : null,
+            'followUp' => $followUp ? [
+                'date' => $followUp->follow_up_date->format('j M Y'),
+                'late' => $followUp->follow_up_date->lt(today()),
+            ] : null,
+            'lastEdit' => $lastEdit ? [
+                'when' => $lastEdit->created_at->displayTz()->format('j M Y, g:i A'),
+                'by' => $lastEdit->admin?->name,
+            ] : null,
         ];
     }
 
@@ -430,10 +668,93 @@ class EditUser extends EditRecord
                 'about_partner' => $data['pp_about_partner'] ?? null,
             ])
         );
+
+        // the completion % follows staff edits too, as on the member's own pages (5 Nov 2026:
+        // it stayed as it was, so members staff had completed stayed in the "Incomplete" list)
+        app(ProfileCompletionService::class)->recalculate($profile);
+
+        $this->logChangedFields();
     }
 
-    protected function getRedirectUrl(): string
+    protected function beforeSave(): void
     {
-        return $this->getResource()::getUrl('view', ['record' => $this->record]);
+        $this->valuesBeforeSave = $this->storedValues();
+    }
+
+    /** Staff stay on this page after Save (often still on the call). */
+    protected function getRedirectUrl(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Logs who changed which fields ("member_profile_updated" in the Activity Log, and
+     * "Last edited" on the member card). Contact details, health details and documents
+     * are logged only as "changed", never with their values.
+     */
+    private function logChangedFields(): void
+    {
+        $before = $this->valuesBeforeSave;
+        $after = $this->storedValues();
+        $changed = [];
+
+        foreach (array_unique(array_merge(array_keys($before), array_keys($after))) as $field) {
+            $old = $this->loggedValue($before[$field] ?? null);
+            $new = $this->loggedValue($after[$field] ?? null);
+            if ($old === $new) {
+                continue;
+            }
+
+            $part = Str::before($field, ':');
+            $changed[$field] = in_array($part, self::LOGGED_WITHOUT_VALUES, true) || in_array($field, self::LOGGED_WITHOUT_VALUES_FIELDS, true)
+                ? 'changed'
+                : ($old ?? '(empty)') . ' → ' . ($new ?? '(empty)');
+        }
+
+        if ($changed !== []) {
+            self::logActivity('member_profile_updated', $this->record, ['changed' => $changed]);
+        }
+    }
+
+    /** The profile's stored values, read fresh: ["Basic: marital status" => "Unmarried", "Religion: caste" => …]. */
+    private function storedValues(): array
+    {
+        $profile = Profile::withTrashed()->with(array_merge(['user'], array_keys(self::LOGGED_PARTS)))->find($this->record->getKey());
+        if (! $profile) {
+            return [];
+        }
+
+        $values = [];
+        $add = function (string $part, $model) use (&$values): void {
+            foreach ($model?->getAttributes() ?? [] as $column => $value) {
+                // the completion % is worked out from the rest, so a Save that changes nothing logs nothing
+                if (! in_array($column, ['id', 'profile_id', 'user_id', 'created_at', 'updated_at', 'profile_completion_pct'], true)) {
+                    $values[$part . ': ' . str_replace('_', ' ', $column)] = $value;
+                }
+            }
+        };
+
+        $add('Basic', $profile);
+        $values['Login: email'] = $profile->user?->email;
+        $values['Login: phone'] = $profile->user?->phone;
+        foreach (self::LOGGED_PARTS as $relation => $part) {
+            $add($part, $profile->{$relation});
+        }
+
+        return $values;
+    }
+
+    /** A stored value as it reads in the log: lists joined, long text shortened, empty as null. */
+    private function loggedValue(mixed $value): ?string
+    {
+        if (is_string($value) && str_starts_with($value, '[')) {
+            $list = json_decode($value, true);
+            if (is_array($list)) {
+                $value = implode(', ', array_map(fn ($item) => is_scalar($item) ? (string) $item : json_encode($item), $list));
+            }
+        }
+        $value = trim((string) $value);
+
+        return $value === '' ? null : Str::limit($value, 80);
     }
 }

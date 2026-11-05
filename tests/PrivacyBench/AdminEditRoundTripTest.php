@@ -25,7 +25,8 @@ function editSnapshot(Profile $p): array
     $out = [];
     foreach (EDIT_TABLES as $table) {
         $row = (array) DB::table($table)->where($table === 'users' ? 'id' : ($table === 'profiles' ? 'id' : 'profile_id'), $table === 'users' ? $p->user_id : $p->id)->first();
-        unset($row['updated_at'], $row['created_at'], $row['last_login_at'], $row['remember_token']);
+        // the completion % is worked out again on every Save (AdminEditPageTest)
+        unset($row['updated_at'], $row['created_at'], $row['last_login_at'], $row['remember_token'], $row['profile_completion_pct']);
         $out[$table] = $row;
     }
 
@@ -114,5 +115,7 @@ it('saves a fully filled member unchanged when staff press Save', function () {
         }
     }
 
-    expect($changed)->toBe([]);
+    expect($changed)->toBe([])
+        // and the edit log has nothing to record
+        ->and(App\Models\AdminActivityLog::where('action', 'member_profile_updated')->where('model_id', $p->id)->count())->toBe(0);
 });
