@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\UserResource\Pages\EditUser;
+use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Models\AdminActivityLog;
 use App\Models\PartnerPreference;
 use App\Models\Profile;
@@ -169,4 +170,24 @@ it('shows the member card: Matri ID, what is still empty, the last call', functi
         ->assertSee("Family: father's name")
         ->assertSee('Asked about the partner age range')
         ->assertSee('9812300005');
+});
+
+it('asks for the right and logs Approve / Activate on the view page too', function () {
+    $p = editPageMember('View Page', 'view-page@bench.test', '9812300007');
+    $p->forceFill(['is_approved' => false])->save();
+
+    $this->actingAs(editPageStaff('bench_view_only', ['view_member' => 'all']), 'admin');
+    Livewire::test(ViewUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->assertActionHidden('quickApprove')
+        ->assertActionHidden('toggleActive');
+
+    $this->actingAs($this->staff, 'admin');
+    Livewire::test(ViewUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->callAction('quickApprove')
+        ->callAction('toggleActive');
+
+    $p = $p->fresh();
+    expect($p->is_approved)->toBeTrue()
+        ->and($p->is_active)->toBeFalse()
+        ->and(AdminActivityLog::where('model_id', $p->id)->whereIn('action', ['profile_approved', 'profile_deactivated'])->count())->toBe(2);
 });
