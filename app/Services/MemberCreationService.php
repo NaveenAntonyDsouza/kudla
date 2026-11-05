@@ -208,7 +208,7 @@ class MemberCreationService
             'native_country' => $data['native_country'] ?? null,
             'native_state' => $data['native_state'] ?? $data['state'] ?? null,
             'native_district' => $data['native_district'] ?? $data['city'] ?? null,
-            'residency_status' => $data['residency_status'] ?? 'citizen',
+            'residency_status' => $data['residency_status'] ?? 'Citizen', // as in residency_status_list (was lower case, which the admin edit page refused)
             'pin_zip_code' => $data['pin_zip_code'] ?? null,
         ];
     }

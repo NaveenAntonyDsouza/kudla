@@ -137,6 +137,12 @@ class EditUser extends EditRecord
         $data['cont_permanent_address'] = $cont?->permanent_address;
         $data['cont_permanent_pin_zip_code'] = $cont?->permanent_pin_zip_code;
 
+        // Differently-abled details (as on the member's own page)
+        $da = $profile->differentlyAbledInfo;
+        $data['da_category'] = $da?->category;
+        $data['da_specify'] = $da?->specify;
+        $data['da_description'] = $da?->description;
+
         // Lifestyle
         $life = $profile->lifestyleInfo;
         $data['life_diet'] = $life?->diet;
@@ -240,6 +246,9 @@ class EditUser extends EditRecord
             'place_of_birth' => $data['rel_place_of_birth'] ?? null,
             'jathakam_upload_url' => $data['rel_jathakam'] ?? null,
         ];
+        if (filled($data['rel_jathakam'] ?? null)) {
+            \App\Support\PublicFolderRules::ensure('jathakam', \App\Support\PublicFolderRules::DOCUMENTS); // never indexed
+        }
         $relData = ReligiousInfo::clearFieldsForReligion($relData, $data['rel_religion'] ?? null);
         ReligiousInfo::updateOrCreate(
             ['profile_id' => $profile->id],
@@ -329,6 +338,20 @@ class EditUser extends EditRecord
             ]
         );
 
+        // Differently-abled details: saved while the status is "Differently Abled", kept
+        // otherwise (the member's own page does the same)
+        if (($data['physical_status'] ?? $profile->physical_status) === 'Differently Abled') {
+            $raw = $this->form->getRawState();
+            \App\Models\DifferentlyAbledInfo::updateOrCreate(
+                ['profile_id' => $profile->id],
+                [
+                    'category' => $raw['da_category'] ?? null,
+                    'specify' => ($raw['da_category'] ?? '') === 'Other' ? ($raw['da_specify'] ?? null) : null,
+                    'description' => $raw['da_description'] ?? null,
+                ]
+            );
+        }
+
         // Update lifestyle
         LifestyleInfo::updateOrCreate(
             ['profile_id' => $profile->id],
@@ -363,7 +386,9 @@ class EditUser extends EditRecord
         // Update partner preferences
         PartnerPreference::updateOrCreate(
             ['profile_id' => $profile->id],
-            [
+            // an empty list (or "Any") is stored as null, the same as the member's own
+            // Partner Preferences page (PartnerPreference::listOrNull, Nov 2026)
+            array_map(fn ($v) => is_array($v) ? PartnerPreference::listOrNull($v) : $v, [
                 'age_from' => $data['pp_age_from'] ?? null,
                 'age_to' => $data['pp_age_to'] ?? null,
                 'height_from_cm' => $data['pp_height_from'] ?? null,
@@ -398,7 +423,7 @@ class EditUser extends EditRecord
                 'muslim_community' => in_array('Muslim', (array) $ppReligions, true) ? ($data['pp_muslim_community'] ?? []) : [],
                 'jain_sect' => in_array('Jain', (array) $ppReligions, true) ? ($data['pp_jain_sect'] ?? []) : [],
                 'about_partner' => $data['pp_about_partner'] ?? null,
-            ]
+            ])
         );
     }
 

@@ -1432,10 +1432,9 @@ class UserResource extends Resource
                         Forms\Components\Select::make('gender')->options(['male' => 'Male', 'female' => 'Female'])->required(),
                         Forms\Components\DatePicker::make('date_of_birth')->label('Date of Birth')->required()
                             ->maxDate(fn (Get $get) => \App\Support\MinimumAge::latestBirthDate($get('gender'))),
-                        Forms\Components\Select::make('marital_status')->label('Marital Status')->options([
-                            'Unmarried' => 'Unmarried', 'Divorced' => 'Divorced',
-                            'Widow/Widower' => 'Widow/Widower', 'Awaiting Divorce' => 'Awaiting Divorce', 'Annulled' => 'Annulled',
-                        ]),
+                        // the site's own list ("Divorcee", "Separated"), as on the member pages (profile edit check, 5 Nov 2026)
+                        Forms\Components\Select::make('marital_status')->label('Marital Status')
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.marital_status_list', []), $state)),
                         // Selects use the same canonical lists as the
                         // member-facing registration wizard. The lists
                         // live in config/reference_data.php so the admin
@@ -1445,31 +1444,44 @@ class UserResource extends Resource
                         // through 80+ options.
                         Forms\Components\Select::make('mother_tongue')
                             ->label('Mother Tongue')
-                            ->options(fn () => self::listToOptions(config('reference_data.language_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.language_list', []), $state))
                             ->searchable(),
                         Forms\Components\Select::make('height')
-                            ->options(fn () => self::listToOptions(config('reference_data.height_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.height_list', []), $state))
                             ->searchable(),
                         Forms\Components\Select::make('weight_kg')
                             ->label('Weight (kg)')
-                            ->options(fn () => self::listToOptions(config('reference_data.weight_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.weight_list', []), $state))
                             ->searchable(),
                         Forms\Components\Select::make('complexion')
-                            ->options(fn () => self::listToOptions(config('reference_data.complexion_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.complexion_list', []), $state)),
                         Forms\Components\Select::make('body_type')
                             ->label('Body Type')
-                            ->options(fn () => self::listToOptions(config('reference_data.body_type_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.body_type_list', []), $state)),
                         Forms\Components\Select::make('blood_group')
                             ->label('Blood Group')
-                            ->options(fn () => self::listToOptions(config('reference_data.blood_group_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.blood_group_list', []), $state)),
                         Forms\Components\Select::make('physical_status')
                             ->label('Physical Status')
-                            ->options(fn () => self::listToOptions(config('reference_data.physical_status_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.physical_status_list', []), $state))
                             // profiles.physical_status is NOT NULL — must always
                             // resolve to a value. Default to 'Normal' which is
                             // the same default the registration wizard uses.
                             ->default('Normal')
-                            ->required(),
+                            ->required()
+                            ->live(), // shows the differently-abled fields
+                        // Differently-abled details, as on the member's own page (profile edit
+                        // check, 5 Nov 2026: staff could neither see nor edit them)
+                        Forms\Components\Select::make('da_category')->label('Differently Abled: Category')
+                            ->options(fn ($state) => self::optionsWithCurrent(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'], $state))
+                            ->live()
+                            ->dehydrated(false)
+                            ->visible(fn (Get $get) => $get('physical_status') === 'Differently Abled'),
+                        Forms\Components\TextInput::make('da_specify')->label('Category (if Other)')->maxLength(50)->dehydrated(false)
+                            ->visible(fn (Get $get) => $get('physical_status') === 'Differently Abled' && $get('da_category') === 'Other'),
+                        Forms\Components\Textarea::make('da_description')->label('Differently Abled: Description')->rows(2)->maxLength(500)->dehydrated(false)
+                            ->visible(fn (Get $get) => $get('physical_status') === 'Differently Abled')
+                            ->columnSpanFull(),
                         // Children — relevant for divorced/widowed members.
                         Forms\Components\TextInput::make('children_with_me')->label('Children Living With Me')->numeric()->minValue(0)->maxValue(20),
                         Forms\Components\TextInput::make('children_not_with_me')->label('Children Not Living With Me')->numeric()->minValue(0)->maxValue(20),
@@ -1529,13 +1541,17 @@ class UserResource extends Resource
                             ->visible(fn (string $operation): bool => $operation === 'create')
                             ->helperText('Optional — leave blank to auto-generate. Min 8 characters. The member signs in with their email or phone + this password.'),
                         Forms\Components\TextInput::make('cont_whatsapp')->label('WhatsApp')->maxLength(15),
+                        // who created the profile (often a parent) and their number, from
+                        // registration (profile edit check, 5 Nov 2026: staff saw only "Parent")
+                        Forms\Components\TextInput::make('creator_name')->label('Profile Created By (Name)')->maxLength(100),
+                        Forms\Components\TextInput::make('creator_contact_number')->label('Creator\'s Contact Number')->tel()->maxLength(20),
                         Forms\Components\TextInput::make('cont_custodian_name')->label('Custodian Name')->maxLength(100),
                         Forms\Components\Select::make('cont_custodian_relation')
                             ->label('Custodian Relation')
-                            ->options(fn () => self::listToOptions(config('reference_data.custodian_relation_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.custodian_relation_list', []), $state)),
                         Forms\Components\Select::make('cont_preferred_call_time')
                             ->label('Preferred Call Time')
-                            ->options(fn () => self::listToOptions(config('reference_data.preferred_call_time_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.preferred_call_time_list', []), $state)),
                         Forms\Components\Textarea::make('cont_communication_address')->label('Communication Address')->rows(2)->maxLength(200)->columnSpanFull(),
                         Forms\Components\TextInput::make('cont_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
                         Forms\Components\TextInput::make('cont_secondary_phone')->label('Secondary Phone')->tel()->maxLength(20),
@@ -1572,7 +1588,7 @@ class UserResource extends Resource
                         // Denomination is ->live() so Diocese can cascade off it
                         // by rite (Latin / Syro-Malabar / Syro-Malankara).
                         Forms\Components\Select::make('rel_denomination')->label('Denomination')
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.denomination_list', [])))
+                            ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.denomination_list', []), $state))
                             ->searchable()
                             ->live()
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Christian'),
@@ -1626,36 +1642,38 @@ class UserResource extends Resource
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_nakshatra')->label('Nakshatra (Star)')
-                            ->options(fn () => self::listToOptions(config('reference_data.nakshatra_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.nakshatra_list', []), $state))
                             ->searchable()
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         Forms\Components\Select::make('rel_rashi')->label('Rashi (Zodiac)')
-                            ->options(fn () => self::listToOptions(config('reference_data.rasi_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.rasi_list', []), $state))
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         // Manglik/Dosh — simple yes/no/unknown, no config list.
                         Forms\Components\Select::make('rel_manglik')->label('Manglik / Dosh')
-                            ->options(['Yes' => 'Yes', 'No' => 'No', "Don't Know" => "Don't Know"])
+                            ->options(fn ($state) => self::optionsWithCurrent(['Yes', 'No', "Don't Know"], $state))
                             ->visible(fn (Get $get) => in_array($get('rel_religion'), ['Hindu', 'Jain'], true)),
                         // ── Muslim ──
                         Forms\Components\Select::make('rel_muslim_sect')->label('Muslim Sect')
-                            ->options(fn () => self::listToOptions(config('reference_data.muslim_sect_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.muslim_sect_list', []), $state))
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Muslim'),
                         Forms\Components\Select::make('rel_muslim_community')->label('Muslim Community')
-                            ->options(fn () => self::listToOptions(config('reference_data.jamath_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.jamath_list', []), $state))
                             ->searchable()
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Muslim'),
                         Forms\Components\Select::make('rel_religious_observance')->label('Religious Observance')
-                            ->options(fn () => self::listToOptions(config('reference_data.religious_observance_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.religious_observance_list', []), $state))
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Muslim'),
                         // ── Jain ──
                         Forms\Components\Select::make('rel_jain_sect')->label('Jain Sect')
-                            ->options(fn () => self::listToOptions(config('reference_data.jain_sect_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.jain_sect_list', []), $state))
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Jain'),
                         // ── Other ──
                         Forms\Components\TextInput::make('rel_other_religion_name')->label('Other Religion (if "Other")')->maxLength(50)
                             ->visible(fn (Get $get) => $get('rel_religion') === 'Other'),
                         // Always shown (any religion).
-                        Forms\Components\TextInput::make('rel_time_of_birth')->label('Time of Birth')->maxLength(20),
+                        // a time picker, as on the member's own page: the column is TIME, so typed
+                        // text like "6:30 AM" failed the whole save (profile edit check, 5 Nov 2026)
+                        Forms\Components\TimePicker::make('rel_time_of_birth')->label('Time of Birth')->seconds(false),
                         Forms\Components\TextInput::make('rel_place_of_birth')->label('Place of Birth')->maxLength(100),
                         // Horoscope / Jathakam document — image or PDF, stored on the
                         // public disk (same as the member/onboarding upload). Maps to
@@ -1676,25 +1694,25 @@ class UserResource extends Resource
                     ->columns(3)
                     ->schema([
                         Forms\Components\Select::make('edu_highest_education')->label('Highest Education')
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.educational_qualifications_list', [])))
+                            ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.educational_qualifications_list', []), $state))
                             ->searchable(),
                         Forms\Components\Select::make('edu_education_level')->label('Education Level')
-                            ->options(fn () => self::listToOptions(config('reference_data.education_level_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.education_level_list', []), $state)),
                         // Free-text: specialization / college / employer.
                         Forms\Components\TextInput::make('edu_education_detail')->label('Education Details')->maxLength(200),
                         Forms\Components\TextInput::make('edu_college_name')->label('College / University')->maxLength(200),
                         Forms\Components\Select::make('edu_occupation')->label('Occupation')
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.occupation_category_list', [])))
+                            ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.occupation_category_list', []), $state))
                             ->searchable(),
                         Forms\Components\TextInput::make('edu_occupation_detail')->label('Occupation Details')->maxLength(200),
                         Forms\Components\Select::make('edu_employment_category')->label('Employment Category')
-                            ->options(fn () => self::listToOptions(config('reference_data.employment_category_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.employment_category_list', []), $state)),
                         Forms\Components\TextInput::make('edu_employer_name')->label('Employer Name')->maxLength(200),
                         Forms\Components\Select::make('edu_annual_income')->label('Annual Income')
-                            ->options(fn () => self::listToOptions(config('reference_data.annual_income_list', [])))
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.annual_income_list', []), $state))
                             ->searchable(),
                         Forms\Components\Select::make('edu_working_country')->label('Working Country')
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
+                            ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.country_list', []), $state))
                             ->searchable(),
                         // Free-text: state/district have no canonical list.
                         Forms\Components\TextInput::make('edu_working_state')->label('Working State')->maxLength(100),
@@ -1716,7 +1734,7 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('fam_mother_house_name')->label('Mother House Name')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_native_place')->label('Mother Native Place')->maxLength(100),
                         Forms\Components\Select::make('fam_family_status')->label('Family Status')
-                            ->options(fn () => self::listToOptions(config('reference_data.family_status_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.family_status_list', []), $state)),
                         Forms\Components\TextInput::make('fam_brothers_married')->label('Brothers (Married)')->numeric()->minValue(0),
                         Forms\Components\TextInput::make('fam_brothers_unmarried')->label('Brothers (Unmarried)')->numeric()->minValue(0),
                         Forms\Components\TextInput::make('fam_brothers_priest')->label('Brothers (Priest)')->numeric()->minValue(0),
@@ -1733,17 +1751,17 @@ class UserResource extends Resource
                     ->columns(3)
                     ->schema([
                         Forms\Components\Select::make('loc_native_country')->label('Native Country')
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
+                            ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.country_list', []), $state))
                             ->searchable(),
                         // Free-text: state/district have no canonical list.
                         Forms\Components\TextInput::make('loc_native_state')->label('Native State')->maxLength(100),
                         Forms\Components\TextInput::make('loc_native_district')->label('Native District')->maxLength(100),
                         Forms\Components\TextInput::make('loc_native_place')->label('Native Place / Town / Village')->maxLength(100),
                         Forms\Components\Select::make('loc_residing_country')->label('Residing Country')
-                            ->options(fn () => self::listToGroupedOptions(config('reference_data.country_list', [])))
+                            ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.country_list', []), $state))
                             ->searchable(),
                         Forms\Components\Select::make('loc_residency_status')->label('Residency Status')
-                            ->options(fn () => self::listToOptions(config('reference_data.residency_status_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.residency_status_list', []), $state)),
                         Forms\Components\TextInput::make('loc_pin_zip_code')->label('PIN/ZIP Code')->maxLength(10),
                         // Outstation leave — when an NRI/outstation member is available in-town.
                         Forms\Components\DatePicker::make('loc_outstation_from')->label('Outstation Leave From')->native(false),
@@ -1757,29 +1775,29 @@ class UserResource extends Resource
                     ->collapsed()
                     ->schema([
                         Forms\Components\Select::make('life_diet')->label('Diet')
-                            ->options(fn () => self::listToOptions(config('reference_data.eating_habits', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.eating_habits', []), $state)),
                         Forms\Components\Select::make('life_smoking')->label('Smoking')
-                            ->options(fn () => self::listToOptions(config('reference_data.smoking_habits', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.smoking_habits', []), $state)),
                         Forms\Components\Select::make('life_drinking')->label('Drinking')
-                            ->options(fn () => self::listToOptions(config('reference_data.drinking_habits', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.drinking_habits', []), $state)),
                         Forms\Components\Select::make('life_cultural_background')->label('Cultural Background')
-                            ->options(fn () => self::listToOptions(config('reference_data.cultural_background_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.cultural_background_list', []), $state)),
                         // Multi-value interests (stored as JSON arrays on lifestyle_info).
                         Forms\Components\Select::make('life_hobbies')->label('Hobbies')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.hobbies_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.hobbies_list', []), $state)),
                         Forms\Components\TagsInput::make('life_interests')->label('Interests')->placeholder('Type and press Enter'),
                         Forms\Components\Select::make('life_languages_known')->label('Languages Known')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.language_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.language_list', []), $state)),
                         Forms\Components\Select::make('life_favorite_music')->label('Favourite Music')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.music_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.music_list', []), $state)),
                         Forms\Components\Select::make('life_preferred_books')->label('Preferred Books')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.books_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.books_list', []), $state)),
                         Forms\Components\Select::make('life_preferred_movies')->label('Preferred Movies')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.movies_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.movies_list', []), $state)),
                         Forms\Components\Select::make('life_sports_fitness_games')->label('Sports / Fitness / Games')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.sports_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.sports_list', []), $state)),
                         Forms\Components\Select::make('life_favorite_cuisine')->label('Favourite Cuisine')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.cuisine_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.cuisine_list', []), $state)),
                     ]),
 
                 // ── Section 8: Social Media ──
@@ -1805,9 +1823,9 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('pp_age_from')->label('Age From')->numeric()->minValue(18)->maxValue(80)->placeholder('Any'),
                         Forms\Components\TextInput::make('pp_age_to')->label('Age To')->numeric()->minValue(18)->maxValue(80)->placeholder('Any'),
                         Forms\Components\Select::make('pp_height_from')->label('Height From')->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.height_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.height_list', []), $state)),
                         Forms\Components\Select::make('pp_height_to')->label('Height To')->searchable()
-                            ->options(fn () => self::listToOptions(config('reference_data.height_list', []))),
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.height_list', []), $state)),
                         self::ppMultiSelect('marital_status', 'Marital Status', 'reference_data.marital_status_list', false),
                         self::ppMultiSelect('complexion', 'Complexion', 'reference_data.complexion_list', false),
                         self::ppMultiSelect('body_type', 'Body Type', 'reference_data.body_type_list', false),
@@ -1823,25 +1841,25 @@ class UserResource extends Resource
                         self::ppMultiSelect('diocese', 'Partner: Diocese', 'reference_data.diocese_list', false, true)
                             ->visible(fn (Get $get) => in_array('Christian', (array) $get('pp_religions'), true)),
                         Forms\Components\Select::make('pp_caste')->label('Partner: Caste / Community')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(\App\Models\Community::getCasteList()))
+                            ->options(fn ($state) => self::optionsWithCurrent(\App\Models\Community::getCasteList(), $state))
                             ->visible(fn (Get $get) => (bool) array_intersect(['Hindu', 'Jain'], (array) $get('pp_religions'))),
                         Forms\Components\Select::make('pp_sub_caste')->label('Partner: Sub-Caste')->multiple()->searchable()
-                            ->options(fn () => self::listToOptions(\App\Models\Community::getSubCasteList()))
+                            ->options(fn ($state) => self::optionsWithCurrent(\App\Models\Community::getSubCasteList(), $state))
                             ->visible(fn (Get $get) => (bool) array_intersect(['Hindu', 'Jain'], (array) $get('pp_religions'))),
                         Forms\Components\Select::make('pp_muslim_sect')->label('Partner: Muslim Sect')->multiple()
-                            ->options(self::listToOptions(['Sunni', 'Shia', 'Ahmadiyya', 'Sufi', 'Other', 'Prefer Not to Say']))
+                            ->options(fn ($state) => self::optionsWithCurrent(['Sunni', 'Shia', 'Ahmadiyya', 'Sufi', 'Other', 'Prefer Not to Say'], $state))
                             ->visible(fn (Get $get) => in_array('Muslim', (array) $get('pp_religions'), true)),
                         self::ppMultiSelect('muslim_community', 'Partner: Muslim Community', 'reference_data.jamath_list', false, true)
                             ->visible(fn (Get $get) => in_array('Muslim', (array) $get('pp_religions'), true)),
                         Forms\Components\Select::make('pp_jain_sect')->label('Partner: Jain Sect')->multiple()
-                            ->options(self::listToOptions(['Digambar', 'Svetambara', 'Other']))
+                            ->options(fn ($state) => self::optionsWithCurrent(['Digambar', 'Svetambara', 'Other'], $state))
                             ->visible(fn (Get $get) => in_array('Jain', (array) $get('pp_religions'), true)),
                         self::ppMultiSelect('mother_tongues', 'Mother Tongue', 'reference_data.language_list', false, true),
-                        self::ppMultiSelect('education_levels', 'Education Level', 'reference_data.educational_qualifications_list', true, true),
+                        self::ppMultiSelect('education_levels', 'Education Level', 'reference_data.education_level_list', false, true), // levels (Bachelor's…), as the member page stores
                         self::ppMultiSelect('educational_qualifications', 'Educational Qualifications', 'reference_data.educational_qualifications_list', true, true),
                         self::ppMultiSelect('occupations', 'Occupation', 'reference_data.occupation_category_list', true, true),
                         Forms\Components\Select::make('pp_employment_status')->label('Employment Category')->multiple()
-                            ->options(self::listToOptions(['Central Govt.', 'Entrepreneurship', 'Govt.', 'MNC', 'Others', 'Overseas', 'Own Business', 'Private', 'Public Limited', 'Semi Govt.'])),
+                            ->options(fn ($state) => self::optionsWithCurrent(['Central Govt.', 'Entrepreneurship', 'Govt.', 'MNC', 'Others', 'Overseas', 'Own Business', 'Private', 'Public Limited', 'Semi Govt.'], $state)),
                         self::ppMultiSelect('working_countries', 'Preferred Working Country(ies)', 'reference_data.country_list', true, true),
                         self::ppMultiSelect('working_states', 'Preferred Working State(s)', 'locations.indian_states', false, true),
                         self::ppMultiSelect('working_districts', 'Preferred Working District(s)', 'locations.state_district_map', true, true),
@@ -1851,11 +1869,11 @@ class UserResource extends Resource
                         self::ppMultiSelect('income_range', 'Preferred Annual Income', 'reference_data.annual_income_list', false, true),
                         // Fixed-option preferences (same choices as the member's own page).
                         Forms\Components\Select::make('pp_children_status')->label('Children Status')->multiple()
-                            ->options(['Any' => 'Any', 'Having Children' => 'Having Children', 'No Children' => 'No Children']),
+                            ->options(fn ($state) => self::optionsWithCurrent(['Any', 'Having Children', 'No Children'], $state)),
                         Forms\Components\Select::make('pp_manglik')->label('Manglik / Chovva Dosham')->multiple()
-                            ->options(['Yes' => 'Yes', 'No' => 'No', "Don't Know" => "Don't Know"]),
+                            ->options(fn ($state) => self::optionsWithCurrent(['Yes', 'No', "Don't Know"], $state)),
                         Forms\Components\Select::make('pp_da_category')->label('Category of Differently Abled')->multiple()
-                            ->options(self::listToOptions(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'])),
+                            ->options(fn ($state) => self::optionsWithCurrent(['Deaf & Dumb', 'Dwarfism', 'Hearing Impaired', 'Mentally Challenged', 'Physical Disability', 'Speech Impaired', 'Visually Challenged', 'Other'], $state)),
                         Forms\Components\Textarea::make('pp_about_partner')->label('About Partner Expectations')->rows(3)->maxLength(5000)->columnSpanFull(),
                     ]),
 
@@ -2057,8 +2075,28 @@ class UserResource extends Resource
     {
         $opts = array_combine($list, $list) ?: [];
 
-        if (is_string($current) && $current !== '' && ! array_key_exists($current, $opts)) {
-            $opts[$current] = $current;
+        // the member's stored answer(s) stay selectable even when the list no longer has
+        // them (profile edit check, 5 Nov 2026: Kudla had "Divorcee" 50, custodian "SELF"…,
+        // and Save was refused until staff overwrote answers they could not see)
+        foreach (is_array($current) ? $current : [$current] as $value) {
+            if (is_scalar($value) && (string) $value !== '' && ! array_key_exists((string) $value, $opts)) {
+                $opts[(string) $value] = (string) $value;
+            }
+        }
+
+        return $opts;
+    }
+
+    /** A grouped list plus the member's stored answer(s) not in it, under "Earlier answer". */
+    private static function groupedWithCurrent(array $grouped, $current): array
+    {
+        $opts = self::listToGroupedOptions($grouped);
+        $known = [];
+        array_walk_recursive($opts, function ($v, $k) use (&$known) { $known[(string) $k] = true; });
+        foreach (is_array($current) ? $current : [$current] as $value) {
+            if (is_scalar($value) && (string) $value !== '' && ! isset($known[(string) $value])) {
+                $opts['Earlier answer'][(string) $value] = (string) $value;
+            }
         }
 
         return $opts;

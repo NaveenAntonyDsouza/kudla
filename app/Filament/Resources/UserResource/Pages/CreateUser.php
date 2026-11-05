@@ -111,6 +111,9 @@ class CreateUser extends CreateRecord
                 'jathakam_upload_url' => $data['rel_jathakam'] ?? null,
             ];
             $relData = ReligiousInfo::clearFieldsForReligion($relData, $data['rel_religion'] ?? null);
+            if (filled($relData['jathakam_upload_url'] ?? null)) {
+                \App\Support\PublicFolderRules::ensure('jathakam', \App\Support\PublicFolderRules::DOCUMENTS); // never indexed
+            }
             ReligiousInfo::create($relData);
 
             // 5. Create Education Detail
@@ -219,7 +222,8 @@ class CreateUser extends CreateRecord
             ]);
 
             // 11. Create Partner Preferences
-            PartnerPreference::create([
+            // an empty list (or "Any") is stored as null, as on the member's own page
+            PartnerPreference::create(array_map(fn ($v) => is_array($v) ? PartnerPreference::listOrNull($v) : $v, [
                 'profile_id' => $profile->id,
                 'age_from' => $data['pp_age_from'] ?? null,
                 'age_to' => $data['pp_age_to'] ?? null,
@@ -256,7 +260,7 @@ class CreateUser extends CreateRecord
                 'muslim_community' => in_array('Muslim', (array) $ppReligions, true) ? ($data['pp_muslim_community'] ?? []) : [],
                 'jain_sect' => in_array('Jain', (array) $ppReligions, true) ? ($data['pp_jain_sect'] ?? []) : [],
                 'about_partner' => $data['pp_about_partner'] ?? null,
-            ]);
+            ]));
 
             // 12. Profile photo (optional) — mirrors the Photos relation manager:
             // watermark the file, store as the primary/visible 'profile' photo.
