@@ -1559,7 +1559,8 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('cont_alternate_email')->label('Alternate Email')->email()->maxLength(150),
                         Forms\Components\TextInput::make('cont_reference_name')->label('Reference Name')->maxLength(100),
                         Forms\Components\TextInput::make('cont_reference_mobile')->label('Reference Mobile')->maxLength(15),
-                        Forms\Components\TextInput::make('cont_reference_relationship')->label('Reference Relationship')->maxLength(100),
+                        Forms\Components\Select::make('cont_reference_relationship')->label('Reference Relationship')->searchable()
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.reference_relationship_list', []), $state)),
                         Forms\Components\Textarea::make('cont_present_address')->label('Present Address')->rows(2)->maxLength(300)->columnSpan(2),
                         Forms\Components\TextInput::make('cont_present_pin_zip_code')->label('Present PIN/ZIP Code')->maxLength(10),
                         Forms\Components\Textarea::make('cont_permanent_address')->label('Permanent Address')->rows(2)->maxLength(300)->columnSpan(2),
@@ -1713,10 +1714,9 @@ class UserResource extends Resource
                             ->searchable(),
                         Forms\Components\Select::make('edu_working_country')->label('Working Country')
                             ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.country_list', []), $state))
-                            ->searchable(),
-                        // Free-text: state/district have no canonical list.
-                        Forms\Components\TextInput::make('edu_working_state')->label('Working State')->maxLength(100),
-                        Forms\Components\TextInput::make('edu_working_district')->label('Working District')->maxLength(100),
+                            ->searchable()
+                            ->live(),
+                        ...self::stateDistrictFields('edu_working', 'Working'),
                         Forms\Components\TextInput::make('edu_working_city')->label('Working City / Town')->maxLength(100),
                     ]),
 
@@ -1726,11 +1726,13 @@ class UserResource extends Resource
                     ->columns(3)
                     ->schema([
                         Forms\Components\TextInput::make('fam_father_name')->label('Father Name')->maxLength(100),
-                        Forms\Components\TextInput::make('fam_father_occupation')->label('Father Occupation')->maxLength(100),
+                        Forms\Components\Select::make('fam_father_occupation')->label('Father Occupation')->searchable()
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.parent_occupation_list', []), $state)),
                         Forms\Components\TextInput::make('fam_father_house_name')->label('Father House Name')->maxLength(100),
                         Forms\Components\TextInput::make('fam_father_native_place')->label('Father Native Place')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_name')->label('Mother Name')->maxLength(100),
-                        Forms\Components\TextInput::make('fam_mother_occupation')->label('Mother Occupation')->maxLength(100),
+                        Forms\Components\Select::make('fam_mother_occupation')->label('Mother Occupation')->searchable()
+                            ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.parent_occupation_list', []), $state)),
                         Forms\Components\TextInput::make('fam_mother_house_name')->label('Mother House Name')->maxLength(100),
                         Forms\Components\TextInput::make('fam_mother_native_place')->label('Mother Native Place')->maxLength(100),
                         Forms\Components\Select::make('fam_family_status')->label('Family Status')
@@ -1752,10 +1754,11 @@ class UserResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('loc_native_country')->label('Native Country')
                             ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.country_list', []), $state))
-                            ->searchable(),
-                        // Free-text: state/district have no canonical list.
-                        Forms\Components\TextInput::make('loc_native_state')->label('Native State')->maxLength(100),
-                        Forms\Components\TextInput::make('loc_native_district')->label('Native District')->maxLength(100),
+                            ->searchable()
+                            ->live(),
+                        // India: state and district dropdowns, as on the member's page; any
+                        // other country: typed, as there (5 Nov 2026: these were text boxes)
+                        ...self::stateDistrictFields('loc_native', 'Native'),
                         Forms\Components\TextInput::make('loc_native_place')->label('Native Place / Town / Village')->maxLength(100),
                         Forms\Components\Select::make('loc_residing_country')->label('Residing Country')
                             ->options(fn ($state) => self::groupedWithCurrent(config('reference_data.country_list', []), $state))
@@ -1820,8 +1823,11 @@ class UserResource extends Resource
                     ->columns(2)
                     ->collapsed()
                     ->schema([
-                        Forms\Components\TextInput::make('pp_age_from')->label('Age From')->numeric()->minValue(18)->maxValue(80)->placeholder('Any'),
-                        Forms\Components\TextInput::make('pp_age_to')->label('Age To')->numeric()->minValue(18)->maxValue(80)->placeholder('Any'),
+                        // 18–70, as on the member's own page; empty = Any
+                        Forms\Components\Select::make('pp_age_from')->label('Age From')->placeholder('Any')
+                            ->options(fn ($state) => self::optionsWithCurrent(array_map('strval', range(18, 70)), $state)),
+                        Forms\Components\Select::make('pp_age_to')->label('Age To')->placeholder('Any')
+                            ->options(fn ($state) => self::optionsWithCurrent(array_map('strval', range(18, 70)), $state)),
                         Forms\Components\Select::make('pp_height_from')->label('Height From')->searchable()
                             ->options(fn ($state) => self::optionsWithCurrent(config('reference_data.height_list', []), $state)),
                         Forms\Components\Select::make('pp_height_to')->label('Height To')->searchable()
@@ -2085,6 +2091,47 @@ class UserResource extends Resource
         }
 
         return $opts;
+    }
+
+    /**
+     * State + district for a country field ($prefix = 'loc_native' / 'edu_working'), as on the
+     * member's own page: India → state and district dropdowns (config/locations.php); any
+     * other country (or none) → typed. The stored answer always stays selectable.
+     */
+    private static function stateDistrictFields(string $prefix, string $label): array
+    {
+        $india = fn (Get $get) => $get("{$prefix}_country") === 'India';
+        // districts are listed for some states only; the others are typed, as on the member's page
+        $listed = fn (Get $get) => $india($get) && self::districtsOf($get("{$prefix}_state")) !== [];
+
+        return [
+            Forms\Components\Select::make("{$prefix}_state")->label("{$label} State")->searchable()->live()
+                ->options(fn ($state) => self::optionsWithCurrent(config('locations.indian_states', []), $state))
+                ->afterStateUpdated(fn (\Filament\Schemas\Components\Utilities\Set $set) => $set("{$prefix}_district", null))
+                ->visible($india),
+            Forms\Components\TextInput::make("{$prefix}_state_text")->label("{$label} State")->maxLength(100)
+                ->visible(fn (Get $get) => ! $india($get)),
+            Forms\Components\Select::make("{$prefix}_district")->label("{$label} District")->searchable()
+                ->options(fn (Get $get, $state) => self::optionsWithCurrent(self::districtsOf($get("{$prefix}_state")), $state))
+                ->visible($listed),
+            Forms\Components\TextInput::make("{$prefix}_district_text")->label("{$label} District")->maxLength(100)
+                ->visible(fn (Get $get) => ! $listed($get)),
+        ];
+    }
+
+    private static function districtsOf(?string $state): array
+    {
+        return $state ? (array) (config('locations.state_district_map', [])[$state] ?? []) : [];
+    }
+
+    /** [state, district] from the form: the dropdowns for India, the typed boxes otherwise. */
+    public static function stateDistrictFromForm(array $data, string $prefix): array
+    {
+        $india = ($data["{$prefix}_country"] ?? null) === 'India';
+        $state = $india ? ($data["{$prefix}_state"] ?? null) : ($data["{$prefix}_state_text"] ?? null);
+        $district = $india && self::districtsOf($state) !== [] ? ($data["{$prefix}_district"] ?? null) : ($data["{$prefix}_district_text"] ?? null);
+
+        return [$state, $district];
     }
 
     /** A grouped list plus the member's stored answer(s) not in it, under "Earlier answer". */

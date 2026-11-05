@@ -129,8 +129,8 @@ class CreateUser extends CreateRecord
                 'employer_name' => $data['edu_employer_name'] ?? null,
                 'annual_income' => $data['edu_annual_income'] ?? null,
                 'working_country' => $data['edu_working_country'] ?? null,
-                'working_state' => $data['edu_working_state'] ?? null,
-                'working_district' => $data['edu_working_district'] ?? null,
+                'working_state' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'edu_working')[0],
+                'working_district' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'edu_working')[1],
                 'working_city' => $data['edu_working_city'] ?? null,
             ]);
 
@@ -161,8 +161,8 @@ class CreateUser extends CreateRecord
                 'profile_id' => $profile->id,
                 'residing_country' => $data['loc_residing_country'] ?? null,
                 'native_country' => $data['loc_native_country'] ?? null,
-                'native_state' => $data['loc_native_state'] ?? null,
-                'native_district' => $data['loc_native_district'] ?? null,
+                'native_state' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'loc_native')[0],
+                'native_district' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'loc_native')[1],
                 'native_place' => $data['loc_native_place'] ?? null,
                 'residency_status' => $data['loc_residency_status'] ?? 'citizen',
                 'pin_zip_code' => $data['loc_pin_zip_code'] ?? null,

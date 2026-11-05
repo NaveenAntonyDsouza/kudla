@@ -84,6 +84,9 @@ class EditUser extends EditRecord
         $data['edu_working_country'] = $edu?->working_country;
         $data['edu_working_state'] = $edu?->working_state;
         $data['edu_working_district'] = $edu?->working_district;
+        // typed twins for a country other than India (UserResource::stateDistrictFields)
+        $data['edu_working_state_text'] = $edu?->working_state;
+        $data['edu_working_district_text'] = $edu?->working_district;
         $data['edu_working_city'] = $edu?->working_city;
 
         // Family
@@ -112,6 +115,8 @@ class EditUser extends EditRecord
         $data['loc_native_country'] = $loc?->native_country;
         $data['loc_native_state'] = $loc?->native_state;
         $data['loc_native_district'] = $loc?->native_district;
+        $data['loc_native_state_text'] = $loc?->native_state;
+        $data['loc_native_district_text'] = $loc?->native_district;
         $data['loc_native_place'] = $loc?->native_place;
         $data['loc_residency_status'] = $loc?->residency_status;
         $data['loc_pin_zip_code'] = $loc?->pin_zip_code;
@@ -269,8 +274,8 @@ class EditUser extends EditRecord
                 'employer_name' => $data['edu_employer_name'] ?? null,
                 'annual_income' => $data['edu_annual_income'] ?? null,
                 'working_country' => $data['edu_working_country'] ?? null,
-                'working_state' => $data['edu_working_state'] ?? null,
-                'working_district' => $data['edu_working_district'] ?? null,
+                'working_state' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'edu_working')[0],
+                'working_district' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'edu_working')[1],
                 'working_city' => $data['edu_working_city'] ?? null,
             ]
         );
@@ -305,8 +310,8 @@ class EditUser extends EditRecord
             [
                 'residing_country' => $data['loc_residing_country'] ?? null,
                 'native_country' => $data['loc_native_country'] ?? null,
-                'native_state' => $data['loc_native_state'] ?? null,
-                'native_district' => $data['loc_native_district'] ?? null,
+                'native_state' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'loc_native')[0],
+                'native_district' => \App\Filament\Resources\UserResource::stateDistrictFromForm($data, 'loc_native')[1],
                 'native_place' => $data['loc_native_place'] ?? null,
                 'residency_status' => $data['loc_residency_status'] ?? null,
                 'pin_zip_code' => $data['loc_pin_zip_code'] ?? null,
