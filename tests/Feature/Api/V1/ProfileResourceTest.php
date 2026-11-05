@@ -85,9 +85,9 @@ it('returns all 19 top-level keys', function () {
     }
 });
 
-it('all boolean flags are real bools', function () {
+it('all boolean flags are real bools (own profile)', function () {
     $profile = buildFullProfile();
-    $data = (new ProfileResource($profile))->resolve();
+    $data = (new ProfileResource($profile, viewer: $profile))->resolve();
 
     foreach (['is_approved', 'is_active', 'is_hidden', 'is_verified', 'is_vip', 'is_featured', 'is_premium'] as $flag) {
         expect($data[$flag])->toBeBool("{$flag} must be bool");
@@ -102,9 +102,9 @@ it('profile_completion_pct is integer', function () {
     expect($data['profile_completion_pct'])->toBe(78);
 });
 
-it('timestamps are ISO 8601 strings', function () {
+it('timestamps are ISO 8601 strings (own profile)', function () {
     $profile = buildFullProfile();
-    $data = (new ProfileResource($profile))->resolve();
+    $data = (new ProfileResource($profile, viewer: $profile))->resolve();
 
     expect($data['created_at'])->toBeString();
     expect($data['created_at'])->toMatch('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/');
@@ -202,4 +202,16 @@ it('keeps social handles locked with the contact (Oct 2026), open together with 
     expect($locked['sections']['social'])->toBeNull()
         ->and(json_encode($locked))->not->toContain('instagram.com/asha')
         ->and($open['sections']['social'])->toMatchArray(['instagram_url' => 'https://instagram.com/asha', 'website_url' => 'https://asha.example']);
+});
+
+it('leaves another member account state out: hidden, approval, suspension, paid, last login (privacy check, 5 Nov 2026)', function () {
+    $profile = buildFullProfile();
+    $other = new App\Models\Profile();
+    $other->forceFill(['id' => 999001, 'gender' => 'male']);
+    $data = (new ProfileResource($profile, viewer: $other))->resolve();
+
+    foreach (['is_approved', 'is_active', 'is_hidden', 'is_premium', 'suspension_status', 'last_active_at'] as $key) {
+        expect($data)->toHaveKey($key)->and($data[$key])->toBeNull($key);
+    }
+    expect($data['is_verified'])->toBeBool()->and($data['is_vip'])->toBeBool();
 });

@@ -55,6 +55,11 @@ class ProfileResource extends JsonResource
         /** @var Profile $profile */
         $profile = $this->resource;
 
+        // Account state is the member's own business (privacy check, 5 Nov 2026): for another
+        // member's profile, hidden / approval / suspension, paid status and the exact last
+        // login are left out (null). Badges the website shows (verified, VIP, featured) stay.
+        $own = $this->viewerProfile()?->id === $profile->id;
+
         return [
             // ── Identity ────────────────────────────────────────────
             'matri_id'                 => (string) $profile->matri_id,
@@ -66,18 +71,18 @@ class ProfileResource extends JsonResource
             'profile_completion_pct'   => (int) ($profile->profile_completion_pct ?? 0),
 
             // ── Flags (all real booleans) ──────────────────────────
-            'is_approved'              => (bool) $profile->is_approved,
-            'is_active'                => (bool) $profile->is_active,
-            'is_hidden'                => (bool) $profile->is_hidden,
+            'is_approved'              => $own ? (bool) $profile->is_approved : null,
+            'is_active'                => $own ? (bool) $profile->is_active : null,
+            'is_hidden'                => $own ? (bool) $profile->is_hidden : null,
             'is_verified'              => (bool) ($profile->is_verified ?? false),
             'is_vip'                   => (bool) ($profile->is_vip ?? false),
             'is_featured'              => (bool) ($profile->is_featured ?? false),
-            'is_premium'               => $this->isPremiumSafely($profile),
-            'suspension_status'        => $profile->suspension_status ?? 'active',
+            'is_premium'               => $own ? $this->isPremiumSafely($profile) : null,
+            'suspension_status'        => $own ? ($profile->suspension_status ?? 'active') : null,
 
             // ── Timestamps (ISO 8601) ──────────────────────────────
             'created_at'               => $profile->created_at?->toUtcIso(),
-            'last_active_at'           => $profile->user?->last_login_at?->toUtcIso(),
+            'last_active_at'           => $own ? $profile->user?->last_login_at?->toUtcIso() : null,
 
             // ── 9 editable sections ────────────────────────────────
             'sections' => [
