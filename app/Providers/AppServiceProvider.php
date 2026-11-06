@@ -50,8 +50,23 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
+    /** Staff "Remember me" keeps a browser signed in for 7 days (Laravel's default is 400). */
+    public const STAFF_REMEMBER_MINUTES = 7 * 24 * 60;
+
     public function boot(): void
     {
+        // 6 Nov 2026: a remembered staff browser (shared office PC, lost phone) stayed in the
+        // admin for 400 days; a password change did not end it
+        // Sign out ends this browser only, not the person's other remembered browsers
+        $this->app->bind(\Filament\Auth\Http\Controllers\LogoutController::class, \App\Http\Controllers\Admin\SignOutThisBrowser::class);
+
+        $this->callAfterResolving('auth', function ($auth): void {
+            $guard = $auth->guard('admin');
+            if (method_exists($guard, 'setRememberDuration')) {
+                $guard->setRememberDuration(self::STAFF_REMEMBER_MINUTES);
+            }
+        });
+
         // Every email that leaves the site is logged for admin → Reports → Email Activity
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Mail\Events\MessageSent::class,

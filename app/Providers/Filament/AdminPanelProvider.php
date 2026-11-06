@@ -82,7 +82,9 @@ class AdminPanelProvider extends PanelProvider
                     }
                 },
             )
-            ->brandName(($theme?->site_name ?? 'Matrimony') . ' Admin')
+            // "Admin" only, no site name, on the sign-in page, the top bar and the browser tab
+            // (owner, 6 Nov 2026); the web address still shows which site it is
+            ->brandName('Admin')
             ->colors([
                 'primary' => $this->hexToFilamentColor($theme?->primary_color ?? '#8B1D91'),
                 'danger' => Color::Rose,
