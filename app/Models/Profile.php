@@ -69,6 +69,12 @@ class Profile extends Model
         'suspended_by',
     ];
 
+    /** Staff-only: "details checked on a call" (EditUser::markDetailsChecked) never goes out with a profile. */
+    protected $hidden = [
+        'details_checked_at',
+        'details_checked_by',
+    ];
+
     protected static function booted(): void
     {
         // Staff reactivating a deleted account cancels its 90-day erasure (App\Services\MemberErasure)
@@ -103,6 +109,7 @@ class Profile extends Model
             'children_not_with_me' => 'integer',
             'suspended_at' => 'datetime',
             'suspension_ends_at' => 'datetime',
+            'details_checked_at' => 'datetime',
         ];
     }
 

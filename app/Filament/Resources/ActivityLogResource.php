@@ -77,7 +77,7 @@ class ActivityLogResource extends Resource
                     ->color(fn (string $state): string => match (true) {
                         str_contains($state, 'banned') || str_contains($state, 'deleted') => 'danger',
                         str_contains($state, 'suspended') || str_contains($state, 'deactivated') => 'warning',
-                        str_contains($state, 'approved') || str_contains($state, 'activated') || str_contains($state, 'restored') => 'success',
+                        str_contains($state, 'approved') || str_contains($state, 'activated') || str_contains($state, 'restored') || str_contains($state, 'checked') => 'success',
                         str_contains($state, 'replied') || str_contains($state, 'saved') || str_contains($state, 'updated') => 'info',
                         default => 'gray',
                     })

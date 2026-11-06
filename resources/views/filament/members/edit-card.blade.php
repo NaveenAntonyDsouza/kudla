@@ -1,7 +1,8 @@
 {{--
     Member card above the tabs on the admin member edit page (EditUser::memberCard):
-    who this is, how to reach them, what is still empty, the last call. Staff often
-    have the member on the phone while on this page (5 Nov 2026).
+    who this is, how to reach them, what is still empty, the last call, when the
+    details were last checked on a call. Staff often have the member on the phone
+    while on this page (5 Nov 2026).
     Inline styles: the panel has no theme build for custom classes (see x-admin.pill).
 --}}
 @php
@@ -72,6 +73,12 @@
                 <span><span style="{{ $muted }}">Last call</span> {{ $lastCall['when'] }}@if ($lastCall['by']) by {{ $lastCall['by'] }}@endif @if ($lastCall['note'] !== '')<span style="opacity:.8;">— “{{ $lastCall['note'] }}”</span>@endif</span>
             @else
                 <span style="{{ $muted }}">No call logged yet (Notes → Type: Call)</span>
+            @endif
+            {{-- "Save and mark checked on call" below the form --}}
+            @if ($checked)
+                <span><span style="{{ $muted }}">Details checked on a call</span> {{ $checked['when'] }} ({{ $checked['ago'] }})@if ($checked['by']) by {{ $checked['by'] }}@endif</span>
+            @else
+                <span style="{{ $muted }}">Details not checked on a call yet</span>
             @endif
             @if ($followUp)
                 <span @if ($followUp['late']) style="color:#dc2626;font-weight:600;" @endif><span style="{{ $followUp['late'] ? '' : $muted }}">Follow-up {{ $followUp['late'] ? 'was due' : 'due' }}</span> {{ $followUp['date'] }}</span>

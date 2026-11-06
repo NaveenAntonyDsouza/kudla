@@ -18,9 +18,11 @@ use App\Services\ProfileCompletionService;
 use App\Support\Permissions;
 use App\Traits\LogsAdminActivity;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Schemas\Components\View as SchemaView;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /*
@@ -31,7 +33,9 @@ use Illuminate\Support\Str;
 | buttons, each with a confirm and its own staff right (they were switches inside
 | the form that anyone who could edit could flip, unlogged); Save always in view,
 | and staying on this page; a warning before leaving with unsaved changes; and
-| every save logged with the fields it changed.
+| every save logged with the fields it changed. 6 Nov 2026: "Save and mark checked
+| on call" next to Save records that the details were gone through with the
+| member, also when nothing needed changing.
 */
 class EditUser extends EditRecord
 {
@@ -81,6 +85,15 @@ class EditUser extends EditRecord
 
     /** @var array<string, mixed> the values before Save (see logChangedFields) */
     private array $valuesBeforeSave = [];
+
+    /** @var array<string, array<string, mixed>> per part (LOGGED_PARTS key), the values afterSave() wrote */
+    private array $writtenValues = [];
+
+    /** True while saveAndMarkChecked() saves: afterSave() then records the check, once everything is saved. */
+    private bool $markCheckedOnSave = false;
+
+    /** After a check was recorded: how many fields that save changed. */
+    private ?int $checkedWithChanges = null;
 
     public function getHeading(): string
     {
@@ -159,6 +172,63 @@ class EditUser extends EditRecord
 
             Actions\ViewAction::make(),
         ];
+    }
+
+    /**
+     * Save, and the button for the end of a call: it saves what was corrected and records
+     * that the details were checked with the member, also when nothing needed changing.
+     * A plain Livewire call like Save, so a field that does not validate shows its error
+     * on the form and nothing is marked.
+     */
+    protected function getFormActions(): array
+    {
+        return [
+            $this->getSaveFormAction(),
+            Actions\Action::make('saveChecked')
+                ->label('Save and mark checked on call')
+                ->icon('heroicon-o-phone')
+                ->color('success')
+                ->tooltip('After going through the details with the member or their family on a call: saves any changes, and records that the details were checked today.')
+                ->action('saveAndMarkChecked'),
+            $this->getCancelFormAction(),
+        ];
+    }
+
+    public function saveAndMarkChecked(): void
+    {
+        $this->markCheckedOnSave = true;
+        $this->checkedWithChanges = null;
+
+        try {
+            $this->save(shouldRedirect: false, shouldSendSavedNotification: false);
+        } finally {
+            $this->markCheckedOnSave = false;
+        }
+
+        if ($this->checkedWithChanges !== null) {
+            Notification::make()
+                ->success()
+                ->title($this->checkedWithChanges === 0
+                    ? 'Marked as checked on a call. Nothing needed changing.'
+                    : 'Saved, and marked as checked on a call.')
+                ->send();
+        }
+    }
+
+    /**
+     * "Details checked on a call": when and by whom on the profile (the member card, the
+     * members list and its filter), and every check in the Activity Log. Written straight
+     * to the table at the end of a save that went through: a check is not an edit, so the
+     * profile's updated time and its model hooks stay as they are.
+     */
+    private function markDetailsChecked(int $fieldsChanged): void
+    {
+        $mark = ['details_checked_at' => now(), 'details_checked_by' => auth()->id()];
+        DB::table('profiles')->where('id', $this->record->getKey())->update($mark);
+        $this->record->forceFill($mark)->syncOriginalAttributes(array_keys($mark));
+
+        self::logActivity('member_details_checked', $this->record, ['fields_changed' => $fieldsChanged]);
+        $this->checkedWithChanges = $fieldsChanged;
     }
 
     /**
@@ -246,6 +316,7 @@ class EditUser extends EditRecord
             ->orderBy('follow_up_date')->first();
         $lastEdit = AdminActivityLog::where('action', 'member_profile_updated')->where('model_type', 'Profile')->where('model_id', $profile->id)
             ->with('admin')->latest()->first();
+        $checkedAt = $profile->details_checked_at?->displayTz();
 
         // what the member typed after "Other", marked as typed (6 Nov 2026: the card said
         // "Hindu, Other / Not Listed" for a member who had typed "Shetty")
@@ -292,6 +363,12 @@ class EditUser extends EditRecord
             'lastEdit' => $lastEdit ? [
                 'when' => $lastEdit->created_at->displayTz()->format('j M Y, g:i A'),
                 'by' => $lastEdit->admin?->name,
+            ] : null,
+            // "Save and mark checked on call" (markDetailsChecked)
+            'checked' => $checkedAt ? [
+                'when' => $checkedAt->format('j M Y'),
+                'ago' => $checkedAt->isToday() ? 'today' : $checkedAt->diffForHumans(),
+                'by' => $profile->details_checked_by ? \App\Models\User::whereKey($profile->details_checked_by)->value('name') : null,
             ] : null,
         ];
     }
@@ -517,14 +594,10 @@ class EditUser extends EditRecord
             \App\Support\PublicFolderRules::ensure('jathakam', \App\Support\PublicFolderRules::DOCUMENTS); // never indexed
         }
         $relData = ReligiousInfo::clearFieldsForReligion($relData, $data['rel_religion'] ?? null);
-        ReligiousInfo::updateOrCreate(
-            ['profile_id' => $profile->id],
-            $relData
-        );
+        $this->savePart('religiousInfo', ReligiousInfo::class, $relData);
 
         // Update education
-        EducationDetail::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('educationDetail', EducationDetail::class,
             [
                 'highest_education' => $data['edu_highest_education'] ?? null,
                 'education_level' => $data['edu_education_level'] ?? null,
@@ -543,8 +616,7 @@ class EditUser extends EditRecord
         );
 
         // Update family details
-        FamilyDetail::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('familyDetail', FamilyDetail::class,
             [
                 'father_name' => $data['fam_father_name'] ?? null,
                 'father_occupation' => $data['fam_father_occupation'] ?? null,
@@ -567,8 +639,7 @@ class EditUser extends EditRecord
         );
 
         // Update location
-        LocationInfo::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('locationInfo', LocationInfo::class,
             [
                 'residing_country' => $data['loc_residing_country'] ?? null,
                 'native_country' => $data['loc_native_country'] ?? null,
@@ -583,8 +654,7 @@ class EditUser extends EditRecord
         );
 
         // Update contact info
-        ContactInfo::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('contactInfo', ContactInfo::class,
             [
                 'whatsapp_number' => $data['cont_whatsapp'] ?? null,
                 'contact_person' => $data['cont_custodian_name'] ?? null,
@@ -609,8 +679,7 @@ class EditUser extends EditRecord
         // otherwise (the member's own page does the same)
         if (($data['physical_status'] ?? $profile->physical_status) === 'Differently Abled') {
             $raw = $this->form->getRawState();
-            \App\Models\DifferentlyAbledInfo::updateOrCreate(
-                ['profile_id' => $profile->id],
+            $this->savePart('differentlyAbledInfo', \App\Models\DifferentlyAbledInfo::class,
                 [
                     'category' => $raw['da_category'] ?? null,
                     'specify' => ($raw['da_category'] ?? '') === 'Other' ? ($raw['da_specify'] ?? null) : null,
@@ -620,8 +689,7 @@ class EditUser extends EditRecord
         }
 
         // Update lifestyle
-        LifestyleInfo::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('lifestyleInfo', LifestyleInfo::class,
             [
                 'diet' => $data['life_diet'] ?? null,
                 'smoking' => $data['life_smoking'] ?? null,
@@ -639,8 +707,7 @@ class EditUser extends EditRecord
         );
 
         // Update social media
-        SocialMediaLink::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('socialMediaLink', SocialMediaLink::class,
             [
                 'instagram_url' => $data['social_instagram'] ?? null,
                 'facebook_url' => $data['social_facebook'] ?? null,
@@ -651,8 +718,7 @@ class EditUser extends EditRecord
         );
 
         // Update partner preferences
-        PartnerPreference::updateOrCreate(
-            ['profile_id' => $profile->id],
+        $this->savePart('partnerPreference', PartnerPreference::class,
             // an empty list (or "Any") is stored as null, the same as the member's own
             // Partner Preferences page (PartnerPreference::listOrNull, Nov 2026)
             array_map(fn ($v) => is_array($v) ? PartnerPreference::listOrNull($v) : $v, [
@@ -697,12 +763,24 @@ class EditUser extends EditRecord
         // it stayed as it was, so members staff had completed stayed in the "Incomplete" list)
         app(ProfileCompletionService::class)->recalculate($profile);
 
-        $this->logChangedFields();
+        $changed = $this->logChangedFields();
+
+        if ($this->markCheckedOnSave) {
+            $this->markDetailsChecked(count($changed));
+        }
+    }
+
+    /** Saves one part of the profile (a LOGGED_PARTS relation) and remembers what was written, for the edit log. */
+    private function savePart(string $relation, string $model, array $values): void
+    {
+        $this->writtenValues[$relation] = $values;
+        $model::updateOrCreate(['profile_id' => $this->record->getKey()], $values);
     }
 
     protected function beforeSave(): void
     {
         $this->valuesBeforeSave = $this->storedValues();
+        $this->writtenValues = [];
     }
 
     /** Staff stay on this page after Save (often still on the call). */
@@ -714,13 +792,28 @@ class EditUser extends EditRecord
     /**
      * Logs who changed which fields ("member_profile_updated" in the Activity Log, and
      * "Last edited" on the member card). Contact details, health details and documents
-     * are logged only as "changed", never with their values.
+     * are logged only as "changed", never with their values. Returns what changed.
+     *
+     * @return array<string, string>
      */
-    private function logChangedFields(): void
+    private function logChangedFields(): array
     {
         $before = $this->valuesBeforeSave;
         $after = $this->storedValues();
         $changed = [];
+
+        // A part saved for the first time (no row before): only what staff filled in. The new
+        // row's own values are not edits (6 Nov 2026: "Partner preferences: exclude same gotra
+        // (empty) → 0" and the sibling counts 0 were logged on members who had no row yet).
+        $partsBefore = array_unique(array_map(fn (string $field): string => Str::before($field, ':'), array_keys($before)));
+        $firstSaved = [];
+        foreach ($this->writtenValues as $relation => $values) {
+            $part = self::LOGGED_PARTS[$relation];
+            if (! in_array($part, $partsBefore, true)) {
+                $firstSaved[$part] = array_map(fn (string $column): string => $part . ': ' . str_replace('_', ' ', $column),
+                    array_keys(array_filter($values, fn ($value): bool => filled($value))));
+            }
+        }
 
         foreach (array_unique(array_merge(array_keys($before), array_keys($after))) as $field) {
             $old = $this->loggedValue($before[$field] ?? null);
@@ -730,6 +823,9 @@ class EditUser extends EditRecord
             }
 
             $part = Str::before($field, ':');
+            if (isset($firstSaved[$part]) && ! in_array($field, $firstSaved[$part], true)) {
+                continue;
+            }
             $changed[$field] = in_array($part, self::LOGGED_WITHOUT_VALUES, true) || in_array($field, self::LOGGED_WITHOUT_VALUES_FIELDS, true)
                 ? 'changed'
                 : ($old ?? '(empty)') . ' → ' . ($new ?? '(empty)');
@@ -738,6 +834,8 @@ class EditUser extends EditRecord
         if ($changed !== []) {
             self::logActivity('member_profile_updated', $this->record, ['changed' => $changed]);
         }
+
+        return $changed;
     }
 
     /** The profile's stored values, read fresh: ["Basic: marital status" => "Unmarried", "Religion: caste" => …]. */

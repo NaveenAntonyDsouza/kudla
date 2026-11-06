@@ -356,6 +356,18 @@ class UserResource extends Resource
                                 ->icon(fn (string $state): string => $state === 'ID Verified' ? 'heroicon-o-shield-check' : 'heroicon-o-shield-exclamation')
                                 ->color(fn (string $state): string => $state === 'ID Verified' ? 'success' : 'gray')
                                 ->grow(false),
+
+                            // edit page → "Save and mark checked on call" (Nov 2026)
+                            Tables\Columns\TextColumn::make('details_checked_at')
+                                ->label('Details checked')
+                                ->getStateUsing(fn (Profile $record): string => $record->details_checked_at
+                                    ? 'Checked on call ' . $record->details_checked_at->displayTz()->format('d M Y')
+                                    : 'Not checked on call')
+                                ->badge()
+                                ->icon('heroicon-o-phone')
+                                ->color(fn (string $state): string => str_starts_with($state, 'Checked') ? 'success' : 'gray')
+                                ->sortable()
+                                ->grow(false),
                         ]),
                     ])->space(2),
                 ])->from('md'),
@@ -480,6 +492,13 @@ class UserResource extends Resource
                 // Hidden
                 Tables\Filters\TernaryFilter::make('is_hidden')
                     ->label('Hidden'),
+
+                // edit page → "Save and mark checked on call" (Nov 2026)
+                Tables\Filters\TernaryFilter::make('details_checked_at')
+                    ->label('Details checked on a call')
+                    ->nullable()
+                    ->trueLabel('Checked')
+                    ->falseLabel('Not checked yet'),
 
                 // Created By
                 Tables\Filters\SelectFilter::make('created_by')
@@ -977,6 +996,14 @@ class UserResource extends Resource
                                 return ($m->plan?->plan_name ?? 'Unknown') . ($m->ends_at ? ' (exp ' . $m->ends_at->format('d M Y') . ')' : '');
                             })->badge()
                             ->color(fn (string $state): string => str_contains($state, 'Diamond Plus') ? 'success' : (str_contains($state, 'Diamond') ? 'info' : (str_contains($state, 'Gold') ? 'warning' : (str_contains($state, 'Silver') ? 'primary' : 'gray')))),
+                        // edit page → "Save and mark checked on call" (Nov 2026)
+                        Infolists\Components\TextEntry::make('details_checked_display')->label('Details checked on a call')
+                            ->getStateUsing(fn (Profile $record): string => $record->details_checked_at
+                                ? $record->details_checked_at->displayTz()->format('d M Y')
+                                    . (($by = $record->details_checked_by ? \App\Models\User::whereKey($record->details_checked_by)->value('name') : null) ? ' by ' . $by : '')
+                                : 'Not yet')
+                            ->badge()
+                            ->color(fn (Profile $record): string => $record->details_checked_at ? 'success' : 'gray'),
                     ]),
 
                 // ── Tabs ──

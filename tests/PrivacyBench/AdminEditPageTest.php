@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\UserResource\Pages\EditUser;
+use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Models\AdminActivityLog;
 use App\Models\PartnerPreference;
@@ -21,6 +22,8 @@ use Tests\PrivacyBench\Bench;
 | the fields it changed (contact details without their values); the completion % follows
 | the edit; the status changes are header buttons with a confirm, each needing its own
 | staff right, and a later Save never undoes them; the page itself needs "Edit Member".
+| 6 Nov 2026: "Save and mark checked on call" records that the details were gone
+| through with the member, also when nothing needed changing (staff-only).
 */
 
 beforeEach(function () {
@@ -170,6 +173,99 @@ it('shows the member card: Matri ID, what is still empty, the last call', functi
         ->assertSee("Family: father's name")
         ->assertSee('Asked about the partner age range')
         ->assertSee('9812300005');
+});
+
+it('marks the details checked on a call when nothing needed changing, logged, and shows it on the card', function () {
+    $p = editPageMember('Checked Call', 'checked-call@bench.test', '9812300008');
+
+    $this->actingAs($this->staff, 'admin');
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])->call('save'); // the completion % settles
+    AdminActivityLog::where('model_id', $p->id)->delete();
+    $updatedAt = $p->fresh()->updated_at;
+    $this->travel(5)->seconds();
+
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->assertSee('Save and mark checked on call')
+        ->assertSee('Details not checked on a call yet')
+        ->call('saveAndMarkChecked')
+        ->assertHasNoFormErrors()
+        ->assertNoRedirect()
+        ->assertNotified('Marked as checked on a call. Nothing needed changing.')
+        ->assertSeeText('Details checked on a call ' . now()->displayTz()->format('j M Y') . ' (today) by Page Staff');
+
+    $p = $p->fresh();
+    $log = AdminActivityLog::where('action', 'member_details_checked')->where('model_id', $p->id)->sole();
+    expect($p->details_checked_at)->not->toBeNull()
+        ->and($p->details_checked_by)->toBe($this->staff->id)
+        ->and($p->updated_at->equalTo($updatedAt))->toBeTrue() // a check is not an edit
+        ->and($log->admin_user_id)->toBe($this->staff->id)
+        ->and($log->changes)->toBe(['fields_changed' => 0])
+        ->and(AdminActivityLog::where('action', 'member_profile_updated')->where('model_id', $p->id)->exists())->toBeFalse();
+});
+
+it('saves the corrections made on the call with the mark, and marks nothing when the details do not save', function () {
+    $p = editPageMember('Checked Edit', 'checked-edit@bench.test', '9812300009');
+
+    $this->actingAs($this->staff, 'admin');
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->fillForm(['full_name' => '']) // required: the save stops
+        ->call('saveAndMarkChecked')
+        ->assertHasFormErrors(['full_name' => 'required']);
+    expect($p->fresh()->details_checked_at)->toBeNull()
+        ->and(AdminActivityLog::where('action', 'member_details_checked')->where('model_id', $p->id)->exists())->toBeFalse();
+
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->fillForm(['fam_father_name' => 'Checked Father'])
+        ->call('saveAndMarkChecked')
+        ->assertHasNoFormErrors()
+        ->assertNotified('Saved, and marked as checked on a call.');
+
+    // the member had no family or partner-preference row yet: their new rows' own values
+    // (sibling counts 0, "exclude same gotra" 0) are not staff edits, only the father's name is
+    $p = $p->fresh();
+    expect($p->familyDetail->father_name)->toBe('Checked Father')
+        ->and($p->details_checked_at)->not->toBeNull()
+        ->and(AdminActivityLog::where('action', 'member_details_checked')->where('model_id', $p->id)->sole()->changes)->toBe(['fields_changed' => 1])
+        ->and(AdminActivityLog::where('action', 'member_profile_updated')->where('model_id', $p->id)->sole()->changes['changed'])
+        ->toBe(['Family: father name' => '(empty) → Checked Father']);
+});
+
+it('shows the check on the members list, its filter and the view page', function () {
+    $checked = editPageMember('List Checked', 'list-checked@bench.test', '9812300010');
+    $unchecked = editPageMember('List Unchecked', 'list-unchecked@bench.test', '9812300011');
+    DB::table('profiles')->where('id', $checked->id)->update(['details_checked_at' => now()->subDays(3), 'details_checked_by' => $this->staff->id]);
+
+    $this->actingAs($this->staff, 'admin');
+    Livewire::test(ListUsers::class)
+        ->filterTable('details_checked_at', true)
+        ->assertCanSeeTableRecords([$checked->fresh()])
+        ->assertCanNotSeeTableRecords([$unchecked])
+        ->assertSee('Checked on call ' . now()->subDays(3)->displayTz()->format('d M Y'))
+        ->filterTable('details_checked_at', false)
+        ->assertCanSeeTableRecords([$unchecked])
+        ->assertCanNotSeeTableRecords([$checked->fresh()]);
+
+    Livewire::test(ViewUser::class, ['record' => $checked->fresh()->getRouteKey()])
+        ->assertSee('Details checked on a call')
+        ->assertSee(now()->subDays(3)->displayTz()->format('d M Y') . ' by Page Staff');
+});
+
+it('keeps the check staff-only: not in the member\'s own app profile, nor in what other members get', function () {
+    $p = editPageMember('Staff Only', 'staff-only@bench.test', '9812300012');
+    DB::table('profiles')->where('id', $p->id)->update(['details_checked_at' => now(), 'details_checked_by' => $this->staff->id]);
+    $viewer = app(MemberCreationService::class)->create(['full_name' => 'Staff Only Viewer', 'gender' => 'male', 'date_of_birth' => '1993-03-03',
+        'email' => 'staff-only-viewer@bench.test', 'phone' => '9812300013', 'religion' => 'Hindu', 'caste' => 'Billava'], ['temp_password' => 'page-pass-0013'])['profile'];
+
+    expect($p->fresh()->toArray())->not->toHaveKey('details_checked_at')->not->toHaveKey('details_checked_by');
+
+    $own = $this->actingAs($p->user, 'sanctum')->getJson('/api/v1/profile/me');
+    $other = $this->actingAs($viewer->user, 'sanctum')->getJson('/api/v1/profiles/' . $p->matri_id);
+    expect($own->getStatusCode())->toBe(200)
+        ->and($other->getStatusCode())->toBe(200)
+        ->and((string) $other->getContent())->toContain($p->matri_id); // the profile really came back
+    foreach ([$own, $other] as $res) {
+        expect((string) $res->getContent())->not->toContain('details_checked')->not->toContain('Page Staff');
+    }
 });
 
 it('asks for the right and logs Approve / Activate on the view page too', function () {
