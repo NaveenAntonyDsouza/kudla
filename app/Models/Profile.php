@@ -136,6 +136,25 @@ class Profile extends Model
             : $this->where('matri_id', \App\Support\MatriId::current((string) $value))->first();
     }
 
+    /**
+     * Members who have not deleted their account. On the website a deleted account keeps
+     * its profile (inactive, hidden) until its details are erased 90 days later, so staff
+     * lists leave it out explicitly; it is listed only under Deleted (6 Nov 2026: such
+     * members showed as APPROVED in All Members, and in the follow-ups to call).
+     */
+    public function scopeWithoutDeletedAccounts(Builder $query): Builder
+    {
+        return $query->whereNull($query->qualifyColumn('account_deleted_at'));
+    }
+
+    /** Deleted accounts: by the member (website or app) or by staff (soft-deleted). */
+    public function scopeDeletedAccounts(Builder $query): Builder
+    {
+        return $query->withTrashed()->where(fn (Builder $deleted) => $deleted
+            ->whereNotNull($query->qualifyColumn('deleted_at'))
+            ->orWhereNotNull($query->qualifyColumn('account_deleted_at')));
+    }
+
     /** True when the address used the old number or an old prefix: the page redirects to the Matri ID one. */
     public static function routeUsedOldKey(Profile $profile, string $parameter = 'profile'): bool
     {

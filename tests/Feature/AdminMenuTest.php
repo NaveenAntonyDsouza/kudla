@@ -55,6 +55,7 @@ describe('work queue', function () {
             $t->string('full_name')->nullable();
             $t->string('matri_id')->nullable();
             $t->boolean('is_approved')->default(true);
+            $t->timestamp('account_deleted_at')->nullable(); // the member deleted the account (not worked on)
             $t->softDeletes();
             $t->timestamps();
         });
@@ -126,6 +127,7 @@ describe('scorecard', function () {
             $t->boolean('is_active')->default(true);
             $t->boolean('is_approved')->default(true);
             $t->boolean('onboarding_completed')->default(false);
+            $t->timestamp('account_deleted_at')->nullable();
             $t->softDeletes();
             $t->timestamps();
         });

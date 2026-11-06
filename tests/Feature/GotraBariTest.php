@@ -78,6 +78,7 @@ it('hides profiles of my own bari only when I ask for it', function () {
     Schema::create('profiles', function (Blueprint $t) {
         $t->id();
         $t->string('matri_id')->nullable();
+        $t->timestamp('account_deleted_at')->nullable();
         $t->softDeletes();
         $t->timestamps();
     });
@@ -234,6 +235,7 @@ it('lists gotras / baris members typed that are not in the list, with their cast
         $t->id();
         $t->string('matri_id')->nullable();
         $t->string('full_name')->nullable();
+        $t->timestamp('account_deleted_at')->nullable();
         $t->softDeletes();
         $t->timestamps();
     });

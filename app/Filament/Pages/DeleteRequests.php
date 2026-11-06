@@ -31,10 +31,14 @@ class DeleteRequests extends Page
 
     // deletions in the last 7 days, for information, as on the Work Queue (6 Nov 2026: the
     // badge counted every deletion ever, 66 on Kudla, in red in the Today group, though
-    // there is nothing to do for them)
+    // there is nothing to do for them). Both kinds: by the member (account_deleted_at; on the
+    // website the profile stays until it is erased) and by staff (soft-deleted); the badge
+    // used to miss the members' own deletions (5 on Kudla that week).
     public static function getNavigationBadge(): ?string
     {
-        $count = Profile::onlyTrashed()->whereNotNull('full_name')->where('deleted_at', '>=', now()->subDays(7))->count();
+        $count = Profile::query()->deletedAccounts()->whereNotNull('full_name')
+            ->whereRaw('COALESCE(account_deleted_at, deleted_at) >= ?', [now()->subDays(7)])
+            ->count();
         return $count > 0 ? (string) $count : null;
     }
 
@@ -48,19 +52,22 @@ class DeleteRequests extends Page
         return 'Accounts deleted in the last 7 days';
     }
 
+    /** Deleted by the member (website or app) or by staff, newest first. */
     public function getDeletedProfiles()
     {
-        return Profile::onlyTrashed()
+        return Profile::query()->deletedAccounts()
             ->whereNotNull('full_name')
             ->with(['user', 'religiousInfo', 'locationInfo', 'primaryPhoto'])
-            ->orderByDesc('deleted_at')
+            ->orderByRaw('COALESCE(account_deleted_at, deleted_at) DESC')
             ->limit(50)
             ->get();
     }
 
+    /** Deactivated by staff (members' own deletions are under Deleted). */
     public function getDeactivatedProfiles()
     {
         return Profile::query()
+            ->withoutDeletedAccounts()
             ->whereNotNull('full_name')
             ->where('is_active', false)
             ->with(['user', 'religiousInfo', 'locationInfo', 'primaryPhoto'])

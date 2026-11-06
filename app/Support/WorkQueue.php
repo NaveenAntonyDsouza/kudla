@@ -73,6 +73,9 @@ class WorkQueue
     private static function definitions(): array
     {
         $pending = fn ($query, string $column = 'created_at') => [(clone $query)->count(), (clone $query)->min($column)];
+        // members who deleted their account are not worked on (6 Nov 2026: 2 overdue follow-ups
+        // and a bounced email on Kudla belonged to members who had deleted their account)
+        $current = fn ($profile) => $profile->withoutDeletedAccounts();
 
         return [
             'profiles' => [
@@ -80,7 +83,7 @@ class WorkQueue
                 'target_hours' => 24, 'target' => '1 day',
                 'can' => fn () => UserResource::canAccess(),
                 'url' => self::url(fn () => UserResource::getUrl('index', ['activeTab' => 'pending'])),
-                'measure' => fn () => $pending(Profile::whereNotNull('full_name')->where('is_approved', false)),
+                'measure' => fn () => $pending(Profile::whereNotNull('full_name')->where('is_approved', false)->withoutDeletedAccounts()),
             ],
             'photos' => [
                 'label' => 'Photos waiting for approval',
@@ -123,7 +126,7 @@ class WorkQueue
                 'target_hours' => 24, 'target' => 'on the day',
                 'can' => fn () => FollowUpReport::canAccess(),
                 'url' => self::url(fn () => FollowUpReport::getUrl()),
-                'measure' => fn () => $pending(ProfileNote::pendingFollowUp()->whereHas('profile')->where('follow_up_date', '<=', today()), 'follow_up_date'),
+                'measure' => fn () => $pending(ProfileNote::pendingFollowUp()->whereHas('profile', $current)->where('follow_up_date', '<=', today()), 'follow_up_date'),
             ],
             'whatsapp' => [
                 'label' => 'WhatsApp chats not read',
@@ -149,7 +152,7 @@ class WorkQueue
                 'can' => fn () => UserResource::canAccess(),
                 'url' => self::url(fn () => UserResource::getUrl('index', ['tableFilters' => ['email_bounced' => ['isActive' => true]]])),
                 // live members only; the line clears when their address is corrected
-                'measure' => fn () => $pending(User::whereNull('staff_role_id')->whereNotNull('email_undeliverable_at')->whereHas('profile'), 'email_undeliverable_at'),
+                'measure' => fn () => $pending(User::whereNull('staff_role_id')->whereNotNull('email_undeliverable_at')->whereHas('profile', $current), 'email_undeliverable_at'),
             ],
             'unlisted' => [
                 'label' => 'Castes and religions typed in by members (add to the lists)',
@@ -157,7 +160,7 @@ class WorkQueue
                 'can' => fn () => UnlistedCommunities::canAccess(),
                 'url' => self::url(fn () => UnlistedCommunities::getUrl()),
                 // only while the pick is still "Other" (ReligiousInfo::TYPED_ENTRIES)
-                'measure' => fn () => $pending(ReligiousInfo::query()->whereHas('profile')->withUnlistedEntry(), 'updated_at'),
+                'measure' => fn () => $pending(ReligiousInfo::query()->whereHas('profile', $current)->withUnlistedEntry(), 'updated_at'),
             ],
             'deleted' => [
                 'label' => 'Accounts deleted, last 7 days (for your information)',

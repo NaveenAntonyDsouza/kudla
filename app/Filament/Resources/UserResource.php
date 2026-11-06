@@ -119,12 +119,14 @@ class UserResource extends Resource
                                 })
                                 ->grow(false),
 
+                            // deleted / suspended / deactivated before approved (UserResource::listStatus)
                             Tables\Columns\TextColumn::make('is_approved')
                                 ->label('Status')
                                 ->badge()
-                                ->getStateUsing(fn (Profile $record): string => $record->is_approved ? 'APPROVED' : 'PENDING')
-                                ->icon(fn (string $state): string => $state === 'APPROVED' ? 'heroicon-o-check-badge' : 'heroicon-o-clock')
-                                ->color(fn (string $state): string => $state === 'APPROVED' ? 'success' : 'warning')
+                                ->getStateUsing(fn (Profile $record): string => self::listStatus($record)['label'])
+                                ->icon(fn (Profile $record): string => self::listStatus($record)['icon'])
+                                ->color(fn (Profile $record): string => self::listStatus($record)['color'])
+                                ->tooltip(fn (Profile $record): ?string => self::listStatus($record)['note'])
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('vip_featured_badges')
@@ -959,6 +961,43 @@ class UserResource extends Resource
             ->poll('60s');
     }
 
+    /**
+     * A member's main status on the members list: deleted first, then suspended or banned,
+     * deactivated, pending, approved. 6 Nov 2026: members who deleted their account on the
+     * website (the profile stays, inactive and hidden, until erased 90 days later), and
+     * members staff deactivated, showed as APPROVED.
+     *
+     * @return array{label: string, color: string, icon: string, note: ?string}
+     */
+    public static function listStatus(Profile $record): array
+    {
+        $date = fn ($at): string => $at->displayTz()->format('j M Y');
+
+        if ($record->account_deleted_at) {
+            return ['label' => 'DELETED', 'color' => 'danger', 'icon' => 'heroicon-o-trash',
+                'note' => 'Deleted by the member on ' . $date($record->account_deleted_at) . '; '
+                    . ($record->data_erased_at
+                        ? 'details erased on ' . $date($record->data_erased_at)
+                        : 'details are erased on ' . $date($record->account_deleted_at->copy()->addDays(\App\Services\MemberErasure::AFTER_DAYS)) . ' unless the account is activated again')];
+        }
+        if ($record->trashed()) {
+            return ['label' => 'DELETED', 'color' => 'danger', 'icon' => 'heroicon-o-trash',
+                'note' => 'Deleted by staff on ' . $date($record->deleted_at)];
+        }
+        if (in_array($record->suspension_status, ['suspended', 'banned'], true)) {
+            return ['label' => strtoupper($record->suspension_status), 'color' => 'danger', 'icon' => 'heroicon-o-shield-exclamation',
+                'note' => filled($record->suspension_reason) ? 'Reason: ' . $record->suspension_reason : null];
+        }
+        if (! $record->is_active) {
+            return ['label' => 'DEACTIVATED', 'color' => 'gray', 'icon' => 'heroicon-o-no-symbol',
+                'note' => ($record->is_approved ? 'Approved' : 'Not approved') . ', but deactivated: other members do not see this profile'];
+        }
+
+        return $record->is_approved
+            ? ['label' => 'APPROVED', 'color' => 'success', 'icon' => 'heroicon-o-check-badge', 'note' => null]
+            : ['label' => 'PENDING', 'color' => 'warning', 'icon' => 'heroicon-o-clock', 'note' => null];
+    }
+
     public static function infolist(Schema $infolist): Schema
     {
         return $infolist
@@ -996,6 +1035,12 @@ class UserResource extends Resource
                                 return ($m->plan?->plan_name ?? 'Unknown') . ($m->ends_at ? ' (exp ' . $m->ends_at->format('d M Y') . ')' : '');
                             })->badge()
                             ->color(fn (string $state): string => str_contains($state, 'Diamond Plus') ? 'success' : (str_contains($state, 'Diamond') ? 'info' : (str_contains($state, 'Gold') ? 'warning' : (str_contains($state, 'Silver') ? 'primary' : 'gray')))),
+                        // the member deleted the account (6 Nov 2026: the header said Approved)
+                        Infolists\Components\TextEntry::make('account_deleted_display')->label('Account deleted')
+                            ->getStateUsing(fn (Profile $record): ?string => self::listStatus($record)['note'])
+                            ->color('danger')
+                            ->weight('bold')
+                            ->visible(fn (Profile $record): bool => $record->account_deleted_at !== null || $record->trashed()),
                         // edit page → "Save and mark checked on call" (Nov 2026)
                         Infolists\Components\TextEntry::make('details_checked_display')->label('Details checked on a call')
                             ->getStateUsing(fn (Profile $record): string => $record->details_checked_at

@@ -30,7 +30,7 @@ class UnlistedCommunities extends Page
     public static function getNavigationBadge(): ?string
     {
         // only while the pick is still "Other" (ReligiousInfo::TYPED_ENTRIES)
-        $count = ReligiousInfo::query()->whereHas('profile')->withUnlistedEntry()->count();
+        $count = ReligiousInfo::query()->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts())->withUnlistedEntry()->count();
 
         return $count > 0 ? (string) $count : null;
     }
@@ -43,7 +43,7 @@ class UnlistedCommunities extends Page
             ->when(isset(ReligiousInfo::TYPED_ENTRIES[$column]),
                 fn ($q) => $q->unlistedIn($column),
                 fn ($q) => $q->whereNotNull($column)->where($column, '!=', ''))
-            ->whereHas('profile')
+            ->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts()) // live members only (6 Nov 2026: not accounts the member deleted)
             ->with('profile:id,matri_id,full_name')
             ->get()
             ->groupBy($column)
@@ -72,7 +72,7 @@ class UnlistedCommunities extends Page
 
         return ReligiousInfo::query()
             ->whereNotNull('gotra')->where('gotra', '!=', '')
-            ->whereHas('profile')
+            ->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts()) // live members only (6 Nov 2026: not accounts the member deleted)
             ->with('profile:id,matri_id,full_name')
             ->get()
             ->filter(function ($ri) use ($known) {
@@ -103,7 +103,7 @@ class UnlistedCommunities extends Page
 
         return ReligiousInfo::query()
             ->whereNotNull('sub_caste')->where('sub_caste', '!=', '')
-            ->whereHas('profile')
+            ->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts()) // live members only (6 Nov 2026: not accounts the member deleted)
             ->with('profile:id,matri_id,full_name')
             ->get()
             ->filter(fn ($ri) => ! in_array(mb_strtolower(trim($ri->sub_caste)), $skip, true))
