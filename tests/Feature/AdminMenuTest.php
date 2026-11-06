@@ -60,6 +60,7 @@ describe('work queue', function () {
         });
         Schema::create('contact_submissions', function (Blueprint $t) {
             $t->id();
+            $t->string('email')->default('someone@example.test');
             $t->string('status')->default('new');
             $t->timestamps();
         });
@@ -87,14 +88,16 @@ describe('work queue', function () {
             ['user_id' => 1, 'full_name' => 'B', 'is_approved' => true, 'created_at' => now()->subDays(9)],
         ]);
         DB::table('contact_submissions')->insert([
-            ['status' => 'new', 'created_at' => now()->subDays(3)],
-            ['status' => 'new', 'created_at' => now()->subHour()],
-            ['status' => 'replied', 'created_at' => now()->subDays(20)],
+            ['email' => 'asha@example.test', 'status' => 'new', 'created_at' => now()->subDays(3)],
+            ['email' => 'Asha@Example.test', 'status' => 'new', 'created_at' => now()->subHours(2)], // the same person again
+            ['email' => 'ravi@example.test', 'status' => 'new', 'created_at' => now()->subHour()],
+            ['email' => 'mohan@example.test', 'status' => 'replied', 'created_at' => now()->subDays(20)],
         ]);
 
         $items = collect(WorkQueue::items())->keyBy('key');
 
-        expect($items['contact']['count'])->toBe(2)
+        expect($items['contact']['count'])->toBe(2)                     // people waiting, not messages
+            ->and($items['contact']['oldest']->lt(now()->subDays(2)))->toBeTrue()
             ->and($items['contact']['overdue'])->toBeTrue()               // 3 days against a 1-day target
             ->and($items['profiles']['count'])->toBe(1)
             ->and($items['profiles']['overdue'])->toBeFalse()             // 3 hours

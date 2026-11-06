@@ -158,3 +158,21 @@ it('does not crash when admin email is not configured', function () {
     // Submission still persisted — that's the canonical record.
     expect(ContactSubmission::count())->toBe(1);
 });
+
+/* ==================================================================
+ |  Repeats (6 Nov 2026)
+ | ================================================================== */
+
+it('saves the same message from the same address once a day, and answers with the first one', function () {
+    $body = ['name' => 'Anita', 'email' => 'anita@e.com', 'subject' => 'Hi', 'message' => 'Please call me back'];
+
+    $first = app(ContactController::class)->submit(contactRequest(null, $body));
+    $again = app(ContactController::class)->submit(contactRequest(null, array_merge($body, ['email' => 'Anita@E.com', 'message' => ' Please call me  back '])));
+
+    expect($again->getStatusCode())->toBe(201)
+        ->and($again->getData(true)['data']['submission_id'])->toBe($first->getData(true)['data']['submission_id'])
+        ->and(ContactSubmission::count())->toBe(1);
+
+    app(ContactController::class)->submit(contactRequest(null, array_merge($body, ['message' => 'Another question'])));
+    expect(ContactSubmission::count())->toBe(2);
+});

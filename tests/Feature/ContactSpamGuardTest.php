@@ -75,11 +75,12 @@ it('drops bots silently: hidden field filled, no form timestamp, or sent too fas
 ]);
 
 it('lets one visitor send 3 messages per 10 minutes', function () {
+    // different messages: the same one again is saved once (below)
     foreach (range(1, ContactController::MAX_PER_WINDOW) as $i) {
-        $this->from('/contact-us')->post('/contact-us', contactForm())->assertSessionHas('success');
+        $this->from('/contact-us')->post('/contact-us', contactForm(['message' => "Question number {$i}"]))->assertSessionHas('success');
     }
 
-    $this->from('/contact-us')->post('/contact-us', contactForm())->assertSessionHasErrors('message');
+    $this->from('/contact-us')->post('/contact-us', contactForm(['message' => 'One more question']))->assertSessionHasErrors('message');
     expect(DB::table('contact_submissions')->count())->toBe(ContactController::MAX_PER_WINDOW);
 
     $this->travel(ContactController::WINDOW_SECONDS + 1)->seconds();
@@ -104,8 +105,34 @@ it('counts dropped bot messages per day and reason, for the weekly review', func
     $post(['form_ts' => encrypt(now()->timestamp)]);
     $post([]); // a person: not counted
 
+    $post([]); // the same message again: a repeat
+
     expect(ContactController::spamCounts(2))->toBe([
-        now()->toDateString() => ['hidden_field' => 2, 'no_form' => 1, 'too_fast' => 1],
-        now()->subDay()->toDateString() => ['hidden_field' => 0, 'no_form' => 0, 'too_fast' => 0],
+        now()->toDateString() => ['hidden_field' => 2, 'no_form' => 1, 'too_fast' => 1, 'repeat' => 1],
+        now()->subDay()->toDateString() => ['hidden_field' => 0, 'no_form' => 0, 'too_fast' => 0, 'repeat' => 0],
     ]);
+});
+
+/*
+| Repeats (6 Nov 2026): Kudla's inbox had the same message 3 and 4 times, sent within
+| a minute, each one saved and emailed to the office. The same text from the same
+| address within a day is now saved once; the sender sees the same thank-you.
+*/
+it('saves the same message from the same address once a day, whatever the letter case and spacing', function () {
+    $this->from('/contact-us')->post('/contact-us', contactForm())->assertSessionHas('success');
+    $this->from('/contact-us')->post('/contact-us', contactForm(['email' => 'ASHA@example.test', 'message' => "  How do I change\nmy photo? "]))
+        ->assertRedirect('/contact-us')->assertSessionHas('success');
+
+    expect(DB::table('contact_submissions')->count())->toBe(1);
+});
+
+it('saves a different message, the same message from someone else, and the same message a day later', function () {
+    $this->from('/contact-us')->post('/contact-us', contactForm());
+    $this->from('/contact-us')->post('/contact-us', contactForm(['message' => 'And how do I hide my profile?']));
+    $this->from('/contact-us')->post('/contact-us', contactForm(['email' => 'ravi@example.test']));
+    RateLimiter::clear('contact-form:127.0.0.1');
+    $this->travel(25)->hours();
+    $this->from('/contact-us')->post('/contact-us', contactForm(['form_ts' => encrypt(now()->subSeconds(30)->timestamp)]));
+
+    expect(DB::table('contact_submissions')->count())->toBe(4);
 });

@@ -68,7 +68,8 @@ class Scorecard
         ), 'percent');
         $add('paid', 'Paid plans bought', 'Payments received that week', fn ($f, $t) => Subscription::where('payment_status', 'paid')->where('created_at', '>=', $f)->where('created_at', '<', $t)->count(), money: true);
         $add('revenue', 'Revenue', 'Paid that week, in rupees', fn ($f, $t) => (int) round(Subscription::where('payment_status', 'paid')->where('created_at', '>=', $f)->where('created_at', '<', $t)->sum('amount') / 100), 'rupees', money: true);
-        $add('backlog', 'Support backlog', 'Contact messages not answered + follow-ups overdue (today\'s figure)', fn ($f, $t) => ContactSubmission::where('status', 'new')->count()
+        // people waiting, not messages (6 Nov 2026: 20 messages on Kudla came from 11 people)
+        $add('backlog', 'Support backlog', 'People waiting in the Contact Inbox + follow-ups overdue (today\'s figure)', fn ($f, $t) => ContactSubmission::sendersWaiting()
             + ProfileNote::pendingFollowUp()->whereHas('profile')->where('follow_up_date', '<', today())->count(), weekly: false);
         // member edit page → "Save and mark checked on call" (6 Nov 2026); each member once a week
         $add('details_checked', 'Details checked on calls', 'Members whose details staff went through with them on a call that week', fn ($f, $t) => AdminActivityLog::where('action', 'member_details_checked')

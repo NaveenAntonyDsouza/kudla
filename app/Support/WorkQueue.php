@@ -103,12 +103,13 @@ class WorkQueue
                 'url' => self::url(fn () => DocumentApprovalResource::getUrl('index')),
                 'measure' => fn () => $pending(ReligiousInfo::whereNotNull('jathakam_upload_url')->where('jathakam_approval_status', 'pending'), 'updated_at'),
             ],
+            // people, not messages: one person's repeats are answered once (6 Nov 2026)
             'contact' => [
-                'label' => 'Contact messages to answer',
+                'label' => 'People to answer in the Contact Inbox',
                 'target_hours' => 24, 'target' => '1 day',
                 'can' => fn () => ContactSubmissionResource::canAccess(),
                 'url' => self::url(fn () => ContactSubmissionResource::getUrl('index', ['activeTab' => 'new'])),
-                'measure' => fn () => $pending(ContactSubmission::where('status', 'new')),
+                'measure' => fn () => [ContactSubmission::sendersWaiting(), ContactSubmission::where('status', 'new')->min('created_at')],
             ],
             'reports' => [
                 'label' => 'Profiles reported by members',

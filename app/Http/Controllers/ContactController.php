@@ -50,6 +50,15 @@ class ContactController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
+        // The same message again from the same address within a day (a second press, a bot):
+        // saved and emailed once, and they see the same thank-you (6 Nov 2026: Kudla's inbox
+        // had the same message 3 and 4 times, sent within a minute).
+        if (ContactSubmission::findRepeat($validated['email'], $validated['message'])) {
+            self::countSpam('repeat');
+
+            return back()->with('success', $thanks);
+        }
+
         RateLimiter::hit($key, self::WINDOW_SECONDS);
         \App\Support\Analytics::track('contact_message_sent', ['subject' => $validated['subject'], 'member' => auth()->check()]);
 
@@ -110,7 +119,8 @@ class ContactController extends Controller
     /** Dropped bot messages are kept this many days, counted per day and reason. */
     public const SPAM_COUNT_DAYS = 90;
 
-    public const SPAM_REASONS = ['hidden_field', 'no_form', 'too_fast'];
+    /** repeat = the same message again from the same address within a day, on the website or in the app (6 Nov 2026). */
+    public const SPAM_REASONS = ['hidden_field', 'no_form', 'too_fast', 'repeat'];
 
     /**
      * Count a dropped bot message (Nov 2026: the weekly review could not see

@@ -49,6 +49,16 @@ class ContactController extends BaseApiController
             'message' => 'required|string|max:2000',
         ]);
 
+        // the same message again within a day: saved and emailed once, as on the website form
+        if ($repeat = ContactSubmission::findRepeat($data['email'], $data['message'])) {
+            \App\Http\Controllers\ContactController::countSpam('repeat');
+
+            return ApiResponse::created([
+                'submission_id' => (int) $repeat->id,
+                'message' => "Thanks! We'll reply within 24 hours.",
+            ]);
+        }
+
         $submission = ContactSubmission::create(array_merge($data, [
             'user_id' => $request->user()?->id,
             'ip_address' => $request->ip(),
