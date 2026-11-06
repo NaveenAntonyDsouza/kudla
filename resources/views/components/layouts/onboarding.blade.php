@@ -31,6 +31,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @include('components.partials.tracking-head')
+    {{-- a photo that does not fit its frame is trimmed 30% from the top, 70% from the bottom: faces sit above the middle (6 Nov 2026: a centred crop cut off foreheads; keeping the very top kept sky) --}}
+    <style>img.object-cover{object-position:50% 30%}</style>
 </head>
 <body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased min-h-screen flex flex-col">
     @include('components.partials.tracking-body')
