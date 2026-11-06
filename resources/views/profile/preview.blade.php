@@ -1,13 +1,19 @@
-<x-layouts.app title="Profile Preview">
+@php $ownPage = $isOwn ?? false; @endphp
+{{-- Another member's profile: their Matri ID, not "View & Edit / Profile Preview" (6 Nov 2026: members saw their own-profile labels on others' profiles) --}}
+<x-layouts.app :title="$ownPage ? 'Profile Preview' : 'Profile ' . $profile->matri_id">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- Breadcrumb --}}
         <p class="text-sm text-gray-500 mb-6">
             <a href="{{ route('dashboard') }}" class="hover:text-(--color-primary)">My Home</a>
             <span class="mx-1">/</span>
-            <a href="{{ route('profile.show') }}" class="hover:text-(--color-primary)">View & Edit</a>
-            <span class="mx-1">/</span>
-            <span class="text-gray-700 font-medium">Profile Preview</span>
+            @if($ownPage)
+                <a href="{{ route('profile.show') }}" class="hover:text-(--color-primary)">View & Edit</a>
+                <span class="mx-1">/</span>
+                <span class="text-gray-700 font-medium">Profile Preview</span>
+            @else
+                <span class="text-gray-700 font-medium">Profile {{ $profile->matri_id }}</span>
+            @endif
         </p>
 
         @if(session('success'))

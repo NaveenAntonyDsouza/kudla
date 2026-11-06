@@ -89,10 +89,14 @@ class DashboardController extends Controller
                 ->whereHas('viewerProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $profile))
                 ->with(['viewerProfile' => fn($q) => $q->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])])
                 ->orderByDesc('viewed_at')
-                ->limit(6)
+                ->limit(60)
                 ->get()
                 ->pluck('viewerProfile')
-                ->filter();
+                ->filter()
+                // each viewer once, at their latest view (6 Nov 2026: one member who viewed twice showed twice)
+                ->unique('id')
+                ->take(6)
+                ->values();
         } else {
             $recentViews = collect(); // Free users: show count only
         }

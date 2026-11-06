@@ -20,6 +20,8 @@ class ProfileViewController extends Controller
                 // Premium: show full profile list
                 // only viewers this member may see (4 Nov 2026: hidden / blocked viewers showed)
                 $views = ProfileView::where('viewed_profile_id', $profile->id)
+                    // each viewer once, at their latest view (6 Nov 2026: repeat views listed the same member twice)
+                    ->whereIn('id', ProfileView::where('viewed_profile_id', $profile->id)->selectRaw('MAX(id)')->groupBy('viewer_profile_id'))
                     ->whereHas('viewerProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $profile))
                     ->with(['viewerProfile.primaryPhoto', 'viewerProfile.religiousInfo', 'viewerProfile.educationDetail', 'viewerProfile.locationInfo'])
                     ->orderBy('viewed_at', 'desc')
@@ -33,6 +35,7 @@ class ProfileViewController extends Controller
         } else {
             $viewedByCount = 0;
             $views = ProfileView::where('viewer_profile_id', $profile->id)
+                ->whereIn('id', ProfileView::where('viewer_profile_id', $profile->id)->selectRaw('MAX(id)')->groupBy('viewed_profile_id'))
                 ->whereHas('viewedProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $profile))
                 ->with(['viewedProfile.primaryPhoto', 'viewedProfile.religiousInfo', 'viewedProfile.educationDetail', 'viewedProfile.locationInfo'])
                 ->orderBy('viewed_at', 'desc')

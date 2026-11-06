@@ -13,7 +13,7 @@ class ViewInterest extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            InterestResource::deleteAction(),
         ];
     }
 }

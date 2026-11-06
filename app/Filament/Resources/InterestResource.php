@@ -139,11 +139,44 @@ class InterestResource extends Resource
             ])
             ->actions([
                 \Filament\Actions\ViewAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                self::deleteAction(),
             ])
             ->bulkActions([])
             ->defaultSort('created_at', 'desc')
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['senderProfile', 'receiverProfile']));
+    }
+
+    /**
+     * Delete, with what it takes with it and a log line. 6 Nov 2026: an interest and two
+     * days of chat between KM100375 and KM100745 disappeared around 20 Oct; deleting here
+     * removes the messages too, and nothing recorded who did it.
+     */
+    public static function deleteAction(): \Filament\Actions\DeleteAction
+    {
+        return \Filament\Actions\DeleteAction::make()
+            ->modalDescription(fn (Interest $record): string => 'This also deletes the '
+                . \App\Models\InterestReply::where('interest_id', $record->id)->count()
+                . ' replies and chat messages in it, for both members. It cannot be undone.')
+            ->before(function (Interest $record): void {
+                try {
+                    \App\Models\AdminActivityLog::create([
+                        'admin_user_id' => auth()->id(),
+                        'action' => 'interest_deleted',
+                        'model_type' => 'Interest',
+                        'model_id' => $record->id,
+                        'changes' => [
+                            'sender' => $record->senderProfile?->matri_id,
+                            'receiver' => $record->receiverProfile?->matri_id,
+                            'status' => $record->status,
+                            'messages_deleted' => \App\Models\InterestReply::where('interest_id', $record->id)->count(),
+                            'sent_on' => (string) $record->created_at,
+                        ],
+                        'ip_address' => request()->ip(),
+                    ]);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            });
     }
 
     public static function infolist(Schema $infolist): Schema

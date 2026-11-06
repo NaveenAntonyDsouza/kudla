@@ -103,20 +103,36 @@ class InterestService
         }
 
         return DB::transaction(function () use ($sender, $receiver, $templateId, $customMessage, $declined) {
-            // Remove old declined/cancelled/expired records to satisfy unique constraint
-            Interest::where('sender_profile_id', $sender->id)
+            // A declined / withdrawn / expired interest to the same member is opened again, not
+            // replaced: one interest per pair (unique), and its messages hang off it. 6 Nov 2026:
+            // it was deleted, and the two members' whole chat went with it (KM100375 lost two
+            // days of messages when he sent a new interest on 21 Oct; 61 interests on Kudla).
+            $interest = Interest::where('sender_profile_id', $sender->id)
                 ->where('receiver_profile_id', $receiver->id)
                 ->whereIn('status', ['declined', 'cancelled', 'expired'])
-                ->delete();
+                ->lockForUpdate()
+                ->first();
 
-            // Create the interest
-            $interest = Interest::create([
-                'sender_profile_id' => $sender->id,
-                'receiver_profile_id' => $receiver->id,
-                'template_id' => $templateId,
-                'custom_message' => $customMessage,
-                'status' => 'pending',
-            ]);
+            if ($interest) {
+                $interest->forceFill([
+                    'template_id' => $templateId,
+                    'custom_message' => $customMessage,
+                    'status' => 'pending',
+                    'cancelled_at' => null,
+                    'is_trashed_by_sender' => false,
+                    'is_trashed_by_receiver' => false,
+                    'receiver_last_read_at' => null,
+                    'created_at' => now(), // sent again now: reminders and expiry count from today
+                ])->save();
+            } else {
+                $interest = Interest::create([
+                    'sender_profile_id' => $sender->id,
+                    'receiver_profile_id' => $receiver->id,
+                    'template_id' => $templateId,
+                    'custom_message' => $customMessage,
+                    'status' => 'pending',
+                ]);
+            }
 
             // Increment daily usage
             $usage = DailyInterestUsage::firstOrCreate(

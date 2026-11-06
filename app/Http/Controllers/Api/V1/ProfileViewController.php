@@ -166,6 +166,8 @@ class ProfileViewController extends BaseApiController
     {
         return ProfileView::query()
             ->where('viewed_profile_id', $viewer->id)
+            // each viewer once, at their latest view (6 Nov 2026, as on the website)
+            ->whereIn('id', ProfileView::where('viewed_profile_id', $viewer->id)->selectRaw('MAX(id)')->groupBy('viewer_profile_id'))
             // only viewers this member may see (privacy bench, 4 Nov 2026: hidden, blocked
             // and limited viewers showed here; the website's list was fixed the same day)
             ->whereHas('viewerProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $viewer))
@@ -178,6 +180,7 @@ class ProfileViewController extends BaseApiController
     {
         return ProfileView::query()
             ->where('viewer_profile_id', $viewer->id)
+            ->whereIn('id', ProfileView::where('viewer_profile_id', $viewer->id)->selectRaw('MAX(id)')->groupBy('viewed_profile_id'))
             ->whereHas('viewedProfile', fn ($q) => \App\Support\ProfileVisibility::forMember($q, $viewer))
             ->with(['viewedProfile.religiousInfo', 'viewedProfile.educationDetail', 'viewedProfile.locationInfo', 'viewedProfile.primaryPhoto', 'viewedProfile.user'])
             ->orderByDesc('viewed_at')
