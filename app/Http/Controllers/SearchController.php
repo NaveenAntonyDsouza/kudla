@@ -264,7 +264,20 @@ class SearchController extends Controller
             'age_to' => $isMale ? $age : min($age + 10, 70),
             'height_from' => $isMale ? '134 cm - 4 ft 05 inch' : ($profile->height ?? '134 cm - 4 ft 05 inch'),
             'height_to' => $isMale ? ($profile->height ?? '213 cm - 7 ft 00 inch') : '213 cm - 7 ft 00 inch',
+            // a fresh form starts with the member's own religion, as Partner Preferences does
+            // (owner, 6 Nov 2026); a search already in the address keeps its own choice
+            'religion' => (string) ($profile->religiousInfo?->religion ?? ''),
         ];
+    }
+
+    /** The religion(s) a members' search form starts with: the address's, or on a fresh form the member's own. */
+    public static function startReligions(array $defaults): array
+    {
+        if (request()->query() !== []) {
+            return array_values(array_filter((array) request('religion', []), fn ($r) => is_string($r) && $r !== '' && $r !== 'Any'));
+        }
+
+        return array_values(array_filter([$defaults['religion'] ?? '']));
     }
 
     public static function memberSearchUrl(array $query): string

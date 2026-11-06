@@ -38,7 +38,8 @@
                     @endphp
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6"
                          x-data="{
-                            selectedReligion: @js(request('religion', '')),
+                            {{-- a member's fresh form starts with their own religion (6 Nov 2026); visitors and searches in the address as before --}}
+                            selectedReligion: @js(request()->query() === [] && filled($quickDefaults['religion'] ?? null) ? $quickDefaults['religion'] : request('religion', '')),
                             communities: [],
                             selectedCastes: {{ Js::from($quickCasteSelected) }},
                             casteAny: {{ $quickCasteAny ? 'true' : 'false' }},

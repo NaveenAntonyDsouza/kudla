@@ -1,11 +1,21 @@
 <x-layouts.app title="Search">
+    {{-- religions = the Religion box's picks, which show Caste (Hindu, Jain) and Denomination
+         (Christian). 6 Nov 2026: nothing ever filled it in (the box announces its picks as
+         multiselect-change and this page did not listen), so members never saw Caste or
+         Denomination. It starts with the religions already chosen (Modify Search, a saved
+         search, Load Partner Preferences); castes / denominations that no longer fit the
+         religion are cleared, as the search applies them whenever they are sent. --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
         activeTab: @js($activeTab),
-        religions: [],
+        religions: @js($startReligions = \App\Http\Controllers\SearchController::startReligions($defaults ?? [])),
         moreOpen: false,
         showProfileOpen: false,
         lifestyleOpen: false,
         hasReligion(r) { return this.religions.includes(r); }
+    }" @multiselect-change.window="if ($event.detail.name === 'religion') {
+        religions = $event.detail.value;
+        if (! hasReligion('Hindu') && ! hasReligion('Jain')) $dispatch('multiselect-clear', { name: 'caste' });
+        if (! hasReligion('Christian')) $dispatch('multiselect-clear', { name: 'denomination' });
     }">
 
         {{-- Breadcrumb --}}
@@ -88,7 +98,7 @@
                             <div class="mt-5">
                                 <x-multi-select name="religion" label="Religion"
                                     :options="config('reference_data.religion_list', [])"
-                                    :selected="(array) request('religion', [])"
+                                    :selected="$startReligions"
                                     emitTo="religions" />
                             </div>
 
