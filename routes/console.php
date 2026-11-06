@@ -61,6 +61,14 @@ Schedule::command('interests:expire', ['--scheduled'])->dailyAt('07:30')->withou
 // privacy policy: personal data erased 90 days after "Delete Account" (App\Services\MemberErasure)
 Schedule::command('members:erase-deleted')->dailyAt('03:15')->withoutOverlapping();
 
+// Nightly database backup to storage/backups (14 daily + 6 monthly), before the erasure
+// above; copied to the other hosting account at 04:00 (db:offsite-copy, below).
+// A failure or a missing backup is logged as an error → the hourly error alert emails.
+Schedule::command('db:backup')->dailyAt('02:30')->withoutOverlapping(60);
+Schedule::command('db:backup', ['--check'])->dailyAt('09:15');
+// copies them to the other hosting account; runs only where offsite_backup_script is set
+Schedule::command('db:offsite-copy')->dailyAt('04:00')->withoutOverlapping(60);
+
 // Uptime alarm: emails the owner when a site on the other server stops loading
 // (site settings uptime_watch_urls + uptime_alert_email; nothing when unset)
 Schedule::command('uptime:watch')->everyFiveMinutes()->withoutOverlapping(10);
