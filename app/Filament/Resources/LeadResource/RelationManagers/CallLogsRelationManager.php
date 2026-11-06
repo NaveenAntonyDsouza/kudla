@@ -7,6 +7,7 @@ use App\Support\Permissions;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -57,7 +58,7 @@ class CallLogsRelationManager extends RelationManager
             Forms\Components\DatePicker::make('follow_up_date')
                 ->label('Follow-up Date')
                 ->minDate(today())
-                ->visible(fn (Forms\Get $get): bool => (bool) $get('follow_up_required')),
+                ->visible(fn (Get $get): bool => (bool) $get('follow_up_required')),
         ]);
     }
 

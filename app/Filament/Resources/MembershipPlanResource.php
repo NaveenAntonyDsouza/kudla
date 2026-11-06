@@ -7,6 +7,7 @@ use App\Models\MembershipPlan;
 use BackedEnum;
 use Filament\Forms;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -65,7 +66,7 @@ class MembershipPlanResource extends Resource
                 ->required()
                 ->maxLength(50)
                 ->live(onBlur: true)
-                ->afterStateUpdated(fn (Forms\Set $set, ?string $state, string $operation) =>
+                ->afterStateUpdated(fn (Set $set, ?string $state, string $operation) =>
                     $operation === 'create' ? $set('slug', Str::slug($state)) : null
                 ),
 

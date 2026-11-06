@@ -17,6 +17,7 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -325,7 +326,7 @@ class LeadResource extends Resource
                         Forms\Components\DatePicker::make('follow_up_date')
                             ->label('Follow-up Date')
                             ->minDate(today())
-                            ->visible(fn (Forms\Get $get): bool => (bool) $get('follow_up_required')),
+                            ->visible(fn (Get $get): bool => (bool) $get('follow_up_required')),
 
                         Forms\Components\DateTimePicker::make('called_at')
                             ->label('Called At')

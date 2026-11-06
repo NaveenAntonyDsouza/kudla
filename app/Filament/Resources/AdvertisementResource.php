@@ -7,6 +7,7 @@ use App\Models\Advertisement;
 use BackedEnum;
 use Filament\Forms;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -98,7 +99,7 @@ class AdvertisementResource extends Resource
                         ->directory('advertisements')
                         ->disk('public')
                         ->helperText('Recommended sizes: 728x90 (banner), 300x250 (sidebar), 320x50 (mobile)')
-                        ->visible(fn (Forms\Get $get) => $get('type') === 'image')
+                        ->visible(fn (Get $get) => $get('type') === 'image')
                         ->columnSpanFull(),
 
                     Forms\Components\TextInput::make('click_url')
@@ -106,14 +107,14 @@ class AdvertisementResource extends Resource
                         ->url()
                         ->placeholder('https://...')
                         ->helperText('Where the user goes when clicking the ad.')
-                        ->visible(fn (Forms\Get $get) => $get('type') === 'image')
+                        ->visible(fn (Get $get) => $get('type') === 'image')
                         ->columnSpanFull(),
 
                     Forms\Components\Textarea::make('html_code')
                         ->label('HTML / AdSense Code')
                         ->rows(6)
                         ->helperText('Paste your Google AdSense code or custom HTML here.')
-                        ->visible(fn (Forms\Get $get) => $get('type') === 'html')
+                        ->visible(fn (Get $get) => $get('type') === 'html')
                         ->columnSpanFull(),
                 ]),
 
