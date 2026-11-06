@@ -119,3 +119,23 @@ it('counts the member\'s own deletion on Delete Requests, and leaves their follo
         ->assertSeeText('Kept Member')
         ->assertDontSeeText('Gone Member');
 });
+
+it('treats a deletion in the app the same way: hidden from members, only under Deleted, can still be cancelled', function () {
+    $this->actingAs($this->gone->user, 'sanctum')
+        ->postJson('/api/v1/settings/delete', ['password' => 'del-pass-0001', 'reason' => 'found_partner'])
+        ->assertOk();
+    $gone = Profile::withTrashed()->find($this->gone->id);
+    expect($gone->account_deleted_at)->not->toBeNull()
+        ->and($gone->trashed())->toBeFalse()
+        ->and(UserResource::listStatus($gone)['label'])->toBe('DELETED');
+
+    // another member can no longer open the profile, in the app or on the website
+    $bride = app(MemberCreationService::class)->create(['full_name' => 'Other Bride', 'gender' => 'female', 'date_of_birth' => '1995-02-02',
+        'email' => 'other-bride@bench.test', 'phone' => '9812400009', 'religion' => 'Hindu', 'caste' => 'Billava'], ['temp_password' => 'del-pass-0009'])['profile'];
+    expect($this->actingAs($bride->user, 'sanctum')->getJson('/api/v1/profiles/' . $gone->matri_id)->getStatusCode())->toBeIn([403, 404]);
+    expect($this->actingAs($bride->user)->get('/profile/' . $gone->matri_id)->getStatusCode())->toBeIn([403, 404]);
+
+    $this->actingAs($this->staff, 'admin');
+    Livewire::test(ListUsers::class)->assertCanNotSeeTableRecords([$gone]);
+    Livewire::test(ListUsers::class)->set('activeTab', 'deleted')->assertCanSeeTableRecords([$gone]);
+});

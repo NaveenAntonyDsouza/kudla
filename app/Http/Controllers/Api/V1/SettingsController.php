@@ -360,8 +360,9 @@ class SettingsController extends BaseApiController
             'deletion_reason' => $reasonText,
             'account_deleted_at' => now(), // details erased after 90 days (members:erase-deleted)
         ]);
-        // Soft-delete via the SoftDeletes trait — auto-sets deleted_at.
-        $user->profile->delete();
+        // Not soft-deleted (6 Nov 2026): the same as the website's Delete Account, so staff see
+        // it as the member's own deletion (Deleted tab, Delete Requests) and can still cancel it
+        // within the 90 days (member's page → Status → Activate); the details are erased then.
 
         $this->auth->revokeAllTokens($user);
 

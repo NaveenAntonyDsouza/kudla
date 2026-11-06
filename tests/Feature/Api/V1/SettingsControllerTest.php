@@ -408,7 +408,8 @@ it('delete soft-deletes profile + revokes all tokens + records reason', function
     expect($profile->is_active)->toBeFalse();
     expect($profile->is_hidden)->toBeTrue();
     expect($profile->deletion_reason)->toBe('found_partner');
-    expect($profile->trashed())->toBeTrue();  // SoftDeletes set deleted_at
+    expect($profile->account_deleted_at)->not->toBeNull()
+        ->and($profile->trashed())->toBeFalse(); // as on the website: staff can cancel it within 90 days (6 Nov 2026)
 
     // AuthService::revokeAllTokens was called once.
     expect($auth->revokeAllCalledCount)->toBe(1);
