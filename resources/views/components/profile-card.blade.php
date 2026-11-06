@@ -86,7 +86,7 @@
                       style="position: absolute; top: 8px; left: 8px; z-index: 5; padding: 3px 8px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 700;">Same {{ $sameLineage['kind'] }}</span>
             @endif
             @if($showPhoto && $hasPhoto)
-                <img src="{{ $p->primaryPhoto->full_url }}" alt="{{ $p->matri_id }}"
+                <img src="{{ $p->primaryPhoto->medium_url }}" alt="{{ $p->matri_id }}"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
             @elseif($photoOverlay === 'hidden' && $hasPhoto)
                 {{-- Locked placeholder — the real image is never sent (a CSS

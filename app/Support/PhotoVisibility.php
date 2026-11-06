@@ -97,10 +97,15 @@ class PhotoVisibility
         };
     }
 
-    /** The photo URL if the viewer may see it, otherwise null (render a placeholder). */
+    /**
+     * The photo URL if the viewer may see it, otherwise null (render a placeholder). The
+     * 600 px version (7 Nov 2026): lists, chats, cards and emails show it at 300 px or less;
+     * the 1200 px one made a page of 20 cards several megabytes on mobile. Photos without
+     * a 600 px version fall back to the full one (ProfilePhoto::getMediumUrlAttribute).
+     */
     public static function url(Profile $owner, ?Profile $viewer = null): ?string
     {
-        return self::state($owner, $viewer) === self::VISIBLE ? $owner->primaryPhoto->full_url : null;
+        return self::state($owner, $viewer) === self::VISIBLE ? $owner->primaryPhoto->medium_url : null;
     }
 
     /** Shortcut for Blade: the current logged-in member as viewer. */

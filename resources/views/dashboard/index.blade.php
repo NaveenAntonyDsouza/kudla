@@ -19,7 +19,7 @@
                     <div class="bg-gradient-to-br from-(--color-primary) to-(--color-primary)/70 px-6 py-8 text-center">
                         @if($profile->primaryPhoto)
                             <div class="w-24 h-24 mx-auto rounded-full overflow-hidden border-2 border-white/30 mb-3">
-                                <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}" class="w-full h-full object-cover">
+                                <img src="{{ $profile->primaryPhoto->medium_url }}" alt="{{ $profile->full_name }}" class="w-full h-full object-cover">
                             </div>
                         @else
                             <div class="w-24 h-24 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-3">
