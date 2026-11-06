@@ -103,7 +103,7 @@ describe('work queue', function () {
             ->and($items['profiles']['count'])->toBe(1)
             ->and($items['profiles']['overdue'])->toBeFalse()             // 3 hours
             ->and(WorkQueue::items()[0]['key'])->toBe('contact')          // overdue first
-            ->and($items['contact']['url'])->toContain('activeTab=new');
+            ->and($items['contact']['url'])->toContain('tab=new')->not->toContain('activeTab'); // Filament list pages read ?tab= (6 Nov 2026: ?activeTab= opened the first tab)
         // lines whose tables this site doesn't have are simply left out
         expect($items->has('photos'))->toBeFalse();
     });

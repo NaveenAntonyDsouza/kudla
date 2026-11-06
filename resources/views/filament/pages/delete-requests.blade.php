@@ -38,7 +38,7 @@
                     </x-filament::button>
                 @else
                     <x-filament::button tag="a" size="sm" color="gray" icon="heroicon-o-arrow-uturn-left"
-                        href="{{ route('filament.admin.resources.users.index', ['activeTab' => 'deleted']) }}">
+                        href="{{ route('filament.admin.resources.users.index', ['tab' => 'deleted']) }}">
                         Manage in Users
                     </x-filament::button>
                 @endif
