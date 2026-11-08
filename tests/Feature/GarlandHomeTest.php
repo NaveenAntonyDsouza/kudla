@@ -272,11 +272,11 @@ it('builds browse links from Discover pages that have members, without "Profiles
 it('lets the admin switch each new section on or off, matchmaking off by default', function () {
     $admin = file_get_contents(app_path('Filament/Pages/HomepageSettings.php'));
 
-    foreach (['show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking'] as $key) {
+    foreach (['show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking', 'show_whatsapp_section'] as $key) {
         expect($admin)->toContain("Toggle::make('{$key}')")->toContain("'{$key}' => (\$settings['{$key}']");
     }
     expect($admin)->toContain("'show_assisted_matchmaking' => (\$settings['show_assisted_matchmaking'] ?? '0') === '1'")
-        ->toContain("'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note', 'show_app_section'];");
+        ->toContain("'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note', 'show_app_section', 'show_whatsapp_section'];");
 });
 
 it('centres two Why Choose cards in two columns instead of leaving a third column empty', function () {
@@ -294,4 +294,18 @@ it('names the after-the-fact check honestly when profiles go live without review
     expect(file_get_contents(resource_path('views/pages/home/sections/safety.blade.php')))
         ->toContain(": ['Fake profiles removed', 'Our team removes fake or misleading profiles, and you can report anyone to us.'")
         ->not->toContain('Watched by our team');
+});
+
+it('shows "Follow us on WhatsApp" with a QR code only when the site has a channel and the switch is on', function () {
+    expect(($this->home)('harmony'))->not->toContain('on WhatsApp</h2>');
+
+    SiteSetting::setValue('whatsapp_channel_url', 'https://whatsapp.com/channel/0029TestChannel');
+    $html = ($this->home)('harmony');
+    expect($html)->toContain('on WhatsApp</h2>')
+        ->toContain('href="https://whatsapp.com/channel/0029TestChannel"')
+        ->toContain('src="data:image/svg+xml;base64,')
+        ->toContain('Your phone number stays private');
+
+    SiteSetting::setValue('show_whatsapp_section', '0');
+    expect(($this->home)('harmony'))->not->toContain('on WhatsApp</h2>');
 });

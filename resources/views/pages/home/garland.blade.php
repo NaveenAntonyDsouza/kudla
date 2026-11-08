@@ -779,6 +779,10 @@
     </section>
     @endif
 
+    @if($section('show_whatsapp_section'))
+        @include('pages.home.sections.whatsapp')
+    @endif
+
     @if($section('show_contact_section'))
         @include('pages.home.sections.contact')
     @endif

@@ -126,7 +126,7 @@ it('cancels the erasure when staff reactivate the account, and says 90 days when
     expect(file_get_contents(app_path('Http/Controllers/SettingsController.php')))->toContain("'account_deleted_at' => now()")
         ->and(file_get_contents(app_path('Http/Controllers/Api/V1/SettingsController.php')))->toContain("'account_deleted_at' => now()")
         ->and(file_get_contents(resource_path('views/settings/partials/delete-account.blade.php')))->toContain('permanently deleted after 90 days')
-        ->and(file_get_contents(base_path('routes/console.php')))->toContain("Schedule::command('members:erase-deleted')");
+        ->and(file_get_contents(base_path('routes/console.php')))->toContain("ScheduledCommand::add('members:erase-deleted')");
 });
 
 it('shows paid plans as coming soon when no payment method is set up', function () {

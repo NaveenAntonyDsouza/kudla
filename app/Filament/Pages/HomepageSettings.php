@@ -87,6 +87,7 @@ class HomepageSettings extends Page implements HasForms
             'community_hidden_religions' => \App\Services\DiscoverConfigService::hiddenCommunityReligions(),
             'show_contact_section' => ($settings['show_contact_section'] ?? '1') === '1',
             'show_app_section' => ($settings['show_app_section'] ?? '1') === '1',
+            'show_whatsapp_section' => ($settings['show_whatsapp_section'] ?? '1') === '1',
             'show_assisted_matchmaking' => ($settings['show_assisted_matchmaking'] ?? '0') === '1',
             'assisted_title' => $settings['assisted_title'] ?? '',
             'assisted_text' => $settings['assisted_text'] ?? '',
@@ -303,6 +304,9 @@ class HomepageSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('show_app_section')
                             ->label('Get the App')
                             ->helperText('Google Play / App Store buttons (shown only when the store links are set). The footer keeps a small app button either way.'),
+                        Forms\Components\Toggle::make('show_whatsapp_section')
+                            ->label('WhatsApp Channel')
+                            ->helperText('"Follow us on WhatsApp" with a button and, on computers, a QR code. Shown only when the WhatsApp Channel URL is set in Site Settings → Social Links.'),
                         Forms\Components\Toggle::make('show_assisted_matchmaking')
                             ->label('Personal Matchmaking')
                             ->helperText('Introduces a staff-assisted matchmaking service with a "Talk to us" WhatsApp button. Turn on only when you offer it.')
@@ -494,7 +498,7 @@ class HomepageSettings extends Page implements HasForms
             SiteSetting::setValue('hero_image_url', '/storage/' . $heroUpload);
         }
 
-        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities', 'show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note', 'show_app_section'];
+        $toggleFields = ['announcement_enabled', 'offer_banner_enabled', 'offer_banner_membership_only', 'stats_auto_compute', 'show_stats_bar', 'show_featured_profiles', 'show_communities_section', 'show_why_choose_us', 'show_success_stories', 'show_faq_section', 'featured_profiles_manual_only', 'hide_empty_communities', 'show_plans_section', 'show_safety_section', 'show_browse_section', 'show_contact_section', 'show_assisted_matchmaking', 'show_not_dating_note', 'show_app_section', 'show_whatsapp_section'];
         $skipFields = ['hero_image_upload', 'current_hero_image', 'community_religions'];
 
         // Homepage community sections: store the Repeater rows as an ordered,
