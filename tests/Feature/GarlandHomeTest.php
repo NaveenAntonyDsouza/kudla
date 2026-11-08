@@ -309,3 +309,12 @@ it('shows "Follow us on WhatsApp" with a QR code only when the site has a channe
     SiteSetting::setValue('show_whatsapp_section', '0');
     expect(($this->home)('harmony'))->not->toContain('on WhatsApp</h2>');
 });
+
+it('puts "Browse profiles by" straight after the search box, before How It Works', function () {
+    $src = file_get_contents(resource_path('views/pages/home/garland.blade.php'));
+    $browse = strpos($src, "@include('pages.home.sections.browse')");
+
+    expect(substr_count($src, "@include('pages.home.sections.browse')"))->toBe(1)
+        ->and($browse)->toBeGreaterThan(strpos($src, '<section class="g-search-sec">'))
+        ->and($browse)->toBeLessThan(strpos($src, '{{-- 3. How it works --}}'));
+});

@@ -166,6 +166,22 @@
                     </div>
                 @endif
 
+                {{-- Mutual Matches first (Nov 2026): their preferences fit this member too,
+                     so an interest to them is the likeliest to be accepted --}}
+                @if($mutualMatches->count() > 0)
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Mutual Matches</h2>
+                            <a href="{{ route('matches.mutual') }}" class="text-sm font-medium text-(--color-primary) hover:underline">See All</a>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                            @foreach($mutualMatches as $p)
+                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Recommended Matches --}}
                 @if($recommendedMatches->count() > 0)
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
@@ -196,21 +212,6 @@
                         </a>
                     @endforeach
                 </div>
-
-                {{-- Mutual Matches --}}
-                @if($mutualMatches->count() > 0)
-                    <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-semibold text-gray-900">Mutual Matches</h2>
-                            <a href="{{ route('matches.mutual') }}" class="text-sm font-medium text-(--color-primary) hover:underline">See All</a>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                            @foreach($mutualMatches as $p)
-                                <x-profile-card :profile="$p" :matchScore="$p->match_score ?? null" :matchBadge="$p->match_badge ?? null" />
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
 
                 {{-- Recent Profile Views (who viewed me) --}}
                 @if(!$isPremium && $viewCount > 0)

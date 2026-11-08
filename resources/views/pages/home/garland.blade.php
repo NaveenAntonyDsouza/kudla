@@ -500,6 +500,12 @@
         </div>
     </section>
 
+    {{-- 2b. Browse profiles by (Nov 2026: moved up from after Safety, so visitors see
+         real member groups straight after the search box) --}}
+    @if($section(\App\Support\HomeBrowse::SETTING))
+        @include('pages.home.sections.browse')
+    @endif
+
     {{-- 3. How it works --}}
     <section class="g-section g-ivory">
         <div class="g-wrap">
@@ -653,9 +659,6 @@
     @endif
     @if($section('show_safety_section'))
         @include('pages.home.sections.safety')
-    @endif
-    @if($section(\App\Support\HomeBrowse::SETTING))
-        @include('pages.home.sections.browse')
     @endif
 
     {{-- 6. Browse by community (links as in Classic) --}}

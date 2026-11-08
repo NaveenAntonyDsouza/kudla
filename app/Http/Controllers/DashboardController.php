@@ -78,6 +78,8 @@ class DashboardController extends Controller
             $mutualPaginator = $this->matchingService->getMutualMatches($profile, 4);
             $mutualMatches = collect($mutualPaginator->items());
         }
+        // Mutual Matches now sit just above Recommended: don't show the same member twice
+        $recommendedMatches = $recommendedMatches->reject(fn ($p) => $mutualMatches->contains('id', $p->id))->values();
 
         // Recent profile views (who viewed me — last 6)
         $isPremium = $user->isPremium();
