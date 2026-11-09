@@ -41,3 +41,11 @@ it('never lists a member the viewer may not see, and scans clean for private det
     expect(collect($res->viewData('views')->items())->pluck('id'))->not->toContain($m['VB']->id)
         ->and($this->b->scan((string) $res->getContent(), $m['T'], 'contact views'))->toBe([]);
 });
+
+it('counts "Viewed My Contact" on the dashboard the same way as the list, and links to it', function () {
+    $m = $this->b->m;
+    $res = $this->actingAs($m['T']->user)->get('/dashboard')->assertOk();
+
+    expect($res->viewData('interestStats')['contact_views'])->toBe(1)   // V; VB is blocked
+        ->and((string) $res->getContent())->toContain('Viewed My Contact')->toContain('tab=contact_viewed_by');
+});

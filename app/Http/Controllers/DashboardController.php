@@ -126,6 +126,11 @@ class DashboardController extends Controller
             'received' => $profile->receivedInterests()->where('status', 'pending')->count(),
             'views' => $profile->viewedByOthers()->count(),
             'shortlisted' => $profile->shortlists()->count(),
+            // members who opened this member's phone / WhatsApp, counted like the
+            // "Viewed My Contact" list it links to (only members they may see)
+            'contact_views' => \App\Support\ProfileVisibility::forMember(\App\Models\Profile::query(), $profile)
+                ->whereIn('profiles.id', \Illuminate\Support\Facades\DB::table('contact_views')->select('viewer_profile_id')->where('target_profile_id', $profile->id))
+                ->count(),
         ];
 
         return view('dashboard.index', compact(

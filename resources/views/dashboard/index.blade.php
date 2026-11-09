@@ -199,17 +199,18 @@
                     </div>
                 @endif
 
-                {{-- Stats Bar --}}
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {{-- Stats Bar: what to act on first (replies owed, accepted, who opened my contact), then the rest (Nov 2026) --}}
+                <div class="grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
                     @foreach([
-                        ['label' => 'Interest Sent', 'count' => $interestStats['sent'], 'route' => route('interests.inbox', ['tab' => 'sent']), 'color' => 'text-(--color-primary)'],
-                        ['label' => 'Interest Accepted', 'count' => $interestStats['accepted'], 'route' => route('interests.inbox', ['tab' => 'all', 'filter' => 'accepted_me']), 'color' => 'text-green-600'],
+                        ['label' => 'Waiting for Your Reply', 'count' => $interestStats['received'], 'route' => route('interests.inbox', ['tab' => 'received']), 'color' => 'text-amber-600'],
+                        ['label' => 'Accepted My Interest', 'count' => $interestStats['accepted'], 'route' => route('interests.inbox', ['tab' => 'all', 'filter' => 'accepted_me']), 'color' => 'text-green-600'],
+                        ['label' => 'Viewed My Contact', 'count' => $interestStats['contact_views'], 'route' => route('views.index', ['tab' => 'contact_viewed_by']), 'color' => '', 'style' => 'color:#0d9488'],
                         ['label' => 'Profile Views', 'count' => $interestStats['views'], 'route' => route('views.index'), 'color' => 'text-blue-600'],
-                        ['label' => 'Pending Received', 'count' => $interestStats['received'], 'route' => route('interests.inbox', ['tab' => 'received']), 'color' => 'text-amber-600'],
                         ['label' => 'Shortlisted', 'count' => $interestStats['shortlisted'], 'route' => route('shortlist.index'), 'color' => 'text-pink-600'],
+                        ['label' => 'Interest Sent', 'count' => $interestStats['sent'], 'route' => route('interests.inbox', ['tab' => 'sent']), 'color' => 'text-(--color-primary)'],
                     ] as $stat)
                         <a href="{{ $stat['route'] }}" class="bg-white rounded-lg border border-gray-200 shadow-xs p-4 text-center hover:border-(--color-primary)/30 hover:shadow-md transition-all">
-                            <p class="text-2xl font-bold {{ $stat['color'] }}">{{ $stat['count'] }}</p>
+                            <p class="text-2xl font-bold {{ $stat['color'] }}" @if(! empty($stat['style'])) style="{{ $stat['style'] }}" @endif>{{ $stat['count'] }}</p>
                             <p class="text-xs text-gray-500 mt-1">{{ $stat['label'] }}</p>
                         </a>
                     @endforeach

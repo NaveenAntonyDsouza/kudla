@@ -18,7 +18,7 @@
         </div>
 
         @if($isContactTab)
-            <p class="text-xs text-gray-500 -mt-3 mb-4">{{ $tab === 'contact_viewed_by' ? 'Members who opened your phone number or WhatsApp.' : 'Members whose phone number or WhatsApp you opened.' }}</p>
+            <p class="text-xs text-gray-500 -mt-2 mb-4">{{ $tab === 'contact_viewed_by' ? 'Members who opened your phone number or WhatsApp.' : 'Members whose phone number or WhatsApp you opened.' }}</p>
         @endif
 
         {{-- Premium gate for "Viewed By" tab --}}
