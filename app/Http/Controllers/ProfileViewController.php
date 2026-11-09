@@ -12,6 +12,26 @@ class ProfileViewController extends Controller
         $tab = request('tab', 'viewed_by');
         $isPremium = auth()->user()->isPremium();
 
+        // Who opened my phone / WhatsApp, and whose I opened (Nov 2026, as on Chavara's
+        // Activity page). From the contact_views rows the plan limits already record; only
+        // members this member may see, each once, newest first. Not behind a plan: the
+        // other member has already seen this member's number, or the other way round.
+        if (in_array($tab, ['contact_viewed_by', 'contacts_i_viewed'], true)) {
+            [$mine, $theirs] = $tab === 'contact_viewed_by'
+                ? ['target_profile_id', 'viewer_profile_id']
+                : ['viewer_profile_id', 'target_profile_id'];
+            $when = \Illuminate\Support\Facades\DB::table('contact_views')->select('created_at')
+                ->where($mine, $profile->id)->whereColumn($theirs, 'profiles.id')->limit(1);
+            $contacts = \App\Support\ProfileVisibility::forMember(\App\Models\Profile::query(), $profile)
+                ->whereIn('profiles.id', \Illuminate\Support\Facades\DB::table('contact_views')->select($theirs)->where($mine, $profile->id))
+                ->select('profiles.*')->addSelect(['contact_viewed_at' => $when])
+                ->with(['primaryPhoto', 'religiousInfo', 'educationDetail', 'locationInfo'])
+                ->orderByDesc('contact_viewed_at')
+                ->paginate(20);
+
+            return view('views.index', ['views' => $contacts, 'tab' => $tab, 'isPremium' => $isPremium, 'viewedByCount' => 0]);
+        }
+
         if ($tab === 'viewed_by') {
             // Count is always available (even for free users)
             $viewedByCount = ProfileView::where('viewed_profile_id', $profile->id)->count();

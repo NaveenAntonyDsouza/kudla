@@ -7,16 +7,19 @@
         </p>
 
         {{-- Tab Navigation --}}
-        <div class="flex border-b border-gray-200 mb-6">
-            <a href="{{ route('views.index', ['tab' => 'viewed_by']) }}"
-                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {{ $tab === 'viewed_by' ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-                Profiles Viewed by Others
-            </a>
-            <a href="{{ route('views.index', ['tab' => 'i_viewed']) }}"
-                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {{ $tab === 'i_viewed' ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
-                Profiles I Viewed
-            </a>
+        @php $isContactTab = in_array($tab, ['contact_viewed_by', 'contacts_i_viewed'], true); @endphp
+        <div class="flex border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap">
+            @foreach(['viewed_by' => 'Viewed My Profile', 'i_viewed' => 'Profiles I Viewed', 'contact_viewed_by' => 'Viewed My Contact', 'contacts_i_viewed' => 'Contacts I Viewed'] as $t => $label)
+                <a href="{{ route('views.index', ['tab' => $t]) }}"
+                    class="px-4 py-3 text-sm font-medium border-b-2 transition-colors shrink-0 {{ $tab === $t ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-gray-500 hover:text-gray-700' }}">
+                    {{ $label }}
+                </a>
+            @endforeach
         </div>
+
+        @if($isContactTab)
+            <p class="text-xs text-gray-500 -mt-3 mb-4">{{ $tab === 'contact_viewed_by' ? 'Members who opened your phone number or WhatsApp.' : 'Members whose phone number or WhatsApp you opened.' }}</p>
+        @endif
 
         {{-- Premium gate for "Viewed By" tab --}}
         @if($tab === 'viewed_by' && !$isPremium)
@@ -44,7 +47,8 @@
             <div class="bg-white rounded-lg border border-gray-200 shadow-xs divide-y divide-gray-100">
                 @foreach($views as $view)
                     @php
-                        $otherProfile = $tab === 'viewed_by' ? $view->viewerProfile : $view->viewedProfile;
+                        $otherProfile = $isContactTab ? $view : ($tab === 'viewed_by' ? $view->viewerProfile : $view->viewedProfile);
+                        $seenAt = $isContactTab ? ($view->contact_viewed_at ? \Illuminate\Support\Carbon::parse($view->contact_viewed_at) : null) : $view->viewed_at;
                     @endphp
                     @if($otherProfile)
                         <a href="{{ route('profile.view', $otherProfile) }}" class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
@@ -61,7 +65,7 @@
                                     {{ collect([$otherProfile->age ? $otherProfile->age . ' Yrs' : null, $otherProfile->religiousInfo?->religion, $otherProfile->educationDetail?->occupation, $otherProfile->locationInfo?->native_state])->filter()->implode(', ') }}
                                 </p>
                             </div>
-                            <p class="text-xs text-gray-400 shrink-0">{{ $view->viewed_at->displayTz()->format('d M Y, h:i A') }}</p>
+                            <p class="text-xs text-gray-400 shrink-0">{{ $seenAt?->displayTz()->format('d M Y, h:i A') }}</p>
                         </a>
                     @endif
                 @endforeach
@@ -72,7 +76,7 @@
                 <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
                 </svg>
-                <p class="text-sm text-gray-500">{{ $tab === 'viewed_by' ? 'No one has viewed your profile yet.' : 'You haven\'t viewed any profiles yet.' }}</p>
+                <p class="text-sm text-gray-500">{{ match ($tab) { 'viewed_by' => 'No one has viewed your profile yet.', 'contact_viewed_by' => 'No one has opened your contact details yet.', 'contacts_i_viewed' => 'You haven\'t opened anyone\'s contact details yet.', default => 'You haven\'t viewed any profiles yet.' } }}</p>
                 @if($tab === 'viewed_by')
                     <p class="text-xs text-gray-400 mt-1">Complete your profile and add photos to get more views.</p>
                 @endif

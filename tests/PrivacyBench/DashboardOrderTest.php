@@ -43,3 +43,16 @@ it('asks only members with no photo to add one, on the dashboard and the matches
         $this->actingAs($b->m['T']->user)->get($url)->assertOk()->assertDontSee('Add your photo');
     }
 });
+
+it('lets a member share their own profile on WhatsApp or print it, without their phone or email', function () {
+    $t = $this->b->m['T'];
+    $html = (string) $this->actingAs($t->user)->get('/dashboard')->assertOk()->getContent();
+
+    preg_match('#https://wa\.me/\?text=([^"]+)"#', $html, $m);
+    $text = rawurldecode(html_entity_decode($m[1] ?? ''));
+
+    expect($html)->toContain('Share my profile on WhatsApp')->toContain(route('profile.print', $t))
+        ->and($text)->toContain($t->matri_id)->toContain($t->full_name)
+        ->not->toContain((string) $t->user->email)
+        ->not->toContain((string) $t->user->phone);
+});
