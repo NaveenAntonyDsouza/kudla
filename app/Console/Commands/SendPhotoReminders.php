@@ -30,6 +30,13 @@ class SendPhotoReminders extends Command
     public const GAPS_DAYS = [1 => 2, 2 => 7, 3 => 21];
 
     /**
+     * Not to members who have not been on the site for this long (weekly review,
+     * 9 Nov 2026: 229 reminders brought back 10 people; the "Add your photo" bar on
+     * the dashboard now asks the members who do come).
+     */
+    public const SKIP_INACTIVE_DAYS = 60;
+
+    /**
      * Women get the version that leads with the choice of who may see the
      * photo (2 Nov 2026: 31 of 144 women show one, against 43% of men).
      * Where a site has not got that template, or an admin switched it off,
@@ -74,6 +81,11 @@ class SendPhotoReminders extends Command
                 ->whereDoesntHave('profilePhotos', fn ($p) => $p->whereIn('approval_status', ['approved', 'pending'])))
             // Not someone who joined in the last couple of days (they may be adding one now)
             ->where(fn ($q) => $q->where('created_at', '<', now()->subDays(self::GAPS_DAYS[1]))
+                ->orWhereHas('profile', fn ($p) => $p->whereIn('matri_id', $also ?: ['']))
+            )
+            // on the site in the last 60 days (never signed in since joining: joined in that time)
+            ->where(fn ($q) => $q->where('last_login_at', '>=', now()->subDays(self::SKIP_INACTIVE_DAYS))
+                ->orWhere(fn ($n) => $n->whereNull('last_login_at')->where('created_at', '>=', now()->subDays(self::SKIP_INACTIVE_DAYS)))
                 ->orWhereHas('profile', fn ($p) => $p->whereIn('matri_id', $also ?: ['']))
             )
             ->with('profile')

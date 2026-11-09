@@ -205,10 +205,8 @@ class SearchController extends BaseApiController
             'marital_status',
             \App\Support\MaritalStatus::expand((array) $v), // all spellings; drops 'Any'
         ));
-        $query->when($request->mother_tongue, fn ($q, $v) => $q->whereIn(
-            'mother_tongue',
-            array_filter((array) $v, fn ($i) => $i !== 'Any'),
-        ));
+        // also members who never gave a mother tongue, as on the website (Nov 2026)
+        \App\Http\Controllers\SearchController::whereMotherTongue($query, (array) $request->mother_tongue);
         $query->when($request->body_type, fn ($q, $v) => $q->whereIn(
             'body_type',
             array_filter((array) $v, fn ($i) => $i !== 'Any'),

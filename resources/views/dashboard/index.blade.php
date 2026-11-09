@@ -10,6 +10,7 @@
             </style>
             @include('dashboard._waiting-banner', ['where' => 'phone'])
         @endif
+        <x-add-photo-bar />
         <div class="flex flex-col lg:flex-row gap-8">
 
             {{-- Left Sidebar: Profile Summary --}}

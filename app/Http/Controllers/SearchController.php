@@ -54,6 +54,7 @@ class SearchController extends Controller
                     $searchNote = self::closestNote($closest['left_out'], $closest['wider_age']);
                 }
             }
+            $searchNote = self::joinNotes($searchNote, self::blankTongueNote($query, (array) $request->mother_tongue));
             $query = $this->applySortOrder($query, $request->get('sort', 'relevance'));
             $results = $query->paginate(20)->withQueryString();
             $currentSort = $request->get('sort', 'relevance');
@@ -128,9 +129,7 @@ class SearchController extends Controller
         $query->when($request->marital_status, fn($q, $v) =>
             $q->whereIn('marital_status', \App\Support\MaritalStatus::expand((array) $v))
         );
-        $query->when($request->mother_tongue, fn($q, $v) =>
-            $q->whereIn('mother_tongue', array_filter((array) $v, fn($i) => $i !== 'Any'))
-        );
+        self::whereMotherTongue($query, (array) $request->mother_tongue);
         $query->when($request->body_type, fn($q, $v) =>
             $q->whereIn('body_type', array_filter((array) $v, fn($i) => $i !== 'Any'))
         );
@@ -444,6 +443,45 @@ class SearchController extends Controller
         return array_filter($params, fn ($v) => ! (is_array($v) ? in_array('Any', $v, true) : $v === 'Any'));
     }
 
+    /**
+     * Mother tongue filter that also keeps members who never gave one (weekly review,
+     * 9 Nov 2026: 135 of 803 live Kudla profiles had it blank, so a Tulu search never
+     * showed them, and every search the closest-profiles fallback could not rescue had
+     * a mother tongue set). Grouped in one where(), so the OR cannot escape other filters.
+     */
+    public static function whereMotherTongue($query, array $tongues)
+    {
+        $tongues = array_values(array_filter($tongues, fn ($t) => $t !== '' && $t !== null && $t !== 'Any'));
+        if ($tongues) {
+            $query->where(fn ($w) => $w->whereIn('profiles.mother_tongue', $tongues)
+                ->orWhereNull('profiles.mother_tongue')
+                ->orWhere('profiles.mother_tongue', ''));
+        }
+
+        return $query;
+    }
+
+    /** "Includes N members who have not given their mother tongue." — or null. */
+    public static function blankTongueNote($query, array $tongues): ?string
+    {
+        $tongues = array_filter($tongues, fn ($t) => $t !== '' && $t !== null && $t !== 'Any');
+        if (! $tongues) {
+            return null;
+        }
+        $blank = (clone $query)->where(fn ($w) => $w->whereNull('profiles.mother_tongue')->orWhere('profiles.mother_tongue', ''))->count();
+
+        return $blank > 0
+            ? 'Includes ' . $blank . ' ' . ($blank === 1 ? 'member who has' : 'members who have') . ' not given a mother tongue.'
+            : null;
+    }
+
+    private static function joinNotes(?string ...$notes): ?string
+    {
+        $notes = array_filter($notes);
+
+        return $notes ? implode(' ', $notes) : null;
+    }
+
     /** The line above the closest profiles: what was left out to find them. */
     public static function closestNote(array $leftOut, bool $widerAge): string
     {
@@ -633,9 +671,7 @@ class SearchController extends Controller
         }
         // Mother tongue lives on the profiles table (cf. buildSearchQuery), not
         // lifestyle_info — the old whereHas('lifestyleInfo', ...) hit a missing column.
-        if ($tongues = $this->multiParam('mother_tongue')) {
-            $query->whereIn('mother_tongue', $tongues);
-        }
+        self::whereMotherTongue($query, (array) $this->multiParam('mother_tongue'));
         // the keyword is applied after every other filter (below), so the
         // "any word" fallback keeps those filters
         $keyword = trim((string) request('keyword', ''));
@@ -722,6 +758,7 @@ class SearchController extends Controller
             }
         }
 
+        $searchNote = self::joinNotes($searchNote, self::blankTongueNote($query, (array) request('mother_tongue')));
         $currentSort = in_array(request('sort'), ['newest', 'recently_active'], true) ? request('sort') : 'relevance';
         $query = $this->applySortOrder($query, $currentSort);
         // no Bride / Groom chosen: a bride, then a groom… (AlternateGenders)

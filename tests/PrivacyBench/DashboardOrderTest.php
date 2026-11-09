@@ -33,3 +33,13 @@ it('shows Mutual Matches above Recommended, without the same member twice', func
     expect($res->viewData('recommendedMatches')->pluck('id')->all())->toBe([$onlyRecommended->id])
         ->and($res->viewData('mutualMatches')->pluck('id')->all())->toBe([$both->id]);
 });
+
+it('asks only members with no photo to add one, on the dashboard and the matches list', function () {
+    $b = $this->b;
+    \App\Models\ProfilePhoto::where('profile_id', $b->m['W']->id)->delete();
+
+    foreach (['/dashboard', '/matches'] as $url) {
+        $this->actingAs($b->m['W']->user)->get($url)->assertOk()->assertSee('Add your photo');
+        $this->actingAs($b->m['T']->user)->get($url)->assertOk()->assertDontSee('Add your photo');
+    }
+});

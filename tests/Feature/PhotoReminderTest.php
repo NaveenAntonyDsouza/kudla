@@ -29,6 +29,7 @@ beforeEach(function () {
         $t->json('notification_preferences')->nullable();
         $t->timestamp('last_registration_reminder_at')->nullable();
         $t->timestamp('last_photo_reminder_at')->nullable();
+        $t->timestamp('last_login_at')->nullable();
         $t->unsignedTinyInteger('photo_reminders_sent')->default(0);
         $t->timestamps();
     });
@@ -230,4 +231,17 @@ it('runs daily only where switched on, within the daily cap', function () {
 
     $event = collect(app(Illuminate\Console\Scheduling\Schedule::class)->events())->first(fn ($e) => str_contains($e->command, 'members:remind-photo'));
     expect($event?->expression)->toBe('30 18 * * *');
+});
+
+it('does not email members who have not been on the site for 60 days', function () {
+    prMember('KM1', joined: '-200 days', user: ['last_login_at' => now()->subDays(10)]);   // ✓ was here recently
+    prMember('KM2', joined: '-200 days', user: ['last_login_at' => now()->subDays(90)]);   // away 90 days
+    prMember('KM3', joined: '-200 days');                                                 // never back since joining long ago
+    prMember('KM4', joined: '-10 days');                                                  // ✓ joined recently, not back yet
+
+    $this->artisan('members:remind-photo', ['--delay' => 0])->assertSuccessful();
+
+    Mail::assertSent(PhotoReminderMail::class, 2);
+    Mail::assertSent(PhotoReminderMail::class, fn (Mailable $m) => $m->hasTo('km1@site.test'));
+    Mail::assertSent(PhotoReminderMail::class, fn (Mailable $m) => $m->hasTo('km4@site.test'));
 });

@@ -7,6 +7,7 @@
             <span class="mx-1">/</span>
             <span class="text-gray-700 font-medium">My Matches</span>
         </p>
+        <x-add-photo-bar />
 
         {{-- e.g. "Partner preferences saved — your matches are updated." --}}
         @if(session('success'))
