@@ -95,7 +95,6 @@ class BranchPayoutResource extends Resource
                         ->numeric()
                         ->minValue(0)
                         ->prefix('₹')
-                        ->dehydrated(false)
                         ->afterStateHydrated(function ($component, $state, $record) {
                             if ($record) {
                                 $component->state(round($record->gross_revenue_paise / 100, 2));
@@ -118,7 +117,6 @@ class BranchPayoutResource extends Resource
                         ->numeric()
                         ->minValue(0)
                         ->prefix('₹')
-                        ->dehydrated(false)
                         ->afterStateHydrated(function ($component, $state, $record) {
                             if ($record) {
                                 $component->state(round($record->payout_amount_paise / 100, 2));

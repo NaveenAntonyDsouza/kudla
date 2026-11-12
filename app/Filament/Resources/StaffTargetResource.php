@@ -114,7 +114,6 @@ class StaffTargetResource extends Resource
                         ->default(0)
                         ->prefix('₹')
                         ->helperText('Target revenue in rupees for the month.')
-                        ->dehydrated(false)
                         ->afterStateHydrated(function ($component, $state, $record) {
                             if ($record) {
                                 $component->state((int) round($record->revenue_target / 100));
@@ -141,7 +140,6 @@ class StaffTargetResource extends Resource
                         ->default(0)
                         ->prefix('₹')
                         ->helperText('Fixed bonus paid for each new registration.')
-                        ->dehydrated(false)
                         ->afterStateHydrated(function ($component, $state, $record) {
                             if ($record) {
                                 $component->state((int) round($record->incentive_per_registration / 100));

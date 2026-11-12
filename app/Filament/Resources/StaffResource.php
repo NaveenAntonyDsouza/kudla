@@ -155,7 +155,9 @@ class StaffResource extends Resource
                     Forms\Components\Toggle::make('send_credentials')
                         ->label('Send credentials via email')
                         ->default(true)
-                        ->dehydrated(false)
+                        // Not dehydrated away: CreateStaff and EditStaff read it from $data and
+                        // unset it before saving. Dehydrated, "off" never arrived and the
+                        // password was emailed anyway (Nov 2026).
                         ->helperText('Emails the login URL, username, and password to the staff member.'),
                 ])
                 ->columns(2),
