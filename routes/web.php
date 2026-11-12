@@ -224,6 +224,14 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Profile Views
     Route::get('/views', [ProfileViewController::class, 'index'])->name('views.index');
 
+    // My Assisted Service (Nov 2026): manager, consent, Yes / No on suggested matches, report
+    Route::get('/assisted-service', [\App\Http\Controllers\AssistedController::class, 'index'])->name('assisted.index');
+    Route::post('/assisted-service/consent', [\App\Http\Controllers\AssistedController::class, 'consent'])->name('assisted.consent');
+    Route::post('/assisted-service/auto-send', [\App\Http\Controllers\AssistedController::class, 'autoSend'])->name('assisted.autoSend');
+    Route::post('/assisted-service/withdraw', [\App\Http\Controllers\AssistedController::class, 'withdraw'])->name('assisted.withdraw');
+    Route::post('/assisted-service/suggestions/{recommendation}', [\App\Http\Controllers\AssistedController::class, 'answer'])
+        ->middleware('throttle:30,1')->name('assisted.answer');
+
     // Membership Plans
     Route::post('/membership-plans/checkout', [MembershipController::class, 'checkout'])->name('membership.checkout');
     Route::post('/membership-plans/verify', [MembershipController::class, 'verify'])->name('membership.verify');

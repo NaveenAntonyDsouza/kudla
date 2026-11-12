@@ -14,6 +14,9 @@ class InterestReply extends Model
         // 'email' when the member pressed Accept or Decline in the interest
         // email; null when they answered on the site or in the app
         'answered_via',
+        // assisted service (Nov 2026): staff answered on the member's instruction
+        'replied_by_admin_id',
+        'member_instruction',
         'template_id',
         'custom_message',
         'is_silent_decline',

@@ -213,6 +213,6 @@ it('shows chats and where interests were sent from on the admin engagement repor
         'members_chatting' => 4,   // profiles 1, 2, 5, 6
         'sent_total' => 3,
     ])->and($page->chatStats['by_source'])->toBe([
-        'Profile page' => 0, 'Profile card' => 1, 'Phone action bar' => 1, 'Contact tab' => 0, 'Mobile app' => 0, 'Before tracking' => 1,
+        'Profile page' => 0, 'Profile card' => 1, 'Phone action bar' => 1, 'Contact tab' => 0, 'Mobile app' => 0, 'Assisted service' => 0, 'Before tracking' => 1,
     ]);
 });

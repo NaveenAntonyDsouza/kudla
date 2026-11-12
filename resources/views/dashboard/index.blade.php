@@ -123,6 +123,22 @@
                     @include('dashboard._waiting-banner', ['where' => 'wide'])
                 @endif
 
+                {{-- Assisted service (Nov 2026): consent not given yet, or matches waiting for a yes / no --}}
+                @if(\App\Support\Assisted::inMenu($user))
+                    @php
+                        $__assistWaiting = \App\Models\AdminRecommendation::where('for_profile_id', $profile->id)->whereNull('member_decision')->count();
+                        $__assistNeedsConsent = ! $profile->assisted_consent_at && \App\Support\Assisted::isAssisted($profile);
+                    @endphp
+                    @if($__assistWaiting || $__assistNeedsConsent)
+                        <a href="{{ route('assisted.index') }}" style="display:block;background:#fae8ff;border:1px solid #f0abfc;border-radius:.5rem;padding:1rem 1.25rem;text-decoration:none;">
+                            <p style="font-size:.875rem;font-weight:600;color:#86198f;margin:0;">
+                                {{ $__assistNeedsConsent ? 'Allow your relationship manager to start working for you' : ($__assistWaiting === 1 ? 'Your manager suggested a match' : "Your manager suggested {$__assistWaiting} matches") }}
+                            </p>
+                            <p style="font-size:.75rem;color:#a21caf;margin:.2rem 0 0;">{{ $__assistNeedsConsent ? 'One tick on My Assisted Service, and they can start.' : 'Say yes or no on My Assisted Service →' }}</p>
+                        </a>
+                    @endif
+                @endif
+
                 {{-- Members of a bari caste with no bari yet (Oct 2026) --}}
                 <x-bari-prompt :profile="$profile" />
 

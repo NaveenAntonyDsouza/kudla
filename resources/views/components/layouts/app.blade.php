@@ -261,6 +261,9 @@
                                 <a href="{{ route('photos.manage') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Photos</a>
                                 <a href="{{ route('idproof.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Submit ID Proof</a>
                                 <a href="{{ route('membership.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Membership Plans</a>
+                                @if(\App\Support\Assisted::inMenu(auth()->user()))
+                                    <a href="{{ route('assisted.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Assisted Service</a>
+                                @endif
                                 <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
                             </div>
                         </div>
@@ -418,6 +421,9 @@
                                 <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                                 <a href="{{ route('shortlist.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Shortlist</a>
                                 <a href="{{ route('views.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Views</a>
+                                @if(\App\Support\Assisted::inMenu(auth()->user()))
+                                    <a href="{{ route('assisted.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Assisted Service</a>
+                                @endif
                                 <div class="border-t border-gray-100 my-1"></div>
                                 <form method="POST" action="/logout">
                                     @csrf
@@ -449,6 +455,9 @@
                     <a href="{{ route('photos.manage') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Manage Photos</a>
                     <a href="{{ route('idproof.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Submit ID Proof</a>
                     <a href="{{ route('membership.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Membership Plans</a>
+                    @if(\App\Support\Assisted::inMenu(auth()->user()))
+                        <a href="{{ route('assisted.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">My Assisted Service</a>
+                    @endif
                     <a href="{{ route('settings.index') }}" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100">Profile Settings</a>
 
                     {{-- Search --}}

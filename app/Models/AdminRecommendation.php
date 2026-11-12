@@ -15,6 +15,12 @@ class AdminRecommendation extends Model
         'priority',
         'is_viewed',
         'interest_sent',
+        // assisted service (Nov 2026): the member's Yes / No, the interest it sent, a meeting
+        'member_decision',
+        'decided_at',
+        'interest_id',
+        'meeting_on',
+        'meeting_note',
     ];
 
     protected function casts(): array
@@ -22,8 +28,53 @@ class AdminRecommendation extends Model
         return [
             'is_viewed' => 'boolean',
             'interest_sent' => 'boolean',
+            'decided_at' => 'datetime',
+            'meeting_on' => 'date',
         ];
     }
+
+    public function interest(): BelongsTo
+    {
+        return $this->belongsTo(Interest::class);
+    }
+
+    /**
+     * Where the suggestion stands, in the member's words: waiting for the member,
+     * they said no, waiting to be sent, interest sent / accepted / declined, meeting.
+     */
+    public function stage(): string
+    {
+        if ($this->meeting_on) {
+            return 'meeting';
+        }
+        if ($this->member_decision === 'no') {
+            return 'member_no';
+        }
+        if ($this->member_decision === null) {
+            return 'waiting_member';
+        }
+        if (! $this->interest_id) {
+            return 'to_send';
+        }
+
+        return match ($this->interest?->status) {
+            'accepted' => 'accepted',
+            'declined' => 'declined',
+            'cancelled', 'expired' => 'closed',
+            default => 'sent',
+        };
+    }
+
+    public const STAGES = [
+        'waiting_member' => 'Waiting for your answer',
+        'member_no' => 'You said no',
+        'to_send' => 'You said yes: being sent',
+        'sent' => 'Interest sent',
+        'accepted' => 'Accepted',
+        'declined' => 'Declined',
+        'closed' => 'Closed',
+        'meeting' => 'Meeting arranged',
+    ];
 
     public function forProfile(): BelongsTo
     {

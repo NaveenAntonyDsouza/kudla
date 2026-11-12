@@ -109,6 +109,8 @@ class Interest extends Model
         'mobile_bar' => 'Phone action bar',
         'contact_tab' => 'Contact tab',
         'app' => 'Mobile app',
+        // sent by the member's relationship manager (assisted service, Nov 2026)
+        'assisted' => 'Assisted service',
     ];
 
     /**

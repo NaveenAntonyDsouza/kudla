@@ -147,6 +147,10 @@ class MembershipPlanResource extends Resource
                 ->label('Priority Support')
                 ->helperText('Access to priority customer support'),
 
+            Forms\Components\Toggle::make('is_assisted')
+                ->label('Assisted Service')
+                ->helperText('A named relationship manager works for the member: suggests matches (the member says yes or no), sends the interests they agree to, and answers interests on their instruction. Staff → Assisted Members.'),
+
             Forms\Components\Toggle::make('is_popular')
                 ->label('Show "POPULAR" Badge')
                 ->helperText('Displays POPULAR badge on pricing page'),

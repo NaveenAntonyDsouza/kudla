@@ -59,6 +59,7 @@
                         <th style="{{ $th }}" title="Recorded from 12 Nov 2026">Photos rejected</th>
                         <th style="{{ $th }}" title="ID proofs and horoscopes approved or rejected; recorded from 12 Nov 2026">ID / documents checked</th>
                         <th style="{{ $th }}">Plans assigned</th>
+                        <th style="{{ $th }}" title="Assisted service: matches suggested, interests sent and answered for members, meetings; recorded from 12 Nov 2026">Assisted work</th>
                         <th style="{{ $th }}" title="Login as member visits">Login as</th>
                         <th style="{{ $th }}">Sign-ins</th>
                         <th style="{{ $th }}padding-right:0;">Days active</th>
@@ -89,12 +90,13 @@
                             <td style="{{ $td }}">{!! $zero($r['photos_rejected']) !!}</td>
                             <td style="{{ $td }}">{!! $zero($r['id_checks']) !!}</td>
                             <td style="{{ $td }}">{!! $zero($r['plans_assigned']) !!}</td>
+                            <td style="{{ $td }}">{!! $zero($r['assisted']) !!}</td>
                             <td style="{{ $td }}">{!! $zero($r['login_as']) !!}@if ($r['login_as'])<span style="opacity:.7;font-size:.75rem;"> ({{ $r['login_as_minutes'] }} min)</span>@endif</td>
                             <td style="{{ $td }}">{!! $zero($r['sign_ins']) !!}</td>
                             <td style="{{ $td }}padding-right:0;">{!! $zero($r['days_active']) !!}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="18" style="padding:.75rem 0;opacity:.75;">No staff accounts.</td></tr>
+                        <tr><td colspan="19" style="padding:.75rem 0;opacity:.75;">No staff accounts.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -133,7 +135,7 @@
                                     <td style="{{ $td }}">{!! $zero($d['members_contacted']) !!}</td>
                                     <td style="{{ $td }}">{!! $zero($d['followups_done']) !!}</td>
                                     <td style="{{ $td }}">{!! $zero($d['details_checked']) !!}</td>
-                                    <td style="{{ $td }}">{!! $zero($d['member_edits'] + $d['approvals'] + $d['photos_approved'] + $d['photos_rejected'] + $d['id_checks'] + $d['plans_assigned']) !!}</td>
+                                    <td style="{{ $td }}">{!! $zero($d['member_edits'] + $d['approvals'] + $d['photos_approved'] + $d['photos_rejected'] + $d['id_checks'] + $d['plans_assigned'] + $d['assisted']) !!}</td>
                                     <td style="{{ $td }}">{{ $d['first'] ?? '—' }}</td>
                                     <td style="{{ $td }}padding-right:0;">{{ $d['last'] ?? '—' }}</td>
                                 </tr>

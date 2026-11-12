@@ -86,7 +86,9 @@ class MemberErasure
                 ['ignored_profiles', 'profile_id', 'ignored_profile_id'], ['blocked_profiles', 'profile_id', 'blocked_profile_id'],
                 ['photo_access_grants', 'grantor_profile_id', 'grantee_profile_id'], ['photo_requests', 'requester_profile_id', 'target_profile_id'],
                 ['profile_views', 'viewer_profile_id', 'viewed_profile_id'], ['contact_views', 'viewer_profile_id', 'target_profile_id'],
-                ['admin_recommendations', 'for_profile_id', 'recommended_profile_id']] as [$table, $a, $b]) {
+                ['admin_recommendations', 'for_profile_id', 'recommended_profile_id'],
+                // assisted service history (Nov 2026): their own, and lines naming them in someone else's
+                ['assisted_events', 'profile_id', 'other_profile_id']] as [$table, $a, $b]) {
                 if (Schema::hasTable($table)) {
                     DB::table($table)->where($a, $pid)->orWhere($b, $pid)->delete();
                 }
@@ -103,6 +105,9 @@ class MemberErasure
             // what they wrote to other members
             $this->updateWhere('interests', ['sender_profile_id' => $pid], ['custom_message' => null]);
             $this->updateWhere('interest_replies', ['replier_profile_id' => $pid], ['custom_message' => null]);
+            if (Schema::hasColumn('interest_replies', 'member_instruction')) {
+                $this->updateWhere('interest_replies', ['replier_profile_id' => $pid], ['member_instruction' => null]);
+            }
             $this->updateWhere('leads', ['profile_id' => $pid], ['full_name' => 'Deleted member', 'phone' => null, 'email' => null, 'notes' => null]);
             if ($uid) {
                 $this->updateWhere('contact_submissions', ['user_id' => $uid], ['name' => 'Deleted member', 'email' => null, 'phone' => null, 'message' => '[removed]', 'ip_address' => null]);

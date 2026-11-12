@@ -23,6 +23,8 @@ class MembershipPlan extends Model
         'exposes_contact_to_free',
         'featured_profile',
         'priority_support',
+        // a named relationship manager works for the member (Nov 2026)
+        'is_assisted',
         'is_highlighted',
         'is_popular',
         'sort_order',
@@ -45,6 +47,7 @@ class MembershipPlan extends Model
             'exposes_contact_to_free' => 'boolean',
             'featured_profile' => 'boolean',
             'priority_support' => 'boolean',
+            'is_assisted' => 'boolean',
             'is_highlighted' => 'boolean',
             'is_popular' => 'boolean',
             'sort_order' => 'integer',

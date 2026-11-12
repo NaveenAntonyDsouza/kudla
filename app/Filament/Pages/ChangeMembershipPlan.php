@@ -55,6 +55,8 @@ class ChangeMembershipPlan extends Page implements HasForms
     public ?string $duration_override = null;
     public ?string $payment_method = null;
     public ?string $reason = null;
+    // assisted plans (Nov 2026): the member's relationship manager
+    public ?string $manager_id = null;
 
     /**
      * How an offline / manually-recorded payment was received. Stored on the
@@ -101,6 +103,7 @@ class ChangeMembershipPlan extends Page implements HasForms
                     Forms\Components\Select::make('plan_id')
                         ->label('Select Plan')
                         ->required()
+                        ->live()
                         ->options(fn () => MembershipPlan::where('is_active', true)
                             ->where('price_inr', '>', 0)
                             ->orderBy('sort_order')
@@ -122,6 +125,15 @@ class ChangeMembershipPlan extends Page implements HasForms
                         ->options(self::PAYMENT_METHODS)
                         ->placeholder('How was payment received?')
                         ->helperText('Recorded as a paid transaction so it appears in Payment History.'),
+
+                    Forms\Components\Select::make('manager_id')
+                        ->label('Relationship Manager')
+                        ->options(fn () => \App\Support\Assisted::staffOptions())
+                        ->default(fn () => $this->foundProfile?->relationship_manager_id)
+                        ->placeholder('Choose who works for this member')
+                        ->helperText('An assisted plan: this staff member suggests matches and works for the member, once the member gives consent on their Assisted page.')
+                        ->visible(fn ($get) => (bool) MembershipPlan::find($get('plan_id'))?->is_assisted)
+                        ->required(fn ($get) => (bool) MembershipPlan::find($get('plan_id'))?->is_assisted),
 
                     Forms\Components\Textarea::make('reason')
                         ->label('Reason / Notes')
@@ -186,7 +198,7 @@ class ChangeMembershipPlan extends Page implements HasForms
     public function cancelAssign(): void
     {
         $this->showAssignForm = false;
-        $this->reset(['plan_id', 'duration_override', 'payment_method', 'reason']);
+        $this->reset(['plan_id', 'duration_override', 'payment_method', 'reason', 'manager_id']);
     }
 
     public function assignPlan(): void
@@ -199,6 +211,12 @@ class ChangeMembershipPlan extends Page implements HasForms
         $plan = MembershipPlan::find($this->plan_id);
         if (!$plan) {
             Notification::make()->title('Invalid plan selected.')->danger()->send();
+            return;
+        }
+
+        $manager = $plan->is_assisted && $this->manager_id ? \App\Models\User::find($this->manager_id) : null;
+        if ($plan->is_assisted && (! $manager || ! array_key_exists($manager->id, \App\Support\Assisted::staffOptions()))) {
+            Notification::make()->title('Choose the relationship manager for this assisted plan.')->danger()->send();
             return;
         }
 
@@ -277,13 +295,17 @@ class ChangeMembershipPlan extends Page implements HasForms
             'reason' => $this->reason ?: null,
         ], fn ($v) => $v !== null));
 
+        if ($manager) {
+            \App\Support\Assisted::setManager($this->foundProfile, $manager);
+        }
+
         Notification::make()
             ->title($this->foundProfile->full_name . ' upgraded to ' . $plan->plan_name)
             ->success()
             ->send();
 
         // Reset back to a clean search box.
-        $this->reset(['search', 'plan_id', 'duration_override', 'payment_method', 'reason', 'foundProfile', 'searched', 'showAssignForm']);
+        $this->reset(['search', 'plan_id', 'duration_override', 'payment_method', 'reason', 'manager_id', 'foundProfile', 'searched', 'showAssignForm']);
         $this->matches = collect();
     }
 }

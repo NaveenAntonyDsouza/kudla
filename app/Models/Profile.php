@@ -110,7 +110,16 @@ class Profile extends Model
             'suspended_at' => 'datetime',
             'suspension_ends_at' => 'datetime',
             'details_checked_at' => 'datetime',
+            // assisted service (Nov 2026); set only through App\Support\Assisted, never fillable
+            'assisted_consent_at' => 'datetime',
+            'assisted_auto_send' => 'boolean',
         ];
+    }
+
+    /** The staff member who works for this member on an assisted plan (Nov 2026). */
+    public function relationshipManager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'relationship_manager_id');
     }
 
     /**

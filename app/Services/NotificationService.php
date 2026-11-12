@@ -135,6 +135,7 @@ class NotificationService
             'photo_added' => isset($data['owner_profile_id']) ? route('profile.view', $data['owner_profile_id']) : route('photo-requests.index'),
             'photo_request', 'photo_request_approved' => route('photo-requests.index'),
             'profile_changes_requested' => route('profile.show'),
+            'assisted_suggestion', 'assisted_update' => route('assisted.index'),
             default => route('dashboard'),
         };
     }

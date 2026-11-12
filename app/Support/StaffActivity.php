@@ -177,6 +177,7 @@ final class StaffActivity
             'photos_approved' => $by('photo')->count(),
             'photos_rejected' => $by('photo_rejected')->count(),
             'id_checks' => $by('id_check')->count(),
+            'assisted' => $by('assisted')->count(),
             'login_as' => $by('login_as')->count(),
             'login_as_minutes' => (int) $by('login_as')->sum('minutes'),
             'sign_ins' => $by('sign_in')->count(),
@@ -259,6 +260,12 @@ final class StaffActivity
             'id_proof_rejected' => 'id_check',
             'document_approved' => 'id_check',
             'document_rejected' => 'id_check',
+            // assisted service, from 12 Nov 2026 (App\Support\Assisted)
+            'assisted_suggested' => 'assisted',
+            'assisted_interest_sent' => 'assisted',
+            'assisted_accepted' => 'assisted',
+            'assisted_declined' => 'assisted',
+            'assisted_meeting' => 'assisted',
         ];
         AdminActivityLog::query()
             ->whereIn('admin_user_id', $staffIds)
