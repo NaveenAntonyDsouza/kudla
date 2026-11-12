@@ -62,6 +62,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SignOutStaffFromMemberSite::class,
             // Keeps last_login_at = "last active" (see the class doc)
             \App\Http\Middleware\TrackMemberActivity::class,
+            // Staff "Login as member": view only, nothing written (innermost, so
+            // the whole page is built inside its rolled-back transaction)
+            \App\Http\Middleware\LoginAsViewOnly::class,
         ]);
 
         // Force JSON responses on /api/* — guarantees JSON even if client
@@ -72,6 +75,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->api(append: [
             \App\Http\Middleware\TrackMemberActivity::class,
+            // The app's API has no browser session today, so this does nothing here;
+            // it is in place so that a staff "Login as member" visit stays view-only
+            // if cookie sign-in is ever switched on for the API.
+            \App\Http\Middleware\LoginAsViewOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

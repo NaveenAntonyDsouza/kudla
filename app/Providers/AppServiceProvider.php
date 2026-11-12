@@ -83,6 +83,13 @@ class AppServiceProvider extends ServiceProvider
             [\App\Support\EmailSuppression::class, 'check'],
         );
 
+        // Staff viewing the site as a member ("Login as member"): a page must never
+        // email anyone because staff opened it (returns false = don't send)
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Mail\Events\MessageSending::class,
+            fn () => \App\Support\LoginAs::active() ? false : null,
+        );
+
         // Carbon ->displayTz() macro: convert a UTC-stored timestamp to
         // the configured display timezone (Asia/Kolkata by default) for
         // rendering. Storage stays UTC; this is display-only.

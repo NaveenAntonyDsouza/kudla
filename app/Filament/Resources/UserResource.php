@@ -830,6 +830,10 @@ class UserResource extends Resource
                     })
                     ->successNotificationTitle('Password reset'),
 
+                // See the site as this member sees it: view only, reason asked, every
+                // visit recorded (own staff right; App\Support\LoginAs)
+                \App\Filament\Actions\LoginAsMemberAction::make()->button()->size('sm'),
+
                 // Soft delete — removes the profile from listings and moves it to
                 // "Deleted Users (Can be restored)", where Restore / Delete Forever
                 // take over. Reversible (not a permanent purge).

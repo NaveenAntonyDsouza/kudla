@@ -33,6 +33,13 @@ class TrackMemberActivity
         $response = $next($request);
 
         try {
+            // Staff looking at the site as this member ("Login as member") is not
+            // the member being active: no "last active", no profile brought back
+            // from the inactive list. Also a visit that ended in this very request.
+            if (\App\Support\LoginAs::active() || \App\Support\LoginAs::pending() || $request->attributes->has('login_as.active')) {
+                return $response;
+            }
+
             // Only a user the request already resolved (auth middleware ran,
             // or the page asked for the user) — never an extra auth lookup.
             $guard = Auth::guard();

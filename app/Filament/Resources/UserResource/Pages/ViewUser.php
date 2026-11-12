@@ -67,6 +67,9 @@ class ViewUser extends ViewRecord
                     self::logActivity($wasActive ? 'profile_deactivated' : 'profile_activated', $this->record);
                 })
                 ->visible(fn (): bool => \App\Support\Permissions::can('toggle_active')),
+
+            // see the site as this member sees it (view only, recorded)
+            \App\Filament\Actions\LoginAsMemberAction::make(),
         ];
     }
 }

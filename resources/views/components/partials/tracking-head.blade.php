@@ -1,4 +1,7 @@
 {{-- Tracking & Analytics - include in <head> of all layouts --}}
+{{-- Staff viewing the site as a member ("Login as member") is not a visitor or that
+     member: no GA, Tag Manager, Pixel or PostHog on those pages --}}
+@if(! \App\Support\LoginAs::active())
 @php
     $gaId = $gaId ?? \App\Models\SiteSetting::getValue('google_analytics_id', '');
     $gtmId = $gtmId ?? \App\Models\SiteSetting::getValue('google_tag_manager_id', '');
@@ -103,4 +106,5 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     });
 })(@js($analyticsEvents));
 </script>
+@endif
 @endif

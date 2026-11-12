@@ -45,6 +45,10 @@ return [
         'toggle_active' => ['label' => 'Activate/Deactivate Member', 'type' => 'scoped', 'category' => 'members'],
         'add_note_to_member' => ['label' => 'Add Note to Member', 'type' => 'scoped', 'category' => 'members'],
         'view_member_notes' => ['label' => 'View Member Notes', 'type' => 'scoped', 'category' => 'members'],
+        // Nov 2026: opens the member site as the member sees it (view only, every visit
+        // recorded with its reason). Shows the member's chats and unlocked contacts, so
+        // it is off for every role until the owner switches it on; needs two-step sign-in.
+        'login_as_member' => ['label' => 'Login as Member (view only, recorded)', 'type' => 'simple', 'category' => 'members'],
 
         // ── VIP & Featured (2 simple) ──
         'mark_vip' => ['label' => 'Mark as VIP', 'type' => 'simple', 'category' => 'vip_featured'],

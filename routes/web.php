@@ -156,6 +156,11 @@ Route::post('/register', [RegisterController::class, 'storeStep1'])->name('regis
 // Logout (requires auth)
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Staff "Login as member": the Exit button on the view-only bar. The visit is
+// ended by LoginAsViewOnly before this runs; with no visit left it only goes
+// back to the admin panel.
+Route::post('/login-as/exit', fn () => redirect('/'.trim((string) config('app.admin_path', 'admin'), '/')))->name('login-as.exit');
+
 // Registration steps 2-5 (requires auth, onboarding in progress)
 Route::middleware('auth')->group(function () {
     Route::get('/register/step-2', [RegisterController::class, 'showStep2'])->name('register.step2');

@@ -170,6 +170,9 @@ class EditUser extends EditRecord
             // send a pending profile back with a reason (pending profiles only)
             \App\Filament\Actions\RequestProfileChangesAction::make(),
 
+            // see the site as this member sees it (view only, recorded)
+            \App\Filament\Actions\LoginAsMemberAction::make(),
+
             Actions\ViewAction::make(),
         ];
     }
