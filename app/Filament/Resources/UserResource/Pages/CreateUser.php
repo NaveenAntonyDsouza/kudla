@@ -78,8 +78,10 @@ class CreateUser extends CreateRecord
                 'how_did_you_hear_about_us' => $data['how_did_you_hear_about_us'] ?? null,
                 'created_by' => 'admin',
                 'registration_source' => \App\Support\DeviceDetector::ADMIN,
-                'is_approved' => $data['is_approved'] ?? true,
+                'is_approved' => $data['is_approved'] ?? (\App\Models\SiteSetting::getValue('auto_approve_profiles', '1') === '1'),
                 'is_active' => $data['is_active'] ?? true,
+                'created_by_staff_id' => auth()->id(),
+                'creator_name' => auth()->user()?->name,
                 'onboarding_completed' => true,
                 'onboarding_step_completed' => 5,
             ]);
@@ -280,6 +282,19 @@ class CreateUser extends CreateRecord
                     'is_visible' => true,
                     'display_order' => 0,
                 ]);
+            }
+
+            try {
+                \App\Models\AdminActivityLog::create([
+                    'admin_user_id' => auth()->id(),
+                    'action' => 'member_registered_by_staff',
+                    'model_type' => 'Profile',
+                    'model_id' => $profile->id,
+                    'changes' => ['matri_id' => $profile->matri_id, 'is_active' => (bool) $profile->is_active, 'is_approved' => (bool) $profile->is_approved],
+                    'ip_address' => request()->ip(),
+                ]);
+            } catch (\Throwable $e) {
+                // the log must not block creating the member
             }
 
             Notification::make()

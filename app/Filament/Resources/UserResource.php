@@ -1988,8 +1988,11 @@ class UserResource extends Resource
                             // only when adding a member; on the edit page these are header buttons with a confirm
                             ->visible(fn (string $operation): bool => $operation === 'create')
                             ->schema([
-                                Forms\Components\Toggle::make('is_active')->label('Active'),
-                                Forms\Components\Toggle::make('is_approved')->label('Approved'),
+                                // Start on / at the site's auto-approve setting: an untouched Filament
+                                // Toggle sends false, which saved 47 Crasta members switched off (Nov 2026)
+                                Forms\Components\Toggle::make('is_active')->label('Active')->default(true),
+                                Forms\Components\Toggle::make('is_approved')->label('Approved')
+                                    ->default(fn () => \App\Models\SiteSetting::getValue('auto_approve_profiles', '1') === '1'),
                                 Forms\Components\Toggle::make('id_proof_verified')->label('ID Proof Verified'),
                                 Forms\Components\Toggle::make('is_hidden')->label('Hidden'),
                             ]),
