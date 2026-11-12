@@ -84,15 +84,14 @@ class ActivityLogResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                // the member by name and Matri ID, linked to their page (12 Nov 2026: "Profile #123")
                 Tables\Columns\TextColumn::make('target')
-                    ->label('Target')
-                    ->getStateUsing(function (AdminActivityLog $record): string {
-                        if (!$record->model_type) {
-                            return '—';
-                        }
-                        return $record->model_type . ' #' . $record->model_id;
-                    })
-                    ->color('gray'),
+                    ->label('About')
+                    ->getStateUsing(fn (AdminActivityLog $record): string => $record->target_label ?? '—')
+                    ->url(fn (AdminActivityLog $record): ?string => ($p = $record->targetProfile()) && ! $p->trashed()
+                        ? UserResource::getUrl('view', ['record' => $p->id])
+                        : null)
+                    ->color(fn (AdminActivityLog $record): string => $record->targetProfile() ? 'primary' : 'gray'),
 
                 Tables\Columns\TextColumn::make('ip_address')
                     ->label('IP')
@@ -105,7 +104,32 @@ class ActivityLogResource extends Resource
                     ->sortable()
                     ->tooltip(fn (AdminActivityLog $record): string => $record->created_at->timezone(config('app.display_timezone', 'Asia/Kolkata'))->format('M j, Y g:i A')),
             ])
+            ->modifyQueryUsing(fn ($query) => $query->with(['admin', 'profileTarget']))
             ->filters([
+                // a date range (12 Nov 2026: the log could only be scrolled)
+                Tables\Filters\Filter::make('when')
+                    ->schema([
+                        \Filament\Forms\Components\DatePicker::make('from')->label('From'),
+                        \Filament\Forms\Components\DatePicker::make('until')->label('Until'),
+                    ])
+                    ->query(fn ($query, array $data) => $query
+                        ->when($data['from'] ?? null, fn ($q, $d) => $q->where('created_at', '>=', \Carbon\Carbon::parse($d, config('app.display_timezone', 'Asia/Kolkata'))->startOfDay()->setTimezone(config('app.timezone'))))
+                        ->when($data['until'] ?? null, fn ($q, $d) => $q->where('created_at', '<=', \Carbon\Carbon::parse($d, config('app.display_timezone', 'Asia/Kolkata'))->endOfDay()->setTimezone(config('app.timezone')))))
+                    ->indicateUsing(fn (array $data): array => array_values(array_filter([
+                        ($data['from'] ?? null) ? 'From '.\Carbon\Carbon::parse($data['from'])->format('j M Y') : null,
+                        ($data['until'] ?? null) ? 'Until '.\Carbon\Carbon::parse($data['until'])->format('j M Y') : null,
+                    ]))),
+
+                // a member, by Matri ID or name
+                Tables\Filters\Filter::make('member')
+                    ->schema([\Filament\Forms\Components\TextInput::make('member')->label('Member (Matri ID or name)')])
+                    ->query(fn ($query, array $data) => $query->when(trim((string) ($data['member'] ?? '')), fn ($q, $term) => $q
+                        ->where('model_type', 'Profile')
+                        ->whereIn('model_id', \App\Models\Profile::withTrashed()
+                            ->where(fn ($p) => $p->where('matri_id', $term)->orWhere('full_name', 'like', '%'.$term.'%'))
+                            ->select('id'))))
+                    ->indicateUsing(fn (array $data): ?string => filled($data['member'] ?? null) ? 'Member: '.$data['member'] : null),
+
                 Tables\Filters\SelectFilter::make('action')
                     ->options(fn () => AdminActivityLog::query()
                         ->distinct()

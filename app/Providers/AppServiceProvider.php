@@ -83,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
             [\App\Support\EmailSuppression::class, 'check'],
         );
 
+        // Approvals, deletions and notes by staff → Activity Log (App\Support\StaffActionLog)
+        \App\Support\StaffActionLog::register();
+
         // Staff viewing the site as a member ("Login as member"): a page must never
         // email anyone because staff opened it (returns false = don't send)
         \Illuminate\Support\Facades\Event::listen(

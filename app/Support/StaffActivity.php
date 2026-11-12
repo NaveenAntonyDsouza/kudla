@@ -21,7 +21,8 @@ use Illuminate\Support\Collection;
  *    Plan page writes by itself is a plan change, not a contact;
  *  - follow-ups set, and done (on time or late) from the Follow-up Report;
  *  - Activity Log: details checked on a call, member edits, approvals;
- *  - plans assigned (manual Subscription), photos approved;
+ *  - plans assigned (manual Subscription), photos approved; from 12 Nov 2026
+ *    also photos rejected and ID proofs / horoscopes checked (StaffActionLog);
  *  - "Login as member" visits and admin sign-ins.
  * Nothing new is recorded; it only reads. Dates are the display time zone's.
  */
@@ -174,6 +175,8 @@ final class StaffActivity
             'approvals' => $by('approval')->count(),
             'plans_assigned' => $by('plan')->count(),
             'photos_approved' => $by('photo')->count(),
+            'photos_rejected' => $by('photo_rejected')->count(),
+            'id_checks' => $by('id_check')->count(),
             'login_as' => $by('login_as')->count(),
             'login_as_minutes' => (int) $by('login_as')->sum('minutes'),
             'sign_ins' => $by('sign_in')->count(),
@@ -250,6 +253,12 @@ final class StaffActivity
             'member_details_checked' => 'details_checked',
             'member_profile_updated' => 'member_edit',
             'profile_approved' => 'approval',
+            // logged from 12 Nov 2026 (App\Support\StaffActionLog)
+            'photo_rejected' => 'photo_rejected',
+            'id_proof_approved' => 'id_check',
+            'id_proof_rejected' => 'id_check',
+            'document_approved' => 'id_check',
+            'document_rejected' => 'id_check',
         ];
         AdminActivityLog::query()
             ->whereIn('admin_user_id', $staffIds)

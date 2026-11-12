@@ -27,6 +27,12 @@ class ReligiousInfo extends Model
         'time_of_birth',
         'place_of_birth',
         'jathakam_upload_url',
+        // 12 Nov 2026: missing here, so the admin's Approve / Reject on horoscopes and
+        // baptism certificates saved nothing (the member still got the notice)
+        'jathakam_approval_status',
+        'jathakam_rejection_reason',
+        'jathakam_approved_by',
+        'jathakam_approved_at',
         'muslim_sect',
         'muslim_community',
         'religious_observance',

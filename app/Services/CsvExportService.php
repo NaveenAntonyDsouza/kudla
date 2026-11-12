@@ -203,6 +203,9 @@ class CsvExportService
 
     private static function streamCsv(string $filename, array $headers, array $rows): StreamedResponse
     {
+        // every CSV download is in the Activity Log: who took which list, how many rows (12 Nov 2026)
+        \App\Support\StaffActionLog::record('csv_exported', null, ['file' => $filename, 'rows' => count($rows)]);
+
         return response()->streamDownload(function () use ($headers, $rows) {
             $handle = fopen('php://output', 'w');
             // BOM for Excel UTF-8 compatibility

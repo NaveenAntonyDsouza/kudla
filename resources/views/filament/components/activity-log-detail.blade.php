@@ -10,8 +10,8 @@
         </tr>
         @if($record->model_type)
         <tr style="border-bottom: 1px solid #f3f4f6;">
-            <td style="padding: 0.5rem 0; color: #6b7280;">Target</td>
-            <td style="padding: 0.5rem 0;">{{ $record->model_type }} #{{ $record->model_id }}</td>
+            <td style="padding: 0.5rem 0; color: #6b7280;">About</td>
+            <td style="padding: 0.5rem 0;">{{ $record->target_label }}</td>
         </tr>
         @endif
         <tr style="border-bottom: 1px solid #f3f4f6;">

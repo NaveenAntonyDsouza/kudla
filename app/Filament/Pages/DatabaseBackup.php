@@ -78,6 +78,8 @@ class DatabaseBackup extends Page
     {
         $dbName = $this->databaseName;
         $filename = "backup_{$dbName}_" . date('Y-m-d_His') . '.sql';
+        // the whole database, every member's details: in the Activity Log (12 Nov 2026)
+        \App\Support\StaffActionLog::record('database_downloaded', null, ['file' => $filename]);
 
         return response()->streamDownload(function () use ($dbName) {
             set_time_limit(300);

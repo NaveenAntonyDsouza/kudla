@@ -32,6 +32,35 @@ class AdminActivityLog extends Model
     }
 
     /**
+     * The member a "Profile" entry is about (deleted ones too), so the log can say
+     * "Sita Iyer (KM100050)" instead of "Profile #50". Only meaningful when
+     * model_type is Profile: use targetProfile() rather than this directly.
+     */
+    public function profileTarget(): BelongsTo
+    {
+        return $this->belongsTo(Profile::class, 'model_id')->withTrashed();
+    }
+
+    public function targetProfile(): ?Profile
+    {
+        return $this->model_type === 'Profile' ? $this->profileTarget : null;
+    }
+
+    /** "Sita Iyer (KM100050)", or "Lead #12" for other records, or null. */
+    public function getTargetLabelAttribute(): ?string
+    {
+        if (! $this->model_type) {
+            return null;
+        }
+        $p = $this->targetProfile();
+        if ($p) {
+            return trim(($p->full_name ?: 'Member').' ('.$p->matri_id.')').($p->trashed() ? ' — deleted' : '');
+        }
+
+        return $this->model_type.' #'.$this->model_id;
+    }
+
+    /**
      * Actions the site takes by itself (scheduled jobs, a member answering an
      * email) have no admin: admin_user_id stays empty and the Activity Log
      * shows "System" (29 Oct 2026; until then they were filed under the main

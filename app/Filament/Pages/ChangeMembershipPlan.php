@@ -268,6 +268,15 @@ class ChangeMembershipPlan extends Page implements HasForms
             ]);
         });
 
+        // Activity Log (12 Nov 2026: plan changes were in Payment History only)
+        \App\Support\StaffActionLog::record('plan_assigned', $this->foundProfile->id, array_filter([
+            'plan' => $plan->plan_name,
+            'months' => $durationMonths,
+            'payment' => self::PAYMENT_METHODS[$paymentMethod] ?? $paymentMethod,
+            'amount_inr' => $amountPaise / 100,
+            'reason' => $this->reason ?: null,
+        ], fn ($v) => $v !== null));
+
         Notification::make()
             ->title($this->foundProfile->full_name . ' upgraded to ' . $plan->plan_name)
             ->success()
