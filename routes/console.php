@@ -62,6 +62,10 @@ ScheduledCommand::add('members:remind-photo', ['--scheduled', '--delay' => 3])->
 // Interests unanswered for 30 days expire; each sender gets one in-app note
 // (only where interest_expiry_enabled = 1)
 ScheduledCommand::add('interests:expire', ['--scheduled'])->dailyAt('07:30')->withoutOverlapping();
+// Verification calls: new members go on the list and are shared out to the callers
+// (App\Support\VerificationCalls; the page itself also does this when it opens)
+ScheduledCommand::add('verification-calls:assign')->everyTenMinutes()->withoutOverlapping();
+
 // privacy policy: personal data erased 90 days after "Delete Account" (App\Services\MemberErasure)
 ScheduledCommand::add('members:erase-deleted')->dailyAt('03:15')->withoutOverlapping();
 

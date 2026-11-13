@@ -55,6 +55,11 @@ class SiteSettings extends Page implements HasForms
             AdminModules::STAFF_TARGETS => ($settings[AdminModules::STAFF_TARGETS] ?? '0') === '1',
             AdminModules::ADVERTISEMENTS => ($settings[AdminModules::ADVERTISEMENTS] ?? '0') === '1',
             AdminModules::RECOMMENDATIONS => ($settings[AdminModules::RECOMMENDATIONS] ?? '0') === '1',
+            AdminModules::VERIFICATION_CALLS => ($settings[AdminModules::VERIFICATION_CALLS] ?? '0') === '1',
+            // already working before they had a switch: not set means on
+            AdminModules::ASSISTED => ($settings[AdminModules::ASSISTED] ?? '1') === '1',
+            AdminModules::STAFF_ACTIVITY => ($settings[AdminModules::STAFF_ACTIVITY] ?? '1') === '1',
+            AdminModules::LOGIN_AS_MEMBER => ($settings[AdminModules::LOGIN_AS_MEMBER] ?? '1') === '1',
 
             // Alerts
             'error_alert_email' => $settings['error_alert_email'] ?? '',
@@ -171,6 +176,22 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::RECOMMENDATIONS)
                             ->label('Recommend matches')
                             ->helperText('Staff suggest matches to a member, for assisted matchmaking (Engagement → Recommend Matches).'),
+
+                        Forms\Components\Toggle::make(AdminModules::VERIFICATION_CALLS)
+                            ->label('Verification calls')
+                            ->helperText('Every new member gets one call from staff to check their details (Today → Verification Calls). New members are shared out among staff whose role has "Take Verification Calls". Members who joined in the 30 days before you switch it on are included.'),
+
+                        Forms\Components\Toggle::make(AdminModules::ASSISTED)
+                            ->label('Assisted service')
+                            ->helperText('A paid service where one staff member works a member\'s profile: suggests matches, sends interests the member says yes to, answers interests on their instruction (Members → Assisted Members, and "My Assisted Service" on the member\'s site). It only appears once a membership plan is marked "Assisted Service".'),
+
+                        Forms\Components\Toggle::make(AdminModules::STAFF_ACTIVITY)
+                            ->label('Staff activity')
+                            ->helperText('Calls, WhatsApp messages, follow-ups and member work per staff member and per day (Insights → Staff Activity). Staff without the Activity Log right see only their own work, as "My Activity".'),
+
+                        Forms\Components\Toggle::make(AdminModules::LOGIN_AS_MEMBER)
+                            ->label('Login as member')
+                            ->helperText('Staff open the member site as a member, view only, and every visit is recorded. Each role still needs the "Login as Member" right, and the staff member must have two-step sign-in on.'),
                     ])
                     ->columns(3),
 
@@ -473,7 +494,8 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_documents',
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
-            AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS,
+            AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
+            AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER,
             'admin_two_step_required',
         ];
 

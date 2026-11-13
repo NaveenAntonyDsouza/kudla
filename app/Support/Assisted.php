@@ -50,6 +50,11 @@ class Assisted
     /** The member's active plan when it is an assisted one. */
     public static function plan(Profile $member): ?MembershipPlan
     {
+        // Settings → Site Settings → Staff tools → Assisted service: off stops all the work
+        // at once (staff can't act, the member can't give consent; withdrawing still works)
+        if (! AdminModules::assisted()) {
+            return null;
+        }
         $plan = $member->user?->activeMembership()?->plan;
 
         return $plan?->is_assisted ? $plan : null;
@@ -69,13 +74,14 @@ class Assisted
     public static function inMenu(?User $user): bool
     {
         static $answers = [];
-        $profile = $user?->profile;
-        if (! $profile) {
+        if (! $user || ! AdminModules::assisted()) {
             return false;
         }
 
         try {
-            return $answers[$profile->id] ??= ($profile->relationship_manager_id !== null || self::isAssisted($profile));
+            $profile = $user->profile;
+
+            return $profile ? ($answers[$profile->id] ??= ($profile->relationship_manager_id !== null || self::isAssisted($profile))) : false;
         } catch (\Throwable) {
             return false; // before the migration
         }
@@ -90,6 +96,10 @@ class Assisted
     /** Any plan marked assisted (the staff menu shows only then). */
     public static function offered(): bool
     {
+        // Settings → Site Settings → Staff tools → Assisted service (on unless switched off)
+        if (! AdminModules::assisted()) {
+            return false;
+        }
         try {
             return MembershipPlan::where('is_assisted', true)->exists();
         } catch (\Throwable) {

@@ -89,6 +89,8 @@ class StaffRolesSeeder extends Seeder
                     'export_member_data' => 'no',
                     // so does "Login as member" (11 Nov 2026)
                     'login_as_member' => 'no',
+                    // admins manage the verification calls list; they are not in the rotation
+                    'verification_calls' => 'no',
                 ]
             ),
 
@@ -107,6 +109,7 @@ class StaffRolesSeeder extends Seeder
                     'system_health' => 'no',
                     'export_member_data' => 'no',
                     'login_as_member' => 'no',
+                    'verification_calls' => 'no', // manages the list, not in the rotation
                     // No delete members
                     'delete_member' => 'none',
                     'delete_lead' => 'none',
@@ -168,6 +171,7 @@ class StaffRolesSeeder extends Seeder
                 'manage_call_log' => 'yes',
                 'register_on_behalf' => 'yes',
                 'manage_bulk_import' => 'yes',
+                'verification_calls' => 'yes',
                 'renew_plan' => 'all',
                 'view_payment_history' => 'all',
                 'assign_member_plan' => 'yes',
@@ -196,6 +200,7 @@ class StaffRolesSeeder extends Seeder
                 'edit_lead' => 'own',
                 'manage_call_log' => 'yes',
                 'register_on_behalf' => 'yes',
+                'verification_calls' => 'yes',
                 'view_payment_history' => 'own',
                 'manage_payouts' => 'own',
                 'advanced_search' => 'yes',
@@ -213,6 +218,7 @@ class StaffRolesSeeder extends Seeder
                 'edit_lead' => 'own',
                 'manage_call_log' => 'yes',
                 'register_on_behalf' => 'yes',
+                'verification_calls' => 'yes',
                 'advanced_search' => 'yes',
             ],
 

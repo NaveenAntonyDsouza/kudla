@@ -91,3 +91,40 @@ it('keeps the telecaller widgets off the dashboard while their tool is off', fun
     expect(MyStatsOverview::canView())->toBeFalse()
         ->and(MyTargetProgress::canView())->toBeFalse();
 });
+
+/*
+| The Nov 2026 builds got switches too (owner, 13 Nov: "can most of the features
+| be turned on or off by admin?"). A tool that was already working keeps working
+| until the owner switches it off, so the switch itself changed nothing live;
+| only Verification calls, which is new, starts off.
+*/
+
+it('starts the November tools as they were: the new one off, the working ones on', function () {
+    expect(AdminModules::verificationCalls())->toBeFalse()   // new: switch it on to start calling
+        ->and(AdminModules::assisted())->toBeTrue()
+        ->and(AdminModules::staffActivity())->toBeTrue()
+        ->and(AdminModules::loginAsMember())->toBeTrue();
+});
+
+it('switches each November tool off on its own, and back on', function () {
+    $staff = DB::table('users')->insertGetId(['name' => 'Office', 'role' => 'admin', 'created_at' => now(), 'updated_at' => now()]);
+    $this->actingAs(User::find($staff));
+
+    expect(\App\Support\LoginAs::allowed(User::find($staff)))->toBeTrue()
+        ->and(\App\Filament\Pages\StaffActivity::canAccess())->toBeTrue();
+
+    SiteSetting::setValue(AdminModules::LOGIN_AS_MEMBER, '0');
+    SiteSetting::setValue(AdminModules::STAFF_ACTIVITY, '0');
+    SiteSetting::setValue(AdminModules::ASSISTED, '0');
+
+    expect(\App\Support\LoginAs::allowed(User::find($staff)))->toBeFalse()   // even for the owner
+        ->and(\App\Filament\Pages\StaffActivity::canAccess())->toBeFalse()
+        ->and(\App\Support\Assisted::offered())->toBeFalse()
+        ->and(\App\Support\Assisted::inMenu(User::find($staff)))->toBeFalse();
+
+    SiteSetting::setValue(AdminModules::LOGIN_AS_MEMBER, '1');
+    SiteSetting::setValue(AdminModules::STAFF_ACTIVITY, '1');
+
+    expect(\App\Support\LoginAs::allowed(User::find($staff)))->toBeTrue()
+        ->and(\App\Filament\Pages\StaffActivity::canAccess())->toBeTrue();
+});

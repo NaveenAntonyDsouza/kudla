@@ -22,6 +22,8 @@ class AssistedController extends Controller
     public function index()
     {
         $profile = auth()->user()->profile;
+        // Settings → Site Settings → Staff tools → Assisted service: off means no such page
+        abort_unless(\App\Support\AdminModules::assisted(), 404);
         $plan = Assisted::plan($profile);
         $hasHistory = $profile->relationship_manager_id
             || AssistedEvent::where('profile_id', $profile->id)->exists();

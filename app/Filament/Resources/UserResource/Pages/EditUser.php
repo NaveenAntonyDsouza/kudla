@@ -14,10 +14,16 @@ use App\Models\Profile;
 use App\Models\ProfileNote;
 use App\Models\ReligiousInfo;
 use App\Models\SocialMediaLink;
+use App\Models\VerificationCall;
 use App\Services\ProfileCompletionService;
 use App\Support\Permissions;
+use App\Support\StaffActivity;
+use App\Support\VerificationCalls;
 use App\Traits\LogsAdminActivity;
+use DomainException;
 use Filament\Actions;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Schemas\Components\View as SchemaView;
@@ -95,6 +101,9 @@ class EditUser extends EditRecord
     /** After a check was recorded: how many fields that save changed. */
     private ?int $checkedWithChanges = null;
 
+    /** This request's verification call row ([] before it is looked up). */
+    private array $verificationRow = [];
+
     public function getHeading(): string
     {
         return $this->record->full_name ?: (string) $this->record->matri_id;
@@ -130,6 +139,40 @@ class EditUser extends EditRecord
                 })
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->user?->phone),
+
+            // a new member's verification call (Today → Verification Calls): what happened on
+            // it, when it was not "Save and mark checked on call"
+            Actions\ActionGroup::make([
+                $this->callResult('no_answer', 'heroicon-o-phone-x-mark')
+                    ->requiresConfirmation()
+                    ->modalDescription('Records a try. The call comes back on the list tomorrow at 10; after ' . VerificationCalls::MAX_NO_ANSWER . ' tries without an answer it closes as "could not reach". Send the "we tried to call you" WhatsApp message from the member card too.'),
+                $this->callResult('call_back', 'heroicon-o-clock')
+                    ->form([
+                        DateTimePicker::make('at')->label('Call back on')->required()->seconds(false)->native(false)
+                            ->timezone(StaffActivity::tz())->minDate(now()),
+                        Textarea::make('note')->label('Note (optional)')->rows(2)->maxLength(500),
+                    ]),
+                $this->callResult('wrong_number', 'heroicon-o-no-symbol')
+                    ->form([Textarea::make('note')->label('Note (optional)')->rows(2)->maxLength(500)]),
+                $this->callResult('mismatch', 'heroicon-o-exclamation-triangle')
+                    ->modalDescription('The call closes and a manager sees it under "Needs a check". The profile itself stays as it is.')
+                    ->form([Textarea::make('note')->label('What did not match?')->required()->rows(3)->maxLength(500)]),
+                $this->callResult('not_looking', 'heroicon-o-hand-raised')
+                    ->form([Textarea::make('note')->label('What did they say?')->placeholder('For example: already settled')->required()->rows(2)->maxLength(500)]),
+                Actions\Action::make('vc_reopen')
+                    ->label('Put back on the calls list')
+                    ->icon('heroicon-o-arrow-path')
+                    ->visible(fn (): bool => ($row = $this->verificationRow()) !== null && ! $row->isOpen() && $row->status !== 'verified')
+                    ->action(function (): void {
+                        $this->runVerification(fn (VerificationCall $row) => VerificationCalls::reopen(auth()->user(), $row) ?? 'Back on the calls list.');
+                    }),
+            ])
+                ->label('Call result')
+                ->icon('heroicon-m-phone')
+                ->iconPosition('after')
+                ->button()
+                ->color('warning')
+                ->visible(fn (): bool => ($row = $this->verificationRow()) !== null && VerificationCalls::mayWork(auth()->user(), $row)),
 
             // the most common status change has its own button; the rest are under Status
             $this->statusAction('approve', 'Approve', 'heroicon-o-check-badge', 'success', ['is_approved' => true], 'profile_approved', 'Profile approved',
@@ -191,7 +234,7 @@ class EditUser extends EditRecord
                 ->label('Save and mark checked on call')
                 ->icon('heroicon-o-phone')
                 ->color('success')
-                ->tooltip('After going through the details with the member or their family on a call: saves any changes, and records that the details were checked today.')
+                ->tooltip('After going through the details with the member or their family on a call: saves any changes, and records that the details were checked today. For a new member, this is their verification call: verified.')
                 ->action('saveAndMarkChecked'),
             $this->getCancelFormAction(),
         ];
@@ -232,6 +275,10 @@ class EditUser extends EditRecord
 
         self::logActivity('member_details_checked', $this->record, ['fields_changed' => $fieldsChanged]);
         $this->checkedWithChanges = $fieldsChanged;
+
+        // a new member's verification call: checked on a call = verified
+        VerificationCalls::checkedOnCall(auth()->user(), $this->record);
+        $this->verificationRow = [];
     }
 
     /**
@@ -254,6 +301,63 @@ class EditUser extends EditRecord
                 self::logActivity($logAction, $this->record);
             })
             ->successNotificationTitle($done);
+    }
+
+    /** This member's verification call, when they are on the list (looked up once per request). */
+    private function verificationRow(): ?VerificationCall
+    {
+        if (! array_key_exists('row', $this->verificationRow)) {
+            $this->verificationRow['row'] = VerificationCalls::enabled()
+                ? VerificationCall::with('caller')->firstWhere('profile_id', $this->record->getKey())?->setRelation('profile', $this->record)
+                : null;
+        }
+
+        return $this->verificationRow['row'];
+    }
+
+    /** One "Call result" item: records it through VerificationCalls::record(). */
+    private function callResult(string $result, string $icon): Actions\Action
+    {
+        return Actions\Action::make('vc_' . $result)
+            ->label(VerificationCalls::RESULTS[$result])
+            ->icon($icon)
+            ->modalHeading(fn (): string => VerificationCalls::RESULTS[$result] . ': ' . $this->record->matri_id)
+            ->visible(fn (): bool => (bool) $this->verificationRow()?->isOpen())
+            ->action(function (array $data) use ($result): void {
+                $this->runVerification(fn (VerificationCall $row) => VerificationCalls::record(
+                    auth()->user(),
+                    $row,
+                    $result,
+                    $data['note'] ?? null,
+                    filled($data['at'] ?? null) ? \Illuminate\Support\Carbon::parse($data['at'], config('app.timezone')) : null,
+                ));
+            });
+    }
+
+    private function runVerification(callable $work): void
+    {
+        $row = $this->verificationRow();
+        if (! $row) {
+            return;
+        }
+        try {
+            $message = $work($row);
+            Notification::make()->title(is_string($message) ? $message : 'Noted.')->success()->send();
+        } catch (DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+        }
+        $this->verificationRow = [];
+    }
+
+    /** A WhatsApp message on the member card was opened (missed, photo, matches): note it in the history. */
+    public function verificationWhatsApp(string $kind): void
+    {
+        try {
+            VerificationCalls::logWhatsApp(auth()->user(), $this->record, $kind);
+            Notification::make()->title('Noted in the member\'s history.')->success()->send();
+        } catch (DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+        }
     }
 
     /** Facts for the member card (resources/views/filament/members/edit-card.blade.php). */
@@ -367,6 +471,10 @@ class EditUser extends EditRecord
                 'when' => $lastEdit->created_at->displayTz()->format('j M Y, g:i A'),
                 'by' => $lastEdit->admin?->name,
             ] : null,
+            // on Today → Verification Calls: where the call stands, and the WhatsApp messages
+            'verification' => ($verification = VerificationCalls::card(auth()->user(), $profile))
+                ? $verification + ['listUrl' => \App\Filament\Pages\VerificationCalls::getUrl()]
+                : null,
             // "Save and mark checked on call" (markDetailsChecked)
             'checked' => $checkedAt ? [
                 'when' => $checkedAt->format('j M Y'),

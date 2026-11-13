@@ -79,7 +79,8 @@ final class LoginAs
     /** May this account use "Login as member" at all? (the staff right) */
     public static function allowed(?User $staff): bool
     {
-        if (! $staff || ! ($staff->staff_role_id !== null || $staff->role === 'admin')) {
+        // Settings → Site Settings → Staff tools → Login as member (on unless switched off)
+        if (! $staff || ! AdminModules::loginAsMember() || ! ($staff->staff_role_id !== null || $staff->role === 'admin')) {
             return false;
         }
 

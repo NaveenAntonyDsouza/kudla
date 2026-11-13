@@ -79,7 +79,7 @@ class MemberErasure
             foreach (['contact_info', 'differently_abled_info', 'education_details', 'family_details', 'lifestyle_info',
                 'location_info', 'partner_preferences', 'religious_info', 'social_media_links', 'photo_privacy_settings',
                 'saved_searches', 'daily_interest_usage', 'call_logs', 'profile_notes', 'whatsapp_messages', 'id_proofs',
-                'profile_photos'] as $table) {
+                'profile_photos', 'verification_calls'] as $table) {
                 $this->deleteWhere($table, ['profile_id' => $pid]);
             }
             foreach ([['match_scores', 'profile_id', 'matched_profile_id'], ['shortlists', 'profile_id', 'shortlisted_profile_id'],

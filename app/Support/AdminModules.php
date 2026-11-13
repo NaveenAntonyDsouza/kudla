@@ -10,7 +10,10 @@ use App\Models\SiteSetting;
  * Switching one off hides its menus, pages, dashboard widgets, form fields
  * and staff roles; the data and the code stay, so switching it back on in
  * Settings → Site Settings → Staff tools brings everything back as it was.
- * Not set means off, so new sites start without them too.
+ *
+ * A tool nobody uses yet starts off (not set = off); a tool that was already
+ * working before it got a switch starts on, so adding the switch changed
+ * nothing on the live sites (Nov 2026).
  */
 class AdminModules
 {
@@ -28,6 +31,38 @@ class AdminModules
 
     /** Recommend Matches (staff suggest matches to a member: assisted matchmaking). */
     public const RECOMMENDATIONS = 'module_recommendations_enabled';
+
+    /** Verification Calls: every new member is called once, shared out among staff (Nov 2026). New: starts off. */
+    public const VERIFICATION_CALLS = 'module_verification_calls_enabled';
+
+    /** Assisted service: a relationship manager works a paying member's profile (Nov 2026). */
+    public const ASSISTED = 'module_assisted_enabled';
+
+    /** Staff Activity / My Activity: what each staff member did, day by day (Nov 2026). */
+    public const STAFF_ACTIVITY = 'module_staff_activity_enabled';
+
+    /** Login as member: staff open the member site as a member, view only and recorded (Nov 2026). */
+    public const LOGIN_AS_MEMBER = 'module_login_as_member_enabled';
+
+    public static function verificationCalls(): bool
+    {
+        return SiteSetting::getValue(self::VERIFICATION_CALLS, '0') === '1';
+    }
+
+    public static function assisted(): bool
+    {
+        return SiteSetting::getValue(self::ASSISTED, '1') === '1';
+    }
+
+    public static function staffActivity(): bool
+    {
+        return SiteSetting::getValue(self::STAFF_ACTIVITY, '1') === '1';
+    }
+
+    public static function loginAsMember(): bool
+    {
+        return SiteSetting::getValue(self::LOGIN_AS_MEMBER, '1') === '1';
+    }
 
     public static function branches(): bool
     {

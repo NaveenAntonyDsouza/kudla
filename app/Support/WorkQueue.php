@@ -121,6 +121,15 @@ class WorkQueue
                 'url' => self::url(fn () => ProfileReportResource::getUrl('index', ['tab' => 'pending'])),
                 'measure' => fn () => $pending(ProfileReport::where('status', 'pending')),
             ],
+            // new members' verification calls (12 Nov 2026): a caller's own and those open to
+            // anyone; the whole list for whoever manages it
+            'verification' => [
+                'label' => 'New members to call for verification',
+                'target_hours' => 24, 'target' => '1 day',
+                'can' => fn () => \App\Filament\Pages\VerificationCalls::canAccess(),
+                'url' => self::url(fn () => \App\Filament\Pages\VerificationCalls::getUrl()),
+                'measure' => fn () => VerificationCalls::queue(auth()->user()),
+            ],
             'followups' => [
                 'label' => 'Follow-ups due',
                 'target_hours' => 24, 'target' => 'on the day',

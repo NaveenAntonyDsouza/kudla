@@ -34,7 +34,9 @@ class StaffActivity extends Page
     {
         $user = auth()->user();
 
-        return $user && ($user->staff_role_id !== null || $user->role === 'admin');
+        // Settings → Site Settings → Staff tools → Staff activity (on unless switched off)
+        return $user && \App\Support\AdminModules::staffActivity()
+            && ($user->staff_role_id !== null || $user->role === 'admin');
     }
 
     public static function getNavigationLabel(): string

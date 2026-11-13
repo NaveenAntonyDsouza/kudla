@@ -16,6 +16,41 @@
         style="width:4.25rem;height:4.25rem;border-radius:9999px;object-fit:cover;flex-shrink:0;background:rgba(128,128,128,.12);">
 
     <div style="flex:1 1 15rem;min-width:0;display:flex;flex-direction:column;gap:.55rem;font-size:.875rem;line-height:1.45;">
+        {{-- a new member's verification call (Today → Verification Calls; App\Support\VerificationCalls::card) --}}
+        @if ($v = $verification ?? null)
+            @php $wa = 'display:inline-flex;align-items:center;padding:.15rem .6rem;border-radius:9999px;font-size:.78rem;font-weight:600;line-height:1.4;white-space:nowrap;border:1px solid rgba(22,163,74,.45);background:rgba(22,163,74,.10);color:#15803d;text-decoration:none;'; @endphp
+            <div style="display:flex;flex-direction:column;gap:.4rem;padding:.6rem .75rem;border-radius:.6rem;border:1px solid rgba(217,119,6,.35);background:rgba(217,119,6,.06);">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .6rem;">
+                    <span style="font-weight:700;">Verification call</span>
+                    <x-admin.pill :color="$v['color']">{{ $v['label'] }}</x-admin.pill>
+                    <span style="opacity:.8;">
+                        joined {{ $v['joined'] }} · {{ $v['givenTo'] ? 'given to ' . $v['givenTo'] : 'not given to anyone' }}@if ($v['tries']) · {{ $v['tries'] }} {{ \Illuminate\Support\Str::plural('try', $v['tries']) }}@endif @if ($v['due']) · due {{ $v['due'] }}@endif @if ($v['done']) · {{ $v['done'] }}@endif
+                    </span>
+                    <a href="{{ $v['listUrl'] }}" style="margin-left:auto;font-size:.8rem;color:inherit;text-decoration:underline;">Back to Verification Calls</a>
+                </div>
+                @if ($v['open'] && $v['may'])
+                    <div>
+                        Ask them to tell you their date of birth @if ($v['dob']) (on the profile: <strong>{{ $v['dob'] }}</strong>) @endif and the details below, without reading them out.
+                        Fill in what is missing, then <strong>Save and mark checked on call</strong> at the bottom: that is "verified".
+                        No answer, busy, wrong number or details that don't match: <strong>Call result</strong> at the top.
+                    </div>
+                @elseif ($v['open'])
+                    <div style="opacity:.8;">{{ $v['givenTo'] ? $v['givenTo'] . ' makes this call.' : 'Waiting for a caller.' }} A manager can move it.</div>
+                @endif
+                @if ($v['whatsapp'])
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .4rem;">
+                        <span style="opacity:.75;">WhatsApp:</span>
+                        @foreach (['missed' => 'We tried to call you', 'photo' => 'Ask for a photo', 'matches' => 'Share matches link'] as $kind => $label)
+                            @if (! empty($v['whatsapp'][$kind]))
+                                {{-- opens WhatsApp with the message ready; the click is noted in the member's history --}}
+                                <a href="{{ $v['whatsapp'][$kind] }}" target="_blank" rel="noopener" wire:click="verificationWhatsApp('{{ $kind }}')" style="{{ $wa }}">{{ $label }}</a>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @endif
+
         <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .7rem;">
             <span style="font-weight:700;font-size:1.05rem;">{{ $matriId }}</span>
             @if ($facts)

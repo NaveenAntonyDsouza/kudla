@@ -49,6 +49,9 @@ return [
         // recorded with its reason). Shows the member's chats and unlocked contacts, so
         // it is off for every role until the owner switches it on; needs two-step sign-in.
         'login_as_member' => ['label' => 'Login as Member (view only, recorded)', 'type' => 'simple', 'category' => 'members'],
+        // Nov 2026: new members are shared out in turn to the staff with this right, who
+        // call each one once to check their details (Today → Verification Calls)
+        'verification_calls' => ['label' => 'Take Verification Calls (new members are shared out to them)', 'type' => 'simple', 'category' => 'members'],
 
         // ── VIP & Featured (2 simple) ──
         'mark_vip' => ['label' => 'Mark as VIP', 'type' => 'simple', 'category' => 'vip_featured'],
