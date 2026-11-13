@@ -442,7 +442,7 @@ it('records what the staff member says they did on the call, nothing ticked for 
     ($this->as)($caller);
 
     // nothing is ever pre-ticked: a photo asked for on the staff member's own phone counts
-    expect(VerificationCalls::TASKS)->toHaveKeys(['details', 'filled', 'looking', 'photo', 'about_us', 'how_to', 'link', 'plans'])
+    expect(VerificationCalls::TASKS)->toHaveKeys(['details', 'filled', 'looking', 'photo', 'members', 'explained', 'link', 'plans'])
         ->and(array_keys(VerificationCalls::TASK_SHORT))->toBe(array_keys(VerificationCalls::TASKS))
         ->and(fn () => VerificationCalls::finishCall($caller, $row, [], ''))->toThrow(DomainException::class)
         ->and(fn () => VerificationCalls::finishCall($other, $row, ['photo'], null))->toThrow(DomainException::class);

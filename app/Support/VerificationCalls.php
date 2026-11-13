@@ -66,8 +66,8 @@ final class VerificationCalls
         'filled' => 'Filled in the details that were missing',
         'looking' => 'Went through what they are looking for',
         'photo' => 'Asked for a photo on WhatsApp',
-        'about_us' => 'Explained the site and how many members we have',
-        'how_to' => 'Showed them how to search and send interests',
+        'members' => 'Told them how many members we have',
+        'explained' => 'Explained search, interests, chat and viewing contacts',
         'link' => 'Sent the search or community link on WhatsApp',
         'plans' => 'Told them about the membership plans',
     ];
@@ -78,8 +78,8 @@ final class VerificationCalls
         'filled' => 'details filled in',
         'looking' => 'what they want',
         'photo' => 'photo asked for',
-        'about_us' => 'site explained',
-        'how_to' => 'shown how to search',
+        'members' => 'member count told',
+        'explained' => 'features explained',
         'link' => 'link sent',
         'plans' => 'plans explained',
     ];
