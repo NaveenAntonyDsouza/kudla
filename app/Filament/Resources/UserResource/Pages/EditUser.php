@@ -140,6 +140,37 @@ class EditUser extends EditRecord
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->user?->phone),
 
+            // the end of a verification call that went through: tick what was done, add
+            // anything else, and the call is recorded and closed in one go
+            Actions\Action::make('vc_done')
+                ->label('Call done')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->button()
+                ->modalHeading(fn (): string => 'What did you do on this call? — '.$this->record->matri_id)
+                ->modalDescription('Tick only what you actually did, however you did it — a photo you asked for on your own phone counts. Save any changes to the details first.')
+                ->modalSubmitActionLabel('Record the call')
+                ->visible(fn (): bool => ($row = $this->verificationRow()) !== null && $row->isOpen() && VerificationCalls::mayWork(auth()->user(), $row))
+                ->form([
+                    \Filament\Forms\Components\CheckboxList::make('tasks')
+                        ->label('On this call I')
+                        ->options(VerificationCalls::TASKS)
+                        ->bulkToggleable(),
+                    Textarea::make('notes')
+                        ->label('Anything else (optional)')
+                        ->placeholder('What they said, what to do next…')
+                        ->rows(3)
+                        ->maxLength(500),
+                ])
+                ->action(function (array $data): void {
+                    $this->runVerification(fn (VerificationCall $row) => VerificationCalls::finishCall(
+                        auth()->user(),
+                        $row,
+                        (array) ($data['tasks'] ?? []),
+                        $data['notes'] ?? null,
+                    ));
+                }),
+
             // a new member's verification call (Today → Verification Calls): what happened on
             // it, when it was not "Save and mark checked on call"
             Actions\ActionGroup::make([

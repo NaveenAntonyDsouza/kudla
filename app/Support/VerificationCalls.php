@@ -56,6 +56,19 @@ final class VerificationCalls
 
     public const START_SETTING = 'verification_calls_from';
 
+    /**
+     * What staff do on a verification call (owner, 13 Nov 2026). Nothing is ever ticked
+     * for them: a photo is often asked for on WhatsApp from the staff member's own phone,
+     * without our button, so the ticks are their own account of what they did.
+     */
+    public const TASKS = [
+        'details' => 'Went through their details with them',
+        'filled' => 'Filled in the details that were missing',
+        'photo' => 'Asked for a photo on WhatsApp',
+        'link' => 'Sent the search or community link on WhatsApp',
+        'plans' => 'Told them about the membership plans',
+    ];
+
     /** What can happen on a call, besides "verified" (the edit page's Save and mark checked). */
     public const RESULTS = [
         'no_answer' => 'No answer / switched off',
@@ -520,6 +533,61 @@ final class VerificationCalls
         };
     }
 
+    /**
+     * The end of a call that went through: the staff member ticks what they did and may
+     * add anything else in their own words. One Call note holds the lot, so the member's
+     * history reads as one conversation, and the ticks are kept on the Activity Log line
+     * so they can be counted later. The call is closed as verified — a call that did not
+     * go through is recorded with record() instead (no answer, call back, wrong number…).
+     */
+    public static function finishCall(User $staff, VerificationCall $row, array $ticked, ?string $notes = null): string
+    {
+        if (! self::mayWork($staff, $row)) {
+            throw new DomainException(self::refusal($staff, $row));
+        }
+        if (! $row->isOpen()) {
+            throw new DomainException('This call is already finished ('.$row->label().'). Put it back on the list first.');
+        }
+        // keep only the known tasks, in the order they are listed
+        $done = array_values(array_intersect(array_keys(self::TASKS), $ticked));
+        $notes = Str::limit(trim((string) $notes), 500, '');
+        if ($done === [] && $notes === '') {
+            throw new DomainException('Tick what you did on the call, or write what happened.');
+        }
+
+        DB::transaction(function () use ($row, $staff, $done, $notes) {
+            $row->forceFill([
+                'status' => 'verified',
+                'attempts' => $row->attempts + 1,
+                'last_attempt_at' => now(),
+                'last_attempt_by' => $staff->id,
+                'done_at' => now(),
+                'done_by' => $staff->id,
+            ] + (self::isCaller($staff) && (int) $row->assigned_to !== $staff->id ? ['assigned_to' => $staff->id, 'assigned_at' => now()] : []))->save();
+
+            $did = array_map(fn ($key) => lcfirst(self::TASKS[$key]), $done);
+            ProfileNote::create([
+                'profile_id' => $row->profile_id,
+                'admin_user_id' => $staff->id,
+                'note_type' => 'call',
+                'note' => trim(self::NOTE_PREFIX.' spoke to them.'
+                    .($did ? ' '.ucfirst(implode('; ', $did)).'.' : '')
+                    .($notes !== '' ? ' '.$notes : '')),
+            ]);
+
+            // "went through their details" is the same thing the edit page's
+            // Save and mark checked records, so the member's card agrees with the note
+            if (in_array('details', $done, true)) {
+                DB::table('profiles')->where('id', $row->profile_id)
+                    ->update(['details_checked_at' => now(), 'details_checked_by' => $staff->id]);
+            }
+        });
+
+        StaffActionLog::record('verification_call_done', $row->profile_id, ['tasks' => $done]);
+
+        return 'Call recorded'.($done ? ' — '.count($done).' '.(count($done) === 1 ? 'thing' : 'things').' done' : '').'. Marked verified.';
+    }
+
     /** No answer: try again the next day, at 10 in the morning. */
     private static function nextTry(): Carbon
     {
@@ -737,12 +805,44 @@ final class VerificationCalls
 
         return [
             'rows' => $rows,
+            'tasks_this_week' => self::tasksDone($weekStart),
             'unassigned' => (int) ($open[0]->n ?? 0),
             'from' => self::startDate(),
             'total' => (clone $all)->count(),
             'verified' => (clone $all)->where('verification_calls.status', 'verified')->count(),
             'openTotal' => (clone $all)->whereIn('verification_calls.status', VerificationCall::OPEN)->count(),
         ];
+    }
+
+    /**
+     * How many calls since $from recorded each task, for the week's line on the page:
+     * ['photo' => 12, 'link' => 9, …]. Read back off the Activity Log lines finishCall
+     * writes, so it counts what staff said they did however they did it.
+     */
+    public static function tasksDone(CarbonInterface $from): array
+    {
+        $done = array_fill_keys(array_keys(self::TASKS), 0);
+        $done['calls'] = 0;
+        try {
+            $rows = \App\Models\AdminActivityLog::query()
+                ->where('action', 'verification_call_done')
+                ->where('created_at', '>=', $from)
+                ->limit(5000)
+                ->pluck('changes');
+            foreach ($rows as $changes) {
+                $done['calls']++;
+                $tasks = is_array($changes) ? ($changes['tasks'] ?? []) : (json_decode((string) $changes, true)['tasks'] ?? []);
+                foreach ((array) $tasks as $task) {
+                    if (array_key_exists($task, self::TASKS)) {
+                        $done[$task]++;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return $done;
     }
 
     /** The verification strip on the member edit page, or null when the member is not on the list. */

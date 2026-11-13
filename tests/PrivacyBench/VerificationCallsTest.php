@@ -432,3 +432,47 @@ it('shows the newest members first by default, the longest waiting the other way
     expect(array_slice($order('newest'), -1))->toBe([$last])
         ->and(array_slice($order('oldest'), -1))->toBe([$last]);
 });
+
+it('records what the staff member says they did on the call, nothing ticked for them', function () {
+    VerificationCalls::sync();
+    $m = $this->bench->m;
+    $row = ($this->row)('T');
+    $caller = User::find($row->assigned_to);
+    $other = collect([$this->asha, $this->ravi, $this->tara])->first(fn ($u) => $u->id !== $caller->id);
+    ($this->as)($caller);
+
+    // nothing is ever pre-ticked: a photo asked for on the staff member's own phone counts
+    expect(VerificationCalls::TASKS)->toHaveKeys(['details', 'filled', 'photo', 'link', 'plans'])
+        ->and(fn () => VerificationCalls::finishCall($caller, $row, [], ''))->toThrow(DomainException::class)
+        ->and(fn () => VerificationCalls::finishCall($other, $row, ['photo'], null))->toThrow(DomainException::class);
+
+    // unknown ticks are dropped; a free note alone is enough
+    $message = VerificationCalls::finishCall($caller, $row, ['photo', 'details', 'nonsense'], 'Father will call back on Sunday.');
+    expect($message)->toContain('2 things done');
+
+    $row->refresh();
+    $note = ProfileNote::where('profile_id', $m['T']->id)->where('note_type', 'call')->latest('id')->first();
+    expect($row->status)->toBe('verified')
+        ->and($row->done_by)->toBe($caller->id)
+        ->and($row->attempts)->toBe(1)
+        // reads as one sentence: "Went through their details with them; asked for a photo on WhatsApp."
+        ->and($note->note)->toContain('Went through their details with them; asked for a photo')
+        ->toContain('Father will call back on Sunday.')
+        ->and($note->note)->not->toContain('nonsense')
+        // "went through their details" marks the member's card too
+        ->and($m['T']->fresh()->details_checked_by)->toBe($caller->id)
+        // and it cannot be recorded twice
+        ->and(fn () => VerificationCalls::finishCall($caller, $row->refresh(), ['plans'], null))->toThrow(DomainException::class);
+
+    // the ticks are counted for the week, however the staff member did them
+    $tasks = VerificationCalls::tasksDone(now()->subDay());
+    expect($tasks['calls'])->toBe(1)->and($tasks['photo'])->toBe(1)->and($tasks['details'])->toBe(1)->and($tasks['plans'])->toBe(0);
+
+    // a note-only call is allowed, and Staff Activity counts both as calls
+    $second = VerificationCall::whereIn('status', VerificationCall::OPEN)->where('assigned_to', $caller->id)->first();
+    VerificationCalls::finishCall($caller, $second, [], 'Wrong time, will ring tomorrow.');
+    expect($second->refresh()->status)->toBe('verified')
+        ->and(VerificationCalls::tasksDone(now()->subDay())['calls'])->toBe(2);
+    $week = [\Carbon\CarbonImmutable::now()->subDay(), \Carbon\CarbonImmutable::now()->addDay()];
+    expect(collect(StaffActivity::summary($week[0], $week[1], $caller->id))->first()['calls'])->toBe(2);
+});

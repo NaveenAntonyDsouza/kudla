@@ -31,8 +31,8 @@
                 @if ($v['open'] && $v['may'])
                     <div>
                         Ask them to tell you their date of birth @if ($v['dob']) (on the profile: <strong>{{ $v['dob'] }}</strong>) @endif and the details below, without reading them out.
-                        Fill in what is missing, then <strong>Save and mark checked on call</strong> at the bottom: that is "verified".
-                        No answer, busy, wrong number or details that don't match: <strong>Call result</strong> at the top.
+                        Fill in what is missing and save, then press <strong>Call done</strong> at the top and tick what you did.
+                        No answer, busy, wrong number or details that don't match: <strong>Call result</strong> instead.
                     </div>
                 @elseif ($v['open'])
                     <div style="opacity:.8;">{{ $v['givenTo'] ? $v['givenTo'] . ' makes this call.' : 'Waiting for a caller.' }} A manager can move it.</div>

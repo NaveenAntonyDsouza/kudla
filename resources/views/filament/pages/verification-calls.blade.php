@@ -49,6 +49,17 @@
                                     <td style="{{ $num }}padding-right:0;">{{ $r['not_reached'] ?: '—' }}</td>
                                 </tr>
                             @endforeach
+                            @php $t = $report['tasks_this_week'] ?? null; @endphp
+                            @if ($t && $t['calls'])
+                                <tr style="border-top:1px solid rgba(127,127,127,.2);">
+                                    <td style="{{ $td }}padding-left:0;" colspan="7">
+                                        <span style="{{ $muted }}">Of the {{ $t['calls'] }} {{ $t['calls'] === 1 ? 'call' : 'calls' }} recorded this week:</span>
+                                        @foreach (\App\Support\VerificationCalls::TASKS as $key => $label)
+                                            <span style="margin-left:.5rem;">{{ $label }} <strong>{{ $t[$key] ?? 0 }}</strong>@if (! $loop->last) ·@endif</span>
+                                        @endforeach
+                                    </td>
+                                </tr>
+                            @endif
                             @if ($report['unassigned'])
                                 <tr style="border-top:1px solid rgba(127,127,127,.2);">
                                     <td style="{{ $td }}padding-left:0;" colspan="7">Not given to anyone: <strong>{{ $report['unassigned'] }}</strong> (under Anyone can call)</td>
@@ -64,8 +75,8 @@
     @if ($isCaller)
         <p style="{{ $muted }}font-size:.85rem;margin:0;">
             On the call: open the member, ask them to tell you their date of birth and the other details (don't read them out), fill in what is missing,
-            ask for a photo on WhatsApp if there is none, then press <strong>Save and mark checked on call</strong>: that is "verified".
-            No answer? Press <strong>No answer</strong> and send the WhatsApp message. After {{ $maxNoAnswer }} tries the call closes.
+            and ask for a photo if there is none. At the end press <strong>Call done</strong> and tick what you did — a photo you asked for on your own
+            phone counts just the same. No answer? Press <strong>No answer</strong> and send the WhatsApp message; after {{ $maxNoAnswer }} tries the call closes.
         </p>
     @endif
 
