@@ -442,7 +442,8 @@ it('records what the staff member says they did on the call, nothing ticked for 
     ($this->as)($caller);
 
     // nothing is ever pre-ticked: a photo asked for on the staff member's own phone counts
-    expect(VerificationCalls::TASKS)->toHaveKeys(['details', 'filled', 'photo', 'link', 'plans'])
+    expect(VerificationCalls::TASKS)->toHaveKeys(['details', 'filled', 'looking', 'photo', 'about_us', 'how_to', 'link', 'plans'])
+        ->and(array_keys(VerificationCalls::TASK_SHORT))->toBe(array_keys(VerificationCalls::TASKS))
         ->and(fn () => VerificationCalls::finishCall($caller, $row, [], ''))->toThrow(DomainException::class)
         ->and(fn () => VerificationCalls::finishCall($other, $row, ['photo'], null))->toThrow(DomainException::class);
 
@@ -455,8 +456,8 @@ it('records what the staff member says they did on the call, nothing ticked for 
     expect($row->status)->toBe('verified')
         ->and($row->done_by)->toBe($caller->id)
         ->and($row->attempts)->toBe(1)
-        // reads as one sentence: "Went through their details with them; asked for a photo on WhatsApp."
-        ->and($note->note)->toContain('Went through their details with them; asked for a photo')
+        // reads as one sentence: "Verified them by their date of birth and details; asked for a photo on WhatsApp."
+        ->and($note->note)->toContain('Verified them by their date of birth and details; asked for a photo')
         ->toContain('Father will call back on Sunday.')
         ->and($note->note)->not->toContain('nonsense')
         // "went through their details" marks the member's card too

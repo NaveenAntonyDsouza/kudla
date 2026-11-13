@@ -62,11 +62,26 @@ final class VerificationCalls
      * without our button, so the ticks are their own account of what they did.
      */
     public const TASKS = [
-        'details' => 'Went through their details with them',
+        'details' => 'Verified them by their date of birth and details',
         'filled' => 'Filled in the details that were missing',
+        'looking' => 'Went through what they are looking for',
         'photo' => 'Asked for a photo on WhatsApp',
+        'about_us' => 'Explained the site and how many members we have',
+        'how_to' => 'Showed them how to search and send interests',
         'link' => 'Sent the search or community link on WhatsApp',
         'plans' => 'Told them about the membership plans',
+    ];
+
+    /** The same things in a few words, for the week's line on the calls page. */
+    public const TASK_SHORT = [
+        'details' => 'verified',
+        'filled' => 'details filled in',
+        'looking' => 'what they want',
+        'photo' => 'photo asked for',
+        'about_us' => 'site explained',
+        'how_to' => 'shown how to search',
+        'link' => 'link sent',
+        'plans' => 'plans explained',
     ];
 
     /** What can happen on a call, besides "verified" (the edit page's Save and mark checked). */

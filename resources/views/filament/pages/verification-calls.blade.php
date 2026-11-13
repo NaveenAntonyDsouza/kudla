@@ -54,7 +54,7 @@
                                 <tr style="border-top:1px solid rgba(127,127,127,.2);">
                                     <td style="{{ $td }}padding-left:0;" colspan="7">
                                         <span style="{{ $muted }}">Of the {{ $t['calls'] }} {{ $t['calls'] === 1 ? 'call' : 'calls' }} recorded this week:</span>
-                                        @foreach (\App\Support\VerificationCalls::TASKS as $key => $label)
+                                        @foreach (\App\Support\VerificationCalls::TASK_SHORT as $key => $label)
                                             <span style="margin-left:.5rem;">{{ $label }} <strong>{{ $t[$key] ?? 0 }}</strong>@if (! $loop->last) ·@endif</span>
                                         @endforeach
                                     </td>
