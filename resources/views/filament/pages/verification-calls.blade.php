@@ -69,12 +69,24 @@
         </p>
     @endif
 
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
         @foreach ($tabs as $key => $label)
             <x-filament::button size="sm" :color="$tab === $key ? 'primary' : 'gray'" :outlined="$tab !== $key" wire:click="$set('tab', '{{ $key }}')">
                 {{ $label }} <span style="opacity:.8;margin-left:.2rem;">{{ $counts[$key] }}</span>
             </x-filament::button>
         @endforeach
+
+        @if ($sortable)
+            {{-- which end of the list to start from; a call put off to a later day stays below either way --}}
+            <span style="margin-left:auto;display:flex;align-items:center;gap:.4rem;">
+                <span style="{{ $muted }}">Show</span>
+                <select style="{{ $select }}max-width:13rem;" wire:model.live="sort" aria-label="Order of the list">
+                    @foreach ($sorts as $key => $label)
+                        <option value="{{ $key }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </span>
+        @endif
     </div>
 
     <x-filament::section>

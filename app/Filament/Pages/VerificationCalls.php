@@ -35,6 +35,10 @@ class VerificationCalls extends Page
     #[Url]
     public string $tab = '';
 
+    /** Newest members first, or the ones waiting longest (kept in the address). */
+    #[Url]
+    public string $sort = Calls::SORT_DEFAULT;
+
     /** Managers: the calls ticked on the list, and who to give them to ('' = anyone). */
     public array $picked = [];
     public string $giveTo = '';
@@ -61,6 +65,9 @@ class VerificationCalls extends Page
         Calls::sync();
         if (! array_key_exists($this->tab, $this->tabs())) {
             $this->tab = array_key_first($this->tabs());
+        }
+        if (! array_key_exists($this->sort, Calls::SORTS)) {
+            $this->sort = Calls::SORT_DEFAULT;
         }
     }
 
@@ -226,7 +233,8 @@ class VerificationCalls extends Page
         foreach (array_keys($tabs) as $key) {
             $counts[$key] = Calls::tab($user, $key)->count();
         }
-        $rows = Calls::tab($user, $this->tab)
+        $sort = array_key_exists($this->sort, Calls::SORTS) ? $this->sort : Calls::SORT_DEFAULT;
+        $rows = Calls::tab($user, $this->tab, $sort)
             ->with(['profile.user', 'profile.contactInfo', 'profile.primaryPhoto', 'caller', 'doneBy'])
             ->limit(200)
             ->get();
@@ -236,6 +244,10 @@ class VerificationCalls extends Page
             'tabs' => $tabs,
             'counts' => $counts,
             'rows' => $rows,
+            'sorts' => Calls::SORTS,
+            'sort' => $sort,
+            // the order only applies to the lists of calls still to make
+            'sortable' => in_array($this->tab, ['mine', 'anyone', 'all'], true),
             'manages' => $manages,
             'isCaller' => Calls::isCaller($user),
             // for the "Given to" menu: [id => [name, branch]]; a call goes only to its member's branch

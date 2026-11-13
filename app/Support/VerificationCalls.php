@@ -331,21 +331,42 @@ final class VerificationCalls
         return $query;
     }
 
+    /** The order of the lists of calls still to make (owner, 13 Nov 2026: newest by default). */
+    public const SORTS = ['newest' => 'Newest members first', 'oldest' => 'Longest waiting first'];
+
+    public const SORT_DEFAULT = 'newest';
+
+    /**
+     * Calls waiting to be made, newest or longest-waiting member first. A call put off to
+     * a later day (no answer, call back) goes below the ones due now whichever way round
+     * it is, so it isn't in the way until it comes due.
+     */
+    private static function waitingOrder(Builder $query, string $sort): Builder
+    {
+        $direction = $sort === 'oldest' ? 'asc' : 'desc';
+
+        return $query
+            ->orderByRaw('(verification_calls.due_at is null or verification_calls.due_at <= ?) desc', [now()])
+            ->orderBy('profiles.created_at', $direction)
+            ->orderBy('verification_calls.id', $direction);
+    }
+
     /** One tab of the list: mine, anyone (can call), all (open), check (details did not match), done (last 30 days). */
-    public static function tab(User $viewer, string $tab): Builder
+    public static function tab(User $viewer, string $tab, string $sort = self::SORT_DEFAULT): Builder
     {
         $query = self::rows($viewer);
         $open = fn (Builder $q) => $q->whereIn('verification_calls.status', VerificationCall::OPEN);
+        $waiting = fn (Builder $q) => self::waitingOrder($q, $sort);
 
         return match ($tab) {
-            'anyone' => $open($query)->where(fn ($w) => self::anyoneWhere($w))->orderBy('verification_calls.due_at')->orderBy('verification_calls.id'),
-            'all' => $open($query)->orderBy('verification_calls.due_at')->orderBy('verification_calls.id'),
+            'anyone' => $waiting($open($query)->where(fn ($w) => self::anyoneWhere($w))),
+            'all' => $waiting($open($query)),
             'check' => $query->where('verification_calls.status', 'mismatch')->orderByDesc('verification_calls.done_at'),
             'done' => $query->whereNotIn('verification_calls.status', VerificationCall::OPEN)
                 ->where('verification_calls.done_at', '>=', now()->subDays(30))
                 ->when(! self::managesAll($viewer), fn ($q) => $q->where(fn ($m) => $m->where('verification_calls.done_by', $viewer->id)->orWhere('verification_calls.assigned_to', $viewer->id)))
                 ->orderByDesc('verification_calls.done_at'),
-            default => $open($query)->where('verification_calls.assigned_to', $viewer->id)->orderBy('verification_calls.due_at')->orderBy('verification_calls.id'),
+            default => $waiting($open($query)->where('verification_calls.assigned_to', $viewer->id)),
         };
     }
 

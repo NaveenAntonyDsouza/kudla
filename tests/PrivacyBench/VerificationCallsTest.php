@@ -402,3 +402,33 @@ it('skips a caller who is away, shares out their calls, and does nothing while t
         ->and(VerificationCalls::card($this->mohan, $this->bench->m['T']))->toBeNull()
         ->and(collect(\App\Support\WorkQueue::items())->firstWhere('key', 'verification'))->toBeNull();
 });
+
+it('shows the newest members first by default, the longest waiting the other way, and puts calls put off below', function () {
+    VerificationCalls::sync();
+    $m = $this->bench->m;
+    // every bench member gets its own join date, the first key oldest and the last newest
+    $keys = array_keys($m);
+    foreach ($keys as $i => $key) {
+        DB::table('profiles')->where('id', $m[$key]->id)->update(['created_at' => now()->subDays(20 - $i)]);
+    }
+    $first = $m[$keys[0]]->id;
+    $last = $m[$keys[count($keys) - 1]]->id;
+    ($this->as)($this->mohan);
+
+    $order = fn (string $sort) => VerificationCalls::tab($this->mohan, 'all', $sort)->pluck('profile_id')->all();
+    $newest = $order('newest');
+    $oldest = $order('oldest');
+
+    expect($newest)->toBe(array_reverse($oldest))
+        ->and($newest[0])->toBe($last)                       // joined most recently
+        ->and($oldest[0])->toBe($first)                      // waiting longest
+        // an unknown sort word falls back to newest rather than erroring
+        ->and($order('sideways'))->toBe($newest)
+        ->and(VerificationCalls::tab($this->mohan, 'all')->pluck('profile_id')->all())->toBe($newest);
+
+    // a call put off to tomorrow drops below the ones due now, whichever order is chosen
+    $putOff = VerificationCall::where('profile_id', $last)->first();
+    VerificationCalls::record($this->mohan, $putOff, 'call_back', 'after work', now()->addDay());
+    expect(array_slice($order('newest'), -1))->toBe([$last])
+        ->and(array_slice($order('oldest'), -1))->toBe([$last]);
+});
