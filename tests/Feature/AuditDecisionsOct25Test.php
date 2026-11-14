@@ -268,7 +268,9 @@ it('shows results at one address for visitors and members', function () {
 
 it('starts visitors at every age, from the youngest allowed to 70', function () {
     expect(file_get_contents(app_path('Http/Controllers/SearchController.php')))
-        ->toContain("['age_from' => \\App\\Support\\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => '']");
+        // not pinned to the end of the array: the visitor defaults now also carry
+        // the religion the site starts its search on (owner, 14 Nov 2026)
+        ->toContain("['age_from' => \\App\\Support\\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => ''");
 
     // both visitor forms (Quick and Advanced) start from those defaults
     $view = file_get_contents(resource_path('views/search/public.blade.php'));

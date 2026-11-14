@@ -89,6 +89,7 @@ class SiteSettings extends Page implements HasForms
             'profile_id_prefix' => $settings['profile_id_prefix'] ?? 'AM',
             'show_diocese' => ($settings['show_diocese'] ?? '1') === '1',
             'caste_required' => ($settings['caste_required'] ?? '1') === '1',
+            'search_default_religion' => $settings['search_default_religion'] ?? '',
             'min_age_male' => $settings['min_age_male'] ?? (string) \App\Support\MinimumAge::DEFAULT_MALE,
             'min_age_female' => $settings['min_age_female'] ?? (string) \App\Support\MinimumAge::DEFAULT_FEMALE,
             'default_phone_code' => $settings['default_phone_code'] ?? '+91',
@@ -314,6 +315,12 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('show_diocese')
                             ->label('Show Diocese field')
                             ->helperText('Shows the Christian Diocese dropdown in registration & profile editing (it cascades from Denomination). Turn OFF for a global audience that has no single-country diocese list. Default: ON.'),
+
+                        Forms\Components\Select::make('search_default_religion')
+                            ->label('Religion the search starts on')
+                            ->options(['' => 'Any Religion'] + array_combine($r = config('reference_data.religion_list', []), $r))
+                            ->selectablePlaceholder(false)
+                            ->helperText('What the Religion box on Quick and Advanced Search shows before anyone chooses. Set it to the religion most of your members follow, so a visitor sees useful results straight away. A signed-in member always starts on their own religion instead, whatever this says.'),
 
                         Forms\Components\Toggle::make('caste_required')
                             ->label('Caste / Community required')

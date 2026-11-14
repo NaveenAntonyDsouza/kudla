@@ -252,6 +252,22 @@ class SearchController extends Controller
      * Where a members' search with these parameters lives now: keyword →
      * Keyword Search, Matri ID → Search by ID, filters → Advanced Search results.
      */
+    /**
+     * The religion the search form starts on when there is nothing better to use:
+     * Settings -> Site Settings -> Registration -> "Religion the search starts on".
+     * Most of Kudla's members are Hindu and most of GCM's are Christian, so each site
+     * sets its own (owner, 14 Nov 2026); empty keeps the old "Any Religion".
+     * A signed-in member's own religion always wins over this.
+     */
+    public static function defaultReligion(): string
+    {
+        // never throws: the search form is also built where there is no settings table
+        // (feature tests on a partial schema, a site part-way through a migration)
+        $religion = rescue(fn () => trim((string) \App\Models\SiteSetting::getValue('search_default_religion', '')), '', false);
+
+        return in_array($religion, config('reference_data.religion_list', []), true) ? $religion : '';
+    }
+
     public static function memberSearchDefaults(Profile $profile): array
     {
         // Starting age / height range from the member's own (Advanced and Quick Search)
@@ -265,7 +281,7 @@ class SearchController extends Controller
             'height_to' => $isMale ? ($profile->height ?? '213 cm - 7 ft 00 inch') : '213 cm - 7 ft 00 inch',
             // a fresh form starts with the member's own religion, as Partner Preferences does
             // (owner, 6 Nov 2026); a search already in the address keeps its own choice
-            'religion' => (string) ($profile->religiousInfo?->religion ?? ''),
+            'religion' => (string) ($profile->religiousInfo?->religion ?: self::defaultReligion()),
         ];
     }
 
@@ -565,7 +581,8 @@ class SearchController extends Controller
         // Quick / Advanced Search start members at their own range, visitors at every age (Oct 2026)
         $quickDefaults = $member
             ? self::memberSearchDefaults(auth()->user()->profile)
-            : ['age_from' => \App\Support\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => ''];
+            : ['age_from' => \App\Support\MinimumAge::lowest(), 'age_to' => 70, 'height_from' => '', 'height_to' => '',
+                'religion' => self::defaultReligion()];
 
         return view('search.public', compact('activeTab', 'quickDefaults', 'idResult'));
     }

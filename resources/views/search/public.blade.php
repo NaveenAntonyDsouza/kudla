@@ -1,7 +1,9 @@
 <x-layouts.app title="Search Profiles" robots="noindex, follow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{
         activeTab: @js($activeTab),
-        advReligion: @js(is_array(request('religion')) ? '' : request('religion', '')),
+        {{-- same start as Quick Search: a fresh form uses the member's own religion, or the
+             one the site starts on (Site Settings); a search in the address keeps its choice --}}
+        advReligion: @js(request()->query() === [] ? (string) ($quickDefaults['religion'] ?? '') : (is_array(request('religion')) ? '' : request('religion', ''))),
         moreOpen: false,
         hasReligion(r) { return this.advReligion === r; }
     }">
