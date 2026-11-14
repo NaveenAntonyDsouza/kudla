@@ -23,7 +23,7 @@ use Illuminate\Support\Str;
 /**
  * Verification calls (12 Nov 2026). The owner: "our staff has to call every new profile
  * at least once for verification". Their call goes: check a few details the profile
- * already has (date of birth etc.), fill in what is missing, ask for a photo on WhatsApp
+ * already has (date of birth etc.), fill in what is missing, ask for a photo
  * if there is none, and sometimes share a matches link on WhatsApp afterwards; when the
  * member does not pick up, a WhatsApp message.
  *
@@ -64,11 +64,11 @@ final class VerificationCalls
     public const TASKS = [
         'details' => 'Verified them by their date of birth and details',
         'filled' => 'Filled in the details that were missing',
-        'looking' => 'Went through what they are looking for',
-        'photo' => 'Asked for a photo on WhatsApp',
+        'preferences' => 'Asked their partner preferences and filled them in',
+        'photo' => 'Asked for a photo',
         'members' => 'Told them how many members we have',
         'explained' => 'Explained search, interests, chat and viewing contacts',
-        'link' => 'Sent the search or community link on WhatsApp',
+        'link' => 'Sent them the search or community link',
         'plans' => 'Told them about the membership plans',
     ];
 
@@ -76,7 +76,7 @@ final class VerificationCalls
     public const TASK_SHORT = [
         'details' => 'verified',
         'filled' => 'details filled in',
-        'looking' => 'what they want',
+        'preferences' => 'preferences filled in',
         'photo' => 'photo asked for',
         'members' => 'member count told',
         'explained' => 'features explained',
