@@ -170,37 +170,13 @@
                 @endif
             </div>
             <p class="text-xs text-gray-600 mt-1 line-clamp-3 min-h-[3rem]">{{ $desc ?: 'Profile details not available' }}</p>
-            <div class="flex items-center justify-between mt-2">
+            {{-- wraps on narrow phone cards, where "Last seen over a month ago" and the date don't fit on one line --}}
+            <div class="flex items-center justify-between mt-2" style="flex-wrap: wrap; column-gap: 8px; row-gap: 2px;">
                 @php
-                    $lastLogin = $p->user?->last_login_at;
-                    if ($lastLogin) {
-                        $diffHours = $lastLogin->diffInHours(now());
-                        if ($diffHours < 1) {
-                            $activityLabel = 'Online now';
-                            $activityColor = 'bg-green-500';
-                            $activityTextColor = 'text-green-700';
-                        } elseif ($diffHours < 24) {
-                            $activityLabel = 'Today';
-                            $activityColor = 'bg-green-400';
-                            $activityTextColor = 'text-green-600';
-                        } elseif ($diffHours < 72) {
-                            $activityLabel = (int) $lastLogin->diffInDays(now()) . 'd ago';
-                            $activityColor = 'bg-yellow-400';
-                            $activityTextColor = 'text-yellow-700';
-                        } elseif ($diffHours < 168) {
-                            $activityLabel = (int) $lastLogin->diffInDays(now()) . 'd ago';
-                            $activityColor = 'bg-orange-400';
-                            $activityTextColor = 'text-orange-700';
-                        } else {
-                            $activityLabel = (int) $lastLogin->diffInDays(now()) . 'd ago';
-                            $activityColor = 'bg-gray-300';
-                            $activityTextColor = 'text-gray-500';
-                        }
-                    } else {
-                        $activityLabel = null;
-                        $activityColor = '';
-                        $activityTextColor = '';
-                    }
+                    // Settings → Member site → "Last seen on profiles" (App\Support\LastSeen)
+                    [$activityLabel, $activityColor, $activityTextColor] = \App\Support\LastSeen::forCard(
+                        $p->user?->last_login_at, $p->user?->created_at ?? $p->created_at
+                    ) ?? [null, '', ''];
                 @endphp
                 @if(!$isGuest && $activityLabel)
                     <span class="inline-flex items-center gap-1 text-[10px] {{ $activityTextColor }}">

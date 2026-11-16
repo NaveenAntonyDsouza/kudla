@@ -7,6 +7,7 @@
             <span class="mx-1">/</span>
             <span class="text-gray-700 font-medium">View & Edit My Profile</span>
         </p>
+        <x-add-photo-bar where="profile" />
 
         @if (session('success'))
             <div class="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">

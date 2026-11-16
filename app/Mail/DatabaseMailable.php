@@ -6,7 +6,9 @@ use App\Models\EmailTemplate;
 use App\Models\SiteSetting;
 use App\Models\ThemeSetting;
 use App\Models\User;
+use App\Support\AdminModules;
 use App\Support\EmailLogger;
+use App\Support\EmailSuppression;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -155,6 +157,9 @@ abstract class DatabaseMailable extends Mailable
                     }
                     // For admin → Reports → Email Activity; the caller still sees the error
                     EmailLogger::failed($this->templateSlug, $this->to, $e, $tries);
+                    if (! $passing) {
+                        $this->markRefusedRecipient($e);
+                    }
                     throw $e;
                 }
 
@@ -165,6 +170,58 @@ abstract class DatabaseMailable extends Mailable
                     sleep(self::RETRY_PAUSE_SECONDS);
                 }
             }
+        }
+    }
+
+    /**
+     * The mailbox said this address can never work: mark it the way the nightly
+     * bounce reader does, so we stop emailing it and staff phone the member for
+     * the right one (Work Queue → "Members whose email bounced").
+     *
+     * Weekly review, 16 Nov 2026: one member's address had no proper domain
+     * after the @. The server answered "504 5.5.2 ... need fully-qualified
+     * address" on every weekly run, and a refusal at the moment of sending
+     * never leaves a bounce notice for the bounce reader to find.
+     *
+     * Deliberately narrow. Only an answer about the ADDRESS counts: enhanced
+     * status 5.1.x (no such mailbox, no such domain, bad address) or 5.5.2 with
+     * "fully-qualified". Never 5.7.x (spam, policy, relay, sign-in), never an
+     * answer about our own sender address, and only an address this email was
+     * actually sent to and that the mailbox named in its answer. A fault on our
+     * side therefore cannot mark members' addresses.
+     *
+     * Switch: Settings → Site Settings → Member site → "Stop emailing addresses
+     * the mail server refuses".
+     */
+    private function markRefusedRecipient(\Throwable $e): void
+    {
+        try {
+            if (! AdminModules::refusedAddresses()) {
+                return;
+            }
+
+            $message = $e->getMessage();
+            $code = self::smtpCode($message);
+            if ($code === null || $code < 500 || $code > 599) {
+                return;
+            }
+
+            $aboutTheAddress = preg_match('/\b5\.1\.\d{1,3}\b/', $message)
+                || preg_match('/\b5\.5\.2\b.*fully.?qualified/i', $message);
+            if (! $aboutTheAddress || preg_match('/sender|relay|spam|policy|blocked|blacklist|reputation|authenticat/i', $message)) {
+                return;
+            }
+
+            $sentTo = collect($this->to)->pluck('address')->filter()->map(fn ($a) => Str::lower(trim($a)))->all();
+            preg_match_all('/<([^<>\s"]+@[^<>\s"]*)>/', $message, $named);
+
+            foreach (array_unique(array_map(fn ($a) => Str::lower($a), $named[1])) as $address) {
+                if (in_array($address, $sentTo, true)) {
+                    EmailSuppression::mark($address, 'Refused by the mail server when sending: '.Str::limit($message, 150));
+                }
+            }
+        } catch (\Throwable) {
+            // marking is a courtesy: never let it hide the original failure
         }
     }
 

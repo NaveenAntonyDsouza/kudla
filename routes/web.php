@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\PhotoPromptController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\IdProofController;
 use App\Http\Controllers\InterestController;
@@ -209,6 +210,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
 
     // Photo Management
     Route::get('/manage-photos', [PhotoController::class, 'index'])->name('photos.manage');
+    Route::post('/photo-bar/close', [PhotoPromptController::class, 'closeBar'])->name('photo-bar.close')->middleware('throttle:20,1');
     Route::post('/manage-photos/upload', [PhotoController::class, 'upload'])->name('photos.upload')->middleware('throttle:10,1');
     Route::delete('/manage-photos/{photo}', [PhotoController::class, 'destroy'])->name('photos.destroy');
     Route::post('/manage-photos/{photo}/restore', [PhotoController::class, 'restore'])->name('photos.restore');

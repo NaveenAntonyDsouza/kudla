@@ -60,6 +60,11 @@ class SiteSettings extends Page implements HasForms
             AdminModules::ASSISTED => ($settings[AdminModules::ASSISTED] ?? '1') === '1',
             AdminModules::STAFF_ACTIVITY => ($settings[AdminModules::STAFF_ACTIVITY] ?? '1') === '1',
             AdminModules::LOGIN_AS_MEMBER => ($settings[AdminModules::LOGIN_AS_MEMBER] ?? '1') === '1',
+            // member site (16 Nov 2026 review): new, so not set means off
+            AdminModules::LAST_SEEN => ($settings[AdminModules::LAST_SEEN] ?? '0') === '1',
+            AdminModules::REFUSED_ADDRESSES => ($settings[AdminModules::REFUSED_ADDRESSES] ?? '0') === '1',
+            AdminModules::PHOTO_BAR_MORE => ($settings[AdminModules::PHOTO_BAR_MORE] ?? '0') === '1',
+            AdminModules::PHOTO_POPUP => ($settings[AdminModules::PHOTO_POPUP] ?? '0') === '1',
 
             // Alerts
             'error_alert_email' => $settings['error_alert_email'] ?? '',
@@ -195,6 +200,27 @@ class SiteSettings extends Page implements HasForms
                             ->helperText('Staff open the member site as a member, view only, and every visit is recorded. Each role still needs the "Login as Member" right, and the staff member must have two-step sign-in on.'),
                     ])
                     ->columns(3),
+
+                \Filament\Schemas\Components\Section::make('Member site')
+                    ->description('Changes to what members see. Each one starts off; switching one off puts that part back exactly as it was.')
+                    ->schema([
+                        Forms\Components\Toggle::make(AdminModules::LAST_SEEN)
+                            ->label('Last seen on profiles')
+                            ->helperText('Profile cards and the full profile say "Last seen 12 days ago", "Last seen 3 months ago" or "Not signed in yet". Today cards say "12d ago" (nothing for members not seen in a long time) and the full profile says "Last Login" with a date, which is the last EDIT date when no sign-in is on record. Visitors who are not signed in never see it on cards.'),
+
+                        Forms\Components\Toggle::make(AdminModules::REFUSED_ADDRESSES)
+                            ->label('Stop emailing addresses the mail server refuses')
+                            ->helperText('When the mail server answers that an address does not exist or is not a full address, it is marked at once, the same as a bounce: we stop emailing it and the member moves to the "phone them for the right address" list.'),
+
+                        Forms\Components\Toggle::make(AdminModules::PHOTO_BAR_MORE)
+                            ->label('"Add your photo" bar: more places, can be closed')
+                            ->helperText('The bar also shows on the member\'s own profile page and above search results, and gets a close button that hides it for 3 days.'),
+
+                        Forms\Components\Toggle::make(AdminModules::PHOTO_POPUP)
+                            ->label('"Add your photo" pop-up')
+                            ->helperText('Members with no photo see a pop-up on their first page of the day, with "Add photo" and "Not now". It stops as soon as they add one. Never shown while staff use Login as member.'),
+                    ])
+                    ->columns(2),
 
                 \Filament\Schemas\Components\Section::make('Alerts & admin security')
                     ->description('Emails to the owner when something goes wrong, and how staff sign in.')
@@ -503,6 +529,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER,
+            AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP,
             'admin_two_step_required',
         ];
 

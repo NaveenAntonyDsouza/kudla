@@ -44,6 +44,22 @@ class AdminModules
     /** Login as member: staff open the member site as a member, view only and recorded (Nov 2026). */
     public const LOGIN_AS_MEMBER = 'module_login_as_member_enabled';
 
+    /*
+     * Member-site changes from the 16 Nov 2026 weekly review. Each is new, so each starts off.
+     */
+
+    /** Profile cards and the full profile say when a member was last seen, including members not seen since tracking began. */
+    public const LAST_SEEN = 'module_last_seen_enabled';
+
+    /** An address the mail server refuses outright at sending time is marked as not reaching the member. */
+    public const REFUSED_ADDRESSES = 'module_refused_addresses_enabled';
+
+    /** "Add your photo" bar also on the member's own profile and above search results, with a close button (3 days). */
+    public const PHOTO_BAR_MORE = 'module_photo_bar_more_enabled';
+
+    /** "Add your photo" pop-up, once a day, for members with no photo. */
+    public const PHOTO_POPUP = 'module_photo_popup_enabled';
+
     public static function verificationCalls(): bool
     {
         return SiteSetting::getValue(self::VERIFICATION_CALLS, '0') === '1';
@@ -62,6 +78,26 @@ class AdminModules
     public static function loginAsMember(): bool
     {
         return SiteSetting::getValue(self::LOGIN_AS_MEMBER, '1') === '1';
+    }
+
+    public static function lastSeen(): bool
+    {
+        return SiteSetting::getValue(self::LAST_SEEN, '0') === '1';
+    }
+
+    public static function refusedAddresses(): bool
+    {
+        return SiteSetting::getValue(self::REFUSED_ADDRESSES, '0') === '1';
+    }
+
+    public static function photoBarMore(): bool
+    {
+        return SiteSetting::getValue(self::PHOTO_BAR_MORE, '0') === '1';
+    }
+
+    public static function photoPopup(): bool
+    {
+        return SiteSetting::getValue(self::PHOTO_POPUP, '0') === '1';
     }
 
     public static function branches(): bool

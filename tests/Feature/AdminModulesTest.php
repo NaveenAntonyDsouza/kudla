@@ -128,3 +128,19 @@ it('switches each November tool off on its own, and back on', function () {
     expect(\App\Support\LoginAs::allowed(User::find($staff)))->toBeTrue()
         ->and(\App\Filament\Pages\StaffActivity::canAccess())->toBeTrue();
 });
+
+it('starts the 16 Nov member-site changes off, and saves each one from Site Settings', function () {
+    expect(AdminModules::lastSeen())->toBeFalse()
+        ->and(AdminModules::refusedAddresses())->toBeFalse()
+        ->and(AdminModules::photoBarMore())->toBeFalse()
+        ->and(AdminModules::photoPopup())->toBeFalse();
+
+    // each must be filled, shown and in the save list, or the switch silently never saves
+    $source = file_get_contents(app_path('Filament/Pages/SiteSettings.php'));
+    foreach (['LAST_SEEN', 'REFUSED_ADDRESSES', 'PHOTO_BAR_MORE', 'PHOTO_POPUP'] as $const) {
+        expect(substr_count($source, 'AdminModules::'.$const))->toBeGreaterThanOrEqual(3);
+    }
+
+    SiteSetting::setValue(AdminModules::PHOTO_POPUP, '1');
+    expect(AdminModules::photoPopup())->toBeTrue()->and(AdminModules::photoBarMore())->toBeFalse();
+});
