@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Support\SuggestedPreferences;
+
 use App\Models\PartnerPreference;
 use App\Models\Profile;
 use App\Traits\ProfileQueryFilters;
@@ -104,7 +106,7 @@ class MatchingService
      */
     public function getMatches(Profile $profile, int $perPage = 20): LengthAwarePaginator
     {
-        $prefs = $profile->partnerPreference;
+        $prefs = SuggestedPreferences::for($profile);
         if (!$prefs) {
             return new LengthAwarePaginator([], 0, $perPage);
         }
@@ -145,7 +147,7 @@ class MatchingService
      */
     public function getMutualMatches(Profile $profile, int $perPage = 20): LengthAwarePaginator
     {
-        $myPrefs = $profile->partnerPreference;
+        $myPrefs = SuggestedPreferences::for($profile);
         if (!$myPrefs) {
             return new LengthAwarePaginator([], 0, $perPage);
         }
@@ -166,7 +168,7 @@ class MatchingService
             }
 
             // Their score: how well do I match THEIR preferences?
-            $theirPrefs = $candidate->partnerPreference;
+            $theirPrefs = SuggestedPreferences::for($candidate);
             if (!$theirPrefs) {
                 return false;
             }
@@ -205,7 +207,7 @@ class MatchingService
      */
     public function getRecommendations(Profile $profile, int $limit = 6): Collection
     {
-        $prefs = $profile->partnerPreference;
+        $prefs = SuggestedPreferences::for($profile);
         if (!$prefs) {
             return collect();
         }
@@ -233,7 +235,7 @@ class MatchingService
      */
     public function getMatchBreakdown(Profile $myProfile, Profile $otherProfile): ?array
     {
-        $prefs = $myProfile->partnerPreference;
+        $prefs = SuggestedPreferences::for($myProfile);
         if (!$prefs) {
             return null;
         }

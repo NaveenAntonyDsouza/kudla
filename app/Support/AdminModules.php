@@ -60,6 +60,9 @@ class AdminModules
     /** "Add your photo" pop-up, once a day, for members with no photo. */
     public const PHOTO_POPUP = 'module_photo_popup_enabled';
 
+    /** Members who never saved partner preferences get matches from their own age, religion and height (17 Nov 2026). */
+    public const SUGGESTED_PREFS = 'module_suggested_preferences_enabled';
+
     public static function verificationCalls(): bool
     {
         return SiteSetting::getValue(self::VERIFICATION_CALLS, '0') === '1';
@@ -98,6 +101,11 @@ class AdminModules
     public static function photoPopup(): bool
     {
         return SiteSetting::getValue(self::PHOTO_POPUP, '0') === '1';
+    }
+
+    public static function suggestedPreferences(): bool
+    {
+        return SiteSetting::getValue(self::SUGGESTED_PREFS, '0') === '1';
     }
 
     public static function branches(): bool

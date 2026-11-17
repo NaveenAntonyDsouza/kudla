@@ -195,8 +195,15 @@ class WeeklyMatchSuggestionsService
                 $q->whereNull('last_weekly_match_sent_at')
                     ->orWhere('last_weekly_match_sent_at', '<', now()->subDays(5));
             })
-            // Must have a profile with a partner preference (otherwise no matches)
-            ->whereHas('profile.partnerPreference')
+            // Must have a profile with a partner preference (otherwise no matches) — or, with
+            // "Matches for members without preferences" on, have been on the site in the last
+            // 60 days (their matches then come from their own profile, App\Support\SuggestedPreferences)
+            ->where(function (Builder $q) {
+                $q->whereHas('profile.partnerPreference');
+                if (\App\Support\AdminModules::suggestedPreferences()) {
+                    $q->orWhere(fn (Builder $seen) => $seen->has('profile')->where('last_login_at', '>=', now()->subDays(60)));
+                }
+            })
             ->with(['profile.partnerPreference'])
             // Longest-waiting first (never sent, then oldest send) — fair
             // rotation when the per-run cap defers some members.

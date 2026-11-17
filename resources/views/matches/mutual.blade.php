@@ -23,6 +23,10 @@
         {{-- Subtitle --}}
         <p class="text-sm text-gray-500 mb-6">Profiles where both of you match each other's partner preferences.</p>
 
+        @if($hasPreferences && ($suggested ?? false))
+            @include('matches._suggested-note')
+        @endif
+
         @if(!$hasPreferences)
             {{-- No preferences set --}}
             <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">

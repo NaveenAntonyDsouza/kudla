@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\MatchingService;
+use App\Support\SuggestedPreferences;
 
 class MatchController extends Controller
 {
@@ -16,12 +17,15 @@ class MatchController extends Controller
         if (!$profile) {
             return redirect()->route('register.step1');
         }
-        $hasPreferences = $profile->partnerPreference()->exists();
+        // saved preferences, or (switch on) ones suggested from the member's own profile
+        $prefs = SuggestedPreferences::for($profile);
+        $hasPreferences = $prefs !== null;
+        $suggested = SuggestedPreferences::isSuggested($prefs);
         $matches = $hasPreferences
             ? $this->matchingService->getMatches($profile)
             : null;
 
-        return view('matches.index', compact('profile', 'matches', 'hasPreferences'));
+        return view('matches.index', compact('profile', 'matches', 'hasPreferences', 'suggested'));
     }
 
     public function mutual()
@@ -30,11 +34,13 @@ class MatchController extends Controller
         if (!$profile) {
             return redirect()->route('register.step1');
         }
-        $hasPreferences = $profile->partnerPreference()->exists();
+        $prefs = SuggestedPreferences::for($profile);
+        $hasPreferences = $prefs !== null;
+        $suggested = SuggestedPreferences::isSuggested($prefs);
         $matches = $hasPreferences
             ? $this->matchingService->getMutualMatches($profile)
             : null;
 
-        return view('matches.mutual', compact('profile', 'matches', 'hasPreferences'));
+        return view('matches.mutual', compact('profile', 'matches', 'hasPreferences', 'suggested'));
     }
 }

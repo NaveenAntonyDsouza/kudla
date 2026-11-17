@@ -28,6 +28,10 @@
             </a>
         </div>
 
+        @if($hasPreferences && ($suggested ?? false))
+            @include('matches._suggested-note')
+        @endif
+
         @if(!$hasPreferences)
             {{-- No preferences set --}}
             <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">

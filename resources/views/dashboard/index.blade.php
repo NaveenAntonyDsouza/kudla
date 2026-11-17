@@ -186,6 +186,10 @@
 
                 {{-- Mutual Matches first (Nov 2026): their preferences fit this member too,
                      so an interest to them is the likeliest to be accepted --}}
+                {{-- matches below come from the member's own profile (no saved preferences, 17 Nov 2026) --}}
+                @if(($prefsSuggested ?? false) && ($mutualMatches->count() > 0 || $recommendedMatches->count() > 0))
+                    @include('matches._suggested-note', ['gap' => '0'])
+                @endif
                 @if($mutualMatches->count() > 0)
                     <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6">
                         <div class="flex items-center justify-between mb-4">

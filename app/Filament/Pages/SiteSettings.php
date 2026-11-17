@@ -65,6 +65,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::REFUSED_ADDRESSES => ($settings[AdminModules::REFUSED_ADDRESSES] ?? '0') === '1',
             AdminModules::PHOTO_BAR_MORE => ($settings[AdminModules::PHOTO_BAR_MORE] ?? '0') === '1',
             AdminModules::PHOTO_POPUP => ($settings[AdminModules::PHOTO_POPUP] ?? '0') === '1',
+            AdminModules::SUGGESTED_PREFS => ($settings[AdminModules::SUGGESTED_PREFS] ?? '0') === '1',
 
             // Alerts
             'error_alert_email' => $settings['error_alert_email'] ?? '',
@@ -219,6 +220,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::PHOTO_POPUP)
                             ->label('"Add your photo" pop-up')
                             ->helperText('Members with no photo see a pop-up on their first page of the day, with "Add photo" and "Not now". It stops as soon as they add one. Never shown while staff use Login as member.'),
+
+                        Forms\Components\Toggle::make(AdminModules::SUGGESTED_PREFS)
+                            ->label('Matches for members without preferences')
+                            ->helperText('A member who never saved partner preferences gets matches from their own profile instead of an empty page: age (a man: up to 7 years younger; a woman: up to 7 years older), their own religion, and height (a man: his height and below; a woman: her height and above). Nothing is saved, and a note asks them to set their own. Also fills Recommended and Mutual Matches and the weekly match email (members seen in the last 60 days).'),
                     ])
                     ->columns(2),
 
@@ -530,6 +535,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER,
             AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP,
+            AdminModules::SUGGESTED_PREFS,
             'admin_two_step_required',
         ];
 

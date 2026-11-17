@@ -68,13 +68,16 @@ class DashboardController extends Controller
 
         // Recommended matches (top 6 by score)
         $recommendedMatches = collect();
-        if ($profile->partnerPreference) {
+        // saved preferences, or (switch on) ones suggested from the member's own profile
+        $matchPrefs = \App\Support\SuggestedPreferences::for($profile);
+        $prefsSuggested = \App\Support\SuggestedPreferences::isSuggested($matchPrefs);
+        if ($matchPrefs) {
             $recommendedMatches = $this->matchingService->getRecommendations($profile, 6);
         }
 
         // Mutual matches (top 4)
         $mutualMatches = collect();
-        if ($profile->partnerPreference) {
+        if ($matchPrefs) {
             $mutualPaginator = $this->matchingService->getMutualMatches($profile, 4);
             $mutualMatches = collect($mutualPaginator->items());
         }
@@ -135,7 +138,7 @@ class DashboardController extends Controller
 
         return view('dashboard.index', compact(
             'profile', 'user', 'completionPct', 'sections',
-            'recommendedMatches', 'mutualMatches', 'recentViews',
+            'recommendedMatches', 'mutualMatches', 'recentViews', 'prefsSuggested',
             'newlyJoined', 'discoverCategories', 'interestStats',
             'isPremium', 'viewCount'
         ));
