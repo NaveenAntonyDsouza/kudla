@@ -10,6 +10,7 @@ use App\Services\OtpService;
 use App\Support\Analytics;
 use App\Support\LoginIdentifier;
 use App\Support\OtpResendNotice;
+use App\Support\PhoneCodeLogin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -91,28 +92,42 @@ class LoginController extends Controller
         return redirect()->intended('/dashboard');
     }
 
+    /**
+     * Send a sign-in code to a mobile number (WhatsApp or SMS, PhoneCodeLogin).
+     * The answer is the same whether or not the number has an account, so
+     * the page never tells anyone that a number is registered here (Nov 2026;
+     * it used to say "No account found with this phone number").
+     */
     public function sendLoginOtp(Request $request)
     {
-        // Check if mobile OTP login is enabled
-        if (SiteSetting::getValue('mobile_otp_login_enabled', '1') !== '1') {
-            return back()->withErrors(['phone' => 'Mobile OTP login is currently disabled.']);
+        if (! PhoneCodeLogin::available()) {
+            return back()->withErrors(['phone' => 'Sign-in with a code on your phone is not available. Please log in with your password.']);
         }
 
         $request->validate(['phone' => 'required|digits:10']);
-
-        $user = User::where('phone', $request->phone)->first();
-
-        if (! $user) {
-            return back()->withErrors(['phone' => 'No account found with this phone number.'])->withInput();
-        }
-
+        $phone = (string) $request->phone;
         $otpService = app(OtpService::class);
-        $otpService->sendOtp($request->phone);
+
+        $visitorKey = 'otp-phone-ip:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($visitorKey, PhoneCodeLogin::PER_VISITOR_PER_HOUR)) {
+            return back()->withErrors(['phone' => 'Too many codes asked from this device. Please try again in an hour, or log in with your password.'])->withInput();
+        }
+        if ($limit = $otpService->phoneLimit($phone)) {
+            return back()->withErrors(['phone' => PhoneCodeLogin::limitMessage($limit)])->withInput();
+        }
+        RateLimiter::hit($visitorKey, 3600);
+
+        if (PhoneCodeLogin::memberFor($phone)) {
+            // A failed send is logged by OtpService; the page still answers the same way.
+            $otpService->sendOtp($phone);
+        } else {
+            $otpService->countPhoneRequest($phone);
+        }
 
         return back()->with(array_filter([
             'otp_sent' => true,
-            'login_phone' => $request->phone,
-            'otp_resent' => $request->boolean('resend') ? OtpResendNotice::phone($request->phone) : null,
+            'login_phone' => $phone,
+            'otp_resent' => $request->boolean('resend') ? OtpResendNotice::phone($phone) : null,
         ]));
     }
 
@@ -125,16 +140,10 @@ class LoginController extends Controller
 
         $otpService = app(OtpService::class);
 
-        if (! $otpService->verifyOtp($request->phone, $request->otp)) {
-            return back()->withErrors(['otp' => 'Invalid or expired OTP.'])->withInput();
-        }
-
-        $user = User::where('phone', $request->phone)->first();
+        // Check the code first, so every wrong guess counts towards the limit.
+        $user = $otpService->verifyOtp($request->phone, $request->otp) ? PhoneCodeLogin::memberFor($request->phone) : null;
         if (! $user) {
-            return back()->withErrors(['otp' => 'No account found with this phone number.'])->withInput();
-        }
-        if ($blocked = $user->blockedStatus()) {
-            return back()->withErrors(['otp' => User::blockedStatusMessage($blocked)])->withInput();
+            return back()->withErrors(['otp' => 'Invalid or expired code.'])->withInput();
         }
         Auth::login($user, true);
         $request->session()->regenerate();
@@ -165,10 +174,23 @@ class LoginController extends Controller
 
         $request->validate(['email' => 'required|email']);
 
-        $user = User::where('email', $request->email)->first();
+        // Members only (staff use the admin login). No account: answer as if a
+        // code was sent, so the page never tells anyone an email is registered.
+        $user = User::where('email', $request->email)->whereNull('staff_role_id')
+            ->where(fn ($q) => $q->whereNull('role')->orWhere('role', '!=', 'admin'))->first();
 
         if (! $user) {
-            return back()->withErrors(['login_email_otp' => 'No account found with this email address.'])->withInput();
+            session([
+                'login_email_otp' => Hash::make(Str::random(40)),
+                'login_email_otp_expires' => now()->addMinutes(config('matrimony.otp_expiry_minutes', 10)),
+                'login_email_otp_address' => $request->email,
+            ]);
+
+            return back()->with(array_filter([
+                'email_otp_sent' => true,
+                'login_email' => $request->email,
+                'otp_resent' => $request->boolean('resend') ? OtpResendNotice::email($request->email) : null,
+            ]));
         }
 
         // Generate OTP
@@ -239,10 +261,11 @@ class LoginController extends Controller
         }
 
         // OTP verified — login user
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->whereNull('staff_role_id')
+            ->where(fn ($q) => $q->whereNull('role')->orWhere('role', '!=', 'admin'))->first();
 
         if (! $user) {
-            return back()->withErrors(['otp' => 'Account not found.']);
+            return back()->withErrors(['otp' => 'Invalid OTP. Please try again.'])->withInput();
         }
 
         if ($blocked = $user->blockedStatus()) {

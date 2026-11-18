@@ -385,7 +385,7 @@ class SiteSettings extends Page implements HasForms
 
                         Forms\Components\Toggle::make('mobile_otp_login_enabled')
                             ->label('Mobile OTP Login')
-                            ->helperText('Allow login via mobile + OTP'),
+                            ->helperText('Allow login with a code sent to the mobile number. The code goes by WhatsApp (Settings -> WhatsApp API -> Sign-in codes) or by SMS (Fast2SMS key); with neither, the tab stays hidden.'),
 
                         Forms\Components\Toggle::make('email_otp_login_enabled')
                             ->label('Email OTP Login')

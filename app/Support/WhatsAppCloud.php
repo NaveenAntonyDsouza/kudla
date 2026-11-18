@@ -153,6 +153,47 @@ final class WhatsAppCloud
         }
     }
 
+    /**
+     * Sign-in codes (Nov 2026): Meta's "authentication" template, fixed
+     * wording "<code> is your verification code. For your security, do not
+     * share this code. Expires in 10 minutes." + Copy code button, and a
+     * 10-minute time to live so a late code is never delivered.
+     */
+    public const TEMPLATE_LOGIN_CODE = 'login_code';
+
+    /** Send sign-in codes by WhatsApp (Settings -> WhatsApp API). Separate from templatesEnabled(). */
+    public static function loginCodesEnabled(): bool
+    {
+        try {
+            return self::enabled() && SiteSetting::getValue('wa_cloud_login_codes_enabled', '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Send a one-time sign-in code. Meta wants the code twice: in the body
+     * and as the Copy code button's parameter.
+     *
+     * @return array{ok: bool, id: ?string, error: ?string}
+     */
+    public static function sendLoginCode(string $to, string $code): array
+    {
+        return self::post([
+            'messaging_product' => 'whatsapp',
+            'to' => $to,
+            'type' => 'template',
+            'template' => [
+                'name' => self::TEMPLATE_LOGIN_CODE,
+                'language' => ['code' => 'en'],
+                'components' => [
+                    ['type' => 'body', 'parameters' => [['type' => 'text', 'text' => $code]]],
+                    ['type' => 'button', 'sub_type' => 'url', 'index' => '0', 'parameters' => [['type' => 'text', 'text' => $code]]],
+                ],
+            ],
+        ]);
+    }
+
     /** Which approved template asks members for a photo (Settings -> WhatsApp API). */
     public static function photoTemplate(): string
     {

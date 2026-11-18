@@ -76,9 +76,21 @@ class AuthController extends BaseApiController
             );
         }
 
-        // Silent short-circuit for login/reset on unknown phone numbers.
+        // No WhatsApp sign-in codes and no SMS key: nothing could arrive.
+        if (OtpService::phoneSender() === null) {
+            return ApiResponse::error(
+                code: 'UNAUTHORIZED',
+                message: 'Codes by phone are not available. Please use your password or email.',
+                status: 403,
+            );
+        }
+
+        // Silent short-circuit for login/reset on numbers that are not a
+        // member account (unknown, staff, blocked); still counted per number.
         if (in_array($data['purpose'], ['login', 'reset'], true)
-            && ! User::where('phone', $data['phone'])->exists()) {
+            && ! \App\Support\PhoneCodeLogin::memberFor($data['phone'])) {
+            $this->otp->countPhoneRequest($data['phone']);
+
             return $this->sendOk();
         }
 
@@ -123,12 +135,16 @@ class AuthController extends BaseApiController
             );
         }
 
-        $user = User::where('phone', $data['phone'])->first();
+        // Login/reset: members only (not staff, not blocked), and the same
+        // answer as a wrong code so nobody learns whether a number is registered.
+        $user = $data['purpose'] === 'register'
+            ? User::where('phone', $data['phone'])->first()
+            : \App\Support\PhoneCodeLogin::memberFor($data['phone']);
         if (! $user) {
             return ApiResponse::error(
-                code: 'NOT_FOUND',
-                message: 'No account found with this phone number.',
-                status: 404,
+                code: 'OTP_INVALID',
+                message: 'Invalid or expired OTP.',
+                status: 422,
             );
         }
 

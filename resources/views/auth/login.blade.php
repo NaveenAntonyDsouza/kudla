@@ -1,14 +1,16 @@
 <x-layouts.auth title="Login">
     @php
         $siteName = \App\Models\SiteSetting::getValue('site_name', 'Matrimony');
-        $mobileOtpEnabled = \App\Models\SiteSetting::getValue('mobile_otp_login_enabled', '1') === '1';
+        // Shown only when a code can really be sent (WhatsApp or SMS, PhoneCodeLogin).
+        $mobileOtpEnabled = \App\Support\PhoneCodeLogin::available();
+        $codeByWhatsApp = $mobileOtpEnabled && \App\Support\PhoneCodeLogin::byWhatsApp();
         $emailOtpEnabled = \App\Models\SiteSetting::getValue('email_otp_login_enabled', '0') === '1';
 
         // Tab order is admin-controlled (General Settings → Login Page). The
         // first *enabled* method in the list becomes the default tab, so the
         // order setting alone decides what members see first.
         $allLoginTabs = [
-            'mobile_otp' => ['key' => 'mobile',    'label' => 'Mobile OTP',      'enabled' => $mobileOtpEnabled],
+            'mobile_otp' => ['key' => 'mobile',    'label' => \App\Support\PhoneCodeLogin::label(), 'enabled' => $mobileOtpEnabled],
             'email_otp'  => ['key' => 'email_otp', 'label' => 'Email OTP',       'enabled' => $emailOtpEnabled],
             'password'   => ['key' => 'email',     'label' => 'Password',        'enabled' => true],
         ];
@@ -46,7 +48,7 @@
         phone: @js(session('login_phone', old('phone', ''))),
         loginEmail: @js(session('login_email', old('email', '')))
     }" x-init="
-        if (mobileOtpSent) { tab = 'mobile'; cooldown = 30; let timer = setInterval(() => { cooldown--; if (cooldown <= 0) clearInterval(timer); }, 1000); }
+        if (mobileOtpSent) { tab = 'mobile'; cooldown = 60; let timer = setInterval(() => { cooldown--; if (cooldown <= 0) clearInterval(timer); }, 1000); }
         if (emailOtpSent) { tab = 'email_otp'; emailCooldown = 30; let timer2 = setInterval(() => { emailCooldown--; if (emailCooldown <= 0) clearInterval(timer2); }, 1000); }
     ">
         {{-- Tabs (hide when only 1 option) --}}
@@ -75,10 +77,13 @@
                         @error('phone')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+                        @if($codeByWhatsApp)
+                            <p class="mt-1 text-xs text-gray-500">We'll send a 6-digit code to this number on WhatsApp.</p>
+                        @endif
                     </div>
 
                     <button type="submit" class="w-full bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-4 py-2.5 font-semibold text-sm transition-colors">
-                        Send OTP
+                        {{ $codeByWhatsApp ? 'Send code on WhatsApp' : 'Send OTP' }}
                     </button>
                 </form>
             </div>
@@ -90,7 +95,11 @@
                     <input type="hidden" name="phone" x-bind:value="phone">
 
                     <p class="text-sm text-gray-600 mb-4">
-                        OTP sent to <strong x-text="'+91 ' + phone"></strong>
+                        @if(session('otp_sent') && session('login_phone'))
+                            {{ \App\Support\PhoneCodeLogin::sentMessage((string) session('login_phone')) }}
+                        @else
+                            Code sent to <strong x-text="'+91 ' + phone"></strong>
+                        @endif
                         <button type="button" x-on:click="mobileOtpSent = false" class="text-(--color-primary) hover:underline ml-1 text-sm">Change</button>
                     </p>
                     @include('auth.partials.otp-resent')
@@ -116,6 +125,10 @@
                     <button type="submit" class="w-full bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-4 py-2.5 font-semibold text-sm transition-colors">
                         Verify & Login
                     </button>
+
+                    <p class="mt-3 text-xs text-gray-500 text-center">
+                        No code? Check the number{{ $codeByWhatsApp ? ' and that it has WhatsApp' : '' }}, or log in with your password.
+                    </p>
 
                     {{-- Resend OTP with cooldown --}}
                     <div class="mt-4 text-center">

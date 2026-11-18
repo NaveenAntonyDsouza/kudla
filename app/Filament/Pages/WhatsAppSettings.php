@@ -62,6 +62,8 @@ class WhatsAppSettings extends Page implements HasForms
             'wa_cloud_photo_reply' => SiteSetting::getValue('wa_cloud_photo_reply', ''),
             'wa_cloud_photo_template' => WhatsAppCloud::photoTemplate(),
             'wa_cloud_templates_enabled' => SiteSetting::getValue('wa_cloud_templates_enabled', '0') === '1',
+            'wa_cloud_login_codes_enabled' => SiteSetting::getValue('wa_cloud_login_codes_enabled', '0') === '1',
+            'otp_phone_daily_cap' => (string) \App\Services\OtpService::dailyCap(),
             'wa_cloud_alert_enabled' => SiteSetting::getValue('wa_cloud_alert_enabled', '1') === '1',
             'wa_cloud_alert_email' => SiteSetting::getValue('wa_cloud_alert_email', ''),
         ]);
@@ -127,6 +129,20 @@ class WhatsAppSettings extends Page implements HasForms
                     ])
                     ->columns(2),
 
+                \Filament\Schemas\Components\Section::make('Sign-in codes')
+                    ->description('Members sign in with a 6-digit code sent to their WhatsApp (Meta\'s fixed wording with a Copy code button; about Rs 0.14 each, charged when delivered). Codes go only to member accounts, at most one a minute and 5 an hour per number, 10 an hour per device, and the daily limit below for the whole site.')
+                    ->schema([
+                        Forms\Components\Toggle::make('wa_cloud_login_codes_enabled')
+                            ->label('Send sign-in codes on WhatsApp')
+                            ->helperText('The login page shows a "WhatsApp Code" tab when this is on AND Site Settings -> Mobile OTP Login is on. Also used for the app\'s phone codes.'),
+                        Forms\Components\TextInput::make('otp_phone_daily_cap')
+                            ->label('Most codes a day (whole site)')
+                            ->numeric()->integer()->minValue(1)->maxValue(5000)
+                            ->required()
+                            ->helperText(fn () => 'Sent today: '.\App\Services\OtpService::sentToday().'. When the limit is reached, members are asked to use their password or email until tomorrow.'),
+                    ])
+                    ->columns(2),
+
                 \Filament\Schemas\Components\Section::make('Approved messages (photo requests, "please reply")')
                     ->description('Messages the office starts, sent through Meta. Meta charges for them and refuses them until a payment card is added in WhatsApp Manager -> Payment settings. Replies within 24 hours of a message from the member are free and work either way.')
                     ->schema([
@@ -173,6 +189,8 @@ class WhatsAppSettings extends Page implements HasForms
         SiteSetting::setValue('wa_cloud_auto_reply_enabled', ! empty($data['wa_cloud_auto_reply_enabled']) ? '1' : '0');
         SiteSetting::setValue('wa_cloud_alert_enabled', ! empty($data['wa_cloud_alert_enabled']) ? '1' : '0');
         SiteSetting::setValue('wa_cloud_templates_enabled', ! empty($data['wa_cloud_templates_enabled']) ? '1' : '0');
+        SiteSetting::setValue('wa_cloud_login_codes_enabled', ! empty($data['wa_cloud_login_codes_enabled']) ? '1' : '0');
+        SiteSetting::setValue('otp_phone_daily_cap', (string) max(1, (int) ($data['otp_phone_daily_cap'] ?? \App\Services\OtpService::PHONE_DAILY_CAP)));
         foreach (['wa_cloud_phone_number_id', 'wa_cloud_waba_id', 'wa_cloud_auto_reply', 'wa_cloud_photo_reply', 'wa_cloud_photo_template', 'wa_cloud_alert_email'] as $key) {
             SiteSetting::setValue($key, trim((string) ($data[$key] ?? '')));
         }

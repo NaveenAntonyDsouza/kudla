@@ -121,6 +121,17 @@ class WhatsAppWebhookController extends Controller
 
         $message = WhatsAppMessage::where('wa_message_id', $id)->where('direction', WhatsAppMessage::OUT)->first();
         if (! $message) {
+            // Messages we don't keep (sign-in codes): note only why one failed, never the number or code.
+            if ($state === 'failed') {
+                $error = (array) ($status['errors'][0] ?? []);
+                \Illuminate\Support\Facades\Log::warning('WhatsApp message not delivered', [
+                    'code' => $error['code'] ?? null,
+                    'title' => $error['title'] ?? $error['message'] ?? null,
+                    'details' => $error['error_data']['details'] ?? null,
+                    'pricing' => $status['pricing']['category'] ?? null,
+                ]);
+            }
+
             return;
         }
 
