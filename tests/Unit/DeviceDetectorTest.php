@@ -32,3 +32,21 @@ it('falls back to Desktop for empty/unknown user agents', function () {
     expect(DeviceDetector::type(''))->toBe('Desktop');
     expect(DeviceDetector::type('curl/8.0'))->toBe('Desktop');
 });
+
+it('counts our Android apps (a WebView of the site) as App, but not other apps\' in-app browsers', function () {
+    // real user agents seen on kannadadating.com from its Play app, Nov 2026
+    $app = 'Mozilla/5.0 (Linux; Android 14; OPD2305 Build/UP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/156.0.8078.47 Safari/537.36';
+    $appPhone = 'Mozilla/5.0 (Linux; Android 13; M2103K19I Build/TP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/156.0.8078.50 Mobile Safari/537.36';
+    expect(DeviceDetector::type($app))->toBe('App')
+        ->and(DeviceDetector::type($appPhone))->toBe('App');
+
+    $facebook = 'Mozilla/5.0 (Linux; Android 14; SM-A146B Build/UP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/480.0.0.0;]';
+    $instagram = 'Mozilla/5.0 (Linux; Android 13; RMX3630 Build/TP1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36 Instagram 350.0.0.0 Android';
+    $googleApp = 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/AP2A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36 GSA/15.40.30';
+    expect(DeviceDetector::type($facebook))->toBe('Mobile')
+        ->and(DeviceDetector::type($instagram))->toBe('Mobile')
+        ->and(DeviceDetector::type($googleApp))->toBe('Mobile');
+
+    // ordinary Chrome on the same phone stays Mobile
+    expect(DeviceDetector::type('Mozilla/5.0 (Linux; Android 14; OPD2305) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0 Safari/537.36'))->toBe('Mobile');
+});
