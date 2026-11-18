@@ -38,7 +38,7 @@
                 </div>
             @endforeach
         </div>
-        <p style="{{ $muted }} margin: 10px 0 0;">Visitors who were not signed in opened the plans page {{ number_format($visitorViews) }} {{ \Illuminate\Support\Str::plural('time', $visitorViews) }}.</p>
+        <p style="{{ $muted }} margin: 10px 0 0;">Counted from {{ $stepsFrom->displayTz()->format('d M Y') }}{{ $stepsFrom->gt(now()->subDays($days)->addMinute()) ? ', when recording of the first two steps began' : '' }}. Visitors who were not signed in opened the plans page {{ number_format($visitorViews) }} {{ \Illuminate\Support\Str::plural('time', $visitorViews) }}.</p>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px;">
@@ -49,7 +49,7 @@
                 <thead><tr><th style="{{ $th }}">Gateway</th><th style="{{ $th }}">Started</th><th style="{{ $th }}">Paid</th><th style="{{ $th }}">Failed</th><th style="{{ $th }}">Unfinished</th><th style="{{ $th }}">Revenue</th></tr></thead>
                 <tbody>
                 @forelse ($gateways as $g => $r)
-                    <tr><td style="{{ $td }}">{{ ucfirst($g) }}</td><td style="{{ $td }}">{{ $r['started'] }}</td><td style="{{ $td }} color: #10B981; font-weight: 600;">{{ $r['paid'] }}</td><td style="{{ $td }} color: #EF4444;">{{ $r['failed'] }}</td><td style="{{ $td }} color: #F59E0B;">{{ $r['unfinished'] }}</td><td style="{{ $td }}">₹{{ number_format($r['revenue']) }}</td></tr>
+                    <tr><td style="{{ $td }}">{{ $g }}</td><td style="{{ $td }}">{{ $r['started'] }}</td><td style="{{ $td }} color: #10B981; font-weight: 600;">{{ $r['paid'] }}</td><td style="{{ $td }} color: #EF4444;">{{ $r['failed'] }}</td><td style="{{ $td }} color: #F59E0B;">{{ $r['unfinished'] }}</td><td style="{{ $td }}">₹{{ number_format($r['revenue']) }}</td></tr>
                 @empty
                     <tr><td colspan="6" style="{{ $td }} {{ $muted }}">No payments started in this period.</td></tr>
                 @endforelse
@@ -112,7 +112,7 @@
     <div style="{{ $box }}">
         <p style="{{ $h }}">Started a payment but did not pay — worth a call ({{ count($toCall['unfinished']) }})</p>
         <table style="width: 100%; border-collapse: collapse;">
-            <thead><tr><th style="{{ $th }}">Member</th><th style="{{ $th }}">Plan</th><th style="{{ $th }}">Tries</th><th style="{{ $th }}">Gateway</th><th style="{{ $th }}">What happened</th><th style="{{ $th }}">Last try</th></tr></thead>
+            <thead><tr><th style="{{ $th }}">Member</th><th style="{{ $th }}">Plan</th><th style="{{ $th }}">Tries</th><th style="{{ $th }}">Gateway</th><th style="{{ $th }}">What happened</th><th style="{{ $th }}">Last try</th><th style="{{ $th }}">Called</th></tr></thead>
             <tbody>
             @forelse ($toCall['unfinished'] as $r)
                 @php $url = \App\Filament\Resources\UserResource::profileWorkUrl($r['profile']); @endphp
@@ -120,12 +120,13 @@
                     <td style="{{ $td }}">@if ($url)<a href="{{ $url }}" style="color: var(--primary-600, #8B1D91); font-weight: 600;">{{ $r['profile']->matri_id }}</a>@else — @endif<div style="{{ $muted }}">{{ $r['profile']?->full_name }}</div></td>
                     <td style="{{ $td }}">{{ $r['plans'] }} · ₹{{ number_format($r['amount']) }}@if ($r['coupon'])<div style="{{ $muted }}">coupon {{ $r['coupon'] }}</div>@endif</td>
                     <td style="{{ $td }}">{{ $r['tries'] }}</td>
-                    <td style="{{ $td }}">{{ ucfirst($r['gateway']) }}</td>
+                    <td style="{{ $td }}">{{ $r['gateway'] }}</td>
                     <td style="{{ $td }}">{{ $r['reason'] }}</td>
                     <td style="{{ $td }} white-space: nowrap;">{{ $r['last']?->displayTz()->format('d M, H:i') }}</td>
+                    <td style="{{ $td }} white-space: nowrap;">@if ($r['called'])<span style="color: #10B981; font-weight: 600;">✓ {{ \Illuminate\Support\Carbon::parse($r['called'])->displayTz()->format('d M') }}</span>@else<span style="color: #F59E0B;">Not yet</span>@endif</td>
                 </tr>
             @empty
-                <tr><td colspan="6" style="{{ $td }} {{ $muted }}">Nobody left a payment unfinished in this period.</td></tr>
+                <tr><td colspan="7" style="{{ $td }} {{ $muted }}">Nobody left a payment unfinished in this period.</td></tr>
             @endforelse
             </tbody>
         </table>

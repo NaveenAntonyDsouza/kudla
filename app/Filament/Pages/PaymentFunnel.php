@@ -44,6 +44,7 @@ class PaymentFunnel extends Page
 
         return [
             'steps' => $f->steps(),
+            'stepsFrom' => $f->stepsFrom(),
             'visitorViews' => $f->visitorPlanViews(),
             'gateways' => $f->byGateway(),
             'reasons' => $f->failureReasons(),

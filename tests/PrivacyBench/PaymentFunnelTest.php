@@ -120,7 +120,7 @@ it('keeps why a payment failed, from the payment window and from the gateway, wi
         ->and(events(MemberEvents::PAYMENT_FAILED, $m->user_id)->where('data->from', 'gateway')->count())->toBe(1);
 
     $reasons = (new PaymentFunnel(7))->failureReasons();
-    expect(array_keys($reasons))->toContain('razorpay: UPI request declined — U30');
+    expect(array_keys($reasons))->toContain('Razorpay: UPI request declined — U30');
 });
 
 it('counts a free member stopped by a paid feature, once a day', function () {
@@ -150,8 +150,14 @@ it('lists unfinished payments to call, and the Work Queue counts the same ones',
     $mk($paid, 'pending', 180);
     $mk($paid, 'paid', 150);       // paid after leaving the first one: not to call
 
-    $call = collect((new PaymentFunnel(7))->toCall()['unfinished'])->map(fn ($r) => $r['profile']->matri_id);
-    expect($call)->toContain($left->matri_id)->not->toContain($paid->matri_id);
+    $call = collect((new PaymentFunnel(7))->toCall()['unfinished'])->keyBy(fn ($r) => $r['profile']->matri_id);
+    expect($call->keys())->toContain($left->matri_id)->not->toContain($paid->matri_id)
+        ->and($call[$left->matri_id]['gateway'])->toBe('PhonePe')
+        ->and($call[$left->matri_id]['called'])->toBeNull();
+
+    // a Call note after the last try marks them as called
+    \App\Models\ProfileNote::create(['profile_id' => $left->id, 'admin_user_id' => $paid->user_id, 'note' => 'Called about the payment', 'note_type' => 'call']);
+    expect(collect((new PaymentFunnel(7))->toCall()['unfinished'])->firstWhere(fn ($r) => $r['profile']->id === $left->id)['called'])->not->toBeNull();
 
     $queue = PaymentFunnel::unfinishedQuery()->whereIn('user_id', [$left->user_id, $paid->user_id])->pluck('user_id')->all();
     expect($queue)->toBe([$left->user_id]);

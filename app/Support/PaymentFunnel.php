@@ -28,6 +28,24 @@ class PaymentFunnel
         return now()->subDays($this->days);
     }
 
+    /**
+     * Where the four-step row starts: the period start, or the first recorded step if
+     * that is later. Steps 1–2 exist only from 18 Nov 2026, so counting steps 3–4 from
+     * further back made the row read "0 → 0 → 6 → 2".
+     */
+    public function stepsFrom(): Carbon
+    {
+        $first = MemberEvent::min('created_at');
+
+        return $first ? max($this->since(), Carbon::parse($first)) : now();
+    }
+
+    /** Gateway slugs as their makers write them. */
+    public static function gatewayName(?string $slug): string
+    {
+        return ['phonepe' => 'PhonePe', 'razorpay' => 'Razorpay', 'paypal' => 'PayPal', 'stripe' => 'Stripe', 'paytm' => 'Paytm'][$slug] ?? ucfirst((string) $slug);
+    }
+
     private function events(string $event)
     {
         return MemberEvent::where('event', $event)->where('created_at', '>=', $this->since());
@@ -41,13 +59,15 @@ class PaymentFunnel
     /** Members at each step (each member counted once per step). */
     public function steps(): array
     {
-        $paidUsers = (clone $this->checkouts())->where('payment_status', 'paid')->distinct()->count('user_id');
+        $from = $this->stepsFrom();
+        $checkouts = Subscription::where('created_at', '>=', $from)->where('amount', '>', 0);
+        $events = fn (string $e) => MemberEvent::where('event', $e)->where('created_at', '>=', $from);
 
         return [
-            ['Saw the plans page', (clone $this->events(MemberEvents::PLANS_VIEWED))->whereNotNull('user_id')->distinct()->count('user_id')],
-            ['Pressed a plan', (clone $this->events(MemberEvents::PLAN_CHOSEN))->distinct()->count('user_id')],
-            ['Opened the payment', (clone $this->checkouts())->distinct()->count('user_id')],
-            ['Paid', $paidUsers],
+            ['Saw the plans page', $events(MemberEvents::PLANS_VIEWED)->whereNotNull('user_id')->distinct()->count('user_id')],
+            ['Pressed a plan', $events(MemberEvents::PLAN_CHOSEN)->distinct()->count('user_id')],
+            ['Opened the payment', (clone $checkouts)->distinct()->count('user_id')],
+            ['Paid', (clone $checkouts)->where('payment_status', 'paid')->distinct()->count('user_id')],
         ];
     }
 
@@ -61,7 +81,7 @@ class PaymentFunnel
     {
         $rows = [];
         foreach ((clone $this->checkouts())->get(['gateway', 'payment_status', 'amount']) as $s) {
-            $g = $s->gateway ?: 'unknown';
+            $g = self::gatewayName($s->gateway ?: 'unknown');
             $rows[$g] ??= ['started' => 0, 'paid' => 0, 'failed' => 0, 'unfinished' => 0, 'revenue' => 0];
             $rows[$g]['started']++;
             match ($s->payment_status) {
@@ -81,7 +101,7 @@ class PaymentFunnel
         $reasons = [];
         foreach ((clone $this->checkouts())->where('payment_status', 'failed')->get(['gateway', 'gateway_metadata']) as $s) {
             $r = trim((string) ($s->gateway_metadata['failure_reason'] ?? '')) ?: 'no reason given';
-            $key = ($s->gateway ?: '?').': '.$r;
+            $key = self::gatewayName($s->gateway ?: '?').': '.$r;
             $reasons[$key] = ($reasons[$key] ?? 0) + 1;
         }
         // reasons the payment window reported for checkouts not (yet) marked failed
@@ -89,7 +109,7 @@ class PaymentFunnel
             if (($e->data['from'] ?? '') !== 'browser') {
                 continue;
             }
-            $key = ($e->subject ?: '?').': '.(($e->data['reason'] ?? '') ?: 'no reason given').' (in the payment window)';
+            $key = self::gatewayName($e->subject ?: '?').': '.(($e->data['reason'] ?? '') ?: 'no reason given').' (in the payment window)';
             $reasons[$key] = ($reasons[$key] ?? 0) + 1;
         }
         arsort($reasons);
@@ -153,11 +173,15 @@ class PaymentFunnel
                 continue;
             }
             $last = $rows->last();
+            $profile = $this->profileOf((int) $userId);
             $unfinished[] = [
-                'profile' => $this->profileOf((int) $userId),
+                'profile' => $profile,
                 'tries' => $rows->count(),
                 'plans' => $rows->pluck('plan_name')->unique()->implode(', '),
-                'gateway' => $rows->pluck('gateway')->unique()->implode(', '),
+                'gateway' => $rows->pluck('gateway')->unique()->map(fn ($g) => self::gatewayName($g))->implode(', '),
+                // a Call note after the last try: someone has already phoned them
+                'called' => $profile ? \App\Models\ProfileNote::where('profile_id', $profile->id)->where('note_type', 'call')
+                    ->where('created_at', '>=', $last->created_at)->max('created_at') : null,
                 'coupon' => $rows->pluck('coupon_code')->filter()->unique()->implode(', '),
                 'amount' => (int) round($last->amount / 100),
                 'reason' => $rows->map(fn ($r) => $r->gateway_metadata['failure_reason'] ?? null)->filter()->last()
