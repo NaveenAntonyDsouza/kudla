@@ -32,10 +32,15 @@ afterEach(function () {
     Schema::dropIfExists('site_settings');
 });
 
+function lastSeenSwitch(string $value): void
+{
+    DB::table('site_settings')->updateOrInsert(['key' => AdminModules::LAST_SEEN], ['value' => $value]);
+    Cache::flush();
+}
+
 function lastSeenSwitchOn(): void
 {
-    DB::table('site_settings')->insert(['key' => AdminModules::LAST_SEEN, 'value' => '1']);
-    Cache::flush();
+    lastSeenSwitch('1');
 }
 
 function seenLabel(?string $lastLogin, ?string $joined = '2026-05-01'): ?string
@@ -44,6 +49,7 @@ function seenLabel(?string $lastLogin, ?string $joined = '2026-05-01'): ?string
 }
 
 it('keeps the old line while the switch is off', function () {
+    lastSeenSwitch('0');
     expect(seenLabel('2026-11-16 09:30:00'))->toBe('Online now')
         ->and(seenLabel('2026-11-16 02:00:00'))->toBe('Today')
         ->and(seenLabel('2026-11-04 10:00:00'))->toBe('12d ago')

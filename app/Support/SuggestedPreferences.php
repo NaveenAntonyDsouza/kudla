@@ -22,7 +22,7 @@ use App\Models\Profile;
  * Only for members with NO saved preferences: a member who saved everything as
  * "Any" chose that. Preferences only rank matches, they never hide anyone.
  *
- * Switch: Settings → Site Settings → Member site → "Matches for members without preferences".
+ * Switch (on by default since 18 Nov 2026): Settings → Site Settings → Member site → "Matches for members without preferences".
  */
 class SuggestedPreferences
 {

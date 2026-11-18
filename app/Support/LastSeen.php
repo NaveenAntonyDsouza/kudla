@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  * for a member who joined before that day, and "never signed in" only for one
  * who joined after it (e.g. a profile staff typed in on the console).
  *
- * Switch: Settings → Site Settings → Member site → "Last seen on profiles". Used by the
+ * Switch (off by default; on for Kudla only, owner 18 Nov 2026): Settings → Site Settings → Member site → "Last seen on profiles". Used by the
  * profile card and the full profile (profile/preview). Off, both keep their old lines:
  * the card "12d ago" (nothing when never seen), the profile "Last Login : <date>".
  */

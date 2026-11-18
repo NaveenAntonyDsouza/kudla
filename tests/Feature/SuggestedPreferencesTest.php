@@ -37,10 +37,15 @@ afterEach(function () {
     Schema::dropIfExists('site_settings');
 });
 
+function suggestSwitch(string $value): void
+{
+    DB::table('site_settings')->updateOrInsert(['key' => AdminModules::SUGGESTED_PREFS], ['value' => $value]);
+    Cache::flush();
+}
+
 function suggestOn(): void
 {
-    DB::table('site_settings')->insert(['key' => AdminModules::SUGGESTED_PREFS, 'value' => '1']);
-    Cache::flush();
+    suggestSwitch('1');
 }
 
 /** An unsaved member: gender, age, height and religion are all the suggestion reads. */
@@ -84,6 +89,9 @@ it('keeps men at 21 and over, and leaves out whatever the profile does not say',
 
 it('uses saved preferences first, and suggests only while the switch is on', function () {
     $man = personFor('male', 30, '170 cm', 'Hindu');
+    expect(SuggestedPreferences::for($man))->not->toBeNull();     // on by default (owner, 18 Nov 2026)
+
+    suggestSwitch('0');
     expect(SuggestedPreferences::for($man))->toBeNull();          // off: as before, no matches
 
     suggestOn();

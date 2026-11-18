@@ -60,12 +60,13 @@ class SiteSettings extends Page implements HasForms
             AdminModules::ASSISTED => ($settings[AdminModules::ASSISTED] ?? '1') === '1',
             AdminModules::STAFF_ACTIVITY => ($settings[AdminModules::STAFF_ACTIVITY] ?? '1') === '1',
             AdminModules::LOGIN_AS_MEMBER => ($settings[AdminModules::LOGIN_AS_MEMBER] ?? '1') === '1',
-            // member site (16 Nov 2026 review): new, so not set means off
+            // member site (16–17 Nov 2026 review): on by default since 18 Nov (owner), not set means on;
+            // Last seen is the exception: off by default, on for Kudla only (owner, 18 Nov)
             AdminModules::LAST_SEEN => ($settings[AdminModules::LAST_SEEN] ?? '0') === '1',
-            AdminModules::REFUSED_ADDRESSES => ($settings[AdminModules::REFUSED_ADDRESSES] ?? '0') === '1',
-            AdminModules::PHOTO_BAR_MORE => ($settings[AdminModules::PHOTO_BAR_MORE] ?? '0') === '1',
-            AdminModules::PHOTO_POPUP => ($settings[AdminModules::PHOTO_POPUP] ?? '0') === '1',
-            AdminModules::SUGGESTED_PREFS => ($settings[AdminModules::SUGGESTED_PREFS] ?? '0') === '1',
+            AdminModules::REFUSED_ADDRESSES => ($settings[AdminModules::REFUSED_ADDRESSES] ?? '1') === '1',
+            AdminModules::PHOTO_BAR_MORE => ($settings[AdminModules::PHOTO_BAR_MORE] ?? '1') === '1',
+            AdminModules::PHOTO_POPUP => ($settings[AdminModules::PHOTO_POPUP] ?? '1') === '1',
+            AdminModules::SUGGESTED_PREFS => ($settings[AdminModules::SUGGESTED_PREFS] ?? '1') === '1',
 
             // Alerts
             'error_alert_email' => $settings['error_alert_email'] ?? '',
@@ -203,7 +204,7 @@ class SiteSettings extends Page implements HasForms
                     ->columns(3),
 
                 \Filament\Schemas\Components\Section::make('Member site')
-                    ->description('Changes to what members see. Each one starts off; switching one off puts that part back exactly as it was.')
+                    ->description('Changes to what members see. All are on unless you switch one off, except Last seen, which starts off. Switching one off puts that part back exactly as it was.')
                     ->schema([
                         Forms\Components\Toggle::make(AdminModules::LAST_SEEN)
                             ->label('Last seen on profiles')

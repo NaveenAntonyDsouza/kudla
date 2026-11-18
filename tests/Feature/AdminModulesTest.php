@@ -129,18 +129,20 @@ it('switches each November tool off on its own, and back on', function () {
         ->and(\App\Filament\Pages\StaffActivity::canAccess())->toBeTrue();
 });
 
-it('starts the 16 Nov member-site changes off, and saves each one from Site Settings', function () {
-    expect(AdminModules::lastSeen())->toBeFalse()
-        ->and(AdminModules::refusedAddresses())->toBeFalse()
-        ->and(AdminModules::photoBarMore())->toBeFalse()
-        ->and(AdminModules::photoPopup())->toBeFalse();
+it('starts the member-site changes on, except Last seen (owner, 18 Nov 2026), and saves each one from Site Settings', function () {
+    expect(AdminModules::lastSeen())->toBeFalse()   // on for Kudla only, by its own stored setting
+        ->and(AdminModules::refusedAddresses())->toBeTrue()
+        ->and(AdminModules::photoBarMore())->toBeTrue()
+        ->and(AdminModules::photoPopup())->toBeTrue()
+        ->and(AdminModules::suggestedPreferences())->toBeTrue();
 
     // each must be filled, shown and in the save list, or the switch silently never saves
     $source = file_get_contents(app_path('Filament/Pages/SiteSettings.php'));
-    foreach (['LAST_SEEN', 'REFUSED_ADDRESSES', 'PHOTO_BAR_MORE', 'PHOTO_POPUP'] as $const) {
+    foreach (['LAST_SEEN', 'REFUSED_ADDRESSES', 'PHOTO_BAR_MORE', 'PHOTO_POPUP', 'SUGGESTED_PREFS'] as $const) {
         expect(substr_count($source, 'AdminModules::'.$const))->toBeGreaterThanOrEqual(3);
     }
 
-    SiteSetting::setValue(AdminModules::PHOTO_POPUP, '1');
-    expect(AdminModules::photoPopup())->toBeTrue()->and(AdminModules::photoBarMore())->toBeFalse();
+    // switching one off leaves the others on
+    SiteSetting::setValue(AdminModules::PHOTO_POPUP, '0');
+    expect(AdminModules::photoPopup())->toBeFalse()->and(AdminModules::photoBarMore())->toBeTrue();
 });

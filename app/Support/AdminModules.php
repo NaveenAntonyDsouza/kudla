@@ -45,7 +45,10 @@ class AdminModules
     public const LOGIN_AS_MEMBER = 'module_login_as_member_enabled';
 
     /*
-     * Member-site changes from the 16 Nov 2026 weekly review. Each is new, so each starts off.
+     * Member-site changes from the 16–17 Nov 2026 weekly review. Built off by default, then
+     * switched on for every site and made ON by default by the owner (18 Nov 2026): not set
+     * means on, so a new site gets them too. Switching one off stores '0'. Except Last seen:
+     * off by default, on for Kudla only (owner, 18 Nov 2026).
      */
 
     /** Profile cards and the full profile say when a member was last seen, including members not seen since tracking began. */
@@ -90,22 +93,22 @@ class AdminModules
 
     public static function refusedAddresses(): bool
     {
-        return SiteSetting::getValue(self::REFUSED_ADDRESSES, '0') === '1';
+        return SiteSetting::getValue(self::REFUSED_ADDRESSES, '1') === '1';
     }
 
     public static function photoBarMore(): bool
     {
-        return SiteSetting::getValue(self::PHOTO_BAR_MORE, '0') === '1';
+        return SiteSetting::getValue(self::PHOTO_BAR_MORE, '1') === '1';
     }
 
     public static function photoPopup(): bool
     {
-        return SiteSetting::getValue(self::PHOTO_POPUP, '0') === '1';
+        return SiteSetting::getValue(self::PHOTO_POPUP, '1') === '1';
     }
 
     public static function suggestedPreferences(): bool
     {
-        return SiteSetting::getValue(self::SUGGESTED_PREFS, '0') === '1';
+        return SiteSetting::getValue(self::SUGGESTED_PREFS, '1') === '1';
     }
 
     public static function branches(): bool
