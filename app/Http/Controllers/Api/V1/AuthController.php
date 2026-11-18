@@ -94,7 +94,9 @@ class AuthController extends BaseApiController
             return $this->sendOk();
         }
 
-        $this->otp->send($data['phone'], OtpService::CHANNEL_PHONE);
+        // Login/reset by WhatsApp: to the WhatsApp number on the member's profile.
+        $member = $data['purpose'] === 'register' ? null : \App\Support\PhoneCodeLogin::memberFor($data['phone']);
+        $this->otp->send($data['phone'], OtpService::CHANNEL_PHONE, $member ? \App\Support\PhoneCodeLogin::deliverTo($member) : null);
 
         return $this->sendOk();
     }

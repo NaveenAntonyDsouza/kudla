@@ -129,7 +129,12 @@ class OtpService
      *  - Creates a fresh row with hashed code + 10-minute expiry
      *  - Dispatches via Fast2SMS (phone) or Laravel Mail (email) in non-local env
      */
-    public function send(string $destination, string $channel = self::CHANNEL_PHONE): bool
+    /**
+     * $deliverTo: for a phone code by WhatsApp, the number to message when it
+     * differs from the one typed (the WhatsApp number on the member's profile).
+     * The code is still checked against $destination.
+     */
+    public function send(string $destination, string $channel = self::CHANNEL_PHONE, ?string $deliverTo = null): bool
     {
         $this->assertValidChannel($channel);
 
@@ -170,7 +175,7 @@ class OtpService
 
         return match ($channel) {
             self::CHANNEL_PHONE => self::phoneSender() === self::SENDER_WHATSAPP
-                ? $this->dispatchWhatsApp($destination, $otp)
+                ? $this->dispatchWhatsApp($deliverTo ?: $destination, $otp)
                 : $this->dispatchSms($destination, $otp),
             self::CHANNEL_EMAIL => $this->dispatchEmail($destination, $otp),
         };
@@ -224,9 +229,9 @@ class OtpService
      * Backwards-compat: legacy web LoginController::sendLoginOtp and
      * RegisterController::sendOtp call this. Keep until web is migrated.
      */
-    public function sendOtp(string $phone): bool
+    public function sendOtp(string $phone, ?string $deliverTo = null): bool
     {
-        return $this->send($phone, self::CHANNEL_PHONE);
+        return $this->send($phone, self::CHANNEL_PHONE, $deliverTo);
     }
 
     /**

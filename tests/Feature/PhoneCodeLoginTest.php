@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
 | account found with this phone number" to anyone who typed a number.
 */
 
-const PCL_TABLES = ['users', 'profiles', 'site_settings', 'otp_verifications', 'whatsapp_messages', 'login_history'];
+const PCL_TABLES = ['users', 'profiles', 'contact_info', 'site_settings', 'otp_verifications', 'whatsapp_messages', 'login_history'];
 
 beforeEach(function () {
     foreach (PCL_TABLES as $t) {
@@ -48,6 +48,13 @@ beforeEach(function () {
         $t->boolean('onboarding_completed')->default(true);
         $t->timestamps();
         $t->softDeletes();
+    });
+    Schema::create('contact_info', function (Blueprint $t) {
+        $t->id();
+        $t->unsignedBigInteger('profile_id');
+        $t->string('whatsapp_number')->nullable();
+        $t->string('primary_phone')->nullable();
+        $t->timestamps();
     });
     Schema::create('site_settings', function (Blueprint $t) {
         $t->id();
@@ -133,6 +140,17 @@ it('sends a member the approved WhatsApp code, never into the inbox', function (
         ->and(DB::table('otp_verifications')->where('destination', '9845012345')->count())->toBe(1)
         ->and(DB::table('whatsapp_messages')->count())->toBe(0)
         ->and(OtpService::sentToday())->toBe(1);
+});
+
+it('sends the code to the WhatsApp number on the profile when it differs from the login mobile', function () {
+    SiteSetting::setValue('wa_cloud_login_codes_enabled', '1');
+    DB::table('contact_info')->insert(['profile_id' => 1, 'whatsapp_number' => '+91 98450 99999', 'primary_phone' => '9845012345']);
+
+    $this->post('/login/send-otp', ['phone' => '9845012345'])->assertSessionHasNoErrors();
+
+    expect(codeSends()->sole()['to'])->toBe('919845099999')
+        ->and(DB::table('otp_verifications')->where('destination', '9845012345')->count())->toBe(1)
+        ->and(PhoneCodeLogin::sentMessage('9845012345'))->toContain('WhatsApp number on that account');
 });
 
 it('answers the same for unknown, staff and banned numbers, and sends them nothing', function () {

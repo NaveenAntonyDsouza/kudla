@@ -69,6 +69,17 @@ class AdminModules
     /** Members who never saved partner preferences get matches from their own age, religion and height (17 Nov 2026). */
     public const SUGGESTED_PREFS = 'module_suggested_preferences_enabled';
 
+    /* Pop-ups (19 Nov 2026), one a day at most with the photo pop-up first (DailyPopup). New: off by default. */
+
+    /** "Families are waiting for your reply" pop-up. */
+    public const WAITING_POPUP = 'module_waiting_popup_enabled';
+
+    /** Plans pop-up for free members, at most once every 4 days. */
+    public const PLANS_POPUP = 'module_plans_popup_enabled';
+
+    /** WhatsApp Channel pop-up, once per member. */
+    public const CHANNEL_POPUP = 'module_channel_popup_enabled';
+
     public static function verificationCalls(): bool
     {
         return SiteSetting::getValue(self::VERIFICATION_CALLS, '0') === '1';
@@ -117,6 +128,21 @@ class AdminModules
     public static function suggestedPreferences(): bool
     {
         return SiteSetting::getValue(self::SUGGESTED_PREFS, '1') === '1';
+    }
+
+    public static function waitingPopup(): bool
+    {
+        return SiteSetting::getValue(self::WAITING_POPUP, '0') === '1';
+    }
+
+    public static function plansPopup(): bool
+    {
+        return SiteSetting::getValue(self::PLANS_POPUP, '0') === '1';
+    }
+
+    public static function channelPopup(): bool
+    {
+        return SiteSetting::getValue(self::CHANNEL_POPUP, '0') === '1';
     }
 
     public static function branches(): bool

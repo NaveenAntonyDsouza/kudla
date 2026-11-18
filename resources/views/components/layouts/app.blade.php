@@ -594,7 +594,7 @@
             <x-offer-banner />
         @endif
         @auth
-            <x-photo-popup />
+            <x-daily-popup />
         @endauth
         {{ $slot }}
     </main>

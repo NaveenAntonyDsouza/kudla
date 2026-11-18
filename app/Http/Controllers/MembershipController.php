@@ -40,7 +40,9 @@ class MembershipController extends Controller
         $activePlanId = $activeMembership?->plan_id;
 
         // payment funnel (18 Nov 2026): once a day per member, or per visitor's session
-        MemberEvents::record(MemberEvents::PLANS_VIEWED, $user ? 'member' : 'visitor', $activePlanId ? ['has_plan' => true] : [], null, 'page');
+        // ?from=popup: opened from the plans pop-up (DailyPopup), so its effect can be counted
+        $viewData = array_filter(['has_plan' => $activePlanId ? true : null, 'from' => request('from') === 'popup' ? 'popup' : null]);
+        MemberEvents::record(MemberEvents::PLANS_VIEWED, $user ? 'member' : 'visitor', $viewData, null, 'page');
 
         return view('membership.index', compact('plans', 'activeMembership', 'activePlanId'));
     }

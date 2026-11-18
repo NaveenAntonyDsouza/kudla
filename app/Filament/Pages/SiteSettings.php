@@ -67,6 +67,9 @@ class SiteSettings extends Page implements HasForms
             AdminModules::REFUSED_ADDRESSES => ($settings[AdminModules::REFUSED_ADDRESSES] ?? '1') === '1',
             AdminModules::PHOTO_BAR_MORE => ($settings[AdminModules::PHOTO_BAR_MORE] ?? '1') === '1',
             AdminModules::PHOTO_POPUP => ($settings[AdminModules::PHOTO_POPUP] ?? '1') === '1',
+            AdminModules::WAITING_POPUP => ($settings[AdminModules::WAITING_POPUP] ?? '0') === '1',
+            AdminModules::PLANS_POPUP => ($settings[AdminModules::PLANS_POPUP] ?? '0') === '1',
+            AdminModules::CHANNEL_POPUP => ($settings[AdminModules::CHANNEL_POPUP] ?? '0') === '1',
             AdminModules::SUGGESTED_PREFS => ($settings[AdminModules::SUGGESTED_PREFS] ?? '1') === '1',
 
             // Alerts
@@ -225,7 +228,19 @@ class SiteSettings extends Page implements HasForms
 
                         Forms\Components\Toggle::make(AdminModules::PHOTO_POPUP)
                             ->label('"Add your photo" pop-up')
-                            ->helperText('Members with no photo see a pop-up on their first page of the day, with "Add photo" and "Not now". It stops as soon as they add one. Never shown while staff use Login as member.'),
+                            ->helperText('Members with no photo see a pop-up on their first page of the day, with "Add photo" and "Not now". It stops as soon as they add one. Never shown while staff use Login as member. Members see at most ONE pop-up a day; this one comes first.'),
+
+                        Forms\Components\Toggle::make(AdminModules::WAITING_POPUP)
+                            ->label('"Families are waiting for your reply" pop-up')
+                            ->helperText('Members who have left an interest unanswered for 3 days or more see how many are waiting, with "Reply now" (opens Interests received). Second in line after the photo pop-up.'),
+
+                        Forms\Components\Toggle::make(AdminModules::PLANS_POPUP)
+                            ->label('Plans pop-up for free members')
+                            ->helperText('Free members (not in their first 3 days) see the paid plans with prices and "See plans", at most once every 4 days. The launch offer line shows only while the Offer Banner is on. Never to paying members.'),
+
+                        Forms\Components\Toggle::make(AdminModules::CHANNEL_POPUP)
+                            ->label('WhatsApp Channel pop-up')
+                            ->helperText('Once per member, ever (from their 3rd day): "Follow our WhatsApp Channel". Needs the Channel link in Site Settings -> Social Links.'),
 
                         Forms\Components\Toggle::make(AdminModules::SUGGESTED_PREFS)
                             ->label('Matches for members without preferences')
@@ -540,7 +555,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER, AdminModules::PAYMENT_INSIGHTS,
-            AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP,
+            AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
             AdminModules::SUGGESTED_PREFS,
             'admin_two_step_required',
         ];

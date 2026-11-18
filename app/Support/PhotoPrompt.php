@@ -48,29 +48,8 @@ class PhotoPrompt
      */
     public static function popupDue(?User $user = null): bool
     {
-        try {
-            $user ??= auth()->user();
-            $profile = $user?->profile;
-
-            if (! $profile || ! AdminModules::photoPopup()) {
-                return false;
-            }
-            // staff using Login as member: view only, and it must not use up the member's pop-up
-            if (LoginAs::active()) {
-                return false;
-            }
-            // already adding photos, or in the middle of choosing / paying for a plan
-            if (request()->routeIs('photos.*', 'membership.*')) {
-                return false;
-            }
-            if (self::hasPhoto($profile)) {
-                return false;
-            }
-
-            return Cache::add(self::popupKey($user), true, now()->endOfDay());
-        } catch (\Throwable) {
-            return false;   // a nudge must never break the page
-        }
+        // One pop-up a day across all kinds (DailyPopup); the photo comes first.
+        return DailyPopup::choose($user) === DailyPopup::PHOTO;
     }
 
     private static function barKey(User $user): string
@@ -78,8 +57,4 @@ class PhotoPrompt
         return 'photo-bar-closed:'.$user->id;
     }
 
-    private static function popupKey(User $user): string
-    {
-        return 'photo-popup:'.$user->id.':'.now()->toDateString();
-    }
 }

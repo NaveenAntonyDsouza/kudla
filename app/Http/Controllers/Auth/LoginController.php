@@ -117,9 +117,9 @@ class LoginController extends Controller
         }
         RateLimiter::hit($visitorKey, 3600);
 
-        if (PhoneCodeLogin::memberFor($phone)) {
+        if ($member = PhoneCodeLogin::memberFor($phone)) {
             // A failed send is logged by OtpService; the page still answers the same way.
-            $otpService->sendOtp($phone);
+            $otpService->sendOtp($phone, PhoneCodeLogin::deliverTo($member));
         } else {
             $otpService->countPhoneRequest($phone);
         }

@@ -78,7 +78,7 @@
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                         @if($codeByWhatsApp)
-                            <p class="mt-1 text-xs text-gray-500">We'll send a 6-digit code to this number on WhatsApp.</p>
+                            <p class="mt-1 text-xs text-gray-500">We'll send a 6-digit code to the WhatsApp number on your account.</p>
                         @endif
                     </div>
 

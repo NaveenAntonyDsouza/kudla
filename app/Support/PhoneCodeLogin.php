@@ -52,6 +52,18 @@ final class PhoneCodeLogin
         return $user && $user->blockedStatus() === null ? $user : null;
     }
 
+    /**
+     * Where a WhatsApp code goes: the WhatsApp number on the member's profile
+     * when it is a usable number (17% of Kudla members, Nov 2026, use a
+     * different number for WhatsApp than for logging in), else the login mobile.
+     */
+    public static function deliverTo(User $user): string
+    {
+        $whatsapp = WhatsApp::digits((string) $user->profile?->contactInfo?->whatsapp_number);
+
+        return $whatsapp ?? (string) $user->phone;
+    }
+
     public static function limitMessage(string $limit): string
     {
         return match ($limit) {
@@ -64,8 +76,8 @@ final class PhoneCodeLogin
     /** What the page says after "Send code", the same whether or not the number has an account. */
     public static function sentMessage(string $phone): string
     {
-        $where = self::byWhatsApp() ? 'on WhatsApp' : 'by SMS';
-
-        return "If +91 {$phone} belongs to an account here, we've sent a 6-digit code {$where}.";
+        return self::byWhatsApp()
+            ? "If +91 {$phone} belongs to an account here, we've sent a 6-digit code to the WhatsApp number on that account."
+            : "If +91 {$phone} belongs to an account here, we've sent a 6-digit code to it by SMS.";
     }
 }
