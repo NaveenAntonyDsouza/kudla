@@ -230,6 +230,45 @@ it('saves secrets encrypted and keeps them when left empty', function () {
         ->and(WhatsAppCloud::phoneNumberId())->toBe('999888777');
 });
 
+it('sends the test as a free text only to a number that wrote in the last 24 hours', function () {
+    $this->actingAs(User::find(1), 'admin');
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    Livewire::test(WhatsAppSettings::class)
+        ->callAction('test', ['number' => '98450 12345'])
+        ->assertNotified('Send a WhatsApp from that phone first');
+    Http::assertNotSent(fn ($r) => str_contains($r->url(), '/messages'));
+
+    WhatsAppMessage::create(['direction' => 'in', 'wa_message_id' => 'wamid.HI', 'wa_id' => '919845012345', 'type' => 'text', 'body' => 'Hi', 'status' => 'received']);
+
+    Livewire::test(WhatsAppSettings::class)
+        ->callAction('test', ['number' => '98450 12345'])
+        ->assertNotified('Test message sent to +919845012345');
+    Http::assertSent(fn ($r) => str_contains($r->url(), '/messages') && $r['type'] === 'text' && $r['to'] === '919845012345');
+    expect(WhatsAppMessage::where('direction', 'out')->value('note'))->toBe('test');
+});
+
+it('checks the connection and shows only the problems that block sending', function () {
+    $this->actingAs(User::find(1), 'admin');
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+    Http::fake(['graph.facebook.com/v25.0/1112223334?*' => Http::response([
+        'display_phone_number' => '+91 63639 04709', 'verified_name' => 'Kudla Matrimony', 'status' => 'CONNECTED', 'quality_rating' => 'GREEN',
+        'health_status' => ['can_send_message' => 'BLOCKED', 'entities' => [
+            ['entity_type' => 'PHONE_NUMBER', 'can_send_message' => 'AVAILABLE', 'errors' => [['error_description' => 'SIP is not enabled']]],
+            ['entity_type' => 'WABA', 'can_send_message' => 'BLOCKED', 'errors' => [['error_description' => 'There is an error with the payment method.', 'possible_solution' => 'Add a new payment method.']]],
+        ]],
+    ])]);
+
+    $s = WhatsAppCloud::status();
+    expect($s['ok'])->toBeTrue()
+        ->and($s['can_start'])->toBeFalse()
+        ->and($s['problems'])->toBe(['There is an error with the payment method. Add a new payment method.']);
+
+    Livewire::test(WhatsAppSettings::class)
+        ->callAction('check')
+        ->assertNotified('Connected, with a problem');
+});
+
 /* ── Inbox ─────────────────────────────────────────────────────────── */
 
 function waInboxAsAdmin()

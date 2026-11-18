@@ -249,6 +249,50 @@ final class WhatsAppCloud
             ->get();
     }
 
+    /**
+     * What Meta says about the number and the account (Settings -> WhatsApp
+     * API -> Check connection). `can_start` is false when Meta refuses the
+     * messages we start, e.g. no working payment card; null if unknown.
+     *
+     * @return array{ok: bool, error: ?string, number: ?string, name: ?string, status: ?string, quality: ?string, can_start: ?bool, problems: list<string>}
+     */
+    public static function status(): array
+    {
+        $result = ['ok' => false, 'error' => null, 'number' => null, 'name' => null, 'status' => null, 'quality' => null, 'can_start' => null, 'problems' => []];
+        if (! self::enabled()) {
+            return ['error' => 'WhatsApp API is not switched on, or the phone number ID or access token is missing.'] + $result;
+        }
+
+        try {
+            $phone = Http::withToken(self::accessToken())->timeout(15)->get(self::GRAPH.'/'.self::phoneNumberId(), [
+                'fields' => 'display_phone_number,verified_name,status,quality_rating,health_status',
+            ]);
+        } catch (\Throwable $e) {
+            return ['error' => $e->getMessage()] + $result;
+        }
+        if (! $phone->successful()) {
+            return ['error' => (string) ($phone->json('error.message') ?? 'HTTP '.$phone->status())] + $result;
+        }
+
+        $health = (array) $phone->json('health_status', []);
+        // Only what stops messages; Meta also lists unrelated ones (e.g. SIP calling not set up).
+        $problems = collect($health['entities'] ?? [])
+            ->filter(fn ($e) => ($e['can_send_message'] ?? 'AVAILABLE') !== 'AVAILABLE')
+            ->flatMap(fn ($e) => collect($e['errors'] ?? [])->map(fn ($err) => trim(($err['error_description'] ?? '').' '.($err['possible_solution'] ?? ''))))
+            ->filter()->unique()->values()->all();
+
+        return [
+            'ok' => true,
+            'error' => null,
+            'number' => $phone->json('display_phone_number'),
+            'name' => $phone->json('verified_name'),
+            'status' => $phone->json('status'),
+            'quality' => $phone->json('quality_rating'),
+            'can_start' => isset($health['can_send_message']) ? $health['can_send_message'] !== 'BLOCKED' : null,
+            'problems' => $problems,
+        ];
+    }
+
     /** The webhook address to paste into Meta (App -> WhatsApp -> Configuration). */
     public static function webhookUrl(): string
     {

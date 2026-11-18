@@ -201,10 +201,39 @@ class WhatsAppSettings extends Page implements HasForms
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('check')
+                ->label('Check connection')
+                ->color('gray')
+                ->action(function (): void {
+                    $s = WhatsAppCloud::status();
+                    if (! $s['ok']) {
+                        Notification::make()->title('Could not reach WhatsApp')->body($s['error'])->danger()->persistent()->send();
+
+                        return;
+                    }
+
+                    $lines = [
+                        "{$s['number']} ({$s['name']}): ".strtolower((string) $s['status']).', quality '.strtolower((string) $s['quality']).'.',
+                        'Replies within 24 hours of a member\'s message: working.',
+                        match ($s['can_start']) {
+                            true => 'Messages we start (photo requests, "please reply"): allowed.',
+                            false => 'Messages we start (photo requests, "please reply"): BLOCKED by Meta.',
+                            default => 'Messages we start: Meta did not say.',
+                        },
+                        ...$s['problems'],
+                    ];
+
+                    Notification::make()
+                        ->title($s['can_start'] === false ? 'Connected, with a problem' : 'Connected')
+                        ->body(implode('<br><br>', array_map('e', $lines)))
+                        ->{$s['can_start'] === false ? 'warning' : 'success'}()
+                        ->persistent()
+                        ->send();
+                }),
             Action::make('test')
                 ->label('Send test message')
                 ->color('gray')
-                ->modalDescription('Sends Meta\'s "hello_world" template, which every WhatsApp account has. In test mode the number must be one of the allowed test recipients in Meta.')
+                ->modalDescription('Sends a short plain message (free). Meta only lets us write first with a paid approved message, so first send any WhatsApp message from that phone to the API number, then send the test within 24 hours.')
                 ->form([
                     Forms\Components\TextInput::make('number')
                         ->label('WhatsApp number')
@@ -218,14 +247,23 @@ class WhatsAppSettings extends Page implements HasForms
 
                         return;
                     }
+                    if (! WhatsAppCloud::inServiceWindow($to)) {
+                        Notification::make()
+                            ->title('Send a WhatsApp from that phone first')
+                            ->body("+{$to} has not written to the API number in the last 24 hours, so Meta will not deliver a free message to it. Send any message (\"Hi\") from that phone, then try again.")
+                            ->warning()->persistent()->send();
 
-                    $result = WhatsAppCloud::sendTemplate($to, 'hello_world');
+                        return;
+                    }
+
+                    $body = 'Test message from the '.SiteSetting::getValue('site_name', config('app.name')).' admin: the WhatsApp API is working.';
+                    $result = WhatsAppCloud::sendText($to, $body);
                     WhatsAppMessage::create([
                         'direction' => WhatsAppMessage::OUT,
                         'wa_message_id' => $result['id'],
                         'wa_id' => $to,
-                        'type' => 'template',
-                        'body' => 'Test message (hello_world template)',
+                        'type' => 'text',
+                        'body' => $body,
                         'status' => $result['ok'] ? 'sent' : 'failed',
                         'note' => $result['ok'] ? 'test' : 'test: '.$result['error'],
                         'sent_by' => auth()->id(),
