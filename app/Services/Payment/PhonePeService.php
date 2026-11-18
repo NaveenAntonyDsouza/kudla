@@ -335,7 +335,7 @@ class PhonePeService implements PaymentGatewayInterface
 
         $outcome = match ($eventType) {
             'checkout.order.completed' => $this->processCompleted($subscription, $payload, $activator),
-            'checkout.order.failed' => $this->processFailed($subscription, $activator),
+            'checkout.order.failed' => $this->processFailed($subscription, $activator, $payload),
             'pg.refund.completed' => $this->processRefundCompleted($subscription, $activator),
             // pg.refund.failed: a refund attempt didn't succeed. Don't
             // touch payment state — log + ignore. Buyer / admin reconciles
@@ -369,9 +369,19 @@ class PhonePeService implements PaymentGatewayInterface
         return 'processed';
     }
 
-    private function processFailed(Subscription $subscription, SubscriptionActivator $activator): string
+    private function processFailed(Subscription $subscription, SubscriptionActivator $activator, array $payload = []): string
     {
-        $activator->markFailed($subscription);
+        $first = $payload['paymentDetails'][0] ?? [];
+        $reason = trim(implode(' — ', array_filter([
+            $first['detailedErrorCode'] ?? null,
+            $first['errorCode'] ?? ($payload['errorCode'] ?? null),
+            isset($first['paymentMode']) ? 'via '.$first['paymentMode'] : null,
+        ])));
+        if ($reason === '' && empty($payload['paymentDetails'])) {
+            // PhonePe sends no detail when the buyer never paid: the window was closed or the order timed out
+            $reason = 'no payment made (closed or timed out)';
+        }
+        $activator->markFailed($subscription, $reason !== '' ? $reason : null);
 
         return 'processed';
     }

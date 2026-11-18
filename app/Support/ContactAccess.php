@@ -48,6 +48,11 @@ final class ContactAccess
         }
 
         $result = ['state' => self::resolveState($viewer, $target, $countView), 'contact' => null];
+        // payment funnel (18 Nov 2026): a connected member opened the profile but their plan
+        // (or its contact limit) kept the number from them — the moment most likely to sell a plan
+        if ($countView && in_array($result['state'], [self::NEEDS_PLAN, self::LIMIT_REACHED], true)) {
+            MemberEvents::paywall('contact', $viewer->user, $target->id);
+        }
         if ($result['state'] === self::OPEN && ! $countView && ! app(ContactViewQuota::class)->alreadyViewed($viewer, $target)) {
             // open, but not opened yet: a list shows no number until they open the chat / profile
         } elseif (in_array($result['state'], [self::OPEN, self::OWN], true)) {

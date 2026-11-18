@@ -44,6 +44,9 @@ class AdminModules
     /** Login as member: staff open the member site as a member, view only and recorded (Nov 2026). */
     public const LOGIN_AS_MEMBER = 'module_login_as_member_enabled';
 
+    /** Payment funnel: records the steps towards paying and paywall moments; Money → Payment Funnel (18 Nov 2026, on by default). */
+    public const PAYMENT_INSIGHTS = 'module_payment_insights_enabled';
+
     /*
      * Member-site changes from the 16–17 Nov 2026 weekly review. Built off by default, then
      * switched on for every site and made ON by default by the owner (18 Nov 2026): not set
@@ -84,6 +87,11 @@ class AdminModules
     public static function loginAsMember(): bool
     {
         return SiteSetting::getValue(self::LOGIN_AS_MEMBER, '1') === '1';
+    }
+
+    public static function paymentInsights(): bool
+    {
+        return SiteSetting::getValue(self::PAYMENT_INSIGHTS, '1') === '1';
     }
 
     public static function lastSeen(): bool

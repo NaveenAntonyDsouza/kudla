@@ -54,6 +54,7 @@
                 },
                 modal: {
                     ondismiss: function() {
+                        sendPaymentEvent({ event: 'checkout_closed' });
                         window.location.href = "{{ route('membership.index') }}";
                     }
                 }
@@ -70,7 +71,24 @@
             }
 
             var rzp = new Razorpay(options);
+            // why a payment failed, as Razorpay tells the page (payment funnel, 18 Nov 2026)
+            rzp.on('payment.failed', function (response) {
+                var e = (response && response.error) || {};
+                sendPaymentEvent({ event: 'payment_failed', code: e.code || '', reason: e.description || e.reason || '', step: e.step || '' });
+            });
             rzp.open();
+        }
+
+        // payment funnel: tell the server about steps it cannot see; never blocks the page
+        function sendPaymentEvent(fields) {
+            try {
+                var f = new FormData();
+                f.append('_token', "{{ csrf_token() }}");
+                f.append('s', "{{ $subscription->id }}");
+                for (var k in fields) { f.append(k, String(fields[k]).slice(0, 150)); }
+                if (navigator.sendBeacon) { navigator.sendBeacon("{{ route('membership.event') }}", f); }
+                else { fetch("{{ route('membership.event') }}", { method: 'POST', body: f, keepalive: true }); }
+            } catch (err) {}
         }
 
         // Auto-open on page load

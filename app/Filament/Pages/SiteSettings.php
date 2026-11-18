@@ -60,6 +60,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::ASSISTED => ($settings[AdminModules::ASSISTED] ?? '1') === '1',
             AdminModules::STAFF_ACTIVITY => ($settings[AdminModules::STAFF_ACTIVITY] ?? '1') === '1',
             AdminModules::LOGIN_AS_MEMBER => ($settings[AdminModules::LOGIN_AS_MEMBER] ?? '1') === '1',
+            AdminModules::PAYMENT_INSIGHTS => ($settings[AdminModules::PAYMENT_INSIGHTS] ?? '1') === '1',
             // member site (16–17 Nov 2026 review): on by default since 18 Nov (owner), not set means on;
             // Last seen is the exception: off by default, on for Kudla only (owner, 18 Nov)
             AdminModules::LAST_SEEN => ($settings[AdminModules::LAST_SEEN] ?? '0') === '1',
@@ -200,6 +201,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::LOGIN_AS_MEMBER)
                             ->label('Login as member')
                             ->helperText('Staff open the member site as a member, view only, and every visit is recorded. Each role still needs the "Login as Member" right, and the staff member must have two-step sign-in on.'),
+
+                        Forms\Components\Toggle::make(AdminModules::PAYMENT_INSIGHTS)
+                            ->label('Payment funnel')
+                            ->helperText('Records each step towards paying (plans page, plan chosen, coupon tried, payment window opened and closed, the gateway\'s reason for a failed payment) and each time a free member is stopped by a paid feature (phone number, chat, own message, daily interest limit). Shown in Money → Payment Funnel, with the members worth a call. No names or phone numbers are stored.'),
                     ])
                     ->columns(3),
 
@@ -534,7 +539,7 @@ class SiteSettings extends Page implements HasForms
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
-            AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER,
+            AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER, AdminModules::PAYMENT_INSIGHTS,
             AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP,
             AdminModules::SUGGESTED_PREFS,
             'admin_two_step_required',

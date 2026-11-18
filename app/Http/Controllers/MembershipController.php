@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\MemberEvents;
+
 use App\Models\Coupon;
 use App\Models\MembershipPlan;
 use App\Models\Subscription;
@@ -37,6 +39,9 @@ class MembershipController extends Controller
         $activeMembership = $user?->activeMembership();
         $activePlanId = $activeMembership?->plan_id;
 
+        // payment funnel (18 Nov 2026): once a day per member, or per visitor's session
+        MemberEvents::record(MemberEvents::PLANS_VIEWED, $user ? 'member' : 'visitor', $activePlanId ? ['has_plan' => true] : [], null, 'page');
+
         return view('membership.index', compact('plans', 'activeMembership', 'activePlanId'));
     }
 
@@ -51,8 +56,10 @@ class MembershipController extends Controller
         ]);
 
         $coupon = Coupon::where('code', strtoupper(trim($request->coupon_code)))->first();
+        $typed = strtoupper(trim($request->coupon_code));
 
         if (!$coupon) {
+            MemberEvents::record(MemberEvents::COUPON_TRIED, $typed, ['valid' => false, 'reason' => 'no such code', 'plan_id' => (int) $request->plan_id]);
             return response()->json(['valid' => false, 'message' => 'Invalid coupon code.']);
         }
 
@@ -60,6 +67,11 @@ class MembershipController extends Controller
         $priceInPaise = $plan->price_inr * 100;
 
         $result = $coupon->validateFor($plan->id, $priceInPaise, auth()->id());
+        MemberEvents::record(MemberEvents::COUPON_TRIED, $coupon->code, array_filter([
+            'valid' => (bool) $result['valid'],
+            'reason' => $result['valid'] ? null : ($result['message'] ?? null),
+            'plan_id' => $plan->id,
+        ], fn ($v) => $v !== null));
 
         if ($result['valid']) {
             $discountInPaise = $result['discount'];
@@ -108,6 +120,10 @@ class MembershipController extends Controller
             return back()->withErrors(['payment' => 'This is a free plan.']);
         }
 
+        // payment funnel: a plan button pressed (once a day per member and plan, so the
+        // gateway picker's second post doesn't count twice)
+        MemberEvents::record(MemberEvents::PLAN_CHOSEN, $plan->plan_name, ['plan_id' => $plan->id, 'with_coupon' => $request->filled('coupon_code')], null, 'plan-'.$plan->id);
+
         $originalAmountInPaise = $plan->price_inr * 100;
         $discountInPaise = 0;
         $coupon = null;
@@ -121,9 +137,11 @@ class MembershipController extends Controller
                 if ($validation['valid']) {
                     $discountInPaise = $validation['discount'];
                 } else {
+                    MemberEvents::record(MemberEvents::COUPON_TRIED, $coupon->code, ['valid' => false, 'reason' => $validation['message'] ?? null, 'plan_id' => $plan->id, 'at' => 'checkout']);
                     return back()->withErrors(['coupon' => $validation['message']]);
                 }
             } else {
+                MemberEvents::record(MemberEvents::COUPON_TRIED, strtoupper(trim($request->coupon_code)), ['valid' => false, 'reason' => 'no such code', 'plan_id' => $plan->id, 'at' => 'checkout']);
                 return back()->withErrors(['coupon' => 'Invalid coupon code.']);
             }
         }
@@ -263,6 +281,13 @@ class MembershipController extends Controller
 
         // Persist gateway-specific IDs (razorpay_order_id, phonepe_merchant_order_id, etc.)
         $gateway->applyOrderIdsToSubscription($subscription, $orderResponse);
+
+        MemberEvents::record(MemberEvents::CHECKOUT_STARTED, $gateway->getSlug(), [
+            'subscription_id' => $subscription->id,
+            'plan' => $plan->plan_name,
+            'amount' => (int) round($amountInPaise / 100),
+            'coupon' => $coupon?->code,
+        ]);
 
         // Render the gateway's web flow. Each slug has its own surface:
         //   razorpay → inline JS SDK (membership.checkout view)
@@ -548,6 +573,38 @@ class MembershipController extends Controller
      * the transaction id, so a refresh or a second success path is counted
      * once by GA4. Amounts are stored in paise; plans are priced in INR.
      */
+    /**
+     * Payment-window steps the server cannot see (18 Nov 2026): the member closed
+     * Razorpay's window, or Razorpay told the page why a payment failed. Sent by
+     * membership.checkout with navigator.sendBeacon. Only for the member's own
+     * unpaid payment; never changes its status (the webhook stays the judge).
+     */
+    public function event(Request $request)
+    {
+        $data = $request->validate([
+            'event' => 'required|in:checkout_closed,payment_failed',
+            's' => 'required|integer',
+            'code' => 'nullable|string|max:60',
+            'reason' => 'nullable|string|max:160',
+            'step' => 'nullable|string|max:60',
+        ]);
+
+        $subscription = Subscription::where('id', $data['s'])->where('user_id', auth()->id())->first();
+        if (! $subscription || $subscription->payment_status === 'paid') {
+            return response()->noContent();
+        }
+
+        if ($data['event'] === 'payment_failed') {
+            $reason = trim(implode(' — ', array_filter([$data['reason'] ?? null, $data['code'] ?? null])));
+            $subscription->update(['gateway_metadata' => array_merge((array) ($subscription->gateway_metadata ?? []), ['failure_reason' => $reason ?: 'failed in the payment window'])]);
+            MemberEvents::record(MemberEvents::PAYMENT_FAILED, $subscription->gateway, ['subscription_id' => $subscription->id, 'reason' => $reason, 'step' => $data['step'] ?? null, 'from' => 'browser']);
+        } else {
+            MemberEvents::record(MemberEvents::CHECKOUT_CLOSED, $subscription->gateway, ['subscription_id' => $subscription->id]);
+        }
+
+        return response()->noContent();
+    }
+
     private function trackPurchase(?Subscription $subscription): void
     {
         if (! $subscription) {

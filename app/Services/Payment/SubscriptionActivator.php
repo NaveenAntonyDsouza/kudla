@@ -117,17 +117,26 @@ class SubscriptionActivator
      * Mark a subscription as failed (e.g. payment.failed webhook).
      * Idempotent — safe to call multiple times.
      */
-    public function markFailed(Subscription $subscription): void
+    public function markFailed(Subscription $subscription, ?string $reason = null): void
     {
         if (in_array($subscription->payment_status, ['paid', 'refunded'], true)) {
             // Already terminal in a different direction — don't flip back.
             return;
         }
 
-        $subscription->update([
-            'payment_status' => 'failed',
-            'is_active' => false,
-        ]);
+        $update = ['payment_status' => 'failed', 'is_active' => false];
+        // the gateway's own reason, kept for staff and the Payment Funnel (18 Nov 2026)
+        if ($reason !== null && trim($reason) !== '') {
+            $update['gateway_metadata'] = array_merge((array) ($subscription->gateway_metadata ?? []), ['failure_reason' => \Illuminate\Support\Str::limit(trim($reason), 160, '')]);
+        }
+        $subscription->update($update);
+
+        // the payment funnel's record must never stop a webhook from marking the payment
+        rescue(fn () => \App\Support\MemberEvents::record(\App\Support\MemberEvents::PAYMENT_FAILED, (string) $subscription->gateway, array_filter([
+            'subscription_id' => $subscription->id,
+            'reason' => $reason,
+            'from' => 'gateway',
+        ]), $subscription->user), null, false);
     }
 
     /**

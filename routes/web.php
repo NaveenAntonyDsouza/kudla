@@ -237,6 +237,7 @@ Route::middleware(['auth', 'profile.complete'])->group(function () {
     // Membership Plans
     Route::post('/membership-plans/checkout', [MembershipController::class, 'checkout'])->name('membership.checkout');
     Route::post('/membership-plans/verify', [MembershipController::class, 'verify'])->name('membership.verify');
+    Route::post('/membership-plans/event', [MembershipController::class, 'event'])->name('membership.event')->middleware('throttle:30,1');
     Route::post('/membership-plans/apply-coupon', [MembershipController::class, 'applyCoupon'])->name('membership.applyCoupon');
     // PhonePe redirect-based return URL. Receives the buyer after they
     // complete (or cancel) payment on PhonePe's hosted checkout. The

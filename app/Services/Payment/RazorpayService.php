@@ -339,7 +339,13 @@ class RazorpayService implements PaymentGatewayInterface
             return 'ignored';
         }
 
-        $activator->markFailed($subscription);
+        $entity = $event['payload']['payment']['entity'] ?? [];
+        $reason = trim(implode(' — ', array_filter([
+            $entity['error_description'] ?? null,
+            $entity['error_reason'] ?? null,
+            $entity['error_code'] ?? null,
+        ])));
+        $activator->markFailed($subscription, $reason !== '' ? $reason : null);
 
         return 'processed';
     }

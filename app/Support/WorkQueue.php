@@ -155,6 +155,15 @@ class WorkQueue
                 'url' => self::url(fn () => PaymentHistoryResource::getUrl('index', ['tab' => 'failed'])),
                 'measure' => fn () => $pending(Subscription::where('payment_status', 'failed')->where('created_at', '>=', now()->subDays(7))),
             ],
+            // 18 Nov 2026: "Failed payments" only counts outright failures; a member who
+            // opened the payment and left it is just as worth a call (App\Support\PaymentFunnel)
+            'unfinished_payments' => [
+                'label' => 'Payments started but not finished, last 7 days (call the member)',
+                'target_hours' => 24, 'target' => '1 day',
+                'can' => fn () => \App\Filament\Pages\PaymentFunnel::canAccess(),
+                'url' => self::url(fn () => \App\Filament\Pages\PaymentFunnel::getUrl()),
+                'measure' => fn () => $pending(\App\Support\PaymentFunnel::unfinishedQuery()),
+            ],
             'bounced' => [
                 'label' => 'Members whose email bounced (phone them for the right address)',
                 'target_hours' => 24 * 7, 'target' => '1 week',

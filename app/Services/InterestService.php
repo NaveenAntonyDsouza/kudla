@@ -56,6 +56,7 @@ class InterestService
         // for other service-level failures.
         $usage = $this->canSendToday($sender);
         if (! $usage['can_send']) {
+            \App\Support\MemberEvents::paywall('interest_limit', $sender->user);
             throw new DailyLimitReachedException(
                 limit: (int) ($usage['limit'] ?? self::FREE_DAILY_LIMIT),
                 used: (int) ($usage['used'] ?? ($usage['limit'] ?? self::FREE_DAILY_LIMIT)),
@@ -67,6 +68,7 @@ class InterestService
         // case free senders may include custom text. Models the BharatMatrimony
         // Platinum convention; see config/matrimony.php + MembershipPlan.
         if ($customMessage && ! $this->canWritePersonalMessage($sender, $receiver)) {
+            \App\Support\MemberEvents::paywall('personal_message', $sender->user);
             throw new \RuntimeException('Upgrade to a paid plan to send personalized messages.');
         }
 
@@ -273,6 +275,7 @@ class InterestService
                 ? $interest->receiverProfile
                 : $interest->senderProfile;
             if (! $otherProfile?->user?->activePlanAllowsFreeMemberChat()) {
+                \App\Support\MemberEvents::paywall('chat_message', $sender->user);
                 throw new \RuntimeException('Upgrade to a paid plan to send messages.');
             }
         }
