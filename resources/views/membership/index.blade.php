@@ -124,7 +124,7 @@
                         @elseif($comingSoon)
                             <div class="mt-5 px-6 py-2.5 text-sm font-semibold rounded-lg" style="background: #f3f4f6; color: #6b7280;">Coming soon</div>
                         @else
-                            <form method="POST" action="{{ route('membership.checkout') }}" class="mt-5" x-data="couponForm({{ $plan->id }}, {{ $plan->price_inr }})">
+                            <form method="POST" action="{{ route('membership.checkout') }}" class="mt-5" x-data="couponForm({{ $plan->id }}, {{ $plan->price_inr }}, @js($applied[$plan->id] ?? null))">
                                 @csrf
                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
                                 <input type="hidden" name="coupon_code" :value="appliedCode">
@@ -301,13 +301,14 @@
     </div>
 
     <script>
-        function couponForm(planId, originalPrice) {
+        // applied: a code the member already applied this visit (kept by the server), or null
+        function couponForm(planId, originalPrice, applied) {
             return {
-                showCoupon: false,
-                couponInput: '',
-                appliedCode: '',
-                discountAmount: 0,
-                finalPrice: originalPrice,
+                showCoupon: !!applied,
+                couponInput: applied ? applied.code : '',
+                appliedCode: applied ? applied.code : '',
+                discountAmount: applied ? applied.discount : 0,
+                finalPrice: applied ? applied.final : originalPrice,
                 errorMsg: '',
                 loading: false,
 
@@ -348,6 +349,11 @@
                 },
 
                 removeCoupon() {
+                    fetch('{{ route("membership.applyCoupon") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ remove: true }),
+                    }).catch(() => {});
                     this.appliedCode = '';
                     this.couponInput = '';
                     this.discountAmount = 0;

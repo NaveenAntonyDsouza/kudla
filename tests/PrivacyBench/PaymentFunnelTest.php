@@ -95,6 +95,37 @@ it('records every coupon code typed and whether it worked', function () {
         ->and($tries[1]->subject)->toBe('BENCH500')->and($tries[1]->data['valid'])->toBeTrue();
 });
 
+it('keeps an accepted coupon for the visit, so any upgrade button or a retry still gets the discount', function () {
+    // 19 Nov 2026, live: KM100687 applied KUDLA500 on a plan card, then paid full price
+    $m = payMember('keep', '9812900009');
+    Coupon::create(['code' => 'BENCHKEEP', 'discount_type' => 'percentage', 'discount_value' => 100, 'is_active' => true,
+        'usage_limit_per_user' => 1, 'valid_until' => now()->addMonth()->toDateString()]);
+    Coupon::create(['code' => 'BENCHOTHER', 'discount_type' => 'percentage', 'discount_value' => 100, 'is_active' => true,
+        'usage_limit_per_user' => 1, 'applicable_plan_ids' => [999999], 'valid_until' => now()->addMonth()->toDateString()]);
+
+    $this->actingAs($m->user)->postJson('/membership-plans/apply-coupon', ['coupon_code' => 'benchkeep', 'plan_id' => $this->plan->id])->assertJson(['valid' => true]);
+
+    // the plans page shows it again after a reload
+    $this->actingAs($m->user)->get('/membership-plans')->assertOk()->assertSee('BENCHKEEP');
+
+    // "Remove" forgets it: a button with no code is full price (no gateway on the bench → that error, not a free plan)
+    $this->actingAs($m->user)->postJson('/membership-plans/apply-coupon', ['remove' => true])->assertJson(['removed' => true]);
+    $this->actingAs($m->user)->post('/membership-plans/checkout', ['plan_id' => $this->plan->id]);
+    expect(Subscription::where('user_id', $m->user_id)->where('coupon_code', 'BENCHKEEP')->exists())->toBeFalse();
+
+    // a remembered code that doesn't fit this plan is skipped quietly, not an error
+    $this->actingAs($m->user)->postJson('/membership-plans/apply-coupon', ['coupon_code' => 'BENCHOTHER', 'plan_id' => $this->plan->id])->assertJson(['valid' => false]);
+    $this->actingAs($m->user)->withSession([\App\Http\Controllers\MembershipController::COUPON_SESSION_KEY => 'BENCHOTHER'])->from('/membership-plans')->post('/membership-plans/checkout', ['plan_id' => $this->plan->id])->assertSessionDoesntHaveErrors('coupon');
+
+    // applied again, then an UPGRADE button that sends no code (comparison table, gateway page, retry)
+    $this->actingAs($m->user)->postJson('/membership-plans/apply-coupon', ['coupon_code' => 'BENCHKEEP', 'plan_id' => $this->plan->id])->assertJson(['valid' => true]);
+    $this->actingAs($m->user)->post('/membership-plans/checkout', ['plan_id' => $this->plan->id, 'coupon_code' => ''])->assertRedirect();
+    expect(Subscription::where('user_id', $m->user_id)->where('coupon_code', 'BENCHKEEP')->where('payment_status', 'paid')->count())->toBe(1);
+
+    // used up: the plans page no longer offers it
+    $this->actingAs($m->user)->get('/membership-plans')->assertOk()->assertDontSee('BENCHKEEP');
+});
+
 it('keeps why a payment failed, from the payment window and from the gateway, without the window deciding it', function () {
     $m = payMember('fail', '9812900003');
     $other = payMember('other', '9812900004');

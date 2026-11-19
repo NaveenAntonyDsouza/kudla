@@ -44,7 +44,35 @@ class MembershipController extends Controller
         $viewData = array_filter(['has_plan' => $activePlanId ? true : null, 'from' => request('from') === 'popup' ? 'popup' : null]);
         MemberEvents::record(MemberEvents::PLANS_VIEWED, $user ? 'member' : 'visitor', $viewData, null, 'page');
 
-        return view('membership.index', compact('plans', 'activeMembership', 'activePlanId'));
+        // a code the member already applied this visit shows again on every plan it fits
+        $applied = [];
+        if ($user && ($remembered = $this->rememberedCoupon())) {
+            foreach ($plans as $plan) {
+                if ($plan->price_inr > 0) {
+                    $check = $remembered->validateFor($plan->id, $plan->price_inr * 100, $user->id);
+                    if ($check['valid']) {
+                        $applied[$plan->id] = ['code' => $remembered->code, 'discount' => $check['discount'] / 100, 'final' => ($plan->price_inr * 100 - $check['discount']) / 100];
+                    }
+                }
+            }
+        }
+
+        return view('membership.index', compact('plans', 'activeMembership', 'activePlanId', 'applied'));
+    }
+
+    /**
+     * Coupon codes are remembered for the visit once accepted (19 Nov 2026: a member
+     * applied KUDLA500 on a plan card, then paid full price — the code lived only in
+     * that card, so the comparison table's UPGRADE buttons, a reload, going back from
+     * the payment page, or a retry after a failed payment all dropped it).
+     */
+    public const COUPON_SESSION_KEY = 'membership_coupon';
+
+    private function rememberedCoupon(): ?Coupon
+    {
+        $code = session(self::COUPON_SESSION_KEY);
+
+        return $code ? Coupon::where('code', $code)->first() : null;
     }
 
     /**
@@ -52,6 +80,13 @@ class MembershipController extends Controller
      */
     public function applyCoupon(Request $request)
     {
+        // "Remove" on a plan card: forget the remembered code too
+        if ($request->boolean('remove')) {
+            session()->forget(self::COUPON_SESSION_KEY);
+
+            return response()->json(['removed' => true]);
+        }
+
         $request->validate([
             'coupon_code' => 'required|string|max:50',
             'plan_id' => 'required|exists:membership_plans,id',
@@ -76,6 +111,7 @@ class MembershipController extends Controller
         ], fn ($v) => $v !== null));
 
         if ($result['valid']) {
+            session()->put(self::COUPON_SESSION_KEY, $coupon->code);
             $discountInPaise = $result['discount'];
             $finalPrice = $priceInPaise - $discountInPaise;
 
@@ -145,6 +181,14 @@ class MembershipController extends Controller
             } else {
                 MemberEvents::record(MemberEvents::COUPON_TRIED, strtoupper(trim($request->coupon_code)), ['valid' => false, 'reason' => 'no such code', 'plan_id' => $plan->id, 'at' => 'checkout']);
                 return back()->withErrors(['coupon' => 'Invalid coupon code.']);
+            }
+        } elseif ($remembered = $this->rememberedCoupon()) {
+            // no code on this button, but one was accepted earlier this visit: use it if it
+            // fits this plan; if not (used up, other plan only), quietly charge full price
+            $validation = $remembered->validateFor($plan->id, $originalAmountInPaise, auth()->id());
+            if ($validation['valid']) {
+                $coupon = $remembered;
+                $discountInPaise = $validation['discount'];
             }
         }
 
