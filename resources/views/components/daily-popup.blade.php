@@ -15,7 +15,12 @@
         {{-- x-show sets and clears display on the outer box, so the centring lives on this one --}}
         <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:16px;box-sizing:border-box;background:rgba(17,24,39,.55)">
         <div @click.outside="open = false"
-             style="width:100%;max-width:{{ $__popup === 'plans' ? '420' : '380' }}px;max-height:100%;overflow-y:auto;background:#fff;border-radius:14px;padding:26px 22px 18px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25);box-sizing:border-box">
+             style="position:relative;width:100%;max-width:{{ $__popup === 'plans' ? '420' : '380' }}px;max-height:100%;overflow-y:auto;background:#fff;border-radius:14px;padding:26px 22px 18px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25);box-sizing:border-box">
+            {{-- close (same as "Not now"): owner, 19 Nov 2026 --}}
+            <button type="button" @click="open = false" aria-label="Close" data-popup-close
+                    style="position:absolute;top:8px;right:8px;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:0;border-radius:9999px;background:transparent;color:#6b7280;cursor:pointer">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
             <span style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:9999px;background:{{ $__popup === 'channel' ? '#DCFCE7' : 'var(--color-primary-light,#F3E8F7)' }};color:{{ $__popup === 'channel' ? '#15803D' : 'var(--color-primary,#7B1FA2)' }}">
                 @switch($__popup)
                     @case('photo')

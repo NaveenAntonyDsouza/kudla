@@ -112,6 +112,7 @@ it('shows free members the plans at most every 4 days, never to new or paying me
     expect($html)->toContain('data-daily-popup="plans"')->toContain(e($cheapest->plan_name))
         ->toContain('₹'.number_format($cheapest->price_inr))->toContain('from=popup')
         ->toContain('chat with members')
+        ->toContain('data-popup-close')
         // each plan line opens that plan's card on the plans page
         ->toContain('#plan-'.$cheapest->id);
     if ($cheapest->duration_months > 1) {
