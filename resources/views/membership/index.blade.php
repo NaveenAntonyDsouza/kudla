@@ -34,20 +34,37 @@
     $tableCross = '<svg class="w-5 h-5 text-red-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/></svg>';
 
     // ONE consistent feature set, shared by the cards and the compare table.
-    // [label, resolver(plan), type, showOnCard]
+    // [label, resolver(plan), type, showOnCard, alwaysShow]
     //   type 'value' -> a string (number / "Unlimited"); false renders as a red X
     //   type 'bool'  -> tick / red X
+    // Each row follows the rule the site itself applies (owner, 19 Nov 2026: the page
+    // promised "Featured Profile" and "Priority Support", which nothing did, and left out
+    // chat, the biggest paid feature):
+    //   chat, personal messages, who viewed you → User::isPremium() = a plan with can_view_contact
+    //   higher in search → Profile::scopePaidBoostsFirst() = any active paid membership
+    //   free members can reply → InterestService, the receiver's allows_free_member_chat
     $features = [
-        ['View Contacts',         fn ($p) => $p->can_view_contact ? $fmtLimit($p->view_contacts_limit) : false, 'value', true],
-        ['Daily Contact Views',   fn ($p) => $p->can_view_contact ? $fmtLimit($p->daily_contact_views) : false, 'value', true],
-        ['Interests per Day',     fn ($p) => number_format((int) $p->daily_interest_limit), 'value', true],
-        ['Personalized Messages', fn ($p) => (bool) $p->personalized_messages, 'bool', true],
-        ['Featured Profile',      fn ($p) => (bool) $p->featured_profile, 'bool', true],
-        ['Priority Support',      fn ($p) => (bool) $p->priority_support, 'bool', true],
-        ['See Who Viewed You',    fn ($p) => $p->price_inr > 0, 'bool', false],
+        ['Phone & WhatsApp numbers', fn ($p) => $p->can_view_contact ? $fmtLimit($p->view_contacts_limit) : false, 'value', true, false],
+        ['Numbers per day',          fn ($p) => $p->can_view_contact ? $fmtLimit($p->daily_contact_views) : false, 'value', true, false],
+        ['Send chat messages',       fn ($p) => (bool) $p->can_view_contact, 'bool', true, false],
+        ['Personal message with your interest', fn ($p) => (bool) $p->can_view_contact, 'bool', true, false],
+        ['Interests per day',        fn ($p) => number_format((int) $p->daily_interest_limit), 'value', true, false],
+        ['See who viewed your profile', fn ($p) => (bool) $p->can_view_contact, 'bool', true, false],
+        ['Shown higher in search',   fn ($p) => $p->price_inr > 0, 'bool', true, false],
+        ['Free members can reply to you', fn ($p) => (bool) $p->allows_free_member_chat, 'bool', true, false],
+        // what every member gets (table only): paid plans are the free plan plus more
+        ['Create profile, search, send & receive interests', fn ($p) => true, 'bool', false, true],
+        ['Weekly match suggestions by email', fn ($p) => true, 'bool', false, true],
     ];
-    // Auto-hide a feature when every plan renders it identically (no differentiation).
+    if (! app(\App\Services\WeeklyMatchSuggestionsService::class)->isEnabled()) {
+        array_pop($features); // a site that switched the weekly email off doesn't promise it
+    }
+    // Auto-hide a feature when every plan renders it identically (no differentiation),
+    // except the rows that are there to show what everyone gets.
     $visibleFeatures = collect($features)->filter(function ($f) use ($plans) {
+        if ($f[4]) {
+            return true;
+        }
         $vals = $plans->map(function ($p) use ($f) {
             $v = $f[1]($p);
             return is_bool($v) ? ($v ? 'T' : 'F') : 'v:' . (string) $v;
@@ -116,7 +133,10 @@
                                 <span class="text-sm text-gray-400 line-through">&#8377;{{ number_format($plan->strike_price_inr) }}</span>
                             @endif
                             <div class="text-3xl font-bold text-gray-900">&#8377;{{ number_format($plan->price_inr) }}</div>
-                            <p class="text-[11px] text-gray-400 mt-1">Taxes extra as applicable</p>
+                            @if($plan->duration_months > 1)
+                                {{-- members pay exactly the price shown; nothing is added at payment --}}
+                                <p class="text-xs text-gray-500 mt-1">&#8377;{{ number_format(round($plan->price_inr / $plan->duration_months)) }} a month</p>
+                            @endif
                         </div>
 
                         @if($activePlanId === $plan->id)
