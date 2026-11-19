@@ -53,20 +53,25 @@
                         $__offer = $__offerOn ? trim((string) \App\Models\SiteSetting::getValue('offer_banner_text', '')) : '';
                     @endphp
                     <h2 id="daily-popup-title" style="margin:14px 0 6px;font-size:18px;font-weight:700;color:#111827">Talk directly to the families you like</h2>
-                    <p style="{{ $__text }}">With a plan you can see phone and WhatsApp numbers and send more interests.</p>
+                    <p style="{{ $__text }}">With a plan you can see phone and WhatsApp numbers, chat with members and send more interests.</p>
                     <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;text-align:left">
                         @foreach($__plans as $__plan)
-                            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid {{ $__plan->is_popular ? 'var(--color-primary,#7B1FA2)' : '#e5e7eb' }};border-radius:10px">
+                            {{-- a tap on a plan opens that plan's card on the plans page --}}
+                            <a href="{{ route('membership.index', ['from' => 'popup']) }}#plan-{{ $__plan->id }}" data-popup-plan="{{ $__plan->id }}"
+                               style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid {{ $__plan->is_popular ? 'var(--color-primary,#7B1FA2)' : '#e5e7eb' }};border-radius:10px;text-decoration:none;color:inherit">
                                 <span style="font-size:14px;color:#111827">
                                     <strong>{{ $__plan->plan_name }}</strong>
                                     <span style="color:#6b7280">· {{ $__plan->duration_months }} {{ $__plan->duration_months === 1 ? 'month' : 'months' }}</span>
                                     @if($__plan->is_popular)<span style="display:inline-block;margin-left:4px;padding:1px 6px;border-radius:9999px;background:var(--color-primary-light,#F3E8F7);color:var(--color-primary,#7B1FA2);font-size:11px;font-weight:600">Popular</span>@endif
                                 </span>
-                                <span style="white-space:nowrap;font-size:14px">
+                                <span style="white-space:nowrap;font-size:14px;text-align:right">
                                     @if($__plan->strike_price_inr && $__plan->strike_price_inr > $__plan->price_inr)<span style="color:#9ca3af;text-decoration:line-through;margin-right:4px">₹{{ number_format($__plan->strike_price_inr) }}</span>@endif
                                     <strong style="color:#111827">₹{{ number_format($__plan->price_inr) }}</strong>
+                                    @if($__plan->duration_months > 1)
+                                        <span style="display:block;font-size:12px;color:#6b7280">₹{{ number_format(round($__plan->price_inr / $__plan->duration_months)) }} a month</span>
+                                    @endif
                                 </span>
-                            </div>
+                            </a>
                         @endforeach
                     </div>
                     @if($__offer !== '')

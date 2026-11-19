@@ -110,7 +110,13 @@ it('shows free members the plans at most every 4 days, never to new or paying me
     $html = (string) test()->actingAs($free->user)->get('/dashboard')->getContent();
     $cheapest = MembershipPlan::where('is_active', true)->where('price_inr', '>', 0)->orderBy('price_inr')->first();
     expect($html)->toContain('data-daily-popup="plans"')->toContain(e($cheapest->plan_name))
-        ->toContain('₹'.number_format($cheapest->price_inr))->toContain('from=popup');
+        ->toContain('₹'.number_format($cheapest->price_inr))->toContain('from=popup')
+        ->toContain('chat with members')
+        // each plan line opens that plan's card on the plans page
+        ->toContain('#plan-'.$cheapest->id);
+    if ($cheapest->duration_months > 1) {
+        expect($html)->toContain('₹'.number_format(round($cheapest->price_inr / $cheapest->duration_months)).' a month');
+    }
 
     $this->travel(1)->days();
     expect(popupOn($free))->toBeNull();
