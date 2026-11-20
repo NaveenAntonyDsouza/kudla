@@ -56,13 +56,33 @@ final class EmailTemplateBodies
         . '<p>Please add this email address to your contacts so our emails reach your inbox.</p>'
         . '<p>Warm regards,<br>Team {{SITE_NAME}}</p>';
 
+    /** The interest-accepted body as seeded until 20 Nov 2026 (Matri ID only). */
+    public const INTEREST_ACCEPTED_V1 = '<h1>Great News! Interest Accepted</h1><p>Dear {{SENDER_NAME}},</p><p><strong>{{ACCEPTER_MATRI_ID}}</strong> has accepted your interest on {{SITE_NAME}}!</p><p>You can now start a conversation and get to know each other better.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">Start Chatting</a></p><p>Wishing you the best,<br>{{SITE_NAME}}</p>';
+
+    /** The same, naming who accepted as "Priya D. (KM100123)" (owner, 20 Nov 2026). */
+    public const INTEREST_ACCEPTED = '<h1>Great News! Interest Accepted</h1><p>Dear {{SENDER_NAME}},</p><p><strong>{{ACCEPTER_LABEL}}</strong> has accepted your interest on {{SITE_NAME}}!</p><p>You can now start a conversation and get to know each other better.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">Start Chatting</a></p><p>Wishing you the best,<br>{{SITE_NAME}}</p>';
+
     /** The original interest-received body, as seeded before October 2026. */
     public const INTEREST_RECEIVED_V1 = '<h1>New Interest Received</h1><p>Dear {{RECEIVER_NAME}},</p><p><strong>{{SENDER_MATRI_ID}}</strong> has expressed interest in your profile on {{SITE_NAME}}.</p><p>Log in to view their profile and respond to the interest.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">View Interest</a></p><p>Wishing you the best in your search,<br>{{SITE_NAME}}</p>';
 
-    /** Accept and Decline open the interest page with that reply chosen; the member confirms there. */
-    public const INTEREST_RECEIVED = '<h1>New interest received</h1>'
+    /** October 2026 body (Matri ID only), replaced on 20 Nov 2026 where an admin had not edited it. */
+    public const INTEREST_RECEIVED_V2 = '<h1>New interest received</h1>'
         . '<p>Dear {{RECEIVER_NAME}},</p>'
         . '<p><strong>{{SENDER_MATRI_ID}}</strong> has expressed interest in your profile on {{SITE_NAME}}.</p>'
+        . '<p style="margin:4px 0 16px;color:#4a4a4a;">{{SENDER_SUMMARY}}</p>'
+        . '<p><a href="{{ACCEPT_URL}}" style="display:inline-block;padding:10px 24px;background:#15803d;color:#fff;text-decoration:none;border-radius:6px;margin:0 8px 8px 0;">Accept</a>'
+        . '<a href="{{DECLINE_URL}}" style="display:inline-block;padding:9px 23px;background:#fff;color:#b91c1c;border:1px solid #b91c1c;text-decoration:none;border-radius:6px;margin:0 0 8px;">Decline</a></p>'
+        . '<p style="font-size:13px;color:#6b7280;">You will see their profile and confirm your reply on {{SITE_NAME}}. <a href="{{ACTION_URL}}">View their profile</a></p>'
+        . '<p>Wishing you the best in your search,<br>Team {{SITE_NAME}}</p>';
+
+    /**
+     * Accept and Decline open the interest page with that reply chosen; the member confirms there.
+     * The sender is named "Priya D. (KM100123)" (SENDER_LABEL, owner 20 Nov 2026); the preview line
+     * keeps the Matri ID only, because previews show on locked phones.
+     */
+    public const INTEREST_RECEIVED = '<h1>New interest received</h1>'
+        . '<p>Dear {{RECEIVER_NAME}},</p>'
+        . '<p><strong>{{SENDER_LABEL}}</strong> has expressed interest in your profile on {{SITE_NAME}}.</p>'
         . '<p style="margin:4px 0 16px;color:#4a4a4a;">{{SENDER_SUMMARY}}</p>'
         . '<p><a href="{{ACCEPT_URL}}" style="display:inline-block;padding:10px 24px;background:#15803d;color:#fff;text-decoration:none;border-radius:6px;margin:0 8px 8px 0;">Accept</a>'
         . '<a href="{{DECLINE_URL}}" style="display:inline-block;padding:9px 23px;background:#fff;color:#b91c1c;border:1px solid #b91c1c;text-decoration:none;border-radius:6px;margin:0 0 8px;">Decline</a></p>'

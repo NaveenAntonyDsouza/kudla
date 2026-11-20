@@ -18,14 +18,14 @@ class EmailTemplateSeeder extends Seeder
                 'name' => 'Interest Received',
                 'subject' => 'New Interest Received - {{SITE_NAME}}',
                 'body_html' => EmailTemplateBodies::INTEREST_RECEIVED,
-                'variables' => ['RECEIVER_NAME', 'SENDER_MATRI_ID', 'SENDER_SUMMARY', 'ACCEPT_URL', 'DECLINE_URL', 'ACTION_URL', 'SITE_NAME'],
+                'variables' => ['RECEIVER_NAME', 'SENDER_MATRI_ID', 'SENDER_LABEL', 'SENDER_SUMMARY', 'ACCEPT_URL', 'DECLINE_URL', 'ACTION_URL', 'SITE_NAME'],
             ],
             [
                 'slug' => 'interest-accepted',
                 'name' => 'Interest Accepted',
                 'subject' => 'Great News! Interest Accepted - {{SITE_NAME}}',
-                'body_html' => '<h1>Great News! Interest Accepted</h1><p>Dear {{SENDER_NAME}},</p><p><strong>{{ACCEPTER_MATRI_ID}}</strong> has accepted your interest on {{SITE_NAME}}!</p><p>You can now start a conversation and get to know each other better.</p><p><a href="{{ACTION_URL}}" style="display:inline-block;padding:10px 24px;background:#8B1D91;color:#fff;text-decoration:none;border-radius:6px;">Start Chatting</a></p><p>Wishing you the best,<br>{{SITE_NAME}}</p>',
-                'variables' => ['SENDER_NAME', 'ACCEPTER_MATRI_ID', 'ACTION_URL', 'SITE_NAME'],
+                'body_html' => EmailTemplateBodies::INTEREST_ACCEPTED,
+                'variables' => ['SENDER_NAME', 'ACCEPTER_MATRI_ID', 'ACCEPTER_LABEL', 'ACTION_URL', 'SITE_NAME'],
             ],
             [
                 'slug' => 'interest-declined',

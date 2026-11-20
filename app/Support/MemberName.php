@@ -34,4 +34,19 @@ final class MemberName
     {
         return trim(strtok(trim((string) $fullName), " \t")) ?: '';
     }
+
+    /**
+     * "Priya D. (KM100123)": how another member is named inside an email (Nov 2026, owner: interest
+     * emails show the name too). Only the Matri ID when the profile has no usable name. Never use it
+     * in a subject or preview line: those show on locked phone screens.
+     */
+    public static function withId(?\App\Models\Profile $profile): string
+    {
+        if (! $profile) {
+            return '';
+        }
+        $short = self::short($profile->full_name);
+
+        return $short !== '' && $short !== $profile->matri_id ? "{$short} ({$profile->matri_id})" : (string) $profile->matri_id;
+    }
 }

@@ -24,7 +24,7 @@ final class InterestReplyRows
             $days = (int) $interest->created_at?->diffInDays(now());
 
             return '<tr><td style="padding:12px 0;border-bottom:1px solid #e5e7eb;">'
-                . '<strong>' . e($sender?->matri_id) . '</strong>'
+                . '<strong>' . e(MemberName::withId($sender)) . '</strong>'
                 . ($summary !== '' ? ' <span style="color:#6b7280;">· ' . e($summary) . '</span>' : '')
                 . '<br><span style="font-size:13px;color:#6b7280;">Sent ' . e($days === 1 ? '1 day' : "{$days} days") . ' ago</span>'
                 . '</td><td style="padding:12px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;">'

@@ -28,7 +28,8 @@ class InterestReceivedMail extends DatabaseMailable
         // (Oct 2026). A link alone never answers: mail scanners open links too.
         return [
             'RECEIVER_NAME' => MemberName::first($this->interest->receiverProfile->full_name) ?: $this->interest->receiverProfile->full_name,
-            'SENDER_MATRI_ID' => $this->interest->senderProfile->matri_id,
+            'SENDER_MATRI_ID' => $this->interest->senderProfile->matri_id,     // preview line: ID only
+            'SENDER_LABEL' => MemberName::withId($this->interest->senderProfile),
             'SENDER_SUMMARY' => MemberSummary::line($this->interest->senderProfile),
             'ACCEPT_URL' => $this->interest->emailReplyUrl('accept'),
             'DECLINE_URL' => $this->interest->emailReplyUrl('decline'),
@@ -49,7 +50,7 @@ class InterestReceivedMail extends DatabaseMailable
     protected function fallbackData(): array
     {
         return [
-            'senderMatriId' => $this->interest->senderProfile->matri_id,
+            'senderMatriId' => MemberName::withId($this->interest->senderProfile),
             'receiverName' => $this->interest->receiverProfile->full_name,
             'url' => route('interests.show', $this->interest),
             'siteName' => config('app.name'),
