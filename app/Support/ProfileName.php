@@ -62,7 +62,7 @@ final class ProfileName
     public static function hidden(?Profile $target, User|Profile|null $viewer = null): bool
     {
         return $target && filled($target->full_name) && ! self::seesFull($target, $viewer)
-            && MemberName::short($target->full_name) !== trim((string) $target->full_name);
+            && mb_strtolower(MemberName::short($target->full_name)) !== mb_strtolower(trim((string) $target->full_name));
     }
 
     private static function user(User|Profile|null $viewer): ?User
