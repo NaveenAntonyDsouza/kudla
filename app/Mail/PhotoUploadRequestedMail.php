@@ -14,7 +14,7 @@ class PhotoUploadRequestedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-upload-requested';
 
-    protected ?string $unsubscribePreference = 'email_interest';
+    protected ?string $unsubscribePreference = 'email_photos';
 
     protected function recipient(): ?User
     {

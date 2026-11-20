@@ -215,7 +215,7 @@ class MemberEmailService
                 ? new PhotoRequestReceivedMail($photoRequest)
                 : new PhotoUploadRequestedMail($photoRequest);
 
-            $this->deliver($user, $mail, 'email_interest');
+            $this->deliver($user, $mail, 'email_photos');
         });
     }
 
@@ -233,7 +233,7 @@ class MemberEmailService
                 return;
             }
 
-            $this->deliver($user, new PhotoRequestApprovedMail($photoRequest), 'email_interest');
+            $this->deliver($user, new PhotoRequestApprovedMail($photoRequest), 'email_photos');
         });
     }
 
@@ -273,7 +273,7 @@ class MemberEmailService
 
                     // Email first, in-app notice second: the notice also
                     // attempts a push, which must not be able to block the email.
-                    $this->deliver($user, new PhotoAddedMail($request), 'email_interest');
+                    $this->deliver($user, new PhotoAddedMail($request), 'email_photos');
                     app(NotificationService::class)->send(
                         $user,
                         'photo_added',

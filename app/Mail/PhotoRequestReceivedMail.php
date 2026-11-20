@@ -14,7 +14,7 @@ class PhotoRequestReceivedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-request-received';
 
-    protected ?string $unsubscribePreference = 'email_interest';
+    protected ?string $unsubscribePreference = 'email_photos';
 
     protected function recipient(): ?User
     {

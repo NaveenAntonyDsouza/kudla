@@ -31,6 +31,7 @@ class UnsubscribeController extends Controller
         'email_declined' => 'Interest declined notifications',
         'email_views' => 'Profile view notifications',
         'email_promotions' => 'Promotional emails',
+        'email_photos' => 'Photo request emails',
     ];
 
     /**

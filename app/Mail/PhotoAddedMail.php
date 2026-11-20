@@ -13,7 +13,7 @@ class PhotoAddedMail extends DatabaseMailable
 {
     protected string $templateSlug = 'photo-added';
 
-    protected ?string $unsubscribePreference = 'email_interest';
+    protected ?string $unsubscribePreference = 'email_photos';
 
     protected function recipient(): ?User
     {

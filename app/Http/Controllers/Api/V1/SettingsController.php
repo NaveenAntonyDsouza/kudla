@@ -71,8 +71,6 @@ class SettingsController extends BaseApiController
             return $this->profileRequired();
         }
 
-        $prefs = $user->notification_preferences ?? [];
-
         return ApiResponse::ok([
             'visibility' => [
                 'show_profile_to' => (string) ($profile->show_profile_to ?? 'all'),
@@ -81,7 +79,7 @@ class SettingsController extends BaseApiController
                 'only_same_mother_tongue' => (bool) ($profile->only_same_mother_tongue ?? false),
                 'is_hidden' => (bool) $profile->is_hidden,
             ],
-            'alerts' => $this->alertsShape($prefs),
+            'alerts' => $this->alertsShape($user),
             'auth' => [
                 'has_password' => ! empty($user->password),
             ],
@@ -156,6 +154,9 @@ class SettingsController extends BaseApiController
      * @bodyParam email_declined boolean Optional.
      * @bodyParam email_views boolean Optional.
      * @bodyParam email_promotions boolean Optional.
+     * @bodyParam email_photos boolean Optional.
+     * @bodyParam email_weekly_matches boolean Optional.
+     * @bodyParam email_reengagement boolean Optional.
      * @bodyParam push_interest boolean Optional.
      * @bodyParam push_accepted boolean Optional.
      * @bodyParam push_declined boolean Optional.
@@ -174,6 +175,9 @@ class SettingsController extends BaseApiController
             'email_declined' => 'sometimes|boolean',
             'email_views' => 'sometimes|boolean',
             'email_promotions' => 'sometimes|boolean',
+            'email_photos' => 'sometimes|boolean',
+            'email_weekly_matches' => 'sometimes|boolean',
+            'email_reengagement' => 'sometimes|boolean',
             'push_interest' => 'sometimes|boolean',
             'push_accepted' => 'sometimes|boolean',
             'push_declined' => 'sometimes|boolean',
@@ -401,24 +405,19 @@ class SettingsController extends BaseApiController
      | ================================================================== */
 
     /**
-     * Default-aware shape of the alerts section. Pulls each key from
-     * prefs with a sensible default — defaulting to true for
-     * informational alerts, false for promotional / engagement alerts
-     * where users typically want to opt-IN.
+     * The alerts section as the member really gets it: every alert is on until switched off
+     * (owner 20 Nov 2026, the same rule wantsNotification() and push sending use), so the
+     * app shows the same ticks as the website.
      */
-    private function alertsShape(array $prefs): array
+    private function alertsShape(\App\Models\User $user): array
     {
-        return [
-            'email_interest' => (bool) ($prefs['email_interest'] ?? true),
-            'email_accepted' => (bool) ($prefs['email_accepted'] ?? true),
-            'email_declined' => (bool) ($prefs['email_declined'] ?? false),
-            'email_views' => (bool) ($prefs['email_views'] ?? true),
-            'email_promotions' => (bool) ($prefs['email_promotions'] ?? false),
-            'push_interest' => (bool) ($prefs['push_interest'] ?? true),
-            'push_accepted' => (bool) ($prefs['push_accepted'] ?? true),
-            'push_declined' => (bool) ($prefs['push_declined'] ?? false),
-            'push_views' => (bool) ($prefs['push_views'] ?? false),
-            'push_promotions' => (bool) ($prefs['push_promotions'] ?? false),
+        $prefs = $user->notification_preferences ?? [];
+        $push = [];
+        foreach (['push_interest', 'push_accepted', 'push_declined', 'push_views', 'push_promotions'] as $key) {
+            $push[$key] = (bool) ($prefs[$key] ?? true);
+        }
+
+        return \App\Support\EmailAlerts::current($user) + $push + [
             'quiet_hours_start' => $prefs['quiet_hours_start'] ?? null,
             'quiet_hours_end' => $prefs['quiet_hours_end'] ?? null,
         ];

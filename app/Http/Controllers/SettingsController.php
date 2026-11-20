@@ -18,7 +18,7 @@ class SettingsController extends Controller
         if ($section === 'profile_filters') {
             return redirect()->route('settings.index', ['section' => 'search_visibility']);
         }
-        $prefs = $user->notification_preferences ?? $this->defaultPrefs();
+        $prefs = \App\Support\EmailAlerts::current($user);   // what we really send; ticked unless switched off
 
         return view('settings.index', compact('user', 'profile', 'section', 'prefs'));
     }
@@ -35,15 +35,10 @@ class SettingsController extends Controller
 
     public function updateAlerts(Request $request)
     {
-        $prefs = [
-            'email_interest' => $request->boolean('email_interest'),
-            'email_accepted' => $request->boolean('email_accepted'),
-            'email_declined' => $request->boolean('email_declined'),
-            'email_views' => $request->boolean('email_views'),
-            'email_promotions' => $request->boolean('email_promotions'),
-        ];
-
-        auth()->user()->update(['notification_preferences' => $prefs]);
+        // Only the page's own alerts change; unsubscribes from email links and app choices stay.
+        $user = auth()->user();
+        $ticked = array_values(array_filter(array_keys(\App\Support\EmailAlerts::LIST), fn ($key) => $request->boolean($key)));
+        $user->update(['notification_preferences' => \App\Support\EmailAlerts::merged($user->notification_preferences, $ticked)]);
         return back()->with('success', 'Notification preferences updated.');
     }
 
@@ -159,14 +154,4 @@ class SettingsController extends Controller
         return mb_substr(implode(' · ', array_filter($parts)), 0, 200);
     }
 
-    private function defaultPrefs(): array
-    {
-        return [
-            'email_interest' => true,
-            'email_accepted' => true,
-            'email_declined' => true,
-            'email_views' => false,
-            'email_promotions' => false,
-        ];
-    }
 }

@@ -78,22 +78,19 @@
 
                     @if($section === 'manage_alerts')
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Manage Alerts</h2>
-                        <p class="text-sm text-gray-500 mb-6">Manage the notifications you receive via email.</p>
+                        <p class="text-sm text-gray-500 mb-6">Choose which emails you receive. Untick an email to stop it, then press Save.</p>
                         <form method="POST" action="{{ route('settings.alerts') }}">
                             @csrf
                             <div class="space-y-4">
-                                @foreach([
-                                    'email_interest' => 'New interest received',
-                                    'email_accepted' => 'Interest accepted',
-                                    'email_declined' => 'Interest declined',
-                                    'email_views' => 'Profile contact views',
-                                    'email_promotions' => 'Promotions & discounts',
-                                ] as $key => $label)
-                                    <label class="flex items-center gap-3 cursor-pointer">
+                                @foreach(\App\Support\EmailAlerts::LIST as $key => [$label, $help])
+                                    <label class="flex items-start gap-3 cursor-pointer" data-alert="{{ $key }}">
                                         <input type="checkbox" name="{{ $key }}" value="1"
-                                            {{ ($prefs[$key] ?? false) ? 'checked' : '' }}
-                                            class="rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
-                                        <span class="text-sm text-gray-700">{{ $label }}</span>
+                                            {{ ($prefs[$key] ?? true) ? 'checked' : '' }}
+                                            class="mt-0.5 rounded border-gray-300 text-(--color-primary) focus:ring-(--color-primary)">
+                                        <span>
+                                            <span class="block text-sm font-medium text-gray-800">{{ $label }}</span>
+                                            <span class="block text-xs text-gray-500 mt-0.5">{{ $help }}</span>
+                                        </span>
                                     </label>
                                 @endforeach
                             </div>

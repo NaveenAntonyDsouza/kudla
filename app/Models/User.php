@@ -180,6 +180,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function wantsNotification(string $key): bool
     {
         $prefs = $this->notification_preferences ?? [];
+        if (! array_key_exists($key, $prefs) && isset(\App\Support\EmailAlerts::FOLLOWS[$key])) {
+            $key = \App\Support\EmailAlerts::FOLLOWS[$key];   // e.g. photo emails follow "New interests" until set
+        }
         return (bool) ($prefs[$key] ?? true);
     }
 

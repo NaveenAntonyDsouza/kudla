@@ -182,8 +182,8 @@ it('index returns all 4 sections with sensible defaults', function () {
 
     // Alerts — informational true, promotional false (defaults), quiet hours null
     expect($data['alerts']['email_interest'])->toBeTrue();
-    expect($data['alerts']['email_promotions'])->toBeFalse();
-    expect($data['alerts']['push_views'])->toBeFalse();
+    expect($data['alerts']['email_promotions'])->toBeTrue();   // everything on by default (owner 20 Nov 2026)
+    expect($data['alerts']['push_views'])->toBeTrue();
     expect($data['alerts']['quiet_hours_start'])->toBeNull();
     expect($data['alerts']['quiet_hours_end'])->toBeNull();
 
