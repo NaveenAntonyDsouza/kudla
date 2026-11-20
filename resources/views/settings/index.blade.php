@@ -78,11 +78,13 @@
 
                     @if($section === 'manage_alerts')
                         <h2 class="text-lg font-semibold text-gray-900 mb-2">Manage Alerts</h2>
-                        <p class="text-sm text-gray-500 mb-6">Choose which emails you receive. Untick an email to stop it, then press Save.</p>
+                        <p class="text-sm text-gray-500 mb-6">Choose which messages you receive. Untick one to stop it, then press Save.</p>
                         <form method="POST" action="{{ route('settings.alerts') }}">
                             @csrf
+                            @foreach(['Email' => \App\Support\EmailAlerts::LIST, 'WhatsApp' => \App\Support\EmailAlerts::WHATSAPP] as $__channel => $__alerts)
+                            <p class="text-sm font-semibold text-gray-900 {{ $loop->first ? '' : 'mt-6 pt-6 border-t border-gray-100' }} mb-3" data-alert-channel="{{ $__channel }}">{{ $__channel }}</p>
                             <div class="space-y-4">
-                                @foreach(\App\Support\EmailAlerts::LIST as $key => [$label, $help])
+                                @foreach($__alerts as $key => [$label, $help])
                                     <label class="flex items-start gap-3 cursor-pointer" data-alert="{{ $key }}">
                                         <input type="checkbox" name="{{ $key }}" value="1"
                                             {{ ($prefs[$key] ?? true) ? 'checked' : '' }}
@@ -94,6 +96,8 @@
                                     </label>
                                 @endforeach
                             </div>
+                            @endforeach
+                            <p class="text-xs text-gray-500 mt-4">Sign-in codes you ask for, and our replies when you message us on WhatsApp, always reach you.</p>
                             <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Save</button>
                         </form>
 

@@ -26,6 +26,20 @@ final class EmailAlerts
     ];
 
     /**
+     * WhatsApp messages a member can switch off (owner 20 Nov 2026). Only messages we start belong
+     * here: sign-in codes the member asks for, and our replies to a member who wrote to us, always go.
+     */
+    public const WHATSAPP = [
+        'whatsapp_photos' => ['Photo reminders', 'A message from our team asking you to add a profile photo.'],
+    ];
+
+    /** Every key the Manage Alerts page shows (email, then WhatsApp). */
+    public static function keys(): array
+    {
+        return array_merge(array_keys(self::LIST), array_keys(self::WHATSAPP));
+    }
+
+    /**
      * A newer key that took over part of an older one. Until the member sets the newer key,
      * it follows the older one, so nobody who switched off "New interests" (which used to
      * cover the photo emails too) starts getting photo emails.
@@ -38,7 +52,7 @@ final class EmailAlerts
     public static function current(User $user): array
     {
         $out = [];
-        foreach (array_keys(self::LIST) as $key) {
+        foreach (self::keys() as $key) {
             $out[$key] = $user->wantsNotification($key);
         }
 
@@ -49,7 +63,7 @@ final class EmailAlerts
     public static function merged(?array $stored, array $ticked): array
     {
         $prefs = $stored ?? [];
-        foreach (array_keys(self::LIST) as $key) {
+        foreach (self::keys() as $key) {
             $prefs[$key] = in_array($key, $ticked, true);
         }
 

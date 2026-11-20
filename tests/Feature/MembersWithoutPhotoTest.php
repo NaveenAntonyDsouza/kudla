@@ -29,6 +29,7 @@ beforeEach(function () {
         $t->string('role')->nullable();
         $t->unsignedBigInteger('staff_role_id')->nullable();
         $t->unsignedBigInteger('branch_id')->nullable();
+        $t->json('notification_preferences')->nullable();
         $t->rememberToken();
         $t->timestamps();
     });
@@ -213,4 +214,31 @@ it('keeps the office-phone WhatsApp button until approved messages are switched 
     Livewire::test(MembersWithoutPhoto::class)
         ->assertTableActionVisible('whatsapp', Profile::find(2))
         ->assertTableActionHidden('sendRequest', Profile::find(2));
+});
+
+it('never sends a WhatsApp photo reminder to a member who switched it off, by button or in bulk', function () {
+    wpEnableApi();
+    DB::table('users')->where('id', 2)->update(['notification_preferences' => json_encode(['whatsapp_photos' => false])]);
+
+    Livewire::test(MembersWithoutPhoto::class)
+        ->assertTableActionHidden('sendRequest', Profile::find(2))
+        ->assertTableActionVisible('sendRequest', Profile::find(4))       // control: others still can be asked
+        ->callTableBulkAction('sendRequests', Profile::whereIn('id', [2, 4])->get(), ['language' => 'auto']);
+
+    \Illuminate\Support\Facades\Http::assertSentCount(1);
+    expect(\App\Models\WhatsAppMessage::pluck('profile_id')->all())->toBe([4]);
+
+    $direct = MembersWithoutPhoto::sendRequest(Profile::with(['contactInfo', 'user'])->find(2));
+    expect($direct->status)->toBe('failed')->and($direct->exists)->toBeFalse();
+    \Illuminate\Support\Facades\Http::assertSentCount(1);
+});
+
+it('hides the office-phone WhatsApp button too for a member who switched it off', function () {
+    wpEnableApi();
+    \App\Models\SiteSetting::setValue('wa_cloud_templates_enabled', '0');
+    DB::table('users')->where('id', 2)->update(['notification_preferences' => json_encode(['whatsapp_photos' => false])]);
+
+    Livewire::test(MembersWithoutPhoto::class)
+        ->assertTableActionHidden('whatsapp', Profile::find(2))
+        ->assertTableActionVisible('whatsapp', Profile::find(4));
 });

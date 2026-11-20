@@ -106,6 +106,9 @@ class MembersWithoutPhoto extends Page implements HasTable
      */
     public static function sendRequest(Profile $profile, ?string $language = null): WhatsAppMessage
     {
+        if (! static::wantsWhatsApp($profile)) {   // never send to a member who switched it off
+            return new WhatsAppMessage(['status' => 'failed', 'note' => 'The member switched off WhatsApp photo reminders (Settings > Manage Alerts).']);
+        }
         $message = app(WhatsAppInboxService::class)->sendTemplate(
             (string) static::whatsappDigits($profile),
             WhatsAppCloud::photoTemplate(),
@@ -125,6 +128,12 @@ class MembersWithoutPhoto extends Page implements HasTable
         }
 
         return $message;
+    }
+
+    /** False when the member switched off WhatsApp photo reminders (Manage Alerts, owner 20 Nov 2026). */
+    public static function wantsWhatsApp(Profile $profile): bool
+    {
+        return $profile->user?->wantsNotification('whatsapp_photos') ?? true;
     }
 
     public static function whatsappUrl(Profile $profile): ?string
@@ -154,7 +163,8 @@ class MembersWithoutPhoto extends Page implements HasTable
                 Tables\Columns\TextColumn::make('phone')
                     ->label('WhatsApp / phone')
                     ->state(fn (Profile $record) => static::whatsappDigits($record) ? '+' . static::whatsappDigits($record) : null)
-                    ->placeholder('No number'),
+                    ->placeholder('No number')
+                    ->description(fn (Profile $record) => static::wantsWhatsApp($record) ? null : 'Switched off WhatsApp photo reminders'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Joined')
                     ->date('j M Y')
@@ -190,11 +200,11 @@ class MembersWithoutPhoto extends Page implements HasTable
                     ->openUrlInNewTab()
                     // Opens WhatsApp on this phone or computer (the office number), until
                     // approved messages can be sent through the API (needs Meta's payment card).
-                    ->visible(fn (Profile $record) => ! WhatsAppCloud::templatesEnabled() && static::whatsappUrl($record) !== null),
+                    ->visible(fn (Profile $record) => ! WhatsAppCloud::templatesEnabled() && static::wantsWhatsApp($record) && static::whatsappUrl($record) !== null),
                 Action::make('sendRequest')
                     ->label(fn (Profile $record) => $record->photo_asked_at ? 'Send again' : 'Send photo request')
                     ->color('success')
-                    ->visible(fn (Profile $record) => WhatsAppCloud::templatesEnabled() && static::whatsappDigits($record) !== null)
+                    ->visible(fn (Profile $record) => WhatsAppCloud::templatesEnabled() && static::wantsWhatsApp($record) && static::whatsappDigits($record) !== null)
                     ->modalHeading(fn (Profile $record) => "Send the photo request to {$record->matri_id}?")
                     ->modalDescription(fn (Profile $record) => 'Sends the approved photo message ('.WhatsAppCloud::photoTemplate().') on WhatsApp to +'.static::whatsappDigits($record).'.')
                     ->form([
@@ -232,7 +242,7 @@ class MembersWithoutPhoto extends Page implements HasTable
                     ->color('success')
                     ->visible(fn () => WhatsAppCloud::templatesEnabled())
                     ->modalHeading('Send the photo request to the selected members?')
-                    ->modalDescription('Members asked in the last '.self::RESEND_AFTER_DAYS.' days and members without a usable number are skipped. At most '.self::BULK_LIMIT.' at a time. Meta charges per message (about Rs 0.12 for profile_photo_missing, Rs 0.86 for photo_request).')
+                    ->modalDescription('Members asked in the last '.self::RESEND_AFTER_DAYS.' days, members without a usable number and members who switched off WhatsApp photo reminders are skipped. At most '.self::BULK_LIMIT.' at a time. Meta charges per message (about Rs 0.12 for profile_photo_missing, Rs 0.86 for photo_request).')
                     ->form([
                         \Filament\Forms\Components\Select::make('language')
                             ->options(['auto' => 'Kannada for Kannada speakers, English for others'] + WhatsAppCloud::LANGUAGES)
@@ -244,7 +254,7 @@ class MembersWithoutPhoto extends Page implements HasTable
                         $sent = $failed = $skipped = 0;
                         $error = null;
                         foreach ($records as $record) {
-                            if ($sent + $failed >= self::BULK_LIMIT || static::whatsappDigits($record) === null
+                            if ($sent + $failed >= self::BULK_LIMIT || static::whatsappDigits($record) === null || ! static::wantsWhatsApp($record)
                                 || ($record->photo_asked_at && \Illuminate\Support\Carbon::parse($record->photo_asked_at)->gt(now()->subDays(self::RESEND_AFTER_DAYS)))) {
                                 $skipped++;
                                 continue;

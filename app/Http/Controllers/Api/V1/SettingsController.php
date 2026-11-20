@@ -157,6 +157,7 @@ class SettingsController extends BaseApiController
      * @bodyParam email_photos boolean Optional.
      * @bodyParam email_weekly_matches boolean Optional.
      * @bodyParam email_reengagement boolean Optional.
+     * @bodyParam whatsapp_photos boolean Optional. Photo reminders on WhatsApp.
      * @bodyParam push_interest boolean Optional.
      * @bodyParam push_accepted boolean Optional.
      * @bodyParam push_declined boolean Optional.
@@ -178,6 +179,7 @@ class SettingsController extends BaseApiController
             'email_photos' => 'sometimes|boolean',
             'email_weekly_matches' => 'sometimes|boolean',
             'email_reengagement' => 'sometimes|boolean',
+            'whatsapp_photos' => 'sometimes|boolean',
             'push_interest' => 'sometimes|boolean',
             'push_accepted' => 'sometimes|boolean',
             'push_declined' => 'sometimes|boolean',

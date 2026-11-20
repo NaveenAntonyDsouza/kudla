@@ -91,3 +91,19 @@ it('still sends the photo email when photo emails are on (control for the test a
         + Mail::queued(\App\Mail\PhotoUploadRequestedMail::class, fn ($m) => $m->hasTo($owner->user->email))->count();
     expect($sent)->toBeGreaterThan(0);
 });
+
+it('has a WhatsApp section, ticked by default, that saves on its own key', function () {
+    $user = $this->b->m['TP']->user;
+    $user->update(['notification_preferences' => null]);
+
+    $html = alertsPage($this, $user)->getContent();
+    expect($html)->toContain('data-alert-channel="WhatsApp"')
+        ->toMatch('/name="whatsapp_photos" value="1"\s*checked/');
+
+    $ticked = array_diff(EmailAlerts::keys(), ['whatsapp_photos']);
+    $this->actingAs($user)->post('/settings/alerts', array_fill_keys($ticked, '1'))->assertRedirect();
+    $user->refresh();
+    expect($user->wantsNotification('whatsapp_photos'))->toBeFalse()
+        ->and($user->wantsNotification('email_photos'))->toBeTrue();
+    expect(alertsPage($this, $user)->getContent())->toMatch('/name="whatsapp_photos" value="1"\s*class/');
+});
