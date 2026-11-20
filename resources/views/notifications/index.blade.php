@@ -36,6 +36,9 @@
                                             @endif
                                         </div>
                                         <div class="flex-1 min-w-0">
+                                            @if($__name = \App\Support\NotificationName::for($notif->profile, auth()->user()?->profile))
+                                                <p class="text-xs font-semibold text-(--color-primary) mb-0.5" data-notif-name>{{ $__name }}</p>
+                                            @endif
                                             <p class="text-sm {{ !$notif->is_read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700' }}">{{ $notif->title }}</p>
                                             <p class="text-sm text-gray-600 mt-0.5">{{ $notif->message }}</p>
                                             <p class="text-xs text-gray-400 mt-1">{{ $notif->created_at->displayTz()->format('d/m/Y h:i A') }}</p>
