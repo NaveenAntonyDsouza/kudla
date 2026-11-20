@@ -28,7 +28,8 @@ class PhotoAddedMail extends DatabaseMailable
 
         return [
             'REQUESTER_NAME' => $this->photoRequest->requesterProfile?->full_name ?? '',
-            'OWNER_MATRI_ID' => $owner?->matri_id ?? '',
+            'OWNER_MATRI_ID' => $owner?->matri_id ?? '',   // preview line: ID only
+            'OWNER_LABEL' => \App\Support\MemberName::withId($owner),
             'ACTION_URL' => $owner ? route('profile.view', $owner) : route('dashboard'),
         ];
     }

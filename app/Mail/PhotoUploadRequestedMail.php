@@ -27,7 +27,8 @@ class PhotoUploadRequestedMail extends DatabaseMailable
     {
         return [
             'RECEIVER_NAME' => $this->photoRequest->targetProfile?->full_name ?? '',
-            'REQUESTER_MATRI_ID' => $this->photoRequest->requesterProfile?->matri_id ?? '',
+            'REQUESTER_MATRI_ID' => $this->photoRequest->requesterProfile?->matri_id ?? '',   // preview line: ID only
+            'REQUESTER_LABEL' => \App\Support\MemberName::withId($this->photoRequest->requesterProfile),
             'ACTION_URL' => route('photos.manage'),
         ];
     }

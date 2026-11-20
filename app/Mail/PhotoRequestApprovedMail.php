@@ -28,7 +28,8 @@ class PhotoRequestApprovedMail extends DatabaseMailable
 
         return [
             'REQUESTER_NAME' => $this->photoRequest->requesterProfile?->full_name ?? '',
-            'APPROVER_MATRI_ID' => $approver?->matri_id ?? '',
+            'APPROVER_MATRI_ID' => $approver?->matri_id ?? '',   // preview line: ID only
+            'APPROVER_LABEL' => \App\Support\MemberName::withId($approver),
             'ACTION_URL' => $approver ? route('profile.view', $approver) : route('dashboard'),
         ];
     }

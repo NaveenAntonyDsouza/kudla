@@ -33,6 +33,32 @@ it('names the sender of an interest by first name, initial and Matri ID, inside 
         ->and((string) $mail->envelope()->subject)->not->toContain('Benchina');
 });
 
+it('names the member in photo emails too, never the surname or in the subject', function () {
+    $b = $this->b;
+    $asker = $b->m['VS'];
+    $owner = $b->m['TP'];
+    $asker->update(['full_name' => 'Photoasker Hiddensurname']);
+    $owner->update(['full_name' => 'Photoowner Secretfamily']);
+    Mail::fake();                                  // only the emails from this request below
+    $this->actingAs($asker->user)->post('/photo-requests/' . $owner->matri_id . '/send');
+    $request = \App\Models\PhotoRequest::where('requester_profile_id', $asker->id)->where('target_profile_id', $owner->id)->first();
+    if ($request && $request->status !== 'approved') {
+        $this->actingAs($owner->user)->post('/photo-requests/' . $request->id . '/approve');
+    }
+    $mails = Mail::sent(fn (\Illuminate\Mail\Mailable $m) => true)->merge(Mail::queued(fn (\Illuminate\Mail\Mailable $m) => true))
+        ->filter(fn ($m) => str_starts_with(class_basename($m), 'Photo'));
+    expect($mails)->not->toBeEmpty();
+    foreach ($mails as $mail) {
+        $html = (string) $mail->render();
+        $kind = class_basename($mail);
+        $other = $kind === 'PhotoRequestApprovedMail' || $kind === 'PhotoAddedMail' ? $owner : $asker;
+        $first = explode(' ', $other->full_name)[0];
+        expect($html)->toContain($first . ' ' . ($other === $owner ? 'S.' : 'H.') . ' (' . $other->matri_id . ')')
+            ->not->toContain($other === $owner ? 'Secretfamily' : 'Hiddensurname')   // the other member's surname
+            ->and((string) $mail->envelope()->subject)->not->toContain($first);
+    }
+});
+
 it('names who accepted, and falls back to the Matri ID when a profile has no name', function () {
     $b = $this->b;
     $accepter = $b->m['TP'];
