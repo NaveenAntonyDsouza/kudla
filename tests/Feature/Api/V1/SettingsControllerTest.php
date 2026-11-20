@@ -187,7 +187,8 @@ it('index returns all 4 sections with sensible defaults', function () {
     // Alerts — informational true, promotional false (defaults), quiet hours null
     expect($data['alerts']['email_interest'])->toBeTrue();
     expect($data['alerts']['email_promotions'])->toBeTrue();   // everything on by default (owner 20 Nov 2026)
-    expect($data['alerts']['push_views'])->toBeTrue();
+    expect($data['alerts']['push_photos'])->toBeTrue();
+    expect($data['alerts'])->not->toHaveKey('push_accepted');   // nothing read it (20 Nov 2026)
     expect($data['alerts']['quiet_hours_start'])->toBeNull();
     expect($data['alerts']['quiet_hours_end'])->toBeNull();
 
@@ -201,7 +202,7 @@ it('index returns all 4 sections with sensible defaults', function () {
 it('index reflects the users actual stored prefs', function () {
     $user = buildSettingsUser(prefs: [
         'email_interest' => false,
-        'push_promotions' => true,
+        'push_photos' => false,
         'quiet_hours_start' => '22:00',
         'quiet_hours_end' => '07:00',
     ]);
@@ -209,7 +210,8 @@ it('index reflects the users actual stored prefs', function () {
     $alerts = buildSettingsController()->index(settingsRequest($user))->getData(true)['data']['alerts'];
 
     expect($alerts['email_interest'])->toBeFalse();
-    expect($alerts['push_promotions'])->toBeTrue();
+    expect($alerts['push_photos'])->toBeFalse();
+    expect($alerts['push_account'])->toBeTrue();   // follows push_interest until set
     expect($alerts['quiet_hours_start'])->toBe('22:00');
     expect($alerts['quiet_hours_end'])->toBe('07:00');
     // Untouched keys keep their default
@@ -252,12 +254,12 @@ it('alerts merges with existing prefs (no clobber)', function () {
     ]);
 
     buildSettingsController()->alerts(settingsRequest(
-        $user, 'PUT', body: ['email_interest' => true, 'push_promotions' => true],
+        $user, 'PUT', body: ['email_interest' => true, 'push_photos' => true],
     ));
 
     $user->refresh();
     expect($user->notification_preferences['email_interest'])->toBeTrue();
-    expect($user->notification_preferences['push_promotions'])->toBeTrue();
+    expect($user->notification_preferences['push_photos'])->toBeTrue();
     expect($user->notification_preferences['email_views'])->toBeTrue();  // preserved
 });
 

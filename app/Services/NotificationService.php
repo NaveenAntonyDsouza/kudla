@@ -63,6 +63,8 @@ class NotificationService
                 array_merge($data, [
                     'notification_id' => (string) $notification->id,
                     'type' => $type,
+                    // The Kudla app (1.0.7+) opens this page when the notification is tapped
+                    'url' => $this->getNotificationUrl($notification),
                 ]),
             );
         }
@@ -161,8 +163,9 @@ class NotificationService
         $prefs = $user->notification_preferences ?? [];
         $prefKey = $this->pushPrefKey($type);
 
-        // Explicit opt-out. Default true (the user has not set it yet).
-        if (! ($prefs[$prefKey] ?? true)) {
+        // Explicit opt-out. Default true (the user has not set it yet); a newer key follows
+        // push_interest until set (EmailAlerts::FOLLOWS).
+        if (! $user->wantsNotification($prefKey)) {
             return false;
         }
 
@@ -179,17 +182,17 @@ class NotificationService
     }
 
     /**
-     * Map a notification type onto the matching push_* preference key.
-     * Future types (membership.*, profile.approved, etc.) need an entry
-     * here when added to the notifications.type ENUM.
+     * Map a notification type onto the matching push_* preference key: the three ticks on
+     * Settings -> Manage Alerts -> App notifications (EmailAlerts::PUSH, 20 Nov 2026).
+     * Before that, everything followed push_interest; push_views / push_promotions were dropped
+     * because nothing sent profile_view pushes and "system" (profile reminders) is profile news.
      */
-    private function pushPrefKey(string $type): string
+    public function pushPrefKey(string $type): string
     {
-        return match ($type) {
-            'interest_received', 'interest_accepted', 'interest_declined' => 'push_interest',
-            'profile_view' => 'push_views',
-            'system' => 'push_promotions',
-            default => 'push_interest',
+        return match (true) {
+            str_starts_with($type, 'interest_') => 'push_interest',   // incl. new messages on an interest
+            str_starts_with($type, 'photo_') => 'push_photos',
+            default => 'push_account',   // membership, profile reminders (system), ID proof, documents, profile changes, assisted, community
         };
     }
 

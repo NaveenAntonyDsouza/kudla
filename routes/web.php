@@ -25,6 +25,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Android App Links for the site's own app (config/services.php android_app); 404 when not set
+Route::get('/.well-known/assetlinks.json', function () {
+    $package = (string) config('services.android_app.package');
+    $prints = array_values(array_filter(array_map('trim', explode(',', (string) config('services.android_app.sha256')))));
+    abort_if($package === '' || $prints === [], 404);
+
+    return response()->json([[
+        'relation' => ['delegate_permission/common.handle_all_urls'],
+        'target' => ['namespace' => 'android_app', 'package_name' => $package, 'sha256_cert_fingerprints' => $prints],
+    ]]);
+})->name('assetlinks');
+
 // Affiliate short URL — /r/MNG redirects to homepage with ?ref=MNG
 // (Used in QR codes / printed marketing materials for cleaner URLs.)
 Route::get('/r/{code}', function (string $code) {

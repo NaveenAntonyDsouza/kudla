@@ -589,6 +589,7 @@
 
     <!-- Main Content -->
     <main>
+        <x-app-update-bar />
         @include('components.partials.email-bounced-banner')
         @if(request()->routeIs('home') || request()->routeIs('membership.index'))
             <x-offer-banner />
@@ -805,5 +806,9 @@
 
     @livewireScripts
     <x-whatsapp-button />
+    @if(auth()->check() && ! \App\Support\LoginAs::active() && str_contains((string) request()->userAgent(), 'KudlaMatrimonyApp/'))
+        {{-- Kudla app 1.0.7+: a member is signed in, so the app may ask to allow notifications (once) --}}
+        <script>try { if (window.KudlaApp && KudlaApp.signedIn) KudlaApp.signedIn(); } catch (e) {}</script>
+    @endif
 </body>
 </html>

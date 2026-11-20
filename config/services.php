@@ -124,4 +124,16 @@ return [
         'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
     ],
 
+    // The site's own Android app (Kudla only today; empty everywhere else = all off).
+    // package + sha256: /.well-known/assetlinks.json, so links to this site open in the app
+    //   (SHA-256 = Play Console > App integrity > App signing key certificate, comma-separate several).
+    // latest_version: members on an older app version see "A new version of the app is available"
+    //   (App\Support\AppUpdate). Set it only once that version is LIVE on Play.
+    'android_app' => [
+        'package' => env('ANDROID_APP_PACKAGE'),
+        'sha256' => env('ANDROID_APP_SHA256'),
+        'latest_version' => env('ANDROID_APP_LATEST_VERSION'),
+        'ua_tag' => env('ANDROID_APP_UA_TAG', 'KudlaMatrimonyApp'),   // what the app adds to its user agent
+    ],
+
 ];

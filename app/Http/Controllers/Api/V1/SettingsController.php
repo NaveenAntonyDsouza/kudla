@@ -170,11 +170,9 @@ class SettingsController extends BaseApiController
      * @bodyParam email_weekly_matches boolean Optional.
      * @bodyParam email_reengagement boolean Optional.
      * @bodyParam whatsapp_photos boolean Optional. Photo reminders on WhatsApp.
-     * @bodyParam push_interest boolean Optional.
-     * @bodyParam push_accepted boolean Optional.
-     * @bodyParam push_declined boolean Optional.
-     * @bodyParam push_views boolean Optional.
-     * @bodyParam push_promotions boolean Optional.
+     * @bodyParam push_interest boolean Optional. Interests received, declined, expired (accepted always pushes).
+     * @bodyParam push_photos boolean Optional. Photo requests, photos added / shared / approved.
+     * @bodyParam push_account boolean Optional. Membership, ID proof, documents, messages from the team.
      * @bodyParam quiet_hours_start string Optional. HH:MM 24h. Pair with quiet_hours_end.
      * @bodyParam quiet_hours_end string Optional. HH:MM 24h.
      *
@@ -192,11 +190,11 @@ class SettingsController extends BaseApiController
             'email_weekly_matches' => 'sometimes|boolean',
             'email_reengagement' => 'sometimes|boolean',
             'whatsapp_photos' => 'sometimes|boolean',
+            // push_accepted / push_declined / push_views / push_promotions were dropped 20 Nov 2026:
+            // nothing read them (or nothing was sent under them). The push ticks = EmailAlerts::PUSH
             'push_interest' => 'sometimes|boolean',
-            'push_accepted' => 'sometimes|boolean',
-            'push_declined' => 'sometimes|boolean',
-            'push_views' => 'sometimes|boolean',
-            'push_promotions' => 'sometimes|boolean',
+            'push_photos' => 'sometimes|boolean',
+            'push_account' => 'sometimes|boolean',
             // Empty string clears the window (null sentinel for the JSON column).
             'quiet_hours_start' => ['sometimes', 'nullable', 'regex:/^([01][0-9]|2[0-3]):[0-5][0-9]$/'],
             'quiet_hours_end' => ['sometimes', 'nullable', 'regex:/^([01][0-9]|2[0-3]):[0-5][0-9]$/'],
@@ -426,12 +424,8 @@ class SettingsController extends BaseApiController
     private function alertsShape(\App\Models\User $user): array
     {
         $prefs = $user->notification_preferences ?? [];
-        $push = [];
-        foreach (['push_interest', 'push_accepted', 'push_declined', 'push_views', 'push_promotions'] as $key) {
-            $push[$key] = (bool) ($prefs[$key] ?? true);
-        }
-
-        return \App\Support\EmailAlerts::current($user) + $push + [
+        // push_interest / push_photos / push_account come with current() (EmailAlerts::PUSH)
+        return \App\Support\EmailAlerts::current($user) + [
             'quiet_hours_start' => $prefs['quiet_hours_start'] ?? null,
             'quiet_hours_end' => $prefs['quiet_hours_end'] ?? null,
         ];

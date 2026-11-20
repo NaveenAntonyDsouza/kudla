@@ -83,6 +83,9 @@ class AppServiceProvider extends ServiceProvider
             [\App\Support\EmailSuppression::class, 'check'],
         );
 
+        // Kudla app push: signing out on the phone unlinks that phone (App\Http\Middleware\RegisterAppDevice)
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Auth\Events\Logout::class, [\App\Support\DeviceRegistry::class, 'loggedOut']);
+
         // Approvals, deletions and notes by staff → Activity Log (App\Support\StaffActionLog)
         \App\Support\StaffActionLog::register();
 

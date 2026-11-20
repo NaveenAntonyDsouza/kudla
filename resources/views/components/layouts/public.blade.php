@@ -81,6 +81,7 @@
 </head>
 <body class="bg-[#FEFCFB] text-[#1C1917] font-sans antialiased">
     @include('components.partials.tracking-body')
+    <x-app-update-bar />
 
     {{-- Announcement banner (admin-toggleable via Homepage Settings) --}}
     @if($announcementEnabled && !empty($announcementText))

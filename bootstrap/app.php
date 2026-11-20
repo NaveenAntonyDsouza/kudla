@@ -55,6 +55,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);
 
+        // Written by the Kudla app (its push token) and by the "Later" button of the app update
+        // bar, not by Laravel, so they are not encrypted
+        $middleware->encryptCookies(except: [\App\Http\Middleware\RegisterAppDevice::COOKIE, \App\Support\AppUpdate::LATER_COOKIE]);
+
         // Affiliate tracking — captures ?ref=CODE on every public web request
         $middleware->web(append: [
             \App\Http\Middleware\CaptureAffiliateRef::class,
@@ -62,6 +66,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SignOutStaffFromMemberSite::class,
             // Keeps last_login_at = "last active" (see the class doc)
             \App\Http\Middleware\TrackMemberActivity::class,
+            // Kudla app (1.0.7+): links the phone's push token cookie to the signed-in member
+            \App\Http\Middleware\RegisterAppDevice::class,
             // Staff "Login as member": view only, nothing written (innermost, so
             // the whole page is built inside its rolled-back transaction)
             \App\Http\Middleware\LoginAsViewOnly::class,

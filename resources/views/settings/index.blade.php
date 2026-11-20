@@ -81,7 +81,7 @@
                         <p class="text-sm text-gray-500 mb-6">Choose which messages you receive. Untick one to stop it, then press Save.</p>
                         <form method="POST" action="{{ route('settings.alerts') }}">
                             @csrf
-                            @foreach(['Email' => \App\Support\EmailAlerts::LIST, 'WhatsApp' => \App\Support\EmailAlerts::WHATSAPP] as $__channel => $__alerts)
+                            @foreach(['Email' => \App\Support\EmailAlerts::LIST, 'WhatsApp' => \App\Support\EmailAlerts::WHATSAPP] + (($hasAppDevice ?? false) ? ['App notifications' => \App\Support\EmailAlerts::PUSH] : []) as $__channel => $__alerts)
                             <p class="text-sm font-semibold text-gray-900 {{ $loop->first ? '' : 'mt-6 pt-6 border-t border-gray-100' }} mb-3" data-alert-channel="{{ $__channel }}">{{ $__channel }}</p>
                             <div class="space-y-4">
                                 @foreach($__alerts as $key => [$label, $help])
@@ -97,6 +97,10 @@
                                 @endforeach
                             </div>
                             @endforeach
+                            @if($hasAppDevice ?? false)
+                                <input type="hidden" name="push_section" value="1">
+                                <p class="text-xs text-gray-500 mt-4" data-alert-note="push">App notifications come to the phone where you use the {{ config('app.name') }} app. Notifications must also be allowed for the app in your phone's settings.</p>
+                            @endif
                             <p class="text-xs text-gray-500 mt-4">Sign-in codes you ask for, and our replies when you message us on WhatsApp, always reach you.</p>
                             <button type="submit" class="mt-6 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Save</button>
                         </form>

@@ -355,16 +355,17 @@ it('send does NOT skip when current time is outside quiet hours', function () {
  |  pushPrefKey routing — different types map to different prefs
  | ================================================================== */
 
-it('send maps profile_view to push_views preference', function () {
+it('send maps system (profile reminders) to push_account preference', function () {
     $user = makeNotifUser(overrides: [
         'notification_preferences' => [
-            'push_views' => false,    // disabling push_views must block the send
+            'push_account' => false,  // "Profile and membership" off must block the send
             'push_interest' => true,  // push_interest stays on, must NOT save us
         ],
     ]);
     seedDevice($user->id);
+    mockFirebaseMessaging()->shouldNotReceive('send');
 
-    app(NotificationService::class)->send($user, 'profile_view', 't', 'm');
+    app(NotificationService::class)->send($user, 'system', 't', 'm');
 
     expect(Notification::where('user_id', $user->id)->count())->toBe(1);
 });

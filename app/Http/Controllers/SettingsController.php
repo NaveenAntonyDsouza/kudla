@@ -19,8 +19,10 @@ class SettingsController extends Controller
             return redirect()->route('settings.index', ['section' => 'search_visibility']);
         }
         $prefs = \App\Support\EmailAlerts::current($user);   // what we really send; ticked unless switched off
+        // App notifications: only for a member whose phone is linked (otherwise we send them none)
+        $hasAppDevice = $section === 'manage_alerts' && $user->devices()->where('is_active', true)->exists();
 
-        return view('settings.index', compact('user', 'profile', 'section', 'prefs'));
+        return view('settings.index', compact('user', 'profile', 'section', 'prefs', 'hasAppDevice'));
     }
 
     public function updateFilters(Request $request)
@@ -37,8 +39,11 @@ class SettingsController extends Controller
     {
         // Only the page's own alerts change; unsubscribes from email links and app choices stay.
         $user = auth()->user();
-        $ticked = array_values(array_filter(\App\Support\EmailAlerts::keys(), fn ($key) => $request->boolean($key)));
-        $user->update(['notification_preferences' => \App\Support\EmailAlerts::merged($user->notification_preferences, $ticked)]);
+        // App notifications count only when the page showed them (it says so with push_section)
+        $shown = array_merge(array_keys(\App\Support\EmailAlerts::LIST), array_keys(\App\Support\EmailAlerts::WHATSAPP),
+            $request->boolean('push_section') ? array_keys(\App\Support\EmailAlerts::PUSH) : []);
+        $ticked = array_values(array_filter($shown, fn ($key) => $request->boolean($key)));
+        $user->update(['notification_preferences' => \App\Support\EmailAlerts::merged($user->notification_preferences, $ticked, $shown)]);
         return back()->with('success', 'Notification preferences updated.');
     }
 

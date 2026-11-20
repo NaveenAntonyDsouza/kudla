@@ -33,19 +33,33 @@ final class EmailAlerts
         'whatsapp_photos' => ['Photo reminders', 'A message from our team asking you to add a profile photo.'],
     ];
 
-    /** Every key the Manage Alerts page shows (email, then WhatsApp). */
+    /**
+     * App notifications (owner 20 Nov 2026): the groups NotificationService::pushPrefKey really
+     * sends under. "Interest accepted" always comes through (HIGH_PRIORITY_TYPES), so it is not
+     * a tick. Shown only to members whose phone is linked (the Kudla app, see RegisterAppDevice).
+     */
+    public const PUSH = [
+        'push_interest' => ['Interests', 'New interests and messages, interests declined or expired. Accepted interests always come through.'],
+        'push_photos' => ['Photos', 'Photo requests from members, when a photo you asked for is added or shared with you, and when your photos are approved.'],
+        'push_account' => ['Profile and membership', 'Membership reminders, reminders to complete your profile, ID proof and document checks, and messages from our team.'],
+    ];
+
+    /** Every key the Manage Alerts page can show (email, WhatsApp, then app). */
     public static function keys(): array
     {
-        return array_merge(array_keys(self::LIST), array_keys(self::WHATSAPP));
+        return array_merge(array_keys(self::LIST), array_keys(self::WHATSAPP), array_keys(self::PUSH));
     }
 
     /**
      * A newer key that took over part of an older one. Until the member sets the newer key,
      * it follows the older one, so nobody who switched off "New interests" (which used to
-     * cover the photo emails too) starts getting photo emails.
+     * cover the photo emails too) starts getting photo emails. Until 20 Nov 2026 every push
+     * followed push_interest, hence the two push lines.
      */
     public const FOLLOWS = [
         'email_photos' => 'email_interest',
+        'push_photos' => 'push_interest',
+        'push_account' => 'push_interest',
     ];
 
     /** What the member gets right now for each alert: true unless they switched it off. */
@@ -59,11 +73,15 @@ final class EmailAlerts
         return $out;
     }
 
-    /** The stored preferences with the page's ticks applied; every other key is kept. */
-    public static function merged(?array $stored, array $ticked): array
+    /**
+     * The stored preferences with the page's ticks applied; every other key is kept.
+     * $shown = the keys the page showed (default all), so a section the member did not see
+     * (App notifications without a linked phone) is never switched off by saving.
+     */
+    public static function merged(?array $stored, array $ticked, ?array $shown = null): array
     {
         $prefs = $stored ?? [];
-        foreach (self::keys() as $key) {
+        foreach ($shown ?? self::keys() as $key) {
             $prefs[$key] = in_array($key, $ticked, true);
         }
 
