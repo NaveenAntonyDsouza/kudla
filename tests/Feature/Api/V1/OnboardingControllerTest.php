@@ -146,6 +146,10 @@ beforeEach(function () {
             $t->boolean('only_same_religion')->default(false);
             $t->boolean('only_same_denomination')->default(false);
             $t->boolean('only_same_mother_tongue')->default(false);
+            $t->boolean('search_visible_to_older')->default(true);
+            $t->boolean('search_visible_to_taller')->default(true);
+            $t->boolean('search_visible_to_younger')->default(true);
+            $t->boolean('search_visible_to_shorter')->default(true);
             $t->string('deletion_reason', 200)->nullable();
             $t->timestamp('deleted_at')->nullable();
             $t->timestamps();

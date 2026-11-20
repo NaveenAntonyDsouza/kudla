@@ -172,6 +172,29 @@
                                 </label>
                             </div>
                             <p class="text-xs text-gray-400 mt-4">Note: Enabling these options may reduce your profile visibility. We recommend keeping them off for maximum matches.</p>
+
+                            {{-- Age and height (like Chavara's Search Visibility, owner 20 Nov 2026): ticked = shown --}}
+                            <p class="text-sm font-semibold text-gray-700 mb-3 mt-6">Age and height:</p>
+                            <input type="hidden" name="size_switches" value="1">
+                            <div class="space-y-4">
+                                @foreach(\App\Support\ProfileVisibility::sizeSwitchesFor($profile) as $__key => [$__title, $__desc, $__needs])
+                                    @php
+                                        $__missing = $__needs === 'height'
+                                            ? (\App\Support\ProfileVisibility::heightCm($profile->height) ? null : 'Add your height to your profile, otherwise this cannot be checked.')
+                                            : ($profile->date_of_birth ? null : 'Add your date of birth to your profile, otherwise this cannot be checked.');
+                                    @endphp
+                                    <label class="flex items-center justify-between cursor-pointer p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" data-size-switch="{{ $__key }}">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">{{ $__title }}</p>
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $__desc }}</p>
+                                            @if($__missing)<p class="text-xs text-amber-700 mt-0.5">{{ $__missing }}</p>@endif
+                                        </div>
+                                        <input type="checkbox" name="{{ $__key }}" value="1"
+                                            {{ ($profile->{$__key} ?? true) ? 'checked' : '' }}
+                                            class="w-5 h-5 rounded text-(--color-primary) focus:ring-(--color-primary) border-gray-300">
+                                    </label>
+                                @endforeach
+                            </div>
                             <button type="submit" class="mt-4 px-8 py-2.5 text-sm font-semibold text-white bg-(--color-primary) hover:bg-(--color-primary-hover) rounded-lg transition-colors">Save</button>
                         </form>
 
@@ -198,18 +221,21 @@
                         <form method="POST" action="{{ route('settings.password') }}" class="max-w-md">
                             @csrf
                             <div class="space-y-5">
-                                <div class="float-field">
-                                    <input type="password" name="current_password" required placeholder=" ">
+                                <div class="float-field" x-data="{ show: false }">
+                                    <input type="password" :type="show ? 'text' : 'password'" name="current_password" required placeholder=" " style="padding-right:2.75rem">
                                     <label>Enter current password</label>
+                                    <x-password-eye />
                                     @error('current_password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
-                                <div class="float-field">
-                                    <input type="password" name="new_password" required minlength="6" maxlength="64" placeholder=" ">
+                                <div class="float-field" x-data="{ show: false }">
+                                    <input type="password" :type="show ? 'text' : 'password'" name="new_password" required minlength="6" maxlength="64" placeholder=" " style="padding-right:2.75rem">
                                     <label>Create new password</label>
+                                    <x-password-eye />
                                 </div>
-                                <div class="float-field">
-                                    <input type="password" name="new_password_confirmation" required placeholder=" ">
+                                <div class="float-field" x-data="{ show: false }">
+                                    <input type="password" :type="show ? 'text' : 'password'" name="new_password_confirmation" required placeholder=" " style="padding-right:2.75rem">
                                     <label>Confirm new password</label>
+                                    <x-password-eye />
                                 </div>
                                 <p class="text-xs text-red-500">Use 6 to 64 characters.</p>
                             </div>

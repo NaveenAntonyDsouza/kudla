@@ -49,7 +49,9 @@ class SettingsController extends Controller
             'only_same_religion' => $request->boolean('only_same_religion'),
             'only_same_denomination' => $request->boolean('only_same_denomination'),
             'only_same_mother_tongue' => $request->boolean('only_same_mother_tongue'),
-        ]);
+        ] + ($request->has('size_switches')   // age / height switches (20 Nov 2026): only the two this member was shown
+            ? collect(\App\Support\ProfileVisibility::sizeSwitchesFor(auth()->user()->profile))->keys()->mapWithKeys(fn ($k) => [$k => $request->boolean($k)])->all()
+            : []));
         return redirect()->route('settings.index', ['section' => 'search_visibility'])->with('success', 'Profile visibility updated.');
     }
 

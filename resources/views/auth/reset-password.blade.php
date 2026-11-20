@@ -20,13 +20,15 @@
                             <input type="email" name="email" value="{{ $email ?? old('email') }}" required placeholder=" ">
                             <label>Email Address</label>
                         </div>
-                        <div class="float-field">
-                            <input type="password" name="password" required minlength="6" maxlength="64" placeholder=" ">
+                        <div class="float-field" x-data="{ show: false }">
+                            <input type="password" :type="show ? 'text' : 'password'" name="password" required minlength="6" maxlength="64" placeholder=" " style="padding-right:2.75rem">
                             <label>New Password</label>
+                            <x-password-eye />
                         </div>
-                        <div class="float-field">
-                            <input type="password" name="password_confirmation" required placeholder=" ">
+                        <div class="float-field" x-data="{ show: false }">
+                            <input type="password" :type="show ? 'text' : 'password'" name="password_confirmation" required placeholder=" " style="padding-right:2.75rem">
                             <label>Confirm New Password</label>
+                            <x-password-eye />
                         </div>
                     </div>
                     <button type="submit" class="w-full mt-6 bg-(--color-primary) text-white hover:bg-(--color-primary-hover) rounded-lg px-4 py-2.5 font-semibold text-sm transition-colors">

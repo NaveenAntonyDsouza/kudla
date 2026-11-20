@@ -77,6 +77,10 @@ class SettingsController extends BaseApiController
                 'only_same_religion' => (bool) ($profile->only_same_religion ?? false),
                 'only_same_denomination' => (bool) ($profile->only_same_denomination ?? false),
                 'only_same_mother_tongue' => (bool) ($profile->only_same_mother_tongue ?? false),
+                'search_visible_to_older' => (bool) ($profile->search_visible_to_older ?? true),
+                'search_visible_to_taller' => (bool) ($profile->search_visible_to_taller ?? true),
+                'search_visible_to_younger' => (bool) ($profile->search_visible_to_younger ?? true),
+                'search_visible_to_shorter' => (bool) ($profile->search_visible_to_shorter ?? true),
                 'is_hidden' => (bool) $profile->is_hidden,
             ],
             'alerts' => $this->alertsShape($user),
@@ -108,6 +112,10 @@ class SettingsController extends BaseApiController
      * @bodyParam only_same_religion boolean Optional.
      * @bodyParam only_same_denomination boolean Optional.
      * @bodyParam only_same_mother_tongue boolean Optional.
+     * @bodyParam search_visible_to_older boolean Optional. Off = hidden from members older than me.
+     * @bodyParam search_visible_to_taller boolean Optional. Off = hidden from members taller than me.
+     * @bodyParam search_visible_to_younger boolean Optional. Off = hidden from members younger than me (shown to women).
+     * @bodyParam search_visible_to_shorter boolean Optional. Off = hidden from members shorter than me (shown to women).
      *
      * @response 200 scenario="success" {"success": true, "data": {"updated": true}}
      */
@@ -123,6 +131,10 @@ class SettingsController extends BaseApiController
             'only_same_religion' => 'sometimes|boolean',
             'only_same_denomination' => 'sometimes|boolean',
             'only_same_mother_tongue' => 'sometimes|boolean',
+            'search_visible_to_older' => 'sometimes|boolean',
+            'search_visible_to_taller' => 'sometimes|boolean',
+            'search_visible_to_younger' => 'sometimes|boolean',
+            'search_visible_to_shorter' => 'sometimes|boolean',
         ]);
 
         if (! empty($data)) {

@@ -36,6 +36,7 @@ beforeEach(function () {
         $t->string('matri_id')->nullable();
         $t->string('gender')->nullable();
         $t->date('date_of_birth')->nullable();
+        $t->string('height')->nullable();
         $t->string('mother_tongue')->nullable();
         $t->boolean('is_active')->default(true);
         $t->boolean('is_approved')->default(true);
@@ -45,6 +46,10 @@ beforeEach(function () {
         $t->boolean('only_same_religion')->default(false);
         $t->boolean('only_same_denomination')->default(false);
         $t->boolean('only_same_mother_tongue')->default(false);
+        $t->boolean('search_visible_to_older')->default(true);
+        $t->boolean('search_visible_to_taller')->default(true);
+        $t->boolean('search_visible_to_younger')->default(true);
+        $t->boolean('search_visible_to_shorter')->default(true);
         $t->softDeletes();
         $t->timestamps();
     });
@@ -237,4 +242,55 @@ it('builds every visitor list and every member list from the one rule', function
     foreach (['Http/Controllers/ShortlistController.php', 'Http/Controllers/Api/V1/ShortlistController.php', 'Http/Controllers/PhotoRequestController.php', 'Services/InterestService.php'] as $file) {
         expect($uses($file, 'canAccess('))->toBeTrue($file);
     }
+});
+
+it('keeps a member who switched off "older than me" or "taller than me" away from older or taller viewers, in lists and on the page', function () {
+    $noOlder = visMember('NOOLDER', 'female', ['search_visible_to_older' => false, 'date_of_birth' => '1996-06-01', 'height' => '165 cm - 5 ft 05 inch']);
+    $noTaller = visMember('NOTALLER', 'female', ['search_visible_to_taller' => false, 'date_of_birth' => '1996-06-01', 'height' => '160 cm - 5 ft 03 inch']);
+    $open = visMember('OPEN', 'female', ['date_of_birth' => '1996-06-01', 'height' => '160 cm']);   // control: switches left on
+
+    $olderTaller = visMember('BIG', 'male', ['date_of_birth' => '1990-01-01', 'height' => '180 cm - 5 ft 11 inch']);
+    $youngerShorter = visMember('SMALL', 'male', ['date_of_birth' => '1998-01-01', 'height' => '158 cm - 5 ft 02 inch']);
+    $sameDaySameHeight = visMember('SAME', 'male', ['date_of_birth' => '1996-06-01', 'height' => '160 cm']);
+    $noHeight = visMember('NOHEIGHT', 'male', ['date_of_birth' => '1998-01-01', 'height' => null]);
+    $access = app(ProfileAccessService::class);
+
+    expect(visVisibleIds($olderTaller))->toContain('OPEN')->not->toContain('NOOLDER')->not->toContain('NOTALLER')
+        ->and($access->check($olderTaller, $noOlder))->toBe(ProfileAccessService::REASON_VISIBILITY_COMMUNITY)
+        ->and($access->canAccess($olderTaller, $noTaller))->toBeFalse()
+        ->and($access->canAccess($olderTaller, $open))->toBeTrue();
+
+    expect(visVisibleIds($youngerShorter))->toContain('NOOLDER')->toContain('NOTALLER')->toContain('OPEN')
+        ->and($access->canAccess($youngerShorter, $noOlder))->toBeTrue()
+        ->and($access->canAccess($youngerShorter, $noTaller))->toBeTrue();
+
+    // same birthday and same height count as "not older" / "not taller"
+    expect(visVisibleIds($sameDaySameHeight))->toContain('NOOLDER')->toContain('NOTALLER')
+        ->and($access->canAccess($sameDaySameHeight, $noTaller))->toBeTrue();
+
+    // an unknown height never counts as "not taller"
+    expect(visVisibleIds($noHeight))->toContain('NOOLDER')->not->toContain('NOTALLER')
+        ->and($access->canAccess($noHeight, $noTaller))->toBeFalse();
+
+    // signed-out visitors: unknown age and height
+    $visitorIds = ProfileVisibility::forVisitors(Profile::query())->pluck('matri_id')->all();
+    expect($visitorIds)->toContain('OPEN')->not->toContain('NOOLDER')->not->toContain('NOTALLER');
+});
+
+it('keeps a woman who switched off "younger than me" or "shorter than me" away from younger or shorter men', function () {
+    $noYounger = visMember('NOYOUNG', 'female', ['search_visible_to_younger' => false, 'date_of_birth' => '1996-06-01', 'height' => '160 cm']);
+    $noShorter = visMember('NOSHORT', 'female', ['search_visible_to_shorter' => false, 'date_of_birth' => '1996-06-01', 'height' => '160 cm - 5 ft 03 inch']);
+
+    $olderTaller = visMember('BIG2', 'male', ['date_of_birth' => '1990-01-01', 'height' => '180 cm - 5 ft 11 inch']);
+    $youngerShorter = visMember('SMALL2', 'male', ['date_of_birth' => '1998-01-01', 'height' => '158 cm - 5 ft 02 inch']);
+    $access = app(ProfileAccessService::class);
+
+    expect(visVisibleIds($olderTaller))->toContain('NOYOUNG')->toContain('NOSHORT')     // the men she wants
+        ->and($access->canAccess($olderTaller, $noShorter))->toBeTrue()
+        ->and(visVisibleIds($youngerShorter))->not->toContain('NOYOUNG')->not->toContain('NOSHORT')
+        ->and($access->canAccess($youngerShorter, $noYounger))->toBeFalse()
+        ->and($access->canAccess($youngerShorter, $noShorter))->toBeFalse();
+
+    expect(array_keys(ProfileVisibility::sizeSwitchesFor($noYounger)))->toBe(['search_visible_to_younger', 'search_visible_to_shorter'])
+        ->and(array_keys(ProfileVisibility::sizeSwitchesFor($olderTaller)))->toBe(['search_visible_to_older', 'search_visible_to_taller']);
 });

@@ -263,14 +263,19 @@
 
                 <div class="mb-4">
                     <label for="login_password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div x-data="{ show: false }" style="position:relative">
                     <input
                         type="password"
+                        :type="show ? 'text' : 'password'"
                         id="login_password"
                         name="password"
                         placeholder="Enter your password"
                         class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) w-full"
+                        style="padding-right:2.75rem"
                         required
                     >
+                    <x-password-eye top="50%" />
+                    </div>
                     @error('password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

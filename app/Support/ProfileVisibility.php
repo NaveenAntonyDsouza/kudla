@@ -54,7 +54,12 @@ final class ProfileVisibility
             ->where(fn ($w) => $w->whereNull('profiles.show_profile_to')->orWhereNotIn('profiles.show_profile_to', ['premium', 'matches']))
             ->where(fn ($w) => $w->where('profiles.only_same_religion', false)->orWhereNull('profiles.only_same_religion'))
             ->where(fn ($w) => $w->where('profiles.only_same_denomination', false)->orWhereNull('profiles.only_same_denomination'))
-            ->where(fn ($w) => $w->where('profiles.only_same_mother_tongue', false)->orWhereNull('profiles.only_same_mother_tongue'));
+            ->where(fn ($w) => $w->where('profiles.only_same_mother_tongue', false)->orWhereNull('profiles.only_same_mother_tongue'))
+            // a visitor's age and height are unknown, so "not to older / taller" members stay out
+            ->where(fn ($w) => $w->where('profiles.search_visible_to_older', true)->orWhereNull('profiles.search_visible_to_older'))
+            ->where(fn ($w) => $w->where('profiles.search_visible_to_taller', true)->orWhereNull('profiles.search_visible_to_taller'))
+            ->where(fn ($w) => $w->where('profiles.search_visible_to_younger', true)->orWhereNull('profiles.search_visible_to_younger'))
+            ->where(fn ($w) => $w->where('profiles.search_visible_to_shorter', true)->orWhereNull('profiles.search_visible_to_shorter'));
     }
 
     /** Everything a member's list needs (ProfileQueryFilters::baseQuery adds ordering and eager loads). */
@@ -106,6 +111,31 @@ final class ProfileVisibility
                 if (self::norm($viewer->mother_tongue) !== '') {
                     $w->orWhere('profiles.mother_tongue', trim((string) $viewer->mother_tongue));
                 }
+            })
+            // "Show to members older / younger / taller / shorter than me" switched off (sizeAllows)
+            ->where(function ($w) use ($viewer) {
+                $w->where('profiles.search_visible_to_older', true)->orWhereNull('profiles.search_visible_to_older');
+                if ($dob = self::dob($viewer)) {
+                    $w->orWhere('profiles.date_of_birth', '<=', $dob);      // viewer born the same day or later
+                }
+            })
+            ->where(function ($w) use ($viewer) {
+                $w->where('profiles.search_visible_to_younger', true)->orWhereNull('profiles.search_visible_to_younger');
+                if ($dob = self::dob($viewer)) {
+                    $w->orWhere('profiles.date_of_birth', '>=', $dob);      // viewer born the same day or earlier
+                }
+            })
+            ->where(function ($w) use ($viewer) {
+                $w->where('profiles.search_visible_to_taller', true)->orWhereNull('profiles.search_visible_to_taller');
+                if ($cm = self::heightCm($viewer->height)) {
+                    $w->orWhereRaw('CAST(profiles.height AS UNSIGNED) BETWEEN ? AND 299', [$cm]);   // viewer no taller
+                }
+            })
+            ->where(function ($w) use ($viewer) {
+                $w->where('profiles.search_visible_to_shorter', true)->orWhereNull('profiles.search_visible_to_shorter');
+                if ($cm = self::heightCm($viewer->height)) {
+                    $w->orWhereRaw('CAST(profiles.height AS UNSIGNED) BETWEEN 10 AND ?', [$cm]);    // viewer no shorter
+                }
             });
     }
 
@@ -125,8 +155,69 @@ final class ProfileVisibility
         if (! self::communityAllows($viewer, $target)) {
             return ProfileAccessService::REASON_VISIBILITY_COMMUNITY;
         }
+        if (! self::sizeAllows($viewer, $target)) {
+            return ProfileAccessService::REASON_VISIBILITY_COMMUNITY;
+        }
 
         return null;
+    }
+
+    /**
+     * Settings -> Who Can See My Profile, age and height (owner 20 Nov 2026, from Chavara): men see
+     * "Show to members older / taller than me", women "younger / shorter than me"; all on by default.
+     * Switched off, the member is shown only to viewers on the other side (the same age or height
+     * counts as allowed). An unknown age or height never counts as allowed.
+     */
+    public static function sizeAllows(Profile $viewer, Profile $target): bool
+    {
+        $vd = self::dob($viewer);
+        $td = self::dob($target);
+        $vh = self::heightCm($viewer->height);
+        $th = self::heightCm($target->height);
+
+        // dates: an earlier date of birth = older
+        if (self::off($target->search_visible_to_older) && (! $vd || ! $td || $vd < $td)) {
+            return false;
+        }
+        if (self::off($target->search_visible_to_younger) && (! $vd || ! $td || $vd > $td)) {
+            return false;
+        }
+        if (self::off($target->search_visible_to_taller) && (! $vh || ! $th || $vh > $th)) {
+            return false;
+        }
+        if (self::off($target->search_visible_to_shorter) && (! $vh || ! $th || $vh < $th)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /** The two age / height switches this member sees on the settings page: men older / taller, women younger / shorter. */
+    public static function sizeSwitchesFor(Profile $profile): array
+    {
+        return mb_strtolower((string) $profile->gender) === 'female'
+            ? ['search_visible_to_younger' => ['Show to members younger than me', 'I am happy for members younger than me to see my profile.', 'date_of_birth'],
+               'search_visible_to_shorter' => ['Show to members shorter than me', 'I am happy for members shorter than me to see my profile.', 'height']]
+            : ['search_visible_to_older' => ['Show to members older than me', 'I am happy for members older than me to see my profile.', 'date_of_birth'],
+               'search_visible_to_taller' => ['Show to members taller than me', 'I am happy for members taller than me to see my profile.', 'height']];
+    }
+
+    /** "170 cm - 5 ft 07 inch" or "146 cm" -> 170 / 146; null when it does not start with the cm figure. */
+    public static function heightCm($height): ?int
+    {
+        return preg_match('/^\s*(\d{2,3})\b/', (string) $height, $m) ? (int) $m[1] : null;
+    }
+
+    /** Date of birth as Y-m-d, or null. */
+    private static function dob(Profile $profile): ?string
+    {
+        return $profile->date_of_birth ? \Illuminate\Support\Carbon::parse($profile->date_of_birth)->toDateString() : null;
+    }
+
+    /** A switch that is explicitly off (null = never set = on). */
+    private static function off($value): bool
+    {
+        return $value !== null && ! (bool) $value;
     }
 
     /** "Same religion / denomination / caste / sect / mother tongue only": an empty value never counts as the same. */
