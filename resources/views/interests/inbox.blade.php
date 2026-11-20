@@ -151,7 +151,7 @@
                                          goes underneath (Oct 2026: "AM100…", "Smoke Ta…") --}}
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-semibold text-gray-900" style="overflow-wrap: anywhere;">{{ $other?->matri_id ?? 'Unknown' }}</p>
-                                        <p class="text-xs text-gray-500" style="overflow-wrap: anywhere;">{{ $other?->full_name }}{{ $other?->age ? ' · '.$other->age.' yrs' : '' }}</p>
+                                        <p class="text-xs text-gray-500" style="overflow-wrap: anywhere;">{{ \App\Support\ProfileName::for($other) }}{{ $other?->age ? ' · '.$other->age.' yrs' : '' }}</p>
                                         <span class="ib-status-phone text-xs font-medium px-2.5 py-1 rounded-full {{ $statusColor }}" style="margin-top: 4px;">{{ $statusLabel }}</span>
                                     </div>
 

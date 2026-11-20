@@ -78,7 +78,7 @@
                                 <button type="button" x-on:click="$dispatch('open-photo-viewer', { index: 0 })"
                                     class="pv-main block w-full"
                                     aria-label="{{ $photoCount > 1 ? 'View all ' . $photoCount . ' photos' : 'View photo' }}">
-                                    <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ $profile->full_name }}"
+                                    <img src="{{ $profile->primaryPhoto->full_url }}" alt="{{ \App\Support\ProfileName::for($profile) }}"
                                         class="w-full aspect-[3/4] object-cover">
                                     <span class="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                                         @if($photoCount > 1)
@@ -344,7 +344,7 @@
                         @endif
 
                         <div class="p-5 text-center">
-                            <h2 class="text-lg font-semibold text-gray-900">{{ $profile->full_name }}</h2>
+                            <h2 class="text-lg font-semibold text-gray-900">{{ \App\Support\ProfileName::for($profile) }}</h2>
                             <p class="text-sm text-(--color-primary) font-medium">{{ $profile->matri_id }}</p>
 
                             @if($profile->is_vip || $profile->is_featured)

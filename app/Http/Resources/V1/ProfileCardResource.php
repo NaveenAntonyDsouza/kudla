@@ -55,7 +55,7 @@ class ProfileCardResource extends JsonResource
 
         return [
             'matri_id'          => (string) $profile->matri_id,
-            'full_name'         => (string) ($profile->full_name ?? ''),
+            'full_name'         => \App\Support\ProfileName::for($profile, $this->viewer),
             'age'               => $this->computeAge($profile),
             'height_cm'         => $this->computeHeightCm($profile),
             'height_label'      => $profile->height ?: null,

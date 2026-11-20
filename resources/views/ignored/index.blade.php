@@ -35,7 +35,7 @@
                         </a>
                         <div class="flex-1 min-w-0">
                             <a href="{{ route('profile.view', $p) }}" class="text-sm font-semibold text-(--color-primary) hover:underline">{{ $p->matri_id }}</a>
-                            <p class="text-xs text-gray-600 truncate">{{ $p->full_name }} — {{ $p->age ? $p->age . ' Yrs' : '' }} {{ $p->religiousInfo?->religion }}</p>
+                            <p class="text-xs text-gray-600 truncate">{{ \App\Support\ProfileName::for($p) }} — {{ $p->age ? $p->age . ' Yrs' : '' }} {{ $p->religiousInfo?->religion }}</p>
                             <p class="text-[10px] text-gray-400 mt-0.5">Ignored {{ $item->created_at->format('d M Y') }}</p>
                         </div>
                         <form method="POST" action="{{ route('ignored.toggle', $p) }}">

@@ -69,6 +69,9 @@ class AdminModules
     /** Members who never saved partner preferences get matches from their own age, religion and height (17 Nov 2026). */
     public const SUGGESTED_PREFS = 'module_suggested_preferences_enabled';
 
+    /** Free members see other members as "Priya D."; paid members see the full name (owner 20 Nov 2026, like Chavara). */
+    public const FULL_NAME_PAID = 'module_full_name_paid_enabled';
+
     /* Pop-ups (19 Nov 2026), one a day at most with the photo pop-up first (DailyPopup). New: off by default. */
 
     /** "Families are waiting for your reply" pop-up. */
@@ -128,6 +131,11 @@ class AdminModules
     public static function suggestedPreferences(): bool
     {
         return SiteSetting::getValue(self::SUGGESTED_PREFS, '1') === '1';
+    }
+
+    public static function fullNamePaidOnly(): bool
+    {
+        return SiteSetting::getValue(self::FULL_NAME_PAID, '1') === '1';
     }
 
     public static function waitingPopup(): bool

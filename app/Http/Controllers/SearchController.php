@@ -819,8 +819,10 @@ class SearchController extends Controller
         return $query->where(function ($outer) use ($words, $matchAll) {
             foreach ($words as $word) {
                 $like = '%' . addcslashes($word, '%_\\') . '%';
-                $match = function ($q) use ($like) {
-                    $q->where('full_name', 'like', $like)
+                // a member who sees "Priya D." can find members by first name only, not by surname
+                $nameLike = \App\Support\ProfileName::viewerSeesFullNames() ? $like : addcslashes($word, '%_\\') . '%';
+                $match = function ($q) use ($like, $nameLike) {
+                    $q->where('full_name', 'like', $nameLike)
                         ->orWhere('about_me', 'like', $like)
                         ->orWhere('matri_id', 'like', $like)
                         ->orWhereHas('religiousInfo', fn ($r) => $r->where('religion', 'like', $like)->orWhere('caste', 'like', $like)

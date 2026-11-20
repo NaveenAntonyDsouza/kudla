@@ -71,6 +71,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::PLANS_POPUP => ($settings[AdminModules::PLANS_POPUP] ?? '0') === '1',
             AdminModules::CHANNEL_POPUP => ($settings[AdminModules::CHANNEL_POPUP] ?? '0') === '1',
             AdminModules::SUGGESTED_PREFS => ($settings[AdminModules::SUGGESTED_PREFS] ?? '1') === '1',
+            AdminModules::FULL_NAME_PAID => ($settings[AdminModules::FULL_NAME_PAID] ?? '1') === '1',
 
             // Alerts
             'error_alert_email' => $settings['error_alert_email'] ?? '',
@@ -245,6 +246,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::SUGGESTED_PREFS)
                             ->label('Matches for members without preferences')
                             ->helperText('A member who never saved partner preferences gets matches from their own profile instead of an empty page: age (a man: up to 7 years younger; a woman: up to 7 years older), their own religion, and height (a man: his height and below; a woman: her height and above). Nothing is saved, and a note asks them to set their own. Also fills Recommended and Mutual Matches and the weekly match email (members seen in the last 60 days).'),
+
+                        Forms\Components\Toggle::make(AdminModules::FULL_NAME_PAID)
+                            ->label('Full names for paid members only')
+                            ->helperText('On: free members see other members as "Priya D." (first name and the first letter of the surname) with "Upgrade to see the full name", and paid members see the full name. Off: every signed-in member sees full names. Signed-out visitors always see "Priya D." on the home page.'),
                     ])
                     ->columns(2),
 
@@ -556,7 +561,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER, AdminModules::PAYMENT_INSIGHTS,
             AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
-            AdminModules::SUGGESTED_PREFS,
+            AdminModules::SUGGESTED_PREFS, AdminModules::FULL_NAME_PAID,
             'admin_two_step_required',
         ];
 

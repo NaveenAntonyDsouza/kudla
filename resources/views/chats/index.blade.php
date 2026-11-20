@@ -40,7 +40,7 @@
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
                                     <p style="margin: 0; font-size: 14px; font-weight: {{ $unread ? '700' : '600' }}; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ $other?->full_name ?: 'Member' }} <span style="font-weight: 500; color: var(--color-primary, #8B1D91);">{{ $other?->matri_id }}</span>
+                                        {{ \App\Support\ProfileName::for($other) ?: 'Member' }} <span style="font-weight: 500; color: var(--color-primary, #8B1D91);">{{ $other?->matri_id }}</span>
                                     </p>
                                     <span style="font-size: 11px; color: {{ $unread ? 'var(--color-primary, #8B1D91)' : '#9ca3af' }}; flex-shrink: 0;">{{ $at?->displayTz()->diffForHumans(short: true) }}</span>
                                 </div>

@@ -391,10 +391,12 @@ class SearchController extends BaseApiController
         int $perPage,
     ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
         $like = '%'.$term.'%';
+        // a member who sees "Priya D." can find members by first name only, not by surname
+        $nameLike = \App\Support\ProfileName::viewerSeesFullNames($viewer) ? $like : $term.'%';
 
         return $this->baseQuery($viewer)
-            ->where(function ($q) use ($like) {
-                $q->where('profiles.full_name', 'like', $like)
+            ->where(function ($q) use ($like, $nameLike) {
+                $q->where('profiles.full_name', 'like', $nameLike)
                     ->orWhere('profiles.about_me', 'like', $like)
                     ->orWhere('profiles.matri_id', 'like', $like)
                     ->orWhereHas('educationDetail', function ($e) use ($like) {

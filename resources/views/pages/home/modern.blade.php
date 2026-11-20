@@ -115,7 +115,7 @@
                                 </div>
                             @endif
                             <div class="mt-3">
-                                <p class="font-semibold text-sm text-gray-900 truncate">{{ $profile->full_name }}</p>
+                                <p class="font-semibold text-sm text-gray-900 truncate">{{ \App\Support\MemberName::short($profile->full_name) }}</p>
                                 <p class="text-xs text-gray-500 mt-0.5">
                                     {{ $profile->date_of_birth ? \Carbon\Carbon::parse($profile->date_of_birth)->age . ' yrs' : '' }}
                                     @if($profile->locationInfo?->native_district) · {{ $profile->locationInfo->native_district }} @endif
@@ -247,7 +247,7 @@
                                 <div class="absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-bold text-white bg-gray-900">Featured</div>
                             @endif
                             <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                <p class="font-bold text-lg">{{ \Illuminate\Support\Str::limit($profile->full_name, 20) }}</p>
+                                <p class="font-bold text-lg">{{ \Illuminate\Support\Str::limit(\App\Support\MemberName::short($profile->full_name), 20) }}</p>
                                 <p class="text-sm opacity-90 mt-0.5">
                                     {{ $profile->date_of_birth ? \Carbon\Carbon::parse($profile->date_of_birth)->age . ' yrs' : '' }}
                                     @if($profile->locationInfo?->native_district) · {{ $profile->locationInfo->native_district }} @endif

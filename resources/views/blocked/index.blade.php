@@ -22,7 +22,7 @@
                             </div>
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">{{ $item->blockedProfile?->matri_id }}</p>
-                                <p class="text-xs text-gray-500">{{ $item->blockedProfile?->full_name }}</p>
+                                <p class="text-xs text-gray-500">{{ \App\Support\ProfileName::for($item->blockedProfile) }}</p>
                             </div>
                         </div>
                         <form method="POST" action="{{ route('unblock.profile', $item->blockedProfile) }}">

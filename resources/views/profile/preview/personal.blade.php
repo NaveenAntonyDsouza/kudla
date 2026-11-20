@@ -13,7 +13,11 @@
 <div class="bg-white rounded-lg border border-gray-200 shadow-xs p-6 mb-6">
     <h3 class="text-lg font-semibold text-(--color-primary) mb-4">Primary Information</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-        <div><p class="text-xs text-gray-500">Full Name</p><p class="text-sm font-semibold text-gray-900">{{ $nm($p->full_name) }}</p></div>
+        <div><p class="text-xs text-gray-500">Full Name</p><p class="text-sm font-semibold text-gray-900">{{ $nm(\App\Support\ProfileName::for($p)) }}</p>
+            @if(\App\Support\ProfileName::hidden($p))
+                <a href="{{ route('membership.index') }}" data-full-name-upgrade class="text-xs font-medium text-(--color-primary) hover:underline">&#128274; Upgrade to see the full name</a>
+            @endif
+        </div>
         <div><p class="text-xs text-gray-500">Gender</p><p class="text-sm font-semibold text-gray-900">{{ $nm($p->gender ? ucfirst($p->gender) : null) }}</p></div>
         <div><p class="text-xs text-gray-500">Date of Birth</p><p class="text-sm font-semibold text-gray-900">{{ $p->date_of_birth?->format('d/m/Y') ?? 'Not Mentioned' }}</p></div>
         <div><p class="text-xs text-gray-500">Age</p><p class="text-sm font-semibold text-gray-900">{{ $p->age ? $p->age . ' Yrs ' . ($p->date_of_birth ? floor($p->date_of_birth->diffInMonths(now()) % 12) . ' months' : '') : 'Not Mentioned' }}</p></div>

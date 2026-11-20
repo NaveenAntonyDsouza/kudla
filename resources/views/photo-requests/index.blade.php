@@ -52,7 +52,7 @@
                             </a>
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('profile.view', $p) }}" class="text-sm font-semibold text-(--color-primary) hover:underline">{{ $p->matri_id }}</a>
-                                <p class="text-xs text-gray-600 truncate">{{ $p->full_name }} — {{ $p->religiousInfo?->religion }} {{ $p->religiousInfo?->display_denomination ?? $p->religiousInfo?->display_caste }}</p>
+                                <p class="text-xs text-gray-600 truncate">{{ \App\Support\ProfileName::for($p) }} — {{ $p->religiousInfo?->religion }} {{ $p->religiousInfo?->display_denomination ?? $p->religiousInfo?->display_caste }}</p>
                                 <p class="text-[10px] text-gray-400 mt-0.5">Requested {{ $req->created_at->format('d M Y') }}</p>
                             </div>
                             <div class="shrink-0 flex items-center gap-2">
@@ -111,7 +111,7 @@
                             </a>
                             <div class="flex-1 min-w-0">
                                 <a href="{{ route('profile.view', $p) }}" class="text-sm font-semibold text-(--color-primary) hover:underline">{{ $p->matri_id }}</a>
-                                <p class="text-xs text-gray-600 truncate">{{ $p->full_name }}</p>
+                                <p class="text-xs text-gray-600 truncate">{{ \App\Support\ProfileName::for($p) }}</p>
                                 <p class="text-[10px] text-gray-400 mt-0.5">Sent {{ $req->created_at->format('d M Y') }}</p>
                             </div>
                             <span class="px-2 py-1 text-[10px] font-medium rounded-full

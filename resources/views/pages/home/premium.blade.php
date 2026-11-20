@@ -144,7 +144,7 @@
                                     <div class="absolute top-4 right-4 px-3 py-1 rounded-sm text-[10px] font-bold tracking-widest uppercase text-white" style="background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3);">✦ VIP</div>
                                 @endif
                                 <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
-                                    <p class="p-serif font-bold text-xl leading-tight">{{ \Illuminate\Support\Str::limit($profile->full_name, 18) }}</p>
+                                    <p class="p-serif font-bold text-xl leading-tight">{{ \Illuminate\Support\Str::limit(\App\Support\MemberName::short($profile->full_name), 18) }}</p>
                                     <p class="text-xs mt-1 opacity-90 tracking-wide uppercase">
                                         {{ $profile->date_of_birth ? \Carbon\Carbon::parse($profile->date_of_birth)->age : '' }}
                                         @if($profile->locationInfo?->native_district) · {{ $profile->locationInfo->native_district }} @endif

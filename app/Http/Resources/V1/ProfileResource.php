@@ -63,7 +63,7 @@ class ProfileResource extends JsonResource
         return [
             // ── Identity ────────────────────────────────────────────
             'matri_id'                 => (string) $profile->matri_id,
-            'full_name'                => (string) ($profile->full_name ?? ''),
+            'full_name'                => \App\Support\ProfileName::for($profile, $this->viewer),
             'gender'                   => $profile->gender,
             'date_of_birth'            => $profile->date_of_birth?->toDateString(),
             'age'                      => $this->computeAge($profile),

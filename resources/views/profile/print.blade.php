@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $profile->matri_id }} — {{ $profile->full_name }} | {{ $siteName }}</title>
+    <title>{{ $profile->matri_id }} — {{ \App\Support\ProfileName::for($profile) }} | {{ $siteName }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #333; line-height: 1.5; padding: 20px; }
@@ -63,13 +63,13 @@
 <div class="profile-top">
     <div class="photo-container">
         @if($__photoUrl = \App\Support\PhotoVisibility::urlForCurrentViewer($profile))
-            <img src="{{ $__photoUrl }}" alt="{{ $profile->full_name }}">
+            <img src="{{ $__photoUrl }}" alt="{{ \App\Support\ProfileName::for($profile) }}">
         @else
             <div class="photo-placeholder">No Photo</div>
         @endif
     </div>
     <div class="quick-info">
-        <h2>{{ $profile->full_name }}</h2>
+        <h2>{{ \App\Support\ProfileName::for($profile) }}</h2>
         <p class="id">{{ $profile->matri_id }}</p>
         <div class="quick-info-grid">
             @if($profile->age)<div class="info-item"><span class="label">Age:</span><span class="value">{{ $profile->age }} Yrs</span></div>@endif
