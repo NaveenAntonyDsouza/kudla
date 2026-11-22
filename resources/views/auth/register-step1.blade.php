@@ -99,6 +99,7 @@
                     }
                 }">
                     @csrf
+                    <input type="hidden" name="signup_from" value="register_page">{{-- where sign-ups start (owner 22 Nov 2026: measure before changing the home page form) --}}
 
                     <div class="space-y-5">
                         {{-- Full Name --}}

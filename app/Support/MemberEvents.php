@@ -29,6 +29,9 @@ class MemberEvents
     public const PAYMENT_FAILED = 'payment_failed';
     public const PAYWALL = 'paywall';
 
+    /** A new account created on sign-up step 1; subject = where it started: home / register_page / other (22 Nov 2026). */
+    public const SIGNUP_STARTED = 'signup_started';
+
     /** Paid features a free member can be stopped by (the paywall event's subject). */
     public const FEATURES = [
         'contact' => 'See phone / WhatsApp',

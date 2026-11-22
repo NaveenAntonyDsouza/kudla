@@ -328,6 +328,7 @@
                         }
                     }" @submit="submitting = true">
                         @csrf
+                        <input type="hidden" name="signup_from" value="home">{{-- where sign-ups start (owner 22 Nov 2026: measure before changing the home page form) --}}
 
                         {{-- Full Name --}}
                         <div class="float-field">

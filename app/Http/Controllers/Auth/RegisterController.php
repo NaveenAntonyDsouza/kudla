@@ -103,6 +103,12 @@ class RegisterController extends Controller
 
         Auth::login($user);
 
+        // Where the sign-up started (owner 22 Nov 2026: measure before changing the home page form):
+        // the home page form or the /register page; anything else (an old cached page, the API) is "other".
+        $from = $request->input('signup_from');
+        \App\Support\MemberEvents::record(\App\Support\MemberEvents::SIGNUP_STARTED,
+            in_array($from, ['home', 'register_page'], true) ? $from : 'other', [], $user);
+
         Analytics::track('sign_up', ['method' => 'email'], 'Lead');
         Analytics::track('registration_step', ['step' => 1]);
 
