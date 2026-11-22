@@ -1,6 +1,6 @@
 {{--
     Harmony hero artwork (Oct 2026, "Harmony" homepage design, Kudla): two flowing
-    ribbons, marigold and soft white, that meet and twist together across the sky,
+    ribbons, marigold (or the accent colour) and soft white, that meet and twist together across the sky,
     "two lives, one journey". Abstract on purpose (owner: a culture- and
     religion-neutral homepage), so no flowers, symbols or people. Each ribbon is a
     bundle of fine lines that spread and pinch, which reads as a twisting silk band.
@@ -36,9 +36,9 @@
 <svg class="h-art {{ $class }}" viewBox="0 0 {{ $vw }} {{ $vh }}" preserveAspectRatio="{{ $id === 'w' ? 'xMidYMid slice' : 'xMidYMin meet' }}" aria-hidden="true" focusable="false">
     <defs>
         <linearGradient id="hr{{ $id }}-gold" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0" stop-color="#f7b51e" stop-opacity="0.15"/>
-            <stop offset="0.45" stop-color="#f7b51e" stop-opacity="0.85"/>
-            <stop offset="1" stop-color="#ff8a1f" stop-opacity="0.55"/>
+            <stop offset="0" style="stop-color: var(--g-hl, #f7b51e)" stop-opacity="0.15"/>
+            <stop offset="0.45" style="stop-color: var(--g-hl, #f7b51e)" stop-opacity="0.85"/>
+            <stop offset="1" style="stop-color: var(--g-hl2, #ff8a1f)" stop-opacity="0.55"/>
         </linearGradient>
         <linearGradient id="hr{{ $id }}-pearl" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0" stop-color="#ffffff" stop-opacity="0.08"/>
@@ -48,7 +48,7 @@
         <filter id="hr{{ $id }}-glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="{{ $id === 'w' ? 18 : 9 }}"/></filter>
     </defs>
     {{-- a soft glow under each ribbon --}}
-    <path d="{{ $ribbons['gold'][intdiv(count($ribbons['gold']), 2)] }}" fill="none" stroke="#f7a21e" stroke-width="{{ $id === 'w' ? 70 : 34 }}" opacity="0.16" filter="url(#hr{{ $id }}-glow)"/>
+    <path d="{{ $ribbons['gold'][intdiv(count($ribbons['gold']), 2)] }}" fill="none" style="stroke: var(--g-glow, #f7a21e)" stroke-width="{{ $id === 'w' ? 70 : 34 }}" opacity="0.16" filter="url(#hr{{ $id }}-glow)"/>
     <path d="{{ $ribbons['pearl'][intdiv(count($ribbons['pearl']), 2)] }}" fill="none" stroke="#ffffff" stroke-width="{{ $id === 'w' ? 60 : 30 }}" opacity="0.08" filter="url(#hr{{ $id }}-glow)"/>
     <g fill="none" stroke-linecap="round">
         @foreach($ribbons['pearl'] as $d)

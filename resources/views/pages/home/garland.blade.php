@@ -49,6 +49,32 @@
             'line' => $mix($primary, '#ffffff', 0.14),
             'tint' => $mix($primary, '#ffffff', 0.09),
         ];
+        // Gold highlights (ribbons, bars, step circles, the big button) belong with a marigold / orange
+        // accent and stay exactly as drawn. Any other accent (Kudla's new logo, 22 Nov 2026: plum and
+        // raspberry) gets light shades of its own colour instead, so the page matches the logo.
+        $warm = (function (string $c) {
+            [$r, $gr, $b] = array_map(fn ($v) => $v / 255, sscanf($c, '#%02x%02x%02x'));
+            $max = max($r, $gr, $b);
+            $d = $max - min($r, $gr, $b);
+            if ($d < 0.2) {
+                return false;                              // greys have no hue
+            }
+            $h = match ($max) {
+                $r => 60 * fmod(($gr - $b) / $d + 6, 6),
+                $gr => 60 * (($b - $r) / $d + 2),
+                default => 60 * (($r - $gr) / $d + 4),
+            };
+
+            return $h >= 15 && $h <= 50;                  // orange to gold
+        })($accent);
+        $g += $warm ? [
+            'hl' => '#f7b51e', 'hl2' => '#ff8a1f', 'glow' => '#f7a21e', 'orn' => '#e8890f',
+            'orn-line' => 'rgba(227,116,4,0.55)', 'btn-top' => '#f7b51e', 'btn-ink' => 'var(--g-deep)',
+        ] : [
+            'hl' => $mix($accent, '#ffffff', 0.5), 'hl2' => $mix($accent, '#ffffff', 0.8), 'glow' => $mix($accent, '#ffffff', 0.8),
+            'orn' => $accent, 'orn-line' => 'rgba(' . $rgb($accent) . ',0.55)',
+            'btn-top' => $mix($accent, '#ffffff', 0.92), 'btn-ink' => '#ffffff',   // white text stays readable on it
+        ];
 
         $whyChooseUsJson = \App\Models\SiteSetting::getValue('why_choose_us', '');
         $whyChooseUs = $whyChooseUsJson ? json_decode($whyChooseUsJson, true) : [];
@@ -80,6 +106,8 @@
             --g-p: {{ $g['p'] }}; --g-ph: {{ $g['ph'] }}; --g-a: {{ $g['a'] }}; --g-a-rgb: {{ $g['a-rgb'] }};
             --g-deep: {{ $g['deep'] }}; --g-plum: {{ $g['plum'] }}; --g-a-ink: {{ $g['a-ink'] }};
             --g-lav: {{ $g['lav'] }}; --g-line: {{ $g['line'] }}; --g-tint: {{ $g['tint'] }};
+            --g-hl: {{ $g['hl'] }}; --g-hl2: {{ $g['hl2'] }}; --g-glow: {{ $g['glow'] }}; --g-orn: {{ $g['orn'] }}; --g-orn-line: {{ $g['orn-line'] }};
+            --g-btn-top: {{ $g['btn-top'] }}; --g-btn-ink: {{ $g['btn-ink'] }};
             --g-ivory: #fff9f1; --g-ink: #2b2230; --g-muted: #6b6070;
             color: var(--g-ink);
         }
@@ -100,7 +128,7 @@
         .home-garland .g-btn-primary:hover { background: var(--g-ph); }
         .home-garland .g-btn-outline { background: #fff; color: var(--g-p); border: 1.5px solid var(--g-p); }
         .home-garland .g-btn-outline:hover { background: var(--g-tint); }
-        .home-garland .g-btn-marigold { background: linear-gradient(180deg, #f7b51e, var(--g-a)); color: var(--g-deep); border: 0; box-shadow: 0 10px 24px -10px rgba(0,0,0,.45); }
+        .home-garland .g-btn-marigold { background: linear-gradient(180deg, var(--g-btn-top), var(--g-a)); color: var(--g-btn-ink); border: 0; box-shadow: 0 10px 24px -10px rgba(0,0,0,.45); }
         .home-garland .g-btn-marigold:hover { transform: translateY(-1px); }
         .home-garland a:focus-visible, .home-garland button:focus-visible, .home-garland select:focus-visible { outline: 3px solid rgba(var(--g-a-rgb), .55); outline-offset: 2px; }
 
@@ -135,7 +163,7 @@
             .home-garland .g-hero-copy { flex: 1; text-align: left; }
         }
         .home-garland .g-h1 { margin: 0; font-family: "Noto Serif Kannada", var(--brand-font-serif, Georgia, serif); font-weight: 700; font-size: clamp(2rem, 4.6vw, 3.5rem); line-height: 1.25; text-shadow: 0 2px 18px rgba(0,0,0,.28); text-wrap: balance; }
-        .home-garland .g-bar { display: block; width: 72px; height: 4px; border-radius: 4px; margin: 18px auto 0; background: linear-gradient(90deg, var(--g-a), #f7b51e); }
+        .home-garland .g-bar { display: block; width: 72px; height: 4px; border-radius: 4px; margin: 18px auto 0; background: linear-gradient(90deg, var(--g-a), var(--g-hl)); }
         @media (min-width: 768px) { .home-garland .g-bar { margin-left: 0; } }
         .home-garland .g-hero-sub { margin: 16px auto 0; max-width: 34rem; font-size: clamp(1.05rem, 1.6vw, 1.3rem); line-height: 1.55; color: rgba(255,255,255,.92); }
         @media (min-width: 768px) { .home-garland .g-hero-sub { margin-left: 0; } }
@@ -148,7 +176,7 @@
 
         .home-garland .g-card { position: relative; width: 100%; max-width: 400px; flex: none; background: #fff; color: var(--g-ink); border-radius: 18px; padding: 24px 20px 20px; box-shadow: 0 30px 60px -22px rgba(12,2,18,.6), 0 0 0 1px rgba(255,255,255,.06); }
         @media (min-width: 768px) { .home-garland .g-card { width: 360px; min-width: 360px; padding: 26px 24px 22px; } }
-        .home-garland .g-card::before { content: ""; position: absolute; left: 22px; right: 22px; top: 0; height: 4px; border-radius: 0 0 4px 4px; background: linear-gradient(90deg, var(--g-a), #f7b51e); }
+        .home-garland .g-card::before { content: ""; position: absolute; left: 22px; right: 22px; top: 0; height: 4px; border-radius: 0 0 4px 4px; background: linear-gradient(90deg, var(--g-a), var(--g-hl)); }
         .home-garland .g-card-title { margin: 0; font-family: var(--brand-font-serif, Georgia, serif); font-size: 1.3rem; font-weight: 700; color: var(--g-plum); }
         .home-garland .g-card-sub { margin: 2px 0 16px; font-size: 0.78rem; color: var(--g-muted); }
         .home-garland .g-submit { background: var(--g-p); }
@@ -183,7 +211,7 @@
             .home-garland .g-steps::before { content: ""; position: absolute; top: 27px; left: 18%; right: 18%; height: 6px; background-image: radial-gradient(circle, rgba(var(--g-a-rgb), .55) 2px, transparent 2.6px); background-size: 14px 6px; }
         }
         .home-garland .g-step { position: relative; text-align: center; }
-        .home-garland .g-step-num { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-family: var(--brand-font-serif, Georgia, serif); font-size: 1.5rem; font-weight: 700; font-variant-numeric: lining-nums; color: #fff; background: radial-gradient(circle at 35% 30%, #f7b51e, var(--g-a) 70%); box-shadow: 0 0 0 6px var(--g-ivory), 0 10px 22px -10px rgba(var(--g-a-rgb), .9); }
+        .home-garland .g-step-num { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-family: var(--brand-font-serif, Georgia, serif); font-size: 1.5rem; font-weight: 700; font-variant-numeric: lining-nums; color: #fff; background: radial-gradient(circle at 35% 30%, var(--g-hl), var(--g-a) 70%); box-shadow: 0 0 0 6px var(--g-ivory), 0 10px 22px -10px rgba(var(--g-a-rgb), .9); }
         .home-garland .g-step h3 { margin: 0 0 8px; font-size: 1.15rem; font-weight: 700; color: var(--g-plum); }
         .home-garland .g-step p { margin: 0 auto; max-width: 18rem; font-size: 0.92rem; line-height: 1.6; color: var(--g-muted); }
 

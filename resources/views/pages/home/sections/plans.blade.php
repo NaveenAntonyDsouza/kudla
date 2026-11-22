@@ -40,7 +40,7 @@
     @media (min-width: 1024px) { .home-garland .g-plans.n-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .home-garland .g-plans.n-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
     .home-garland .g-plan { position: relative; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--g-line); border-radius: 18px; padding: 26px 22px 22px; }
     .home-garland .g-plan.popular { border: 2px solid var(--g-p); box-shadow: 0 22px 44px -24px rgba(40,6,50,.45); }
-    .home-garland .g-plan-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 4px 14px; border-radius: 999px; background: linear-gradient(180deg, #f7b51e, var(--g-a)); color: var(--g-deep); font-size: 0.72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .home-garland .g-plan-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 4px 14px; border-radius: 999px; background: linear-gradient(180deg, var(--g-btn-top, #f7b51e), var(--g-a)); color: var(--g-btn-ink, var(--g-deep)); font-size: 0.72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
     .home-garland .g-plan h3 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--g-plum); }
     .home-garland .g-plan .price { margin-top: 12px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 8px; }
     .home-garland .g-plan .price b { font-family: var(--brand-font-serif, Georgia, serif); font-size: 2rem; font-weight: 700; color: var(--g-ink); font-variant-numeric: lining-nums; }

@@ -145,6 +145,35 @@ it('mixes its shades from the site theme colours', function () {
         ->toContain('--g-a: #e37404;');                                   // invalid colour falls back to marigold
 });
 
+it('keeps the gold highlights with an orange accent and uses the accent\'s own shades otherwise', function () {
+    // orange accent (Kudla until 22 Nov 2026, and any marigold / turmeric / gold one): gold exactly as drawn
+    $html = ($this->home)('harmony');
+    expect($html)->toContain('--g-hl: #f7b51e;')->toContain('--g-hl2: #ff8a1f;')->toContain('--g-glow: #f7a21e;')
+        ->toContain('--g-orn: #e8890f;')->toContain('--g-orn-line: rgba(227,116,4,0.55);')
+        ->toContain('--g-btn-top: #f7b51e;')->toContain('--g-btn-ink: var(--g-deep);')
+        ->toContain('style="stop-color: var(--g-hl, #f7b51e)"')                   // the ribbons follow the variables
+        ->not->toMatch('/linear-gradient\([^)]*#f7b51e/');                          // no gold typed into the page styles
+
+    // Kudla's new logo: plum and raspberry, so no gold anywhere
+    ThemeSetting::query()->update(['primary_color' => '#64026A', 'primary_hover' => '#4E0153', 'secondary_color' => '#D81B60']);
+    Cache::forget('theme_settings');
+    $html = ($this->home)('harmony');
+    expect($html)->toContain('--g-p: #64026a;')->toContain('--g-a: #d81b60;')
+        ->toContain('--g-hl: #ec8db0;')->toContain('--g-hl2: #e04980;')->toContain('--g-orn: #d81b60;')
+        ->toContain('--g-orn-line: rgba(216,27,96,0.55);')
+        ->toContain('--g-btn-top: #db2d6d;')->toContain('--g-btn-ink: #ffffff;')
+        ->not->toContain('--g-hl: #f7b51e');
+
+    foreach (['#B4641A', '#E65100', '#A8832F', '#F57C00'] as $warm) {             // turmeric, deep orange, gold, orange
+        ThemeSetting::query()->update(['secondary_color' => $warm]);
+        Cache::forget('theme_settings');
+        expect(($this->home)('harmony'))->toContain('--g-hl: #f7b51e;');
+    }
+    ThemeSetting::query()->update(['secondary_color' => '#00BCD4']);              // cyan: its own shades
+    Cache::forget('theme_settings');
+    expect(($this->home)('harmony'))->not->toContain('--g-hl: #f7b51e;');
+});
+
 it('hangs marigold and jasmine garlands only, with a phone version', function () {
     $art = Blade::render('<x-home-art.garland-hero />');
 
