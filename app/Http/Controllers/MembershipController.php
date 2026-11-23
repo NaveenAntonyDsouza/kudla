@@ -653,23 +653,7 @@ class MembershipController extends Controller
 
     private function trackPurchase(?Subscription $subscription): void
     {
-        if (! $subscription) {
-            return;
-        }
-        $plan = MembershipPlan::find($subscription->plan_id);
-        $value = round(((int) $subscription->amount) / 100, 2);
-
-        Analytics::track('purchase', [
-            'transaction_id' => (string) $subscription->id,
-            'value' => $value,
-            'currency' => 'INR',
-            'coupon' => (string) ($subscription->coupon_code ?? ''),
-            'items' => [[
-                'item_id' => 'plan-' . ($plan?->id ?? $subscription->plan_id),
-                'item_name' => $plan?->plan_name ?? ($subscription->plan_name ?? 'Membership'),
-                'price' => $value,
-                'quantity' => 1,
-            ]],
-        ], 'Purchase');
+        // once per payment, also when the webhook got there first (PurchaseTracking)
+        \App\Support\PurchaseTracking::queue($subscription);
     }
 }

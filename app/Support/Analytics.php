@@ -55,6 +55,9 @@ final class Analytics
      */
     public static function pull(): array
     {
+        // a payment the gateway's webhook finished joins the queue here
+        PurchaseTracking::sendDue();
+
         try {
             return request()->hasSession() ? (array) session()->pull(self::SESSION_KEY, []) : [];
         } catch (\Throwable) {

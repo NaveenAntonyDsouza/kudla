@@ -110,6 +110,10 @@ class SubscriptionActivator
             // UserMembership row if this branch fires.
         }
 
+        // Analytics' 'purchase' is sent from the member's browser. A webhook has none,
+        // so remember it for the member's next page (sent once either way).
+        \App\Support\PurchaseTracking::due($subscription);
+
         return true;
     }
 

@@ -41,6 +41,10 @@ beforeEach(function () {
                   $t->string('ip_address')->nullable(), $t->text('user_agent')->nullable(), $t->timestamp('logged_in_at')->nullable(), $t->timestamps()],
               'site_settings' => fn (Blueprint $t) => [$t->id(), $t->string('key')->unique(), $t->text('value')->nullable(), $t->timestamps()],
               'membership_plans' => fn (Blueprint $t) => [$t->id(), $t->string('plan_name')->nullable(), $t->timestamps()],
+              'subscriptions' => fn (Blueprint $t) => [$t->id(), $t->unsignedBigInteger('user_id'), $t->string('plan_id')->nullable(), $t->string('plan_name')->nullable(),
+                  $t->string('gateway')->nullable(), $t->unsignedBigInteger('coupon_id')->nullable(), $t->string('coupon_code')->nullable(), $t->integer('discount_amount')->default(0),
+                  $t->integer('amount')->default(0), $t->string('payment_status')->default('pending'), $t->json('gateway_metadata')->nullable(),
+                  $t->date('starts_at')->nullable(), $t->date('expires_at')->nullable(), $t->boolean('is_active')->default(false), $t->timestamps()],
              ] as $table => $cols) {
         Schema::create($table, function (Blueprint $t) use ($cols) { $cols($t); });
     }
@@ -48,7 +52,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    foreach (['users', 'profiles', 'login_history', 'site_settings', 'membership_plans'] as $t) {
+    foreach (['users', 'profiles', 'login_history', 'site_settings', 'membership_plans', 'subscriptions'] as $t) {
         Schema::dropIfExists($t);
     }
 });
@@ -155,4 +159,79 @@ it('every member-facing page with its own <head> loads the tracking tags', funct
     }
 
     expect($missing)->toBe([]);
+});
+
+/*
+| A payment the gateway's webhook finished (weekly review 23 Nov 2026: KM100793's
+| Razorpay payment in the Android app never reached GA4, PostHog or Meta).
+*/
+/** The tracking partial with the queued events' JSON unescaped, to read them. */
+function trackedHtml(array $ids = []): string
+{
+    return str_replace('\u0022', '"', renderTracking($ids));
+}
+
+function paidByWebhook(int $userId = 1, int $amount = 100000): Subscription
+{
+    DB::table('membership_plans')->insertOrIgnore(['id' => 2, 'plan_name' => 'Silver']);
+    $sub = Subscription::create(['user_id' => $userId, 'plan_id' => '2', 'plan_name' => 'Silver', 'gateway' => 'razorpay', 'amount' => $amount, 'payment_status' => 'pending']);
+    app(\App\Services\Payment\SubscriptionActivator::class)->activate($sub); // no browser in a webhook
+
+    return $sub->fresh();
+}
+
+it("a payment the webhook finished is sent as a purchase from the member's next page, once", function () {
+    $member = User::create(['name' => 'M', 'email' => 'm@site.test', 'role' => 'user']);
+    $sub = paidByWebhook($member->id);
+
+    withBrowserSession();
+    $this->actingAs($member);
+    $html = trackedHtml(['gaId' => 'G-TEST123', 'posthogKey' => 'phc_test']);
+
+    expect($sub->payment_status)->toBe('paid')
+        ->and($html)->toContain('"purchase"')
+        ->and($html)->toContain('"transaction_id":"'.$sub->id.'"')
+        ->and($html)->toContain('"value":1000')
+        ->and($html)->toContain('Silver')
+        ->and($html)->not->toContain('m@site.test');
+
+    expect(trackedHtml(['gaId' => 'G-TEST123']))->not->toContain('"purchase"');
+});
+
+it("counts a payment once when both the webhook and the member's browser finish it", function () {
+    $member = User::create(['name' => 'M', 'email' => 'm@site.test', 'role' => 'user']);
+    $sub = paidByWebhook($member->id);
+
+    withBrowserSession();
+    $this->actingAs($member);
+    $track = new ReflectionMethod(MembershipController::class, 'trackPurchase');
+    $track->invoke(app(MembershipController::class), $sub);   // the verify page, after the webhook
+    $track->invoke(app(MembershipController::class), $sub);   // and a refresh of it
+
+    $html = trackedHtml(['gaId' => 'G-TEST123']);
+    expect(substr_count($html, '"transaction_id":"'.$sub->id.'"'))->toBe(1)
+        ->and(trackedHtml(['gaId' => 'G-TEST123']))->not->toContain('"purchase"');
+});
+
+it("another member's page never sends someone else's purchase", function () {
+    $buyer = User::create(['name' => 'B', 'email' => 'b@site.test', 'role' => 'user']);
+    $other = User::create(['name' => 'O', 'email' => 'o@site.test', 'role' => 'user']);
+    $sub = paidByWebhook($buyer->id);
+
+    withBrowserSession();
+    $this->actingAs($other);
+    expect(trackedHtml(['gaId' => 'G-TEST123']))->not->toContain('"purchase"');
+
+    $this->actingAs($buyer);
+    expect(trackedHtml(['gaId' => 'G-TEST123']))->toContain('"transaction_id":"'.$sub->id.'"');
+});
+
+it('a payment that is not paid is never sent', function () {
+    $member = User::create(['name' => 'M', 'email' => 'm@site.test', 'role' => 'user']);
+    $sub = Subscription::create(['user_id' => $member->id, 'plan_id' => '2', 'amount' => 100000, 'payment_status' => 'failed']);
+    \App\Support\PurchaseTracking::due($sub);
+
+    withBrowserSession();
+    $this->actingAs($member);
+    expect(trackedHtml(['gaId' => 'G-TEST123']))->not->toContain('"purchase"');
 });
