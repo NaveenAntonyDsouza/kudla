@@ -83,6 +83,10 @@ class AdminModules
     /** WhatsApp Channel pop-up, once per member. */
     public const CHANNEL_POPUP = 'module_channel_popup_enabled';
 
+    /** Matches (Recommended, Mutual, weekly email) list members seen in the last 30 days first, and the interest
+     *  box says when a member has never signed in (weekly review 23 Nov 2026). New: off by default. */
+    public const ACTIVE_FIRST = 'module_active_first_matches_enabled';
+
     public static function verificationCalls(): bool
     {
         return SiteSetting::getValue(self::VERIFICATION_CALLS, '0') === '1';
@@ -106,6 +110,15 @@ class AdminModules
     public static function paymentInsights(): bool
     {
         return SiteSetting::getValue(self::PAYMENT_INSIGHTS, '1') === '1';
+    }
+
+    public static function activeFirst(): bool
+    {
+        try {
+            return SiteSetting::getValue(self::ACTIVE_FIRST, '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function lastSeen(): bool

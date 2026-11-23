@@ -1,4 +1,8 @@
 @props(['profile'])
+@php
+    // 23 Nov 2026: say so before an interest goes to a member who has never signed in (switch: active-first matches)
+    $neverSignedIn = \App\Support\AdminModules::activeFirst() && $profile->user && ! $profile->user->last_login_at;
+@endphp
 @php $canWriteOwn = auth()->user()?->profile ? app(\App\Services\InterestService::class)->canWritePersonalMessage(auth()->user()->profile, $profile) : false; @endphp
 
 <div x-data="{ showModal: false, source: 'profile', selectedTemplate: 'msg_suitable', customMessage: '', submitting: false }"
@@ -12,6 +16,9 @@
         </svg>
         Send Interest
     </button>
+    @if($neverSignedIn)
+        <p data-never-signed-in style="margin: 6px 0 0; font-size: 12.5px; color: #92400e; text-align: center;">This member has not signed in yet, so a reply may take a long time.</p>
+    @endif
 
     {{-- Modal --}}
     <div x-show="showModal" x-cloak @keydown.escape.window="showModal = false"

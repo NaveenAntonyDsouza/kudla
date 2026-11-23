@@ -64,6 +64,7 @@ class SiteSettings extends Page implements HasForms
             // member site (16–17 Nov 2026 review): on by default since 18 Nov (owner), not set means on;
             // Last seen is the exception: off by default, on for Kudla only (owner, 18 Nov)
             AdminModules::LAST_SEEN => ($settings[AdminModules::LAST_SEEN] ?? '0') === '1',
+            AdminModules::ACTIVE_FIRST => ($settings[AdminModules::ACTIVE_FIRST] ?? '0') === '1',
             AdminModules::REFUSED_ADDRESSES => ($settings[AdminModules::REFUSED_ADDRESSES] ?? '1') === '1',
             AdminModules::PHOTO_BAR_MORE => ($settings[AdminModules::PHOTO_BAR_MORE] ?? '1') === '1',
             AdminModules::PHOTO_POPUP => ($settings[AdminModules::PHOTO_POPUP] ?? '1') === '1',
@@ -218,6 +219,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::LAST_SEEN)
                             ->label('Last seen on profiles')
                             ->helperText('Profile cards and the full profile say "Last seen 12 days ago", "Last seen 3 months ago" or "Not signed in yet". Today cards say "12d ago" (nothing for members not seen in a long time) and the full profile says "Last Login" with a date, which is the last EDIT date when no sign-in is on record. Visitors who are not signed in never see it on cards.'),
+
+                        Forms\Components\Toggle::make(AdminModules::ACTIVE_FIRST)
+                            ->label('Recently active members first in matches')
+                            ->helperText('Recommended, Mutual Matches and the weekly match email list members seen in the last 30 days first; the order inside each group stays the same. The Send Interest button also says when a member has never signed in. Starts off.'),
 
                         Forms\Components\Toggle::make(AdminModules::REFUSED_ADDRESSES)
                             ->label('Stop emailing addresses the mail server refuses')
@@ -560,7 +565,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER, AdminModules::PAYMENT_INSIGHTS,
-            AdminModules::LAST_SEEN, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
+            AdminModules::LAST_SEEN, AdminModules::ACTIVE_FIRST, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
             AdminModules::SUGGESTED_PREFS, AdminModules::FULL_NAME_PAID,
             'admin_two_step_required',
         ];

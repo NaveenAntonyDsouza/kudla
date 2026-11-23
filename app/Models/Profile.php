@@ -393,6 +393,20 @@ class Profile extends Model
      */
     public static function sortCompletedFirst(\Illuminate\Support\Collection $profiles, string $scoreKey): \Illuminate\Support\Collection
     {
+        // 23 Nov 2026 (weekly review): 36% of interests went to members away 30+ days and none was answered.
+        // With the switch on, members seen in the last 30 days come first; the order inside each group is unchanged.
+        if (\App\Support\AdminModules::activeFirst()) {
+            $since = now()->subDays(30);
+            $active = fn ($p) => (int) ($p->user?->last_login_at && $p->user->last_login_at->gte($since));
+
+            return $profiles->sortBy([
+                fn ($a, $b) => $active($b) <=> $active($a),
+                fn ($a, $b) => (int) $b->onboarding_completed <=> (int) $a->onboarding_completed,
+                fn ($a, $b) => (int) $b->has_photo <=> (int) $a->has_photo,
+                fn ($a, $b) => ($b->{$scoreKey} ?? 0) <=> ($a->{$scoreKey} ?? 0),
+            ])->values();
+        }
+
         return $profiles->sortBy([
             fn ($a, $b) => (int) $b->onboarding_completed <=> (int) $a->onboarding_completed,
             fn ($a, $b) => (int) $b->has_photo <=> (int) $a->has_photo,
