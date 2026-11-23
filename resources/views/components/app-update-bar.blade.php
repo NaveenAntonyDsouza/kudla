@@ -7,15 +7,15 @@
         $__icon = \App\Models\SiteSetting::getValue('apple_touch_icon_url', '') ?: \App\Models\SiteSetting::getValue('favicon_url', '');
     @endphp
     <div id="app-update-bar" role="status" style="background: var(--color-primary-light, #F5E7F5); border-bottom: 1px solid rgba(0,0,0,.06);">
-        <div style="max-width: 72rem; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px;">
+        <div style="max-width: 72rem; margin: 0 auto; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
             @if($__icon)
-                <img src="{{ $__icon }}" alt="" width="40" height="40" style="flex: none; width: 40px; height: 40px; border-radius: 10px;">
+                <img src="{{ $__icon }}" alt="" width="34" height="34" style="flex: none; width: 34px; height: 34px; border-radius: 9px;">
             @endif
             <div style="flex: 1; min-width: 0; line-height: 1.3;">
-                <div style="font-size: 14px; font-weight: 700; color: var(--color-primary, #64026A);">New version of the app</div>
-                <div style="font-size: 12.5px; color: #4b5563;">Get alerts on your phone for new interests and replies.</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--color-primary, #64026A);">App update ready</div>
+                <div style="font-size: 12.5px; color: #4b5563;">Get alerts for new interests and replies.</div>
             </div>
-            <a href="{{ \App\Support\AppUpdate::playUrl() }}" style="flex: none; display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 9999px; background: var(--color-primary, #64026A); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none;">Update</a>
+            <a href="{{ \App\Support\AppUpdate::playUrl() }}" style="flex: none; display: inline-flex; align-items: center; padding: 8px 14px; border-radius: 9999px; background: var(--color-primary, #64026A); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none;">Update</a>
             <button type="button" aria-label="Remind me later" style="flex: none; background: none; border: 0; padding: 4px; font-size: 13px; color: #6b7280; text-decoration: underline; cursor: pointer;"
                 onclick="try { document.cookie = '{{ \App\Support\AppUpdate::LATER_COOKIE }}=1; max-age=259200; path=/; secure; samesite=lax'; } catch (e) {} document.getElementById('app-update-bar').remove();">Later</button>
         </div>
