@@ -11,6 +11,12 @@ class RegisterStep1Request extends FormRequest
         return true;
     }
 
+    /** International sites: "+44" + "07700 900123" becomes "+447700900123" before the rules run. */
+    protected function prepareForValidation(): void
+    {
+        \App\Support\PhoneNumber::prepare($this);
+    }
+
     public function rules(): array
     {
         $userId = auth()->id();
@@ -22,7 +28,7 @@ class RegisterStep1Request extends FormRequest
                 'full_name' => 'required|string|min:2|max:100',
                 'gender' => 'required|in:male,female',
                 'date_of_birth' => ['required', 'date', new \App\Rules\OldEnoughToMarry($this->input('gender'))],
-                'phone' => 'required|digits:10|unique:users,phone,' . $userId,
+                'phone' => \App\Support\PhoneNumber::rules($userId),
                 'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email,' . $userId],
                 'password' => ['nullable', 'min:6', 'max:64'],
             ];
@@ -32,7 +38,7 @@ class RegisterStep1Request extends FormRequest
             'full_name' => 'required|string|min:2|max:100',
             'gender' => 'required|in:male,female',
             'date_of_birth' => ['required', 'date', new \App\Rules\OldEnoughToMarry($this->input('gender'))],
-            'phone' => 'required|digits:10|unique:users,phone',
+            'phone' => \App\Support\PhoneNumber::rules(),
             'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => ['required', 'min:6', 'max:64'],
             'accept_terms' => 'accepted',
@@ -41,7 +47,7 @@ class RegisterStep1Request extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return \App\Support\PhoneNumber::messages() + [
             'accept_terms.accepted' => 'Please tick the box to agree to the Privacy Policy and Terms of Use.',
             'phone.unique' => 'This phone number is already registered.',
             'email.unique' => 'This email is already registered.',

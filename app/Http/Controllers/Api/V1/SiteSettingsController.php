@@ -93,6 +93,11 @@ class SiteSettingsController extends BaseApiController
                     // Free Membership mode: every member has full premium
                     // access — the app must not show plans / a paywall.
                     'free_membership'             => User::freeMembershipEnabled(),
+                    // 24 Nov 2026: numbers from any country (send phone_code on sign-up), and members who see
+                    // no one until staff approve them (the app shows a "waiting for verification" screen)
+                    'international_phones'        => \App\Support\PhoneNumber::international(),
+                    'default_phone_code'          => \App\Support\PhoneNumber::defaultCode(),
+                    'browse_after_approval'       => self::bool(SiteSetting::getValue(\App\Support\ProfileVisibility::APPROVED_ONLY_SETTING, '0')),
                 ],
 
                 'registration' => [

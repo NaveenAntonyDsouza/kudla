@@ -35,6 +35,23 @@ final class ProfileVisibility
     /** "Only to those who match my Partner Preferences": the viewer must score at least this. */
     public const MATCH_THRESHOLD = 70;
 
+    /** Site setting: a new member sees no one until staff approve them (24 Nov 2026, the Catholic app: every member is
+     *  phoned and faith-checked first). Off by default: every other site behaves as before. */
+    public const APPROVED_ONLY_SETTING = 'browse_after_approval';
+
+    /** True when $viewer is still waiting for approval on a site that hides everyone until then. */
+    public static function viewerWaiting(Profile $viewer): bool
+    {
+        if ($viewer->is_approved !== false && (int) $viewer->is_approved !== 0) {
+            return false;
+        }
+        try {
+            return \App\Models\SiteSetting::getValue(self::APPROVED_ONLY_SETTING, '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /** Religions whose "same … only" box compares one field (as on the Settings page). */
     private const COMMUNITY_FIELD = ['christian' => 'denomination', 'hindu' => 'caste', 'jain' => 'caste', 'muslim' => 'muslim_sect'];
 
@@ -65,6 +82,10 @@ final class ProfileVisibility
     /** Everything a member's list needs (ProfileQueryFilters::baseQuery adds ordering and eager loads). */
     public static function forMember(Builder $query, Profile $viewer): Builder
     {
+        if (self::viewerWaiting($viewer)) {
+            return $query->whereRaw('1 = 0');           // waiting for approval: no lists at all
+        }
+
         self::live($query)
             ->where('profiles.id', '!=', $viewer->id)
             ->where('profiles.gender', '!=', $viewer->gender)

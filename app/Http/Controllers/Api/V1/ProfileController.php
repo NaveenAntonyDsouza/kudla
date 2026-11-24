@@ -537,6 +537,13 @@ class ProfileController extends BaseApiController
             ProfileAccessService::REASON_HIDDEN,
             ProfileAccessService::REASON_SUSPENDED => $this->notFound(),
 
+            ProfileAccessService::REASON_VIEWER_PENDING => ApiResponse::error(
+                'PENDING_APPROVAL',
+                'Your profile is waiting for verification. You can see other members once it is approved.',
+                null,
+                403,
+            ),
+
             ProfileAccessService::REASON_VISIBILITY_PREMIUM => ApiResponse::error(
                 'PREMIUM_REQUIRED',
                 'This profile is visible to premium members only.',

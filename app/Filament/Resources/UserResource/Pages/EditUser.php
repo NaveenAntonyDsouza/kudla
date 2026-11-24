@@ -154,7 +154,7 @@ class EditUser extends EditRecord
                 ->form([
                     \Filament\Forms\Components\CheckboxList::make('tasks')
                         ->label('On this call I')
-                        ->options(VerificationCalls::TASKS)
+                        ->options(VerificationCalls::tasks())
                         ->bulkToggleable(),
                     Textarea::make('notes')
                         ->label('Anything else (optional)')

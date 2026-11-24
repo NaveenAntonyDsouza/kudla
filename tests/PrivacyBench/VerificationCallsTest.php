@@ -468,6 +468,26 @@ it('records what the staff member says they did on the call, nothing ticked for 
     // the ticks are counted for the week, however the staff member did them
     $tasks = VerificationCalls::tasksDone(now()->subDay());
     expect($tasks['calls'])->toBe(1)->and($tasks['photo'])->toBe(1)->and($tasks['details'])->toBe(1)->and($tasks['plans'])->toBe(0);
+});
+
+it('adds this site\'s own checklist items after the usual ones, and records and counts them (24 Nov 2026)', function () {
+    expect(VerificationCalls::tasks())->toBe(VerificationCalls::TASKS);            // empty setting: the usual eight only
+
+    \App\Models\SiteSetting::setValue(VerificationCalls::EXTRA_TASKS_SETTING, "Asked the faith questions and the answers were right\n\n  Prayed together  \n");
+    expect(array_keys(VerificationCalls::tasks()))->toBe([...array_keys(VerificationCalls::TASKS), 'extra_1', 'extra_2'])
+        ->and(VerificationCalls::tasks()['extra_2'])->toBe('Prayed together')
+        ->and(array_keys(VerificationCalls::taskShort()))->toBe(array_keys(VerificationCalls::tasks()));
+
+    VerificationCalls::sync();
+    $row = ($this->row)('T');
+    $caller = User::find($row->assigned_to);
+    ($this->as)($caller);
+    expect(VerificationCalls::finishCall($caller, $row, ['extra_1', 'details'], null))->toContain('2 things done');
+    $note = ProfileNote::where('profile_id', $this->bench->m['T']->id)->where('note_type', 'call')->latest('id')->first();
+    expect($note->note)->toContain('asked the faith questions and the answers were right')
+        ->and(VerificationCalls::tasksDone(now()->subDay())['extra_1'])->toBe(1);
+
+    \App\Models\SiteSetting::setValue(VerificationCalls::EXTRA_TASKS_SETTING, '');
 
     // a note-only call is allowed, and Staff Activity counts both as calls
     $second = VerificationCall::whereIn('status', VerificationCall::OPEN)->where('assigned_to', $caller->id)->first();

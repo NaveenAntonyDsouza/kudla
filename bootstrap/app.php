@@ -61,6 +61,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Affiliate tracking — captures ?ref=CODE on every public web request
         $middleware->web(append: [
+            // "App only" sites: the website is the download page + information pages (off elsewhere)
+            \App\Http\Middleware\AppOnlyMode::class,
             \App\Http\Middleware\CaptureAffiliateRef::class,
             // Staff see the member site as visitors (the admin panel signs them in separately)
             \App\Http\Middleware\SignOutStaffFromMemberSite::class,

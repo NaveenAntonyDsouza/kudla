@@ -84,6 +84,36 @@ final class VerificationCalls
         'plans' => 'plans explained',
     ];
 
+    /** Site setting: this site's own extra checklist items, one per line (24 Nov 2026, the Catholic app's faith questions). */
+    public const EXTRA_TASKS_SETTING = 'verification_call_extra_tasks';
+
+    /** The checklist: the eight items above, then this site's own extra items (keys extra_1, extra_2, …). */
+    public static function tasks(): array
+    {
+        return self::TASKS + self::extraTasks();
+    }
+
+    /** tasks() in a few words, for the week's line on the calls page. */
+    public static function taskShort(): array
+    {
+        return self::TASK_SHORT + array_map(fn ($label) => Str::limit($label, 28), self::extraTasks());
+    }
+
+    private static function extraTasks(): array
+    {
+        try {
+            $lines = preg_split('/\R/', (string) \App\Models\SiteSetting::getValue(self::EXTRA_TASKS_SETTING, ''));
+        } catch (\Throwable) {
+            return [];
+        }
+        $extra = [];
+        foreach (array_values(array_filter(array_map('trim', $lines ?: []), fn ($l) => $l !== '')) as $i => $label) {
+            $extra['extra_'.($i + 1)] = Str::limit($label, 200, '');
+        }
+
+        return array_slice($extra, 0, 10, true);
+    }
+
     /** What can happen on a call, besides "verified" (the edit page's Save and mark checked). */
     public const RESULTS = [
         'no_answer' => 'No answer / switched off',
@@ -564,7 +594,7 @@ final class VerificationCalls
             throw new DomainException('This call is already finished ('.$row->label().'). Put it back on the list first.');
         }
         // keep only the known tasks, in the order they are listed
-        $done = array_values(array_intersect(array_keys(self::TASKS), $ticked));
+        $done = array_values(array_intersect(array_keys(self::tasks()), $ticked));
         $notes = Str::limit(trim((string) $notes), 500, '');
         if ($done === [] && $notes === '') {
             throw new DomainException('Tick what you did on the call, or write what happened.');
@@ -580,7 +610,8 @@ final class VerificationCalls
                 'done_by' => $staff->id,
             ] + (self::isCaller($staff) && (int) $row->assigned_to !== $staff->id ? ['assigned_to' => $staff->id, 'assigned_at' => now()] : []))->save();
 
-            $did = array_map(fn ($key) => lcfirst(self::TASKS[$key]), $done);
+            $tasks = self::tasks();
+            $did = array_map(fn ($key) => lcfirst($tasks[$key]), $done);
             ProfileNote::create([
                 'profile_id' => $row->profile_id,
                 'admin_user_id' => $staff->id,
@@ -836,7 +867,7 @@ final class VerificationCalls
      */
     public static function tasksDone(CarbonInterface $from): array
     {
-        $done = array_fill_keys(array_keys(self::TASKS), 0);
+        $done = array_fill_keys(array_keys(self::tasks()), 0);
         $done['calls'] = 0;
         try {
             $rows = \App\Models\AdminActivityLog::query()
@@ -848,7 +879,7 @@ final class VerificationCalls
                 $done['calls']++;
                 $tasks = is_array($changes) ? ($changes['tasks'] ?? []) : (json_decode((string) $changes, true)['tasks'] ?? []);
                 foreach ((array) $tasks as $task) {
-                    if (array_key_exists($task, self::TASKS)) {
+                    if (array_key_exists($task, $done) && $task !== 'calls') {
                         $done[$task]++;
                     }
                 }

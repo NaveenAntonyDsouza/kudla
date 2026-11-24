@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Hash;
  *   - 10–13 digits            → mobile; compared on the LAST 10 digits, so
  *                               "+91 98450 12345", "098450…", "9845012345"
  *                               all match however the number was stored
+ *   - any country's number    → also, where Site Settings → "Phone numbers from
+ *                               any country" is on (see internationalMatches)
  *
  * A mobile number can belong to more than one account where old data has
  * duplicates (phone is unique for new registrations). The password then
@@ -91,8 +93,13 @@ final class LoginIdentifier
         }
 
         $digits = preg_replace('/\D/', '', $input);
-        if (preg_match('/^[\d\s().+-]+$/', $input) && strlen($digits) >= 10 && strlen($digits) <= 13) {
-            return User::whereNotNull('phone')
+        if (! preg_match('/^[\d\s().+-]+$/', $input)) {
+            return collect();
+        }
+
+        $found = collect();
+        if (strlen($digits) >= 10 && strlen($digits) <= 13) {
+            $found = User::whereNotNull('phone')
                 ->whereRaw(
                     "SUBSTR(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '+', ''), '(', ''), ')', ''), '.', ''), -10) = ?",
                     [substr($digits, -10)]
@@ -100,7 +107,42 @@ final class LoginIdentifier
                 ->get();
         }
 
-        return collect();
+        // Sites that take numbers from any country (PhoneNumber::international()) store them as
+        // "+447700900123"; members type "+44 7700 900123", "07700 900123" or "412 345 678"
+        if (PhoneNumber::international()) {
+            $found = $found->merge(self::internationalMatches($input, $digits))->unique('id')->values();
+        }
+
+        return $found;
+    }
+
+    /**
+     * Accounts whose international number is the typed one: exactly, when it was typed with its
+     * country code ("+44…", "0044…"); otherwise the stored numbers that end with it after a
+     * 1–3 digit country code ("07700 900123" → "+44 7700900123", "0412 345 678" → "+61 412345678").
+     *
+     * @return Collection<int, User>
+     */
+    private static function internationalMatches(string $input, string $digits): Collection
+    {
+        if (str_starts_with($input, '+') || str_starts_with($digits, '00')) {
+            $e164 = PhoneNumber::international164(null, $input);
+
+            return $e164 ? User::where('phone', $e164)->get() : collect();
+        }
+
+        $national = ltrim($digits, '0');
+        if (strlen($national) < 6 || strlen($national) > 14) {
+            return collect();
+        }
+
+        return User::where('phone', 'like', '+%' . $national)->get()
+            ->filter(function (User $user) use ($national) {
+                $codeLength = strlen(preg_replace('/\D/', '', (string) $user->phone)) - strlen($national);
+
+                return $codeLength >= 1 && $codeLength <= 3;
+            })
+            ->values();
     }
 
     /**

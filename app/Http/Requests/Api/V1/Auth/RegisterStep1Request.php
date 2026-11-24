@@ -19,13 +19,20 @@ use App\Http\Requests\Api\V1\ApiFormRequest;
  */
 class RegisterStep1Request extends ApiFormRequest
 {
+    /** International sites: "phone_code" "+44" + "07700 900123" becomes "+447700900123" before the rules run. */
+    protected function prepareForValidation(): void
+    {
+        \App\Support\PhoneNumber::prepare($this);
+    }
+
     public function rules(): array
     {
         return [
             'full_name' => 'required|string|min:2|max:100',
             'gender' => 'required|in:male,female',
             'date_of_birth' => ['required', 'date', new \App\Rules\OldEnoughToMarry($this->input('gender'))],
-            'phone' => 'required|digits:10|unique:users,phone',
+            'phone' => \App\Support\PhoneNumber::rules(),
+            'phone_code' => 'nullable|string|max:6',
             'email' => ['required', 'email', new \App\Rules\NotMistypedEmail, 'unique:users,email'],
             'password' => 'required|string|min:6|max:64',
             'ref' => 'nullable|string|max:20',  // optional affiliate code
@@ -35,7 +42,7 @@ class RegisterStep1Request extends ApiFormRequest
 
     public function messages(): array
     {
-        return [
+        return \App\Support\PhoneNumber::messages() + [
             'phone.unique' => 'This phone number is already registered. Try logging in instead.',
             'email.unique' => 'This email is already registered. Try logging in instead.',
             'password.min' => 'Password must be at least 6 characters.',
@@ -50,7 +57,8 @@ class RegisterStep1Request extends ApiFormRequest
             'full_name' => ['description' => 'Full legal name. 2-100 characters.', 'example' => 'Naveen DSouza'],
             'gender' => ['description' => 'Either "male" or "female". Drives partner-search defaults + same-gender interest guards.', 'enum' => ['male', 'female'], 'example' => 'male'],
             'date_of_birth' => ['description' => 'YYYY-MM-DD. Minimum age is a site setting: by default 21 for men and 18 for women (legal age to marry in India).', 'example' => '1995-04-12'],
-            'phone' => ['description' => '10-digit phone number. Must be globally unique across users.', 'example' => '9876543210'],
+            'phone' => ['description' => '10-digit Indian mobile number. On sites with international numbers switched on (GET /site/settings → features.international_phones), the national number in any country (send phone_code too), or the full number starting with "+". Must be unique.', 'example' => '9876543210'],
+            'phone_code' => ['description' => 'Country dial code for phone, e.g. "+44". Only used when international numbers are on; defaults to the site default code.', 'required' => false, 'example' => '+91'],
             'email' => ['description' => 'Valid email address. Must be globally unique across users.', 'example' => 'naveen@example.com'],
             'password' => ['description' => '6-64 characters. Hashed with bcrypt before storage.', 'example' => 'choose-a-password'],
             'ref' => ['description' => 'Optional affiliate / referral code. Max 20 chars.', 'required' => false, 'example' => 'FRIEND2026'],

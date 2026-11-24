@@ -106,6 +106,10 @@ class SiteSettings extends Page implements HasForms
             'min_age_male' => $settings['min_age_male'] ?? (string) \App\Support\MinimumAge::DEFAULT_MALE,
             'min_age_female' => $settings['min_age_female'] ?? (string) \App\Support\MinimumAge::DEFAULT_FEMALE,
             'default_phone_code' => $settings['default_phone_code'] ?? '+91',
+            'international_phones' => ($settings['international_phones'] ?? '0') === '1',
+            'browse_after_approval' => ($settings['browse_after_approval'] ?? '0') === '1',
+            'app_only' => ($settings['app_only'] ?? '0') === '1',
+            'verification_call_extra_tasks' => $settings['verification_call_extra_tasks'] ?? '',
             'cascade_countries' => $settings['cascade_countries'] ?? '',
             'email_verification_enabled' => $settings['email_verification_enabled'] ?? '1',
             'phone_verification_enabled' => $settings['phone_verification_enabled'] ?? '0',
@@ -194,6 +198,12 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::VERIFICATION_CALLS)
                             ->label('Verification calls')
                             ->helperText('Every new member gets one call from staff to check their details (Today → Verification Calls). New members are shared out among staff whose role has "Take Verification Calls". Members who joined in the 30 days before you switch it on are included.'),
+
+                        Forms\Components\Textarea::make('verification_call_extra_tasks')
+                            ->label('Extra items on the call checklist')
+                            ->rows(3)
+                            ->placeholder("Asked the faith questions and the answers were right")
+                            ->helperText('Optional, one item per line (up to 10). They appear after the usual items when staff record a verification call, and are counted on the calls page. Leave empty to keep the usual list.'),
 
                         Forms\Components\Toggle::make(AdminModules::ASSISTED)
                             ->label('Assisted service')
@@ -374,6 +384,10 @@ class SiteSettings extends Page implements HasForms
                             ->placeholder('+91')
                             ->helperText('Pre-selected dial code on every phone field (registration, login, profile). e.g. "+91" for India, "+1" for USA. Users can still pick any country. Default: +91.'),
 
+                        Forms\Components\Toggle::make('international_phones')
+                            ->label('Phone numbers from any country')
+                            ->helperText('Sign-up accepts a mobile number from any country, saved with its country code (+44…). Off: a 10-digit Indian mobile, as today. For a worldwide site only; turn it on before members join.'),
+
                         Forms\Components\Toggle::make('show_diocese')
                             ->label('Show Diocese field')
                             ->helperText('Shows the Christian Diocese dropdown in registration & profile editing (it cascades from Denomination). Turn OFF for a global audience that has no single-country diocese list. Default: ON.'),
@@ -441,6 +455,10 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('auto_approve_profiles')
                             ->label('Auto-Approve Profiles')
                             ->helperText('Profiles go live immediately'),
+
+                        Forms\Components\Toggle::make('browse_after_approval')
+                            ->label('New members see others only after approval')
+                            ->helperText('Until staff approve a new profile, that member sees no one: no search, matches or profiles, and cannot send interests. Use with Auto-Approve Profiles off. Off: members can look around while they wait, as today.'),
 
                         Forms\Components\Toggle::make('auto_approve_profile_photos')
                             ->label('Auto-Approve Profile Photos'),
@@ -516,6 +534,10 @@ class SiteSettings extends Page implements HasForms
                             ->label('Apple App Store URL')
                             ->url()
                             ->placeholder('https://apps.apple.com/app/...'),
+
+                        Forms\Components\Toggle::make('app_only')
+                            ->label('App only (no member website)')
+                            ->helperText('The website becomes one page with the app download buttons, plus the privacy, terms, about, contact and other info pages. Website sign-up, sign-in and every member page send visitors to that page. The app, the admin panel and password-reset links keep working.'),
                     ])
                     ->columns(2),
 
@@ -568,6 +590,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::LAST_SEEN, AdminModules::ACTIVE_FIRST, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
             AdminModules::SUGGESTED_PREFS, AdminModules::FULL_NAME_PAID,
             'admin_two_step_required',
+            'international_phones', 'browse_after_approval', 'app_only',
         ];
 
         $jsonFields = ['canned_responses'];

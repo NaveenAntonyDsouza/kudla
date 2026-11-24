@@ -11,6 +11,11 @@ class HomeController extends Controller
 {
     public function index()
     {
+        // "App only" sites (24 Nov 2026): the home page is the app download page, for everyone
+        if (\App\Http\Middleware\AppOnlyMode::on()) {
+            return view('pages.app-only');
+        }
+
         if (auth()->check()) {
             return redirect()->route('dashboard');
         }

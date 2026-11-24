@@ -57,6 +57,9 @@ class ProfileAccessService
     public const REASON_VISIBILITY_COMMUNITY = 'visibility_community';
     public const REASON_UNAVAILABLE = 'unavailable';
 
+    /** The viewer is still waiting for approval on a site where new members see no one until then. */
+    public const REASON_VIEWER_PENDING = 'viewer_pending';
+
     /** Match-score threshold for target.show_profile_to = 'matches' gate. */
     public const MATCH_GATE_THRESHOLD = \App\Support\ProfileVisibility::MATCH_THRESHOLD;
 
@@ -70,6 +73,10 @@ class ProfileAccessService
     {
         if ($viewer->id === $target->id) {
             return self::REASON_SELF;
+        }
+
+        if (\App\Support\ProfileVisibility::viewerWaiting($viewer)) {
+            return self::REASON_VIEWER_PENDING;
         }
 
         if ($this->sameGender($viewer, $target)) {
