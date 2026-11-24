@@ -44,7 +44,8 @@ class AppOnlyMode
 
         $first = explode('/', trim($request->path(), '/'))[0];
         $admin = trim((string) config('app.admin_path', 'admin'), '/');
-        if ($first === $admin || in_array($first, self::OPEN, true)) {
+        // Livewire (the admin panel's sign-in and forms) answers at "livewire-<hash>/update"
+        if ($first === $admin || in_array($first, self::OPEN, true) || str_starts_with($first, 'livewire')) {
             return $next($request);
         }
 

@@ -138,6 +138,14 @@ it('makes the website one download page plus the information pages, only where t
     expect($home)->toContain('/child-safety');
     $this->getJson('/api/v1/site/settings')->assertOk();               // the app keeps working
     $this->post('/register', [])->assertNotFound();                    // no web sign-up
+
+    // the admin panel's sign-in and forms post to Livewire ("livewire-<hash>/update"): never blocked
+    $passed = false;
+    (new \App\Http\Middleware\AppOnlyMode)->handle(
+        \Illuminate\Http\Request::create('/livewire-be3af5a5/update', 'POST'),
+        function () use (&$passed) { $passed = true; return response('ok'); },
+    );
+    expect($passed)->toBeTrue();
 });
 
 it('shows signed-out visitors no members where members wait for approval', function () {
