@@ -96,11 +96,21 @@ it('shows a member nothing until approval, only where the setting is on', functi
     // the app learns it on sign-in and app start, so it can show a waiting screen
     $this->withToken($token)->getJson('/api/v1/auth/me')->assertJsonPath('data.profile.is_approved', false);
 
-    // approved members are not affected
+    // approved members are not affected, and they are told at once (in the app and by push)
     $viewer->forceFill(['is_approved' => true])->save();
     expect(ProfileVisibility::forMember(Profile::query(), $viewer->fresh())->count())->toBeGreaterThan(0);
     $this->app['auth']->forgetGuards();
     $this->withToken($token)->getJson('/api/v1/auth/me')->assertJsonPath('data.profile.is_approved', true);
+    $notice = \App\Models\Notification::where('user_id', $viewer->user_id)->where('type', 'profile_approved')->get();
+    expect($notice)->toHaveCount(1);
+    $listed = collect($this->withToken($token)->getJson('/api/v1/notifications?per_page=50')->json('data'))->firstWhere('type', 'profile_approved');
+    expect($listed['target']['screen'] ?? null)->toBe('home');
+
+    // where the setting is off, approval stays email-only, as before
+    SiteSetting::setValue(ProfileVisibility::APPROVED_ONLY_SETTING, '0');
+    $target->forceFill(['is_approved' => false])->save();
+    $target->forceFill(['is_approved' => true])->save();
+    expect(\App\Models\Notification::where('user_id', $target->user_id)->where('type', 'profile_approved')->count())->toBe(0);
 });
 
 it('makes the website one download page plus the information pages, only where the setting is on', function () {

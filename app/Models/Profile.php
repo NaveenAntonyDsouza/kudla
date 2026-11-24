@@ -209,7 +209,12 @@ class Profile extends Model
             // Deferred until the surrounding transaction commits (Filament
             // actions can run in one) so a rolled-back change never emails.
             // The service never throws, so this can't fail the save.
-            DB::afterCommit(fn () => app(MemberEmailService::class)->profileUpdated($profile, $approved, $completed));
+            DB::afterCommit(function () use ($profile, $approved, $completed) {
+                app(MemberEmailService::class)->profileUpdated($profile, $approved, $completed);
+                if ($approved) {
+                    \App\Support\ProfileVisibility::tellApproved($profile);   // approval-first sites only
+                }
+            });
         });
     }
 

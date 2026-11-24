@@ -318,13 +318,11 @@ class SettingsController extends BaseApiController
      | ================================================================== */
 
     /**
-     * Soft-delete the account. Sets is_active=false + is_hidden=true,
-     * stores the deletion reason (with optional free-form feedback
-     * folded in for "other"), then SoftDeletes the profile (auto-sets
-     * deleted_at via the Profile model trait), and revokes every
-     * Sanctum token so the current session is dropped too.
-     *
-     * Reactivation is admin-only — buyer's support team handles it.
+     * Delete the account, the same as the website's Delete Account. The profile is switched off and
+     * hidden at once (is_active=false, is_hidden=true), the reason is stored (the optional feedback
+     * folded in for "other"), and every token is revoked, so the member is signed out on every
+     * device. The member's details are erased 90 days later (members:erase-deleted); until then
+     * staff can cancel the deletion if the member asks.
      *
      * Schema note: there is NO `deletion_feedback` column. Optional
      * text is concatenated into `deletion_reason` like the web flow

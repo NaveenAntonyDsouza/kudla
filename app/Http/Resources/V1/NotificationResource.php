@@ -61,7 +61,7 @@ class NotificationResource extends JsonResource
     {
         return match ($type) {
             'interest_received', 'interest_accepted', 'interest_declined' => 'interest',
-            'profile_view', 'profile_changes_requested' => 'profile',
+            'profile_view', 'profile_changes_requested', 'profile_approved' => 'profile',
             'photo_request', 'photo_request_approved', 'photo_added',
             'photo_approved', 'photo_rejected' => 'photo',
             'id_proof_approved', 'id_proof_rejected',
@@ -98,6 +98,7 @@ class NotificationResource extends JsonResource
             'photo_added' => ($id = $int($data['owner_profile_id'] ?? $fromProfileId)) ? $to('profile', $id) : $to('photo_requests'),
             'photo_approved', 'photo_rejected' => $to('my_photos'),
             'profile_changes_requested' => $to('my_profile'),
+            'profile_approved' => $to('home'),   // approval-first sites: the member can start
             'id_proof_approved', 'id_proof_rejected',
             'document_approved', 'document_rejected' => $to('my_documents'),
             'membership_expiring', 'membership_expired', 'plan_changed' => $to('membership'),

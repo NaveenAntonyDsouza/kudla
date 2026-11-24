@@ -52,6 +52,27 @@ final class ProfileVisibility
         }
     }
 
+    /**
+     * Where waiting members see no one (APPROVED_ONLY_SETTING), tell the member in the app and by
+     * push the moment staff approve them, so they know they can start (24 Nov 2026). Never throws.
+     */
+    public static function tellApproved(Profile $profile): void
+    {
+        try {
+            if (\App\Models\SiteSetting::getValue(self::APPROVED_ONLY_SETTING, '0') !== '1' || ! $profile->user) {
+                return;
+            }
+            app(\App\Services\NotificationService::class)->send(
+                $profile->user,
+                'profile_approved',
+                'Your profile is approved',
+                'Welcome! You can now see other members and send interests.',
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
     /** Religions whose "same … only" box compares one field (as on the Settings page). */
     private const COMMUNITY_FIELD = ['christian' => 'denomination', 'hindu' => 'caste', 'jain' => 'caste', 'muslim' => 'muslim_sect'];
 

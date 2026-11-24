@@ -117,7 +117,8 @@ Route::prefix('v1')->group(function () {
     // - /contact                        (week 4)
 
     // ── Auth required ───────────────────────────────────────────
-    Route::middleware('auth:sanctum')->group(function () {
+    // EnsureApiAccountActive: deleted / suspended / banned accounts stop at once, as on the website
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureApiAccountActive::class])->group(function () {
         Route::get('/auth/ping', fn (Request $request) => ApiResponse::ok([
             'user_id' => $request->user()->id,
             'message' => 'authenticated',

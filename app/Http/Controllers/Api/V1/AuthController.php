@@ -490,10 +490,12 @@ class AuthController extends BaseApiController
      */
     private function handleLoginVerify(User $user, string $deviceName, string $loginType): JsonResponse
     {
-        if (! $user->is_active) {
+        // The website's gate (24 Nov 2026): deleted (Delete Account), deactivated, suspended and
+        // banned accounts cannot sign in, not only a switched-off user row
+        if ($blocked = $user->blockedStatus()) {
             return ApiResponse::error(
                 code: 'PROFILE_SUSPENDED',
-                message: 'This account is currently inactive. Contact support.',
+                message: User::blockedStatusMessage($blocked),
                 status: 403,
             );
         }
