@@ -61,7 +61,7 @@
                 <a class="store" href="{{ $apple }}" rel="noopener"><span><small>Download on the</small>App Store</span></a>
             @endif
             @if(! $play && ! $apple)
-                <p class="soon">The {{ $siteName }} app is coming soon.</p>
+                <p class="soon">{{ preg_match('/\bapp$/i', trim($siteName)) ? $siteName : 'The '.$siteName.' app' }} is coming soon.</p>
             @endif
         </div>
     </main>
