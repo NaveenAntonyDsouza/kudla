@@ -53,6 +53,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'profile.complete.member' => \App\Http\Middleware\EnsureProfileCompleteWhenLoggedIn::class, // shared visitor/member pages
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            // The app API's limits: one counter per route (plain "throttle" shares one per member)
+            'throttle.route' => \App\Http\Middleware\ThrottlePerRoute::class,
         ]);
 
         // Written by the Kudla app (its push token) and by the "Later" button of the app update

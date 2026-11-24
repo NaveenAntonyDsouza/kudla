@@ -54,6 +54,21 @@ final class DeviceRegistry
         Device::where('user_id', $user->id)->where('fcm_token', $token)->update(['is_active' => false]);
     }
 
+    /**
+     * App sign-in tokens revoked (sign-out, password change, Delete Account): the phones they belonged
+     * to stop getting pushes too. (24 Nov 2026: POST /auth/logout deleted the token but the phone kept
+     * getting the member's pushes, e.g. "New Message", after signing out.)
+     *
+     * @param  iterable<int>  $accessTokenIds
+     */
+    public static function tokensRevoked(User $user, iterable $accessTokenIds): void
+    {
+        $ids = collect($accessTokenIds)->filter()->map(fn ($id) => (int) $id)->values()->all();
+        if ($ids !== []) {
+            Device::where('user_id', $user->id)->whereIn('personal_access_token_id', $ids)->update(['is_active' => false]);
+        }
+    }
+
     /** Logout event: a member signing out in the Kudla app stops that phone's pushes. */
     public static function loggedOut(\Illuminate\Auth\Events\Logout $event): void
     {

@@ -55,10 +55,10 @@ class SettingsController extends BaseApiController
      * @response 200 scenario="success" {
      *   "success": true,
      *   "data": {
-     *     "visibility": {"show_profile_to": "all", "only_same_religion": false, "only_same_denomination": false, "only_same_mother_tongue": false, "is_hidden": false},
-     *     "alerts": {"email_interest": true, "push_interest": true, "quiet_hours_start": null, "quiet_hours_end": null, ...},
+     *     "visibility": {"show_profile_to": "all", "only_same_religion": false, "only_same_denomination": false, "only_same_mother_tongue": false, "search_visible_to_older": true, "search_visible_to_taller": true, "search_visible_to_younger": true, "search_visible_to_shorter": true, "is_hidden": false},
+     *     "alerts": {"email_interest": true, "email_accepted": true, "email_declined": true, "email_photos": true, "email_views": true, "email_weekly_matches": true, "email_reengagement": true, "email_promotions": true, "whatsapp_photos": true, "push_interest": true, "push_photos": true, "push_account": true, "quiet_hours_start": null, "quiet_hours_end": null},
      *     "auth": {"has_password": true},
-     *     "account": {"email": "...", "phone": "...", "email_verified": true, "phone_verified": true}
+     *     "account": {"email": "maria@example.com", "phone": "+447700900123", "email_verified": false, "phone_verified": false}
      *   }
      * }
      * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
@@ -404,8 +404,10 @@ class SettingsController extends BaseApiController
             return 0;
         }
 
-        $count = $user->tokens()->where('id', '!=', $currentId)->count();
-        $user->tokens()->where('id', '!=', $currentId)->delete();
+        $ids = $user->tokens()->where('id', '!=', $currentId)->pluck('id');
+        \App\Support\DeviceRegistry::tokensRevoked($user, $ids);  // those phones stop getting pushes too
+        $user->tokens()->whereIn('id', $ids)->delete();
+        $count = $ids->count();
 
         return $count;
     }

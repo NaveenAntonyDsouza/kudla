@@ -41,8 +41,8 @@ class RegistrationController extends BaseApiController
      * @response 201 scenario="success" {
      *   "success": true,
      *   "data": {
-     *     "user": { "id": 42, "name": "Naveen", "email": "naveen@example.com", "phone": "9876543210" },
-     *     "profile": { "matri_id": "AM100042", "onboarding_step_completed": 1, "onboarding_completed": false, "is_approved": true },
+     *     "user": {"id": 42, "name": "Maria Fernandes", "email": "maria@example.com", "phone": "+447700900123", "role": "user", "branch_id": null, "is_active": true, "email_verified_at": null, "phone_verified_at": null, "last_login_at": null, "created_at": "2026-11-20T18:02:11+00:00"},
+     *     "profile": {"matri_id": "CA100042", "onboarding_step_completed": 1, "onboarding_completed": false, "is_approved": false},
      *     "token": "5|WGNdkrOzGwpNR...",
      *     "next_step": "register.step-2"
      *   }
@@ -183,8 +183,8 @@ class RegistrationController extends BaseApiController
      *   "data": {
      *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true},
      *     "user": {"email_verified_at": null, "phone_verified_at": null},
-     *     "next_step": "verify.email",
-     *     "email_verification_enabled": true,
+     *     "next_step": "complete",
+     *     "email_verification_enabled": false,
      *     "phone_verification_enabled": false
      *   }
      * }

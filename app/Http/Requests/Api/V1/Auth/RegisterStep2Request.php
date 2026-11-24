@@ -28,7 +28,7 @@ class RegisterStep2Request extends WebRegisterStep2Request
         return [
             // Physical. complexion / body_type / physical_status (+DA) and
             // family_status are deferred to onboarding step 1 — optional here.
-            'height' => ['description' => 'Free-form height label (e.g. "170 cm - 5 ft 07 inch"). Stored as written.', 'example' => '170 cm - 5 ft 07 inch'],
+            'height' => ['description' => 'Height label from GET /reference/heights (e.g. "170 cm - 5 ft 07 inch"). Stored as written.', 'example' => '170 cm - 5 ft 07 inch'],
             'complexion' => ['description' => 'Self-described complexion. Optional — collected in onboarding step 1. Reference list at GET /reference/complexions.', 'required' => false],
             'body_type' => ['description' => 'Body type. Optional — collected in onboarding step 1. Reference list at GET /reference/body-types.', 'required' => false],
             'physical_status' => ['description' => 'Physical status. Optional — collected in onboarding step 1.', 'required' => false],
@@ -36,16 +36,16 @@ class RegisterStep2Request extends WebRegisterStep2Request
             'da_category_other' => ['description' => 'Free-text DA category when da_category="Other". Max 50.', 'required' => false],
             'da_description' => ['description' => 'Free-text DA description. Max 500.', 'required' => false],
             // Marital
-            'marital_status' => ['description' => 'Marital status. Reference list at GET /reference/marital-statuses.', 'example' => 'Never Married'],
+            'marital_status' => ['description' => 'Marital status. Reference list at GET /reference/marital-statuses.', 'example' => 'Unmarried'],
             'children_with_me' => ['description' => 'Children currently living with the user. 0+.', 'required' => false, 'example' => 0],
             'children_not_with_me' => ['description' => 'Children not currently living with the user. 0+.', 'required' => false, 'example' => 0],
             'family_status' => ['description' => 'Family status. Optional — collected in onboarding step 1. Reference list at GET /reference/family-statuses.', 'required' => false],
             // Languages
-            'mother_tongue' => ['description' => 'Mother tongue (required). Core match field. Reference list at GET /reference/languages.', 'example' => 'Tulu'],
+            'mother_tongue' => ['description' => 'Mother tongue (required). Core match field. Reference list at GET /reference/languages.', 'example' => 'English'],
             'languages_known' => ['description' => 'Other languages known (optional, array). Stored on lifestyle info.', 'required' => false, 'example' => ['English', 'Hindi']],
             // Religion
-            'religion' => ['description' => 'Religion (Hindu/Christian/Muslim/Jain/Other). Drives downstream conditional fields.', 'example' => 'Hindu'],
-            'denomination' => ['description' => 'Christian denomination. Required when religion="Christian".', 'required' => false],
+            'religion' => ['description' => 'Religion, from GET /reference/religions (the Catholic app lists only "Christian"). Drives downstream conditional fields.', 'example' => 'Christian'],
+            'denomination' => ['description' => 'Christian denomination (church), from GET /reference/denominations. Required when religion="Christian".', 'required' => false, 'example' => 'Roman Catholic'],
             'other_denomination_name' => ['description' => 'Typed denomination when denomination="Other" (covers rare Eastern Catholic rites and breakaway groups in either Catholic or Non-Catholic).', 'required' => false],
             'diocese' => ['description' => 'Diocese (Christian).', 'required' => false],
             'diocese_name' => ['description' => 'Diocese name (Christian, free-text).', 'required' => false],

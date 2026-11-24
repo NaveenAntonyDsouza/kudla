@@ -23,11 +23,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *   - `from_profile_id` is included when the notification carries a
  *     reference to another profile (interest sender, viewer, etc.)
  *     so Flutter can navigate without an extra round trip.
- *   - `target` is {screen, id, section} or null. The server owns the
+ *   - `target` is {screen, id, section, matri_id} or null (matri_id only for screen "profile"). The server owns the
  *     type → screen mapping so new notification types don't need an app
  *     release to open the right place. Screen keys are stable:
- *       interest (id = interest id) · interests · profile (id = profile
- *       id) · photo_requests · my_photos · my_profile (section = which
+ *       home · interest (id = interest id) · interests · profile (id = profile
+ *       id, matri_id = member ID to open) · photo_requests · my_photos · my_profile (section = which
  *       part to complete) · my_documents · membership
  */
 class NotificationResource extends JsonResource
@@ -50,6 +50,22 @@ class NotificationResource extends JsonResource
             'from_profile_id' => $fromProfileId,
             'target' => self::target($type, is_array($data) ? $data : [], $fromProfileId),
         ];
+    }
+
+    /** @var array<int, string|null> member IDs already looked up in this request */
+    private static array $matriIds = [];
+
+    private static function matriIdOf(int $profileId): ?string
+    {
+        if (! array_key_exists($profileId, self::$matriIds)) {
+            try {
+                self::$matriIds[$profileId] = \App\Models\Profile::whereKey($profileId)->value('matri_id');
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        return self::$matriIds[$profileId];
     }
 
     /**
@@ -80,10 +96,14 @@ class NotificationResource extends JsonResource
      */
     public static function target(string $type, array $data, ?int $fromProfileId): ?array
     {
+        // matri_id: for screen "profile" the member ID the app opens it with (GET /profiles/{matri_id});
+        // the numeric id alone could not be opened (24 Nov 2026). Left out for profile views, which
+        // can be a paid feature.
         $to = fn (string $screen, ?int $id = null, ?string $section = null) => [
             'screen' => $screen,
             'id' => $id,
             'section' => $section,
+            'matri_id' => $screen === 'profile' && $id && $type !== 'profile_view' ? self::matriIdOf($id) : null,
         ];
         $int = fn ($v) => is_numeric($v) ? (int) $v : null;
 

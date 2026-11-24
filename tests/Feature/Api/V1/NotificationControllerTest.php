@@ -271,10 +271,11 @@ it('markRead marks a single notification as read', function () {
     );
 
     expect($response->getStatusCode())->toBe(200);
-    expect($response->getData(true)['data']['notification'])->toBe([
-        'id' => (int) $notification->id,
-        'is_read' => true,
-    ]);
+    // the whole notification, as in the list, so a push tap knows where to go (target)
+    $answer = $response->getData(true)['data']['notification'];
+    expect($answer['id'])->toBe((int) $notification->id)
+        ->and($answer['is_read'])->toBeTrue()
+        ->and($answer)->toHaveKeys(['type', 'title', 'message', 'created_at', 'icon_type', 'target']);
     expect($notification->fresh()->is_read)->toBeTrue();
 });
 

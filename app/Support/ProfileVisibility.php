@@ -52,6 +52,15 @@ final class ProfileVisibility
         }
     }
 
+    private static function approvedOnlySite(): bool
+    {
+        try {
+            return \App\Models\SiteSetting::getValue(self::APPROVED_ONLY_SETTING, '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /**
      * Where waiting members see no one (APPROVED_ONLY_SETTING), tell the member in the app and by
      * push the moment staff approve them, so they know they can start (24 Nov 2026). Never throws.
@@ -85,9 +94,17 @@ final class ProfileVisibility
             ->where(fn ($w) => $w->whereNull('profiles.suspension_status')->orWhereNotIn('profiles.suspension_status', self::NOT_LISTED_STATUSES));
     }
 
-    /** Visitors (not signed in) meet no limit, so they see only members who set none. */
+    /**
+     * Visitors (not signed in) meet no limit, so they see only members who set none. Where members
+     * see no one until approved (APPROVED_ONLY_SETTING), visitors see no one at all (24 Nov 2026:
+     * the app API's public /discover lists still showed members of the Catholic app to anyone).
+     */
     public static function forVisitors(Builder $query): Builder
     {
+        if (self::approvedOnlySite()) {
+            return $query->whereRaw('1 = 0');
+        }
+
         return self::live($query)
             ->where(fn ($w) => $w->whereNull('profiles.show_profile_to')->orWhereNotIn('profiles.show_profile_to', ['premium', 'matches']))
             ->where(fn ($w) => $w->where('profiles.only_same_religion', false)->orWhereNull('profiles.only_same_religion'))

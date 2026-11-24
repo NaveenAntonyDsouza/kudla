@@ -93,7 +93,7 @@ class InterestController extends BaseApiController
      *
      * @response 200 scenario="success" {
      *   "success": true,
-     *   "data": [{"id": 42, "direction": "received", "status": "pending"}],
+     *   "data": [{"id": 42, "direction": "received", "status": "pending", "template_id": null, "custom_message": "Hello", "is_starred": false, "is_trashed": false, "can_cancel": false, "can_act": true, "is_chat_open": false, "other_profile": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "replies": [], "created_at": "2026-11-24T09:00:00+00:00", "updated_at": "2026-11-24T09:05:00+00:00"}],
      *   "meta": {"page": 1, "per_page": 20, "total": 12, "last_page": 1, "tab": "received"}
      * }
      *
@@ -226,7 +226,7 @@ class InterestController extends BaseApiController
      *
      * @urlParam interest integer required Interest id.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "status": "accepted", "replies": []}}
+     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "direction": "received", "status": "accepted", "template_id": null, "custom_message": "Hello", "is_starred": false, "is_trashed": false, "can_cancel": false, "can_act": false, "is_chat_open": true, "other_profile": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "replies": [{"id": 7, "type": "accept", "replier_profile_id": 12, "template_id": null, "text": null, "is_silent_decline": false, "created_at": "2026-11-24T09:05:00+00:00"}], "created_at": "2026-11-24T09:00:00+00:00", "updated_at": "2026-11-24T09:05:00+00:00"}}
      * @response 403 scenario="not-party" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "..."}}
      * @response 404 scenario="not-found" {"success": false, "error": {"code": "NOT_FOUND", "message": "..."}}
      */
@@ -265,7 +265,8 @@ class InterestController extends BaseApiController
      * @bodyParam template_id string Opaque template identifier (optional).
      * @bodyParam custom_message string Personalized text (optional, premium-gated unless target's plan has allows_free_member_chat=true).
      *
-     * @response 201 scenario="success" {"success": true, "data": {"id": 42, "status": "pending"}}
+     * @response 201 scenario="success" {"success": true, "data": {"id": 42, "direction": "sent", "status": "pending", "template_id": null, "custom_message": "Hello", "is_starred": false, "is_trashed": false, "can_cancel": true, "can_act": false, "is_chat_open": false, "other_profile": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "replies": [], "created_at": "2026-11-24T09:00:00+00:00", "updated_at": "2026-11-24T09:05:00+00:00"}}
+     * @response 422 scenario="not-possible" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "You already have an active interest with this profile."}}
      * @response 404 scenario="target-not-found" {"success": false, "error": {"code": "NOT_FOUND", "message": "Profile not available."}}
      * @response 422 scenario="invalid-interest" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "Cannot send interest to this profile."}}
      * @response 422 scenario="no-profile" {"success": false, "error": {"code": "PROFILE_REQUIRED", "message": "..."}}
@@ -319,7 +320,7 @@ class InterestController extends BaseApiController
      * @bodyParam template_id string Optional reply template id.
      * @bodyParam custom_message string Optional acceptance message text.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "status": "accepted"}}
+     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "direction": "received", "status": "accepted", "template_id": null, "custom_message": "Hello", "is_starred": false, "is_trashed": false, "can_cancel": false, "can_act": false, "is_chat_open": true, "other_profile": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "replies": [{"id": 7, "type": "accept", "replier_profile_id": 12, "template_id": null, "text": null, "is_silent_decline": false, "created_at": "2026-11-24T09:05:00+00:00"}], "created_at": "2026-11-24T09:00:00+00:00", "updated_at": "2026-11-24T09:05:00+00:00"}}
      * @response 403 scenario="not-receiver" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "..."}}
      * @response 422 scenario="not-pending" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "..."}}
      */
@@ -379,7 +380,7 @@ class InterestController extends BaseApiController
      * @bodyParam custom_message string Optional decline message text.
      * @bodyParam silent boolean If true, no notification fires to the sender. Default false.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "status": "declined"}}
+     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "direction": "received", "status": "declined", "template_id": null, "custom_message": "Hello", "is_starred": false, "is_trashed": false, "can_cancel": false, "can_act": false, "is_chat_open": false, "other_profile": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "replies": [{"id": 8, "type": "decline", "replier_profile_id": 12, "template_id": null, "text": null, "is_silent_decline": false, "created_at": "2026-11-24T09:05:00+00:00"}], "created_at": "2026-11-24T09:00:00+00:00", "updated_at": "2026-11-24T09:05:00+00:00"}}
      * @response 403 scenario="not-receiver" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "..."}}
      * @response 422 scenario="not-pending" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "..."}}
      */
@@ -436,7 +437,7 @@ class InterestController extends BaseApiController
      *
      * @group Interests
      *
-     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "status": "cancelled"}}
+     * @response 200 scenario="success" {"success": true, "data": {"id": 42, "direction": "sent", "status": "cancelled", "template_id": null, "custom_message": null, "is_starred": false, "is_trashed": false, "can_cancel": false, "can_act": false, "is_chat_open": false, "other_profile": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "replies": [], "created_at": "2026-11-24T09:00:00+00:00", "updated_at": "2026-11-24T09:05:00+00:00"}}
      * @response 403 scenario="not-sender" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "..."}}
      * @response 422 scenario="not-pending" {"success": false, "error": {"code": "INVALID_INTEREST", "message": "..."}}
      * @response 422 scenario="window-expired" {"success": false, "error": {"code": "CANCEL_WINDOW_EXPIRED", "message": "..."}}

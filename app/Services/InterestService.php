@@ -90,8 +90,9 @@ class InterestService
             ->first();
 
         if ($declined && $declined->updated_at->diffInDays(now()) < 30) {
-            $daysLeft = 30 - $declined->updated_at->diffInDays(now());
-            throw new \RuntimeException("You can re-send interest after {$daysLeft} days.");
+            // whole days (Carbon 3 gives fractions: "after 29.999968104757 days")
+            $daysLeft = max(1, (int) ceil(30 - $declined->updated_at->diffInDays(now())));
+            throw new \RuntimeException('You can re-send interest after '.$daysLeft.' '.($daysLeft === 1 ? 'day' : 'days').'.');
         }
 
         // Also check reverse direction — if receiver already sent to sender

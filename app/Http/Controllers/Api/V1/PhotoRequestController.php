@@ -188,8 +188,8 @@ class PhotoRequestController extends BaseApiController
      * @response 200 scenario="success" {
      *   "success": true,
      *   "data": {
-     *     "received": [{"id": 1, "requester": {...}, "status": "pending", "created_at": "..."}],
-     *     "sent": [{"id": 2, "target": {...}, "status": "approved", "created_at": "..."}]
+     *     "received": [{"id": 1, "requester": {"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "status": "pending", "created_at": "2026-11-24T09:00:00+00:00"}],
+     *     "sent": [{"id": 2, "target": {"matri_id": "CA100015", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": null, "match_badge": null, "is_shortlisted": false, "interest_status": null, "is_blocked": false}, "status": "approved", "created_at": "2026-11-23T18:00:00+00:00"}]
      *   }
      * }
      *

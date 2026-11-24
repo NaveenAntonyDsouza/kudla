@@ -17,9 +17,9 @@ class RegisterStep5Request extends WebRegisterStep5Request
     public function bodyParameters(): array
     {
         return [
-            'created_by' => ['description' => 'Who is creating this profile (Self / Parent / Sibling / Friend / Relative).', 'example' => 'Self'],
+            'created_by' => ['description' => 'Who is creating this profile, from GET /reference/created-by (the same as step 4). On a dating app send "Self / Candidate".', 'example' => 'Self / Candidate'],
             'creator_name' => ['description' => 'Name of the person creating the profile.', 'example' => 'Naveen DSouza'],
-            'creator_contact_number' => ['description' => 'Contact number of the creator. Up to 15 chars.', 'example' => '9876543210'],
+            'creator_contact_number' => ['description' => 'Contact number of the creator. Up to 15 chars.', 'example' => '+447700900123'],
             'how_did_you_hear_about_us' => ['description' => 'Acquisition channel — used for marketing analytics.', 'required' => false, 'example' => 'Friend referral'],
         ];
     }

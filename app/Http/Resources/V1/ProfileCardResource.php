@@ -160,9 +160,10 @@ class ProfileCardResource extends JsonResource
         // try/catch — same defensive pattern as ProfileResource::
         // isPremiumSafely. Production tables always exist; test env
         // falls through to "not premium" silently.
+        // On a free site everyone counts as premium, so the badge would sit on every card (24 Nov 2026)
         if ($profile->user && $profile->user->relationLoaded('userMemberships')) {
             try {
-                if ($profile->user->isPremium()) {
+                if (! \App\Models\User::freeMembershipEnabled() && $profile->user->isPremium()) {
                     $badges[] = 'premium';
                 }
             } catch (\Throwable $e) {

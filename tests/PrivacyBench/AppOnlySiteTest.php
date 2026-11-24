@@ -139,3 +139,17 @@ it('makes the website one download page plus the information pages, only where t
     $this->getJson('/api/v1/site/settings')->assertOk();               // the app keeps working
     $this->post('/register', [])->assertNotFound();                    // no web sign-up
 });
+
+it('shows signed-out visitors no members where members wait for approval', function () {
+    Bench::build();
+    expect(ProfileVisibility::forVisitors(Profile::query())->count())->toBeGreaterThan(0);   // off: as before
+
+    SiteSetting::setValue(ProfileVisibility::APPROVED_ONLY_SETTING, '1');
+    expect(ProfileVisibility::forVisitors(Profile::query())->count())->toBe(0);
+    // the app API's public browse lists (no token) are empty too
+    $this->app['auth']->forgetGuards();
+    $first = collect($this->getJson('/api/v1/discover/nri-matrimony')->json('data.subcategories') ?? $this->getJson('/api/v1/discover/nri-matrimony')->json('data'))->first();
+    if (is_array($first) && isset($first['slug'])) {
+        $this->getJson('/api/v1/discover/nri-matrimony/'.$first['slug'])->assertOk()->assertJsonCount(0, 'data');
+    }
+});

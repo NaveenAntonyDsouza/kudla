@@ -55,7 +55,7 @@ class AuthController extends BaseApiController
      * @bodyParam phone string required 10-digit phone number. Example: 9876543210
      * @bodyParam purpose string required One of: register | login | reset.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in": 300}}
+     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in_seconds": 600, "cooldown_seconds": 30}}
      * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "Please check the fields below.", "fields": {"phone": ["The phone field is required."]}}}
      * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many requests. Try again in {n} seconds."}}
      */
@@ -116,7 +116,7 @@ class AuthController extends BaseApiController
      * @bodyParam purpose string required One of: register | login | reset.
      * @bodyParam device_name string Optional device label (max 60 chars). Used on login token.
      *
-     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "profile": {"matri_id": "AM100042", "onboarding_completed": true, "is_approved": true}, "next_step": "dashboard"}}
+     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true}, "membership": {"plan": "Free", "ends_at": null, "is_premium": false}, "next_step": "dashboard"}}
      * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
      * @response 422 scenario="otp-invalid-or-expired" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
      */
@@ -172,7 +172,7 @@ class AuthController extends BaseApiController
      * @bodyParam email string required Valid email address.
      * @bodyParam purpose string required One of: register | login | reset.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in": 300}}
+     * @response 200 scenario="success" {"success": true, "data": {"sent": true, "expires_in_seconds": 600, "cooldown_seconds": 30}}
      * @response 422 scenario="login-disabled" {"success": false, "error": {"code": "OTP_INVALID", "message": "Email OTP login is not enabled."}}
      * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"email": ["..."]}}}
      * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many requests. Try again in {n} seconds."}}
@@ -216,7 +216,7 @@ class AuthController extends BaseApiController
      * @bodyParam purpose string required One of: register | login | reset.
      * @bodyParam device_name string Optional device label (max 60 chars). Used on login token.
      *
-     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "profile": {"matri_id": "AM100042", "onboarding_completed": true, "is_approved": true}, "next_step": "dashboard"}}
+     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true}, "membership": {"plan": "Free", "ends_at": null, "is_premium": false}, "next_step": "dashboard"}}
      * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
      * @response 422 scenario="otp-invalid" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
      */
@@ -273,15 +273,16 @@ class AuthController extends BaseApiController
      *   "success": true,
      *   "data": {
      *     "token": "5|abc123...",
-     *     "user": {"id": 42, "name": "Naveen", "email": "naveen@example.com"},
-     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true},
-     *     "membership": {"is_premium": false},
+     *     "user": {"id": 42, "name": "Maria Fernandes", "email": "maria@example.com", "phone": "+447700900123", "role": "user", "branch_id": null, "is_active": true, "email_verified_at": null, "phone_verified_at": null, "last_login_at": "2026-11-24T09:36:07+00:00", "created_at": "2026-11-20T18:02:11+00:00"},
+     *     "profile": {"matri_id": "CA100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true},
+     *     "membership": {"plan": "Free", "ends_at": null, "is_premium": false},
      *     "next_step": "dashboard"
      *   }
      * }
      * @response 401 scenario="bad-credentials" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "Invalid login details or password."}}
+     * @response 403 scenario="account-blocked" {"success": false, "error": {"code": "PROFILE_SUSPENDED", "message": "Your account is temporarily suspended. Please contact support for assistance."}}
      * @response 422 scenario="validation-failed" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"login": ["..."]}}}
-     * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many attempts. Try again later."}}
+     * @response 429 scenario="throttled" {"success": false, "error": {"code": "THROTTLED", "message": "Too many requests. Try again in 60 seconds."}}
      */
     public function loginPassword(Request $request): JsonResponse
     {
@@ -364,7 +365,7 @@ class AuthController extends BaseApiController
      * @bodyParam password string required New password (6-64 chars).
      * @bodyParam password_confirmation string required Must match password.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"reset": true, "message": "Password updated. Please sign in again."}}
+     * @response 200 scenario="success" {"success": true, "data": {"reset": true}}
      * @response 422 scenario="invalid-token" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"token": ["This reset token is invalid or has expired."]}}}
      * @response 422 scenario="weak-password" {"success": false, "error": {"code": "VALIDATION_FAILED", "message": "...", "fields": {"password": ["The password must be at least 6 characters."]}}}
      */
@@ -419,13 +420,14 @@ class AuthController extends BaseApiController
      * @response 200 scenario="success" {
      *   "success": true,
      *   "data": {
-     *     "user": {"id": 42, "name": "Naveen", "email": "naveen@example.com", "phone": "9876543210"},
-     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true},
-     *     "membership": {"is_premium": false, "plan_id": null, "expires_at": null},
+     *     "user": {"id": 42, "name": "Maria Fernandes", "email": "maria@example.com", "phone": "+447700900123", "role": "user", "branch_id": null, "is_active": true, "email_verified_at": null, "phone_verified_at": null, "last_login_at": "2026-11-24T09:36:07+00:00", "created_at": "2026-11-20T18:02:11+00:00"},
+     *     "profile": {"matri_id": "CA100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true},
+     *     "membership": {"plan": "Free", "ends_at": null, "is_premium": false},
      *     "next_step": "dashboard"
      *   }
      * }
      * @response 401 scenario="invalid-token" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "You must log in to access this resource."}}
+     * @response 403 scenario="account-blocked" {"success": false, "error": {"code": "PROFILE_SUSPENDED", "message": "Your account is temporarily suspended. Please contact support for assistance."}}
      */
     public function me(Request $request): JsonResponse
     {
@@ -441,7 +443,8 @@ class AuthController extends BaseApiController
 
     /**
      * Revoke the token the current request authenticated with. Only this
-     * device's token is revoked — other devices stay signed in.
+     * device's token is revoked — other devices stay signed in. A phone registered for push with
+     * this token (POST /devices) stops getting pushes too.
      *
      * @authenticated
      * @group Authentication

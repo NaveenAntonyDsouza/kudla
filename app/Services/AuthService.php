@@ -122,6 +122,7 @@ class AuthService
     {
         $token = $user->currentAccessToken();
         if ($token) {
+            \App\Support\DeviceRegistry::tokensRevoked($user, [$token->id]);
             $token->delete();
         }
     }
@@ -133,8 +134,10 @@ class AuthService
      */
     public function revokeAllTokens(User $user): int
     {
-        $count = $user->tokens()->count();
+        $ids = $user->tokens()->pluck('id');
+        \App\Support\DeviceRegistry::tokensRevoked($user, $ids);
         $user->tokens()->delete();
+        $count = $ids->count();
 
         return $count;
     }

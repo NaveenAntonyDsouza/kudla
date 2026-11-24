@@ -182,15 +182,15 @@ it('an admin settings change reaches the app immediately (API snapshot is cleare
 it('maps every notification type to the screen it should open', function (string $type, array $data, ?int $from, ?array $expected) {
     expect(NotificationResource::target($type, $data, $from))->toBe($expected);
 })->with([
-    'interest'         => ['interest_received', ['interest_id' => 9], 5, ['screen' => 'interest', 'id' => 9, 'section' => null]],
-    'photo request'    => ['photo_request', [], 5, ['screen' => 'photo_requests', 'id' => null, 'section' => null]],
-    'request approved' => ['photo_request_approved', [], 5, ['screen' => 'profile', 'id' => 5, 'section' => null]],
-    'photo added'      => ['photo_added', ['owner_profile_id' => 7], 7, ['screen' => 'profile', 'id' => 7, 'section' => null]],
-    'photo rejected'   => ['photo_rejected', [], null, ['screen' => 'my_photos', 'id' => null, 'section' => null]],
-    'changes needed'   => ['profile_changes_requested', [], null, ['screen' => 'my_profile', 'id' => null, 'section' => null]],
-    'id proof'         => ['id_proof_approved', [], null, ['screen' => 'my_documents', 'id' => null, 'section' => null]],
-    'plan expiring'    => ['membership_expiring', ['membership_id' => 3], null, ['screen' => 'membership', 'id' => null, 'section' => null]],
-    'nudge'            => ['system', ['nudge_type' => 'photos'], null, ['screen' => 'my_profile', 'id' => null, 'section' => 'photos']],
+    'interest'         => ['interest_received', ['interest_id' => 9], 5, ['screen' => 'interest', 'id' => 9, 'section' => null, 'matri_id' => null]],
+    'photo request'    => ['photo_request', [], 5, ['screen' => 'photo_requests', 'id' => null, 'section' => null, 'matri_id' => null]],
+    'request approved' => ['photo_request_approved', [], 5, ['screen' => 'profile', 'id' => 5, 'section' => null, 'matri_id' => null]],
+    'photo added'      => ['photo_added', ['owner_profile_id' => 7], 7, ['screen' => 'profile', 'id' => 7, 'section' => null, 'matri_id' => null]],
+    'photo rejected'   => ['photo_rejected', [], null, ['screen' => 'my_photos', 'id' => null, 'section' => null, 'matri_id' => null]],
+    'changes needed'   => ['profile_changes_requested', [], null, ['screen' => 'my_profile', 'id' => null, 'section' => null, 'matri_id' => null]],
+    'id proof'         => ['id_proof_approved', [], null, ['screen' => 'my_documents', 'id' => null, 'section' => null, 'matri_id' => null]],
+    'plan expiring'    => ['membership_expiring', ['membership_id' => 3], null, ['screen' => 'membership', 'id' => null, 'section' => null, 'matri_id' => null]],
+    'nudge'            => ['system', ['nudge_type' => 'photos'], null, ['screen' => 'my_profile', 'id' => null, 'section' => 'photos', 'matri_id' => null]],
     'broadcast'        => ['admin_broadcast', [], null, null],
 ]);
 

@@ -75,7 +75,7 @@ class MatchController extends BaseApiController
      *
      * @response 200 scenario="success" {
      *   "success": true,
-     *   "data": [{"matri_id": "AM100042", "match_score": 87, "match_badge": "great"}],
+     *   "data": [{"matri_id": "CA100012", "full_name": "Maria F.", "age": 29, "height_cm": 165, "height_label": "165 cm - 5 ft 05 inch", "religion": "Christian", "caste": null, "native_state": null, "occupation": "Nurse", "education_short": null, "primary_photo": null, "badges": ["new"], "last_active_at": "2026-11-24T08:10:00+00:00", "last_active_label": "1 hour ago", "match_score": 87, "match_badge": "great", "is_shortlisted": false, "interest_status": null, "is_blocked": false}],
      *   "meta": {"page": 1, "per_page": 20, "total": 47, "last_page": 3}
      * }
      *

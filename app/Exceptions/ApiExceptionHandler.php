@@ -45,6 +45,18 @@ class ApiExceptionHandler
             $e instanceof NotFoundHttpException => self::notFound(),
             $e instanceof MethodNotAllowedHttpException => self::methodNotAllowed(),
             $e instanceof ThrottleRequestsException => self::throttled($e),
+            $e instanceof \Illuminate\Http\Exceptions\PostTooLargeException => ApiResponse::error(
+                code: 'VALIDATION_FAILED',
+                message: 'The upload is too large. Photos can be up to '.(int) config('matrimony.max_photo_size_mb', 5).' MB.',
+                status: 413,
+            ),
+            // abort(403 / 404 / 422, '...') in a controller: the code for that status and our own
+            // message (24 Nov 2026: these came out as SERVER_ERROR)
+            $e instanceof HttpExceptionInterface && in_array($e->getStatusCode(), [403, 404, 422], true) => ApiResponse::error(
+                code: match ($e->getStatusCode()) { 403 => 'UNAUTHORIZED', 404 => 'NOT_FOUND', 422 => 'PROFILE_REQUIRED' },
+                message: $e->getMessage() ?: 'This action is not possible.',
+                status: $e->getStatusCode(),
+            ),
             default => self::fallback($e),
         };
     }

@@ -6,6 +6,7 @@ use App\Models\ContactInfo;
 use App\Models\DifferentlyAbledInfo;
 use App\Models\EducationDetail;
 use App\Models\FamilyDetail;
+use App\Models\LifestyleInfo;
 use App\Models\LocationInfo;
 use App\Models\Profile;
 use App\Models\ReligiousInfo;
@@ -84,52 +85,55 @@ class RegistrationService
     }
 
     /**
-     * Step 2: physical + marital + religious info + family status.
-     * Writes: profiles, family_details, religious_infos, (optional) differently_abled_infos.
+     * Step 2: physical + marital + languages + religion: the same fields the website's step 2 saves.
+     * (24 Nov 2026: this had drifted from the website. complexion / body_type had moved to onboarding,
+     * so every app sign-up failed here, and mother tongue, weight and languages were never saved.)
+     * Complexion, body type, physical status and family status belong to onboarding step 1: still
+     * taken here when an app sends them, but never wiped when it does not.
+     * Writes: profiles, lifestyle_infos, religious_infos, (optional) family_details, differently_abled_infos.
      */
     public function updateStep2(Profile $profile, array $data): void
     {
-        $profile->update([
+        $profile->update(array_merge([
             'height' => $data['height'],
-            'complexion' => $data['complexion'],
-            'body_type' => $data['body_type'],
-            'physical_status' => $data['physical_status'] ?? null,
+            'weight_kg' => $data['weight_kg'] ?? null,
             'marital_status' => $data['marital_status'],
             'children_with_me' => $data['children_with_me'] ?? 0,
             'children_not_with_me' => $data['children_not_with_me'] ?? 0,
-            'onboarding_step_completed' => 2,
-        ]);
+            'mother_tongue' => $data['mother_tongue'],
+            'onboarding_step_completed' => max(2, (int) $profile->onboarding_step_completed),
+        ], array_intersect_key($data, array_flip(['complexion', 'body_type', 'physical_status']))));
 
-        FamilyDetail::updateOrCreate(
+        LifestyleInfo::updateOrCreate(
             ['profile_id' => $profile->id],
-            ['family_status' => $data['family_status'] ?? null],
+            ['languages_known' => $data['languages_known'] ?? []],
         );
 
-        ReligiousInfo::updateOrCreate(
-            ['profile_id' => $profile->id],
-            [
-                'religion' => $data['religion'],
-                'caste' => $data['caste'] ?? null,
-                'other_caste_name' => $data['other_caste_name'] ?? null,
-                'sub_caste' => $data['sub_caste'] ?? null,
-                'gotra' => $data['gotra'] ?? null,
-                'nakshatra' => $data['nakshatra'] ?? null,
-                'rashi' => $data['rashi'] ?? null,
-                'dosh' => $data['manglik'] ?? null,
-                'denomination' => $data['denomination'] ?? null,
-                'other_denomination_name' => $data['other_denomination_name'] ?? null,
-                'diocese' => $data['diocese'] ?? null,
-                'diocese_name' => $data['diocese_name'] ?? null,
-                'parish_name_place' => $data['parish_name_place'] ?? null,
-                'time_of_birth' => $data['time_of_birth'] ?? null,
-                'place_of_birth' => $data['place_of_birth'] ?? null,
-                'muslim_sect' => $data['muslim_sect'] ?? null,
-                'muslim_community' => $data['muslim_community'] ?? null,
-                'religious_observance' => $data['religious_observance'] ?? null,
-                'jain_sect' => $data['jain_sect'] ?? null,
-                'other_religion_name' => $data['other_religion_name'] ?? null,
-            ],
-        );
+        if (array_key_exists('family_status', $data)) {
+            FamilyDetail::updateOrCreate(
+                ['profile_id' => $profile->id],
+                ['family_status' => $data['family_status']],
+            );
+        }
+
+        // Fields that do not belong to the chosen religion are cleared, as on the website
+        $religious = ReligiousInfo::clearFieldsForReligion([
+            'religion' => $data['religion'],
+            'caste' => $data['caste'] ?? null,
+            'other_caste_name' => $data['other_caste_name'] ?? null,
+            'sub_caste' => $data['sub_caste'] ?? null,
+            'denomination' => $data['denomination'] ?? null,
+            'other_denomination_name' => $data['other_denomination_name'] ?? null,
+            'diocese' => $data['diocese'] ?? null,
+            'diocese_name' => $data['diocese_name'] ?? null,
+            'parish_name_place' => $data['parish_name_place'] ?? null,
+            'muslim_sect' => $data['muslim_sect'] ?? null,
+            'muslim_community' => $data['muslim_community'] ?? null,
+            'religious_observance' => $data['religious_observance'] ?? null,
+            'jain_sect' => $data['jain_sect'] ?? null,
+            'other_religion_name' => $data['other_religion_name'] ?? null,
+        ], $data['religion']);
+        ReligiousInfo::updateOrCreate(['profile_id' => $profile->id], $religious);
 
         if (($data['physical_status'] ?? '') === 'Differently Abled') {
             DifferentlyAbledInfo::updateOrCreate(
@@ -157,33 +161,54 @@ class RegistrationService
     }
 
     /**
-     * Step 4: location + contact. Writes: location_infos + contact_infos.
+     * Step 4: native place, working place, phone numbers and who created the profile, as on the
+     * website's step 4. (24 Nov 2026: the working country / state / district / city and the native
+     * place were checked but never saved.) Custodian, address and PIN belong to onboarding step 2:
+     * saved only when sent, so going back to this step does not wipe them.
+     * Writes: location_infos, education_details (working place), contact_infos, profiles.
      */
     public function updateStep4(Profile $profile, array $data): void
     {
         LocationInfo::updateOrCreate(
             ['profile_id' => $profile->id],
-            [
+            array_merge([
                 'native_country' => $data['native_country'] ?? null,
                 'native_state' => $data['native_state'] ?? null,
                 'native_district' => $data['native_district'] ?? null,
-                'pin_zip_code' => $data['pin_zip_code'] ?? null,
-            ],
+                'native_place' => $data['native_place'] ?? null,
+            ], array_key_exists('pin_zip_code', $data) ? ['pin_zip_code' => $data['pin_zip_code']] : []),
         );
 
-        ContactInfo::updateOrCreate(
+        // The working place lives on education_details (the row exists from step 3)
+        EducationDetail::updateOrCreate(
             ['profile_id' => $profile->id],
             [
-                'whatsapp_number' => $data['whatsapp_number'] ?? null,
-                'primary_phone' => $data['mobile_number'] ?? null,
-                'contact_person' => $data['custodian_name'] ?? null,
-                'contact_relationship' => $data['custodian_relation'] ?? null,
-                'communication_address' => $data['communication_address'] ?? null,
-                'pincode' => $data['pin_zip_code'] ?? null,
+                'working_country' => $data['working_country'] ?? null,
+                'working_state' => $data['working_state'] ?? null,
+                'working_district' => $data['working_district'] ?? null,
+                'working_city' => $data['working_city'] ?? null,
             ],
         );
 
-        $profile->update(['onboarding_step_completed' => 4]);
+        $contact = [
+            'whatsapp_number' => $data['whatsapp_number'] ?? null,
+            'primary_phone' => $data['mobile_number'] ?? null,
+        ];
+        foreach (['custodian_name' => 'contact_person', 'custodian_relation' => 'contact_relationship',
+            'communication_address' => 'communication_address', 'pin_zip_code' => 'pincode'] as $field => $column) {
+            if (array_key_exists($field, $data)) {
+                $contact[$column] = $data[$field];
+            }
+        }
+        ContactInfo::updateOrCreate(['profile_id' => $profile->id], $contact);
+
+        $profile->update([
+            'created_by' => $data['created_by'] ?? $profile->created_by,
+            'creator_name' => $data['creator_name'] ?? $profile->creator_name,
+            'creator_contact_number' => $data['creator_contact_number'] ?? $profile->creator_contact_number,
+            'how_did_you_hear_about_us' => $data['how_did_you_hear_about_us'] ?? $profile->how_did_you_hear_about_us,
+            'onboarding_step_completed' => max(4, (int) $profile->onboarding_step_completed),
+        ]);
     }
 
     /**

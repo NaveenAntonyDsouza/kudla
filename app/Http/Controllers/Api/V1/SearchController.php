@@ -73,7 +73,7 @@ class SearchController extends BaseApiController
      * @queryParam height_to integer Maximum height in cm.
      * @queryParam religion string[] Religion filter (multi-select, comma-separated).
      * @queryParam caste string[] Caste filter.
-     * @queryParam denomination string[] Denomination filter (usually chained with religion).
+     * @queryParam denomination string[] Denomination (church) filter, e.g. denomination[]=Roman Catholic. Works with or without religion.
      * @queryParam mother_tongue string[] Mother tongue filter.
      * @queryParam marital_status string[] Marital status filter.
      * @queryParam body_type string[] Body type filter.
@@ -81,7 +81,7 @@ class SearchController extends BaseApiController
      * @queryParam education string[] Education level filter.
      * @queryParam occupation string[] Occupation filter.
      * @queryParam annual_income string[] Income bracket filter.
-     * @queryParam working_country string Single country filter (not array).
+     * @queryParam working_country string Country where the member lives / works (one value, not an array), as in GET /reference/countries.
      * @queryParam native_country string Single country filter (not array).
      * @queryParam family_status string[] Family status filter.
      * @queryParam diet string[] Diet filter.
@@ -217,18 +217,20 @@ class SearchController extends BaseApiController
         ));
 
         // Religion + cascading denomination / caste.
+        // Denomination and caste also work on their own (24 Nov 2026: they were ignored unless a
+        // religion was sent too, so the Catholic app's "church" filter did nothing)
         $religions = array_filter((array) ($request->religion ?? []), fn ($i) => $i !== 'Any');
-        if (! empty($religions)) {
-            $query->whereHas('religiousInfo', function ($q) use ($request, $religions) {
-                $q->whereIn('religion', $religions);
-
-                $denominations = array_filter((array) ($request->denomination ?? []), fn ($i) => $i !== 'Any');
-                if (! empty($denominations)) {
+        $denominations = array_filter((array) ($request->denomination ?? []), fn ($i) => $i !== 'Any');
+        $castes = array_filter((array) ($request->caste ?? []), fn ($i) => $i !== 'Any');
+        if ($religions || $denominations || $castes) {
+            $query->whereHas('religiousInfo', function ($q) use ($religions, $denominations, $castes) {
+                if ($religions) {
+                    $q->whereIn('religion', $religions);
+                }
+                if ($denominations) {
                     $q->whereIn('denomination', $denominations);
                 }
-
-                $castes = array_filter((array) ($request->caste ?? []), fn ($i) => $i !== 'Any');
-                if (! empty($castes)) {
+                if ($castes) {
                     $q->whereIn('caste', $castes);
                 }
             });

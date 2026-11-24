@@ -58,7 +58,7 @@ class NotificationController extends BaseApiController
      *
      * @response 200 scenario="success" {
      *   "success": true,
-     *   "data": [{"id": 1, "type": "interest_received", "title": "...", "message": "...", "data": {"interest_id": 42}, "is_read": false, "created_at": "2026-04-26T...", "icon_type": "interest", "from_profile_id": 7}],
+     *   "data": [{"id": 1, "type": "interest_received", "title": "Interest Received", "message": "...", "data": {"interest_id": 42}, "is_read": false, "created_at": "2026-11-24T09:36:07+00:00", "icon_type": "interest", "from_profile_id": 7, "target": {"screen": "interest", "id": 42, "section": null}}],
      *   "meta": {"page": 1, "per_page": 20, "total": 1, "last_page": 1, "unread_count": 1}
      * }
      */
@@ -116,7 +116,7 @@ class NotificationController extends BaseApiController
      *
      * @urlParam notification integer required Notification id.
      *
-     * @response 200 scenario="success" {"success": true, "data": {"notification": {"id": 1, "is_read": true}}}
+     * @response 200 scenario="success" {"success": true, "data": {"notification": {"id": 1, "type": "interest_accepted", "title": "Interest Accepted", "message": "Maria F. (CA100012) accepted your interest.", "data": {"interest_id": 42}, "is_read": true, "created_at": "2026-11-24T09:36:07+00:00", "icon_type": "interest", "from_profile_id": 7, "target": {"screen": "interest", "id": 42, "section": null}}}}
      * @response 403 scenario="not-owner" {"success": false, "error": {"code": "UNAUTHORIZED", "message": "..."}}
      * @response 404 scenario="not-found" {"success": false, "error": {"code": "NOT_FOUND", "message": "..."}}
      */
@@ -133,11 +133,10 @@ class NotificationController extends BaseApiController
 
         $this->notificationService->markAsRead($notification);
 
+        // The whole notification, as in the list (24 Nov 2026: only id + is_read before), so an app
+        // opened from a push tap knows where to go (target) from this one call
         return ApiResponse::ok([
-            'notification' => [
-                'id' => (int) $notification->id,
-                'is_read' => true,
-            ],
+            'notification' => (new NotificationResource($notification->fresh()))->resolve(),
         ]);
     }
 

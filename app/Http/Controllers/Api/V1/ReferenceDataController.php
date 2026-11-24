@@ -70,6 +70,21 @@ class ReferenceDataController extends BaseApiController
         'cuisines' => 'cuisine_list',
         'jamaats' => 'jamath_list',
         'phone-codes' => 'phone_codes',
+        // 24 Nov 2026: the other choice lists of sign-up and My Profile (the website's forms read
+        // them from the same place). Before, an app had no way to learn e.g. that marital status
+        // is "Unmarried", not "Never Married", or that "created by" is "Self / Candidate".
+        'religions' => 'religion_list',
+        'marital-statuses' => 'marital_status_list',
+        'education-bands' => 'education_level_list',          // sign-up step 3 education_level
+        'employment-categories' => 'employment_category_list',
+        'created-by' => 'created_by_list',
+        'complexions' => 'complexion_list',
+        'body-types' => 'body_type_list',
+        'physical-statuses' => 'physical_status_list',
+        'family-statuses' => 'family_status_list',
+        'blood-groups' => 'blood_group_list',
+        'residency-statuses' => 'residency_status_list',
+        'custodian-relations' => 'custodian_relation_list',
     ];
 
     /**

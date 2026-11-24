@@ -11,23 +11,21 @@ class RegisterStep3Request extends WebRegisterStep3Request
 {
     /**
      * Scribe body-parameter metadata for the education / occupation step.
-     * Reference lists are at GET /api/v1/reference/{slug}.
+     * Reference lists are at GET /api/v1/reference/{slug}. The working place
+     * (working_country etc.) is sent in step 4.
      */
     public function bodyParameters(): array
     {
         return [
-            'highest_education' => ['description' => 'Highest qualification (degree name).', 'example' => 'Bachelor of Engineering'],
-            'education_level' => ['description' => 'Education level bucket. Reference list at GET /reference/education-levels.', 'example' => 'Bachelors'],
-            'education_detail' => ['description' => 'Free-text specialisation or degree detail.', 'required' => false, 'example' => 'Computer Science'],
-            'college_name' => ['description' => 'College / university name.', 'required' => false],
-            'occupation' => ['description' => 'Occupation. Reference list at GET /reference/occupations.', 'example' => 'Software Engineer'],
-            'occupation_detail' => ['description' => 'Free-text occupation detail.', 'required' => false],
-            'employment_category' => ['description' => 'Employment category (Government/Private/Self-Employed/etc).', 'example' => 'Private Sector'],
-            'employer_name' => ['description' => 'Current employer name.', 'required' => false],
-            'annual_income' => ['description' => 'Annual income bucket. Reference list at GET /reference/income-ranges.', 'example' => '5-10 LPA'],
-            'working_country' => ['description' => 'Country where the user works currently.', 'example' => 'India'],
-            'working_state' => ['description' => 'Working state (free-text).', 'required' => false],
-            'working_district' => ['description' => 'Working district (free-text).', 'required' => false],
+            'highest_education' => ['description' => 'Highest qualification: one item of the grouped list GET /reference/education-levels (send the item, not the group name). Max 100.', 'example' => 'B.Sc'],
+            'education_level' => ['description' => 'Education level band from GET /reference/education-bands. Max 50.', 'example' => "Bachelor's"],
+            'education_detail' => ['description' => 'Free-text specialisation or degree detail. Max 200.', 'required' => false, 'example' => 'Nursing'],
+            'college_name' => ['description' => 'College / university name. Max 200.', 'required' => false],
+            'occupation' => ['description' => 'Occupation: one item of the grouped list GET /reference/occupations. Max 100.', 'example' => 'Nurse'],
+            'occupation_detail' => ['description' => 'Free-text occupation detail. Max 200.', 'required' => false],
+            'employment_category' => ['description' => 'Employment category from GET /reference/employment-categories. Max 100.', 'example' => 'Private'],
+            'employer_name' => ['description' => 'Current employer name. Max 200.', 'required' => false],
+            'annual_income' => ['description' => 'Annual income band from GET /reference/income-ranges. Max 50.', 'example' => 'Upto 1 Lakh'],
         ];
     }
 }
