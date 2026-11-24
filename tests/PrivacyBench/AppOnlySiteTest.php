@@ -93,10 +93,14 @@ it('shows a member nothing until approval, only where the setting is on', functi
     $this->withToken($token)->getJson('/api/v1/profiles/'.$target->matri_id)
         ->assertStatus(403)->assertJsonPath('error.code', 'PENDING_APPROVAL');
     expect(fn () => app(\App\Services\InterestService::class)->send($viewer->fresh(), $target, 'msg_suitable', null))->toThrow(\RuntimeException::class);
+    // the app learns it on sign-in and app start, so it can show a waiting screen
+    $this->withToken($token)->getJson('/api/v1/auth/me')->assertJsonPath('data.profile.is_approved', false);
 
     // approved members are not affected
     $viewer->forceFill(['is_approved' => true])->save();
     expect(ProfileVisibility::forMember(Profile::query(), $viewer->fresh())->count())->toBeGreaterThan(0);
+    $this->app['auth']->forgetGuards();
+    $this->withToken($token)->getJson('/api/v1/auth/me')->assertJsonPath('data.profile.is_approved', true);
 });
 
 it('makes the website one download page plus the information pages, only where the setting is on', function () {

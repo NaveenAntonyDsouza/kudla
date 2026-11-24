@@ -116,7 +116,7 @@ class AuthController extends BaseApiController
      * @bodyParam purpose string required One of: register | login | reset.
      * @bodyParam device_name string Optional device label (max 60 chars). Used on login token.
      *
-     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "next_step": "complete"}}
+     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "profile": {"matri_id": "AM100042", "onboarding_completed": true, "is_approved": true}, "next_step": "dashboard"}}
      * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
      * @response 422 scenario="otp-invalid-or-expired" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
      */
@@ -216,7 +216,7 @@ class AuthController extends BaseApiController
      * @bodyParam purpose string required One of: register | login | reset.
      * @bodyParam device_name string Optional device label (max 60 chars). Used on login token.
      *
-     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "next_step": "complete"}}
+     * @response 200 scenario="login-success" {"success": true, "data": {"token": "5|abc...", "user": {"id": 42}, "profile": {"matri_id": "AM100042", "onboarding_completed": true, "is_approved": true}, "next_step": "dashboard"}}
      * @response 200 scenario="register-verify-success" {"success": true, "data": {"verified": true, "next_step": "register.step-2"}}
      * @response 422 scenario="otp-invalid" {"success": false, "error": {"code": "OTP_INVALID", "message": "Invalid or expired code."}}
      */
@@ -274,9 +274,9 @@ class AuthController extends BaseApiController
      *   "data": {
      *     "token": "5|abc123...",
      *     "user": {"id": 42, "name": "Naveen", "email": "naveen@example.com"},
-     *     "profile": {"matri_id": "AM100042", "onboarding_completed": true},
+     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true},
      *     "membership": {"is_premium": false},
-     *     "next_step": "home"
+     *     "next_step": "dashboard"
      *   }
      * }
      * @response 401 scenario="bad-credentials" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "Invalid login details or password."}}
@@ -420,9 +420,9 @@ class AuthController extends BaseApiController
      *   "success": true,
      *   "data": {
      *     "user": {"id": 42, "name": "Naveen", "email": "naveen@example.com", "phone": "9876543210"},
-     *     "profile": {"matri_id": "AM100042", "onboarding_completed": true, "is_approved": true, "is_active": true},
+     *     "profile": {"matri_id": "AM100042", "onboarding_step_completed": 5, "onboarding_completed": true, "profile_completion_pct": 80, "is_approved": true},
      *     "membership": {"is_premium": false, "plan_id": null, "expires_at": null},
-     *     "next_step": "home"
+     *     "next_step": "dashboard"
      *   }
      * }
      * @response 401 scenario="invalid-token" {"success": false, "error": {"code": "UNAUTHENTICATED", "message": "You must log in to access this resource."}}
@@ -537,6 +537,9 @@ class AuthController extends BaseApiController
             'onboarding_step_completed' => (int) ($profile?->onboarding_step_completed ?? 0),
             'onboarding_completed' => (bool) $profile?->onboarding_completed,
             'profile_completion_pct' => (int) ($profile?->profile_completion_pct ?? 0),
+            // false until staff approve the profile; where Site Settings → "New members see others
+            // only after approval" is on (features.browse_after_approval), the app shows a waiting screen
+            'is_approved' => (bool) $profile?->is_approved,
         ];
     }
 
