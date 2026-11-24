@@ -21,6 +21,7 @@ class AppOnlyMode
     /** First part of the path that stays open. '' is the home page (the download page). */
     private const OPEN = [
         '', 'privacy-policy', 'terms-condition', 'about-us', 'contact-us', 'contact', 'page',
+        'child-safety', 'refund-policy', 'report-misuse',   // Play asks dating apps for a child-safety page
         'forgot-password', 'reset-password', 'unsubscribe', 'logout',
         'livewire', 'storage', 'build', 'health', 'up', 'robots.txt', 'sitemap.xml', 'favicon.ico',
         '.well-known', 'api', 'filament',

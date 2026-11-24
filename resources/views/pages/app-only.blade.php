@@ -15,6 +15,7 @@
         'Privacy Policy' => url('/privacy-policy'),
         'Terms of Use' => url('/terms-condition'),
         'About Us' => url('/about-us'),
+        'Child Safety' => url('/child-safety'),
         'Delete my account' => $deletePage ? url('/page/delete-account') : null,
         'Contact Us' => url('/contact-us'),
     ]);

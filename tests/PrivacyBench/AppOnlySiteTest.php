@@ -121,6 +121,11 @@ it('makes the website one download page plus the information pages, only where t
     foreach (['/privacy-policy', '/terms-condition', '/contact-us', '/forgot-password'] as $page) {
         $this->get($page)->assertOk();
     }
+    // Play asks dating apps for a child-safety page: open too (404 here only if the page is not written yet)
+    foreach (['/child-safety', '/refund-policy'] as $page) {
+        expect($this->get($page)->getStatusCode())->not->toBe(302);
+    }
+    expect($home)->toContain('/child-safety');
     $this->getJson('/api/v1/site/settings')->assertOk();               // the app keeps working
     $this->post('/register', [])->assertNotFound();                    // no web sign-up
 });
