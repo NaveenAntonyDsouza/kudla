@@ -521,7 +521,11 @@ abstract class DatabaseMailable extends Mailable
 
     protected function getLogoUrl(): string
     {
-        $logo = ThemeSetting::first()?->logo_url ?? '';
+        // Site Settings "email_logo_url" (25 Nov 2026): the logo with its own white rounded panel
+        // built into the picture, so it stays readable when Gmail's dark mode darkens the email
+        // (it recolours backgrounds, never pictures). Empty = the site logo, as before.
+        $emailLogo = trim((string) rescue(fn () => \App\Models\SiteSetting::getValue('email_logo_url', ''), '', false));
+        $logo = $emailLogo !== '' ? $emailLogo : (ThemeSetting::first()?->logo_url ?? '');
         if (!$logo) return '';
         // If it's a relative path, make it absolute for emails
         return str_starts_with($logo, 'http') ? $logo : rtrim(config('app.url'), '/') . $logo;

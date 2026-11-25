@@ -41,7 +41,8 @@
     <div class="wrapper">
         <div class="header">
             @if($logoUrl)
-                <img src="{{ $logoUrl }}" alt="{{ $siteName }}">
+                {{-- The email logo (with its own white panel) is shown a little taller, so the logo inside matches --}}
+                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" @if(str_contains($logoUrl, 'email-logo')) style="max-height:64px;height:64px" @endif>
             @else
                 <div class="header-text">{{ $siteName }}</div>
                 @if($tagline)
