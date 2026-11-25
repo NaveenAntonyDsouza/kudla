@@ -415,11 +415,17 @@ final class VerificationCalls
         $query = self::rows($viewer);
         $open = fn (Builder $q) => $q->whereIn('verification_calls.status', VerificationCall::OPEN);
         $waiting = fn (Builder $q) => self::waitingOrder($q, $sort);
+        // simpler staff screens (25 Nov 2026): a caller's own late calls are under My calls only,
+        // and Needs a check holds every call for a manager to look at until they press Checked
+        $simple = AdminModules::simpleStaffScreens();
 
         return match ($tab) {
-            'anyone' => $waiting($open($query)->where(fn ($w) => self::anyoneWhere($w))),
+            'anyone' => $waiting($open($query)->where(fn ($w) => self::anyoneWhere($w))
+                ->when($simple, fn ($q) => $q->where(fn ($o) => $o->whereNull('verification_calls.assigned_to')->orWhere('verification_calls.assigned_to', '!=', $viewer->id)))),
             'all' => $waiting($open($query)),
-            'check' => $query->where('verification_calls.status', 'mismatch')->orderByDesc('verification_calls.done_at'),
+            'check' => $simple
+                ? $query->whereIn('verification_calls.status', VerificationCall::NEEDS_CHECK)->whereNull('verification_calls.checked_at')->orderByDesc('verification_calls.done_at')
+                : $query->where('verification_calls.status', 'mismatch')->orderByDesc('verification_calls.done_at'),
             'done' => $query->whereNotIn('verification_calls.status', VerificationCall::OPEN)
                 ->where('verification_calls.done_at', '>=', now()->subDays(30))
                 ->when(! self::managesAll($viewer), fn ($q) => $q->where(fn ($m) => $m->where('verification_calls.done_by', $viewer->id)->orWhere('verification_calls.assigned_to', $viewer->id)))
@@ -497,8 +503,11 @@ final class VerificationCalls
      * Record what happened on a call (anything but "verified", which the edit page's Save
      * and mark checked on call records through checkedOnCall()). Returns the message to show.
      */
-    public static function record(User $staff, VerificationCall $row, string $result, ?string $note = null, ?CarbonInterface $callBackAt = null): string
+    public static function record(User $staff, VerificationCall $row, string $result, ?string $note = null, ?CarbonInterface $callBackAt = null, ?CarbonInterface $date = null): string
     {
+        // $date (25 Nov 2026, "call again / follow up on"): while the call stays open it is
+        // when the next try is due; when the result closes the call it becomes a follow-up
+        // on the Follow-up Report, on the call's note
         if (! array_key_exists($result, self::RESULTS)) {
             throw new DomainException('Pick what happened on the call.');
         }
@@ -533,12 +542,12 @@ final class VerificationCalls
         $due = match (true) {
             $closed => $row->due_at,
             $result === 'call_back' => Carbon::instance($callBackAt)->setTimezone(config('app.timezone')),
-            default => self::nextTry(),
+            default => self::dueOn($date),
         };
         // a caller who picks up someone else's call (open to anyone) takes it over
         $takeOver = self::isCaller($staff) && (int) $row->assigned_to !== $staff->id;
 
-        DB::transaction(function () use ($row, $staff, $noAnswers, $status, $closed, $due, $takeOver, $result, $note) {
+        DB::transaction(function () use ($row, $staff, $noAnswers, $status, $closed, $due, $takeOver, $result, $note, $date) {
             $row->forceFill(array_merge([
                 'attempts' => $row->attempts + 1,
                 'no_answers' => $noAnswers,
@@ -564,6 +573,7 @@ final class VerificationCalls
                 'admin_user_id' => $staff->id,
                 'note_type' => 'call',
                 'note' => self::NOTE_PREFIX.' '.$what.($note !== '' ? ' '.$note : ''),
+                'follow_up_date' => $closed && $date ? $date->toDateString() : null,
             ]);
         });
         StaffActionLog::record('verification_'.$result, $row->profile_id, ['try' => $row->attempts]);
@@ -582,10 +592,15 @@ final class VerificationCalls
      * The end of a call that went through: the staff member ticks what they did and may
      * add anything else in their own words. One Call note holds the lot, so the member's
      * history reads as one conversation, and the ticks are kept on the Activity Log line
-     * so they can be counted later. The call is closed as verified — a call that did not
-     * go through is recorded with record() instead (no answer, call back, wrong number…).
+     * so they can be counted later. A call that did not go through is recorded with
+     * record() instead (no answer, call back, wrong number…).
+     *
+     * Verified only when the first tick ("verified them by their date of birth and details")
+     * is ticked (owner, 25 Nov 2026). Without it the call counts as a try and stays on the
+     * list: due on $date (10 in the morning), or tomorrow. On a verified call $date becomes a
+     * follow-up on the Follow-up Report.
      */
-    public static function finishCall(User $staff, VerificationCall $row, array $ticked, ?string $notes = null): string
+    public static function finishCall(User $staff, VerificationCall $row, array $ticked, ?string $notes = null, ?CarbonInterface $date = null): string
     {
         if (! self::mayWork($staff, $row)) {
             throw new DomainException(self::refusal($staff, $row));
@@ -600,14 +615,22 @@ final class VerificationCalls
             throw new DomainException('Tick what you did on the call, or write what happened.');
         }
 
-        DB::transaction(function () use ($row, $staff, $done, $notes) {
-            $row->forceFill([
+        $verified = in_array('details', $done, true);
+        $due = $verified ? null : self::dueOn($date);
+
+        DB::transaction(function () use ($row, $staff, $done, $notes, $verified, $due, $date) {
+            $row->forceFill(($verified ? [
                 'status' => 'verified',
+                'done_at' => now(),
+                'done_by' => $staff->id,
+            ] : [
+                // spoke to them, not verified yet: another call, like a try that went unanswered
+                'status' => 'waiting',
+                'due_at' => $due,
+            ]) + [
                 'attempts' => $row->attempts + 1,
                 'last_attempt_at' => now(),
                 'last_attempt_by' => $staff->id,
-                'done_at' => now(),
-                'done_by' => $staff->id,
             ] + (self::isCaller($staff) && (int) $row->assigned_to !== $staff->id ? ['assigned_to' => $staff->id, 'assigned_at' => now()] : []))->save();
 
             $tasks = self::tasks();
@@ -616,22 +639,63 @@ final class VerificationCalls
                 'profile_id' => $row->profile_id,
                 'admin_user_id' => $staff->id,
                 'note_type' => 'call',
-                'note' => trim(self::NOTE_PREFIX.' spoke to them.'
+                'note' => trim(self::NOTE_PREFIX.($verified ? ' spoke to them.' : ' spoke to them, not verified yet.')
                     .($did ? ' '.ucfirst(implode('; ', $did)).'.' : '')
-                    .($notes !== '' ? ' '.$notes : '')),
+                    .($notes !== '' ? ' '.$notes : '')
+                    .($verified ? '' : ' Next call '.$due->displayTz()->format('j M, g:i A').'.')),
+                'follow_up_date' => $verified && $date ? $date->toDateString() : null,
             ]);
 
             // "went through their details" is the same thing the edit page's
             // Save and mark checked records, so the member's card agrees with the note
-            if (in_array('details', $done, true)) {
+            if ($verified) {
                 DB::table('profiles')->where('id', $row->profile_id)
                     ->update(['details_checked_at' => now(), 'details_checked_by' => $staff->id]);
             }
         });
 
-        StaffActionLog::record('verification_call_done', $row->profile_id, ['tasks' => $done]);
+        StaffActionLog::record('verification_call_done', $row->profile_id, ['tasks' => $done] + ($verified ? [] : ['verified' => false]));
 
-        return 'Call recorded'.($done ? ' — '.count($done).' '.(count($done) === 1 ? 'thing' : 'things').' done' : '').'. Marked verified.';
+        $things = $done ? ' — '.count($done).' '.(count($done) === 1 ? 'thing' : 'things').' done' : '';
+
+        return $verified
+            ? 'Call recorded'.$things.'. Marked verified.'
+            : 'Call recorded'.$things.'. Not verified yet (the first tick verifies): it comes back on the list '.$due->displayTz()->format('j M, g:i A').'.';
+    }
+
+    /** When a call that stays open comes back: on the day picked, at 10 in the morning (now, if that has passed), else tomorrow at 10. */
+    public static function dueOn(?CarbonInterface $date): Carbon
+    {
+        if (! $date) {
+            return self::nextTry();
+        }
+        $at = Carbon::parse($date->format('Y-m-d'), StaffActivity::tz())->setTime(10, 0);
+
+        return ($at->isPast() ? now(StaffActivity::tz()) : $at)->setTimezone(config('app.timezone'));
+    }
+
+    /**
+     * Needs a check (owner, 25 Nov 2026): a manager has dealt with a call that ended as "details
+     * did not match", "not looking any more" or "wrong number" (hid a settled member's profile,
+     * emailed for the right number…). It leaves the list; the member's history says who checked it.
+     */
+    public static function markChecked(User $manager, VerificationCall $row): void
+    {
+        if (! self::managesAll($manager) || ! self::mayWork($manager, $row)) {
+            throw new DomainException('Only a manager can mark a call checked.');
+        }
+        if (! in_array($row->status, VerificationCall::NEEDS_CHECK, true) || $row->checked_at !== null) {
+            throw new DomainException('This call is not waiting for a check.');
+        }
+        $row->forceFill(['checked_at' => now(), 'checked_by' => $manager->id])->save();
+        // one Activity Log line (verification_checked), not a second "note added"
+        ProfileNote::withoutEvents(fn () => ProfileNote::create([
+            'profile_id' => $row->profile_id,
+            'admin_user_id' => $manager->id,
+            'note_type' => 'general',
+            'note' => self::NOTE_PREFIX.' checked by '.$manager->name.' ('.mb_strtolower($row->label()).').',
+        ]));
+        StaffActionLog::record('verification_checked', $row->profile_id, ['status' => $row->status]);
     }
 
     /** No answer: try again the next day, at 10 in the morning. */
@@ -909,6 +973,7 @@ final class VerificationCalls
         return [
             'label' => $row->label(),
             'color' => $row->color(),
+            'status' => $row->status,
             'open' => $row->isOpen(),
             'givenTo' => $row->caller?->name,
             'mine' => (int) $row->assigned_to === $viewer->id,
@@ -938,11 +1003,20 @@ final class VerificationCalls
     {
         $site = SiteSetting::getValue('site_name', config('app.name'));
         $first = trim((string) strtok((string) $profile->full_name, ' ')) ?: 'there';
+        // an app-only site has no member pages to link to: they open the app download page (25 Nov 2026)
+        $appOnly = \App\Http\Middleware\AppOnlyMode::on();
 
         if ($kind === 'photo') {
-            return MembersWithoutPhoto::message($profile);
+            return $appOnly
+                ? "Hi {$first}, greetings from {$site}! Profiles with a photo get many more responses. "
+                    ."Please reply to this message with one clear, recent photo of yourself, and we will add it to your profile ({$profile->matri_id}) for you. "
+                    ."You can also add it yourself in the {$site} app."
+                : MembersWithoutPhoto::message($profile);
         }
         if ($kind === 'matches') {
+            if ($appOnly) {
+                return "Hi {$first}, thank you for speaking with us. You can download the {$site} app here: ".url('/');
+            }
             [$community, $url] = self::communityPage($profile);
             $side = $profile->gender === 'female' ? 'grooms' : 'brides';
 
@@ -951,9 +1025,21 @@ final class VerificationCalls
                 .' . Sign in to see the matches picked for you: '.route('matches.index');
         }
 
+        // "your new profile" only while the member is still on the calls list (25 Nov 2026)
+        if (! self::enabled() || ! VerificationCall::where('profile_id', $profile->getKey())->whereIn('status', VerificationCall::OPEN)->exists()) {
+            return "Hi {$first}, greetings from {$site}! We called you but could not reach you. "
+                .'Please reply with a good time to call, or call us back on this number.';
+        }
+
         return "Hi {$first}, greetings from {$site}! We called you about your new profile ({$profile->matri_id}) but could not reach you. "
             .'We would like to check a few details with you and help you get more responses from families. '
             .'Please reply with a good time to call, or call us back on this number.';
+    }
+
+    /** The link staff send for the checklist's "search or community link" (the app download page on an app-only site). */
+    public static function linkFor(Profile $profile): string
+    {
+        return \App\Http\Middleware\AppOnlyMode::on() ? url('/') : self::communityPage($profile)[1];
     }
 
     /**

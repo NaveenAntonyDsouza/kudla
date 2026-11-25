@@ -8,6 +8,9 @@
 @php
     $chip = 'display:inline-flex;align-items:center;padding:.15rem .6rem;border-radius:9999px;font-size:.78rem;font-weight:600;line-height:1.4;white-space:nowrap;border:1px solid rgba(217,119,6,.45);background:rgba(217,119,6,.10);color:#b45309;';
     $muted = 'opacity:.62;';
+    // simpler staff screens (25 Nov 2026): Copy buttons, recent notes, no WhatsApp links on the card
+    $simple = $simple ?? false;
+    $smallBtn = 'display:inline-flex;align-items:center;padding:.05rem .45rem;margin-left:.3rem;border-radius:.4rem;border:1px solid rgba(127,127,127,.45);background:transparent;color:inherit;font-size:.72rem;font-weight:600;cursor:pointer;';
 @endphp
 {{-- flex-wrap: on a phone the facts go below the photo instead of squeezing beside it --}}
 <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start;padding:1rem 1.1rem;border:1px solid rgba(128,128,128,.22);border-radius:.75rem;background:rgba(128,128,128,.04);">
@@ -28,7 +31,13 @@
                     </span>
                     <a href="{{ $v['listUrl'] }}" style="margin-left:auto;font-size:.8rem;color:inherit;text-decoration:underline;">Back to Verification Calls</a>
                 </div>
-                @if ($v['open'] && $v['may'])
+                @if ($v['open'] && $v['may'] && $simple)
+                    {{-- the stored date of birth is not shown here: they say it, staff don't read it out (25 Nov 2026) --}}
+                    <div>
+                        Ask them to tell you their date of birth and the details below, without reading them out.
+                        Fill in what is missing, then press <strong>Log call</strong> and pick what happened.
+                    </div>
+                @elseif ($v['open'] && $v['may'])
                     <div>
                         Ask them to tell you their date of birth @if ($v['dob']) (on the profile: <strong>{{ $v['dob'] }}</strong>) @endif and the details below, without reading them out.
                         Fill in what is missing and save, then press <strong>Call done</strong> at the top and tick what you did.
@@ -37,7 +46,10 @@
                 @elseif ($v['open'])
                     <div style="opacity:.8;">{{ $v['givenTo'] ? $v['givenTo'] . ' makes this call.' : 'Waiting for a caller.' }} A manager can move it.</div>
                 @endif
-                @if ($v['whatsapp'])
+                @if ($simple && ! $v['open'] && $v['may'] && $v['status'] !== 'verified')
+                    <div><button type="button" wire:click="verificationReopen" style="{{ $smallBtn }}margin-left:0;">Put back on my list</button></div>
+                @endif
+                @if ($v['whatsapp'] && ! $simple)
                     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .4rem;">
                         <span style="opacity:.75;">WhatsApp:</span>
                         @foreach (['missed' => 'We tried to call you', 'photo' => 'Ask for a photo', 'matches' => 'Share matches link'] as $kind => $label)
@@ -64,14 +76,15 @@
             @endforeach
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;gap:.3rem 1.4rem;">
+        <div style="display:flex;flex-wrap:wrap;gap:.3rem 1.4rem;"
+            x-data="{ copied: null, copy(text, what) { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(() => { this.copied = what; setTimeout(() => this.copied = null, 1500) }).catch(() => {}) } } }">
             @if ($phone)
-                <span><span style="{{ $muted }}">Phone</span> <a href="{{ $phoneHref }}" style="font-weight:600;color:inherit;">{{ $phone }}</a></span>
+                <span><span style="{{ $muted }}">Phone</span> <a href="{{ $phoneHref }}" style="font-weight:600;color:inherit;">{{ $phone }}</a>@if ($simple && ($copyPhone ?? null))<button type="button" style="{{ $smallBtn }}" x-on:click="copy(@js($copyPhone), 'phone')"><span x-text="copied === 'phone' ? 'Copied' : 'Copy'">Copy</span></button>@endif</span>
             @else
                 <span style="color:#dc2626;">No phone number</span>
             @endif
             @if ($whatsapp)
-                <span><span style="{{ $muted }}">WhatsApp</span> {{ $whatsapp }}</span>
+                <span><span style="{{ $muted }}">WhatsApp</span> {{ $whatsapp }}@if ($simple && ($copyWhatsApp ?? null))<button type="button" style="{{ $smallBtn }}" x-on:click="copy(@js($copyWhatsApp), 'whatsapp')"><span x-text="copied === 'whatsapp' ? 'Copied' : 'Copy'">Copy</span></button>@endif</span>
             @endif
             @if ($contactPerson)
                 <span><span style="{{ $muted }}">Contact person</span> {{ $contactPerson }}</span>
@@ -103,6 +116,36 @@
             </div>
         @endif
 
+        @if ($simple)
+            {{-- the last three notes, and the whole history one click away (the Notes box was the only place before) --}}
+            <div style="display:flex;flex-direction:column;gap:.3rem;font-size:.8125rem;">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.3rem 1rem;">
+                    @if (is_array($recentNotes ?? null))
+                        <span style="font-weight:600;">Recent notes</span>
+                        @if ($notesCount)
+                            <button type="button" wire:click="mountAction('notesHistory')" style="{{ $smallBtn }}margin-left:0;">All notes ({{ $notesCount }})</button>
+                        @endif
+                    @endif
+                    @if ($followUp)
+                        <span @if ($followUp['late']) style="color:#dc2626;font-weight:600;" @endif><span style="{{ $followUp['late'] ? '' : $muted }}">Follow-up {{ $followUp['late'] ? 'was due' : 'due' }}</span> {{ $followUp['date'] }}</span>
+                    @endif
+                    @if ($lastEdit)
+                        <span><span style="{{ $muted }}">Last edited</span> {{ $lastEdit['when'] }}@if ($lastEdit['by']) by {{ $lastEdit['by'] }}@endif</span>
+                    @endif
+                </div>
+                @if (is_array($recentNotes ?? null))
+                    @forelse ($recentNotes as $n)
+                        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:.15rem .45rem;">
+                            <x-admin.pill :color="$n['color']">{{ $n['type'] }}</x-admin.pill>
+                            <span style="{{ $muted }}">{{ $n['when'] }}@if ($n['by']) · {{ $n['by'] }}@endif</span>
+                            <span>{{ $n['note'] }}</span>
+                        </div>
+                    @empty
+                        <span style="{{ $muted }}">No notes yet. Log call writes the first one.</span>
+                    @endforelse
+                @endif
+            </div>
+        @else
         <div style="display:flex;flex-wrap:wrap;gap:.3rem 1.4rem;font-size:.8125rem;">
             @if ($lastCall)
                 <span><span style="{{ $muted }}">Last call</span> {{ $lastCall['when'] }}@if ($lastCall['by']) by {{ $lastCall['by'] }}@endif @if ($lastCall['note'] !== '')<span style="opacity:.8;">— “{{ $lastCall['note'] }}”</span>@endif</span>
@@ -122,5 +165,6 @@
                 <span><span style="{{ $muted }}">Last edited</span> {{ $lastEdit['when'] }}@if ($lastEdit['by']) by {{ $lastEdit['by'] }}@endif</span>
             @endif
         </div>
+        @endif
     </div>
 </div>

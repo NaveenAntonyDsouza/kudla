@@ -129,6 +129,23 @@ it('switches each November tool off on its own, and back on', function () {
         ->and(\App\Filament\Pages\StaffActivity::canAccess())->toBeTrue();
 });
 
+it('starts the simpler staff screens off, saves the switch, and offers the Telecaller role once verification calls are on (25 Nov 2026)', function () {
+    expect(AdminModules::simpleStaffScreens())->toBeFalse();
+
+    // filled, shown and in the save list, or the switch silently never saves
+    $source = file_get_contents(app_path('Filament/Pages/SiteSettings.php'));
+    expect(substr_count($source, 'AdminModules::SIMPLE_STAFF_SCREENS'))->toBeGreaterThanOrEqual(3);
+
+    SiteSetting::setValue(AdminModules::SIMPLE_STAFF_SCREENS, '1');
+    expect(AdminModules::simpleStaffScreens())->toBeTrue();
+
+    // the Telecaller role (the lighter one for a new caller) is offered when adding staff
+    // while verification calls are on, even with Leads off
+    expect(AdminModules::hiddenRoleSlugs())->toContain('telecaller');
+    SiteSetting::setValue(AdminModules::VERIFICATION_CALLS, '1');
+    expect(AdminModules::hiddenRoleSlugs())->toBe(['branch_manager', 'branch_staff']);
+});
+
 it('starts the member-site changes on, except Last seen (owner, 18 Nov 2026), and saves each one from Site Settings', function () {
     expect(AdminModules::lastSeen())->toBeFalse()   // on for Kudla only, by its own stored setting
         ->and(AdminModules::refusedAddresses())->toBeTrue()

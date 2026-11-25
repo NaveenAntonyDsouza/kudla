@@ -25,6 +25,11 @@ class ListUsers extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        // simpler staff screens (owner, 25 Nov 2026): one way to add a member
+        if (\App\Support\AdminModules::simpleStaffScreens()) {
+            return [$this->addMemberAction()];
+        }
+
         return [
             Actions\CreateAction::make()->label('New Profile'),
 
@@ -136,6 +141,102 @@ class ListUsers extends ListRecords
                         ->send();
                 }),
         ];
+    }
+
+    /**
+     * "Add member" (simpler staff screens, 25 Nov 2026) in place of New Profile and Register on
+     * Behalf: the few facts every profile needs, then the member page for the rest.
+     *   - "Email the login details" ticked: the member uses the site and finishes their own
+     *     profile at first sign-in, as Register on Behalf did.
+     *   - Not ticked: the office fills it in on the member page and the profile counts as
+     *     complete, as New Profile did (Crasta's offline families).
+     * Active on and Approved per the auto-approve setting, as on New Profile since the Crasta
+     * fix; staff-added members need no verification call; every add is in the Activity Log.
+     */
+    private function addMemberAction(): Actions\Action
+    {
+        return Actions\Action::make('addMember')
+            ->label('Add member')
+            ->icon('heroicon-o-user-plus')
+            ->color('success')
+            ->visible(fn (): bool => (bool) (auth()->user()?->isSuperAdmin() || auth()->user()?->hasPermission('register_on_behalf')))
+            ->modalDescription('Add the member now and fill in the rest on their page.')
+            ->form([
+                Forms\Components\TextInput::make('full_name')->label('Full name')->required()->maxLength(100),
+                Forms\Components\Select::make('gender')->label('Gender')->required()
+                    ->options(['male' => 'Groom (Male)', 'female' => 'Bride (Female)']),
+                Forms\Components\DatePicker::make('date_of_birth')->label('Date of birth')->required()
+                    ->maxDate(fn (\Filament\Schemas\Components\Utilities\Get $get) => \App\Support\MinimumAge::latestBirthDate($get('gender')))
+                    ->helperText(fn (\Filament\Schemas\Components\Utilities\Get $get) => \App\Support\MinimumAge::message($get('gender'))),
+                Forms\Components\TextInput::make('phone')->label('Phone')->tel()->required()->unique('users', 'phone')->maxLength(15),
+                Forms\Components\TextInput::make('email')->label('Email (optional)')->email()->unique('users', 'email')->maxLength(255)
+                    ->live(onBlur: true),
+                Forms\Components\Toggle::make('send_login')
+                    ->label('Email the login details to the member')
+                    ->helperText('They then finish their own profile when they first sign in. Leave it off when the office fills the profile in.')
+                    ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get): bool => filled($get('email'))),
+            ])
+            ->modalSubmitActionLabel('Add member')
+            ->action(function (array $data): void {
+                $email = filled($data['email'] ?? null) ? trim((string) $data['email']) : null;
+                $sendLogin = $email !== null && ! empty($data['send_login']);
+                $password = Str::random(12);
+                $autoApprove = SiteSetting::getValue('auto_approve_profiles', '1') === '1';
+
+                $profile = DB::transaction(function () use ($data, $email, $sendLogin, $password, $autoApprove) {
+                    $user = User::create([
+                        'name' => $data['full_name'],
+                        'email' => $email,
+                        'phone' => $data['phone'],
+                        // raw: the User model's "hashed" cast hashes it once
+                        'password' => $password,
+                        'role' => 'user',
+                        'is_active' => true,
+                    ]);
+                    if (! $sendLogin) {
+                        // an office-run profile: nobody has to confirm the address
+                        $user->forceFill(['email_verified_at' => now()])->save();
+                    }
+                    if (method_exists($user, 'assignRole')) {
+                        try {
+                            $user->assignRole('User');
+                        } catch (\Throwable) {
+                            // the role may not exist on every site, as on New Profile
+                        }
+                    }
+
+                    return Profile::create([
+                        'user_id' => $user->id,
+                        'full_name' => $data['full_name'],
+                        'gender' => $data['gender'],
+                        'date_of_birth' => $data['date_of_birth'],
+                        'created_by' => 'staff',
+                        'creator_name' => auth()->user()?->name,
+                        'created_by_staff_id' => auth()->id(),
+                        'registration_source' => \App\Support\DeviceDetector::ADMIN,
+                        'is_active' => true,
+                        'is_approved' => $autoApprove,
+                        'onboarding_completed' => ! $sendLogin,
+                        'onboarding_step_completed' => $sendLogin ? 1 : 5,
+                    ]);
+                });
+
+                if ($sendLogin) {
+                    try {
+                        Mail::to($email)->send(new StaffCreatedMemberWelcomeMail($profile->user, $password));
+                    } catch (\Throwable $e) {
+                        report($e);   // the member can still use "Forgot password"
+                    }
+                }
+                \App\Support\StaffActionLog::record('member_registered_by_staff', $profile->id, ['matri_id' => $profile->matri_id, 'login_emailed' => $sendLogin]);
+
+                Notification::make()
+                    ->title('Added '.$profile->matri_id.'. Fill in the rest of the profile here.')
+                    ->body($sendLogin ? 'The login details were emailed to the member.' : null)
+                    ->success()
+                    ->send();
+                $this->redirect(UserResource::getUrl('edit', ['record' => $profile]));
+            });
     }
 
     public function getTabs(): array

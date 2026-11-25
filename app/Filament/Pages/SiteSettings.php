@@ -56,6 +56,7 @@ class SiteSettings extends Page implements HasForms
             AdminModules::ADVERTISEMENTS => ($settings[AdminModules::ADVERTISEMENTS] ?? '0') === '1',
             AdminModules::RECOMMENDATIONS => ($settings[AdminModules::RECOMMENDATIONS] ?? '0') === '1',
             AdminModules::VERIFICATION_CALLS => ($settings[AdminModules::VERIFICATION_CALLS] ?? '0') === '1',
+            AdminModules::SIMPLE_STAFF_SCREENS => ($settings[AdminModules::SIMPLE_STAFF_SCREENS] ?? '0') === '1',
             // already working before they had a switch: not set means on
             AdminModules::ASSISTED => ($settings[AdminModules::ASSISTED] ?? '1') === '1',
             AdminModules::STAFF_ACTIVITY => ($settings[AdminModules::STAFF_ACTIVITY] ?? '1') === '1',
@@ -204,6 +205,10 @@ class SiteSettings extends Page implements HasForms
                             ->rows(3)
                             ->placeholder("Asked the faith questions and the answers were right")
                             ->helperText('Optional, one item per line (up to 10). They appear after the usual items when staff record a verification call, and are counted on the calls page. Leave empty to keep the usual list.'),
+
+                        Forms\Components\Toggle::make(AdminModules::SIMPLE_STAFF_SCREENS)
+                            ->label('Simpler staff screens')
+                            ->helperText('One "Log call" and one "Log WhatsApp" box on the member page (Save and mark checked, Call done and Call result go), a tidier Verification Calls list, Open · Notes · More on All Members, and one "Add member" button. Off: today\'s buttons. No data changes either way.'),
 
                         Forms\Components\Toggle::make(AdminModules::ASSISTED)
                             ->label('Assisted service')
@@ -585,7 +590,7 @@ class SiteSettings extends Page implements HasForms
             'auto_approve_documents',
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
-            AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS,
+            AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS, AdminModules::SIMPLE_STAFF_SCREENS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER, AdminModules::PAYMENT_INSIGHTS,
             AdminModules::LAST_SEEN, AdminModules::ACTIVE_FIRST, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
             AdminModules::SUGGESTED_PREFS, AdminModules::FULL_NAME_PAID,

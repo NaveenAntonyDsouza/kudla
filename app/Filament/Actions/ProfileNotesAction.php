@@ -55,16 +55,19 @@ class ProfileNotesAction
             ->size('sm')
             ->modalHeading(fn (?Profile $record, array $arguments): string => 'Notes — '
                 .(self::resolveProfile($record, $arguments)?->full_name ?? 'Member'))
+            // the "View Member Notes" and "Add Note to Member" rights (25 Nov 2026: in Staff Roles,
+            // but nothing checked them)
+            ->visible(fn (): bool => self::canView() || self::canAdd())
             ->modalContent(function (?Profile $record, array $arguments) {
                 $profile = self::resolveProfile($record, $arguments);
 
                 return view('filament.components.profile-notes-history', [
-                    'notes' => $profile
+                    'notes' => $profile && self::canView()
                         ? $profile->profileNotes()->with('adminUser')->latest()->get()
                         : collect(),
                 ]);
             })
-            ->form([
+            ->form(fn (): array => self::canAdd() ? [
                 Select::make('note_type')
                     ->label('Type')
                     ->options(ProfileNote::NOTE_TYPES)
@@ -78,11 +81,12 @@ class ProfileNotesAction
                 DatePicker::make('follow_up_date')
                     ->label('Follow-up date (optional)')
                     ->minDate(today()),
-            ])
+            ] : [])
             ->modalSubmitActionLabel('Add Note')
+            ->modalSubmitAction(fn ($action) => self::canAdd() ? $action : false)
             ->action(function (?Profile $record, array $arguments, array $data): void {
                 $profile = self::resolveProfile($record, $arguments);
-                if (! $profile) {
+                if (! $profile || ! self::canAdd()) {
                     return;
                 }
 
@@ -97,12 +101,22 @@ class ProfileNotesAction
             ->successNotificationTitle('Note added');
     }
 
+    public static function canView(): bool
+    {
+        return \App\Support\Permissions::can('view_member_notes');
+    }
+
+    public static function canAdd(): bool
+    {
+        return \App\Support\Permissions::can('add_note_to_member');
+    }
+
     /**
      * The member this popup is about — the injected record when the host
      * component provides one (table row / View page), otherwise the `profile`
      * id passed as a render argument (the Follow-up Report's custom page).
      */
-    private static function resolveProfile(?Profile $record, array $arguments): ?Profile
+    public static function resolveProfile(?Profile $record, array $arguments): ?Profile
     {
         if ($record instanceof Profile) {
             return $record;

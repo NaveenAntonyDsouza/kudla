@@ -35,6 +35,14 @@ class AdminModules
     /** Verification Calls: every new member is called once, shared out among staff (Nov 2026). New: starts off. */
     public const VERIFICATION_CALLS = 'module_verification_calls_enabled';
 
+    /**
+     * Simpler staff screens (owner, 25 Nov 2026, for a new staff member learning from scratch):
+     * one Log call / Log WhatsApp box on the member page, a tidier calls list, Open · Notes · More
+     * on All Members, one Add member button. New: starts off; switching it off brings back
+     * today's buttons, and no data changes either way.
+     */
+    public const SIMPLE_STAFF_SCREENS = 'module_simple_staff_screens_enabled';
+
     /** Assisted service: a relationship manager works a paying member's profile (Nov 2026). */
     public const ASSISTED = 'module_assisted_enabled';
 
@@ -90,6 +98,15 @@ class AdminModules
     public static function verificationCalls(): bool
     {
         return SiteSetting::getValue(self::VERIFICATION_CALLS, '0') === '1';
+    }
+
+    public static function simpleStaffScreens(): bool
+    {
+        try {
+            return SiteSetting::getValue(self::SIMPLE_STAFF_SCREENS, '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public static function assisted(): bool
@@ -199,7 +216,9 @@ class AdminModules
     {
         return array_merge(
             self::branches() ? [] : ['branch_manager', 'branch_staff'],
-            self::leads() ? [] : ['telecaller'],
+            // the Telecaller role also takes verification calls (25 Nov 2026: the lighter
+            // role for a new caller on a site without leads)
+            self::leads() || self::verificationCalls() ? [] : ['telecaller'],
         );
     }
 }

@@ -349,6 +349,7 @@ class UserResource extends Resource
                                 ->formatStateUsing(fn ($state) => ($state ?? 0) . ' notes')
                                 ->badge()
                                 ->color(fn ($state) => ($state ?? 0) > 0 ? 'warning' : 'gray')
+                                ->visible(fn (): bool => \App\Support\Permissions::can('view_member_notes'))
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('id_verified_display')
@@ -583,7 +584,7 @@ class UserResource extends Resource
                     ->searchable(),
             ])
             ->filtersFormColumns(2)
-            ->actions([
+            ->actions(\App\Support\AdminModules::simpleStaffScreens() ? self::simpleRowActions() : [
                 \Filament\Actions\ViewAction::make()
                     ->label('View')
                     ->button()
@@ -633,7 +634,119 @@ class UserResource extends Resource
                 // Secondary / less-frequent actions grouped into a "More" dropdown
                 // so the row stays compact. The common actions (View, Edit, Assign
                 // Plan, WhatsApp) remain as direct buttons above.
-                \Filament\Actions\ActionGroup::make([
+                \Filament\Actions\ActionGroup::make(self::moreActions())
+                    ->label('More')
+                    ->icon('heroicon-m-ellipsis-horizontal')
+                    ->button()
+                    ->size('sm'),
+            ])
+            // simpler staff screens (25 Nov 2026): clicking a member opens the member page staff work on
+            ->when(\App\Support\AdminModules::simpleStaffScreens(), fn (Table $table): Table => $table->recordUrl(fn (Profile $record): ?string => self::profileWorkUrl($record)))
+            // 25 Nov 2026: the bulk actions checked no staff right and wrote nothing to the
+            // Activity Log. Now each needs the same right as its single button (a hidden action
+            // cannot be run either), says how many members it changes, and logs each member.
+            ->bulkActions([
+                \Filament\Actions\BulkAction::make('approveSelected')
+                    ->label('Approve Selected')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($records): string => 'Approve '.self::membersCount($records).'?')
+                    ->modalDescription('Other members will see these profiles, and each member who is not approved yet gets the "profile approved" email.')
+                    ->visible(fn (): bool => \App\Support\Permissions::can('approve_member'))
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        if (! $record->is_approved) {
+                            $record->update(['is_approved' => true]);
+                            self::logActivity('profile_approved', $record, ['bulk' => true]);
+                        }
+                    }))
+                    ->deselectRecordsAfterCompletion(),
+
+                \Filament\Actions\BulkAction::make('activate')
+                    ->label('Activate Selected')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($records): string => 'Activate '.self::membersCount($records).'?')
+                    ->modalDescription('Other members can see these profiles again (if they are approved, not hidden and not suspended).')
+                    ->visible(fn (): bool => \App\Support\Permissions::can('toggle_active'))
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        if (! $record->is_active) {
+                            $record->update(['is_active' => true]);
+                            self::logActivity('profile_activated', $record, ['bulk' => true]);
+                        }
+                    }))
+                    ->deselectRecordsAfterCompletion(),
+
+                \Filament\Actions\BulkAction::make('deactivate')
+                    ->label('Deactivate Selected')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($records): string => 'Deactivate '.self::membersCount($records).'?')
+                    ->modalDescription('Other members stop seeing these profiles. The members can still sign in.')
+                    ->visible(fn (): bool => \App\Support\Permissions::can('toggle_active'))
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        if ($record->is_active) {
+                            $record->update(['is_active' => false]);
+                            self::logActivity('profile_deactivated', $record, ['bulk' => true]);
+                        }
+                    }))
+                    ->deselectRecordsAfterCompletion(),
+
+                // Bulk Restore / Delete-Forever — gated to the "Deleted" tab, whose
+                // query is withTrashed()->whereNotNull('deleted_at'). So these can
+                // ONLY ever act on already-soft-deleted profiles, never live members
+                // (fails closed: hidden on every other tab).
+                \Filament\Actions\BulkAction::make('restoreSelected')
+                    ->label('Restore selected')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($records): string => 'Restore '.self::membersCount($records).'?')
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) === 'deleted' && \App\Support\Permissions::can('delete_member'))
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        $record->restore();
+                        $record->update(['is_active' => true]);
+                        self::logActivity('profile_restored', $record, ['bulk' => true]);
+                    }))
+                    ->deselectRecordsAfterCompletion()
+                    ->successNotificationTitle('Profiles restored'),
+
+                \Filament\Actions\BulkAction::make('forceDeleteSelected')
+                    ->label('Delete forever')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($records): string => 'Permanently delete '.self::membersCount($records).'?')
+                    ->modalDescription('This permanently deletes the selected profiles and all their data, photos and interests. This cannot be undone.')
+                    ->modalSubmitActionLabel('Delete forever')
+                    // 25 Nov 2026: anyone who could open All Members could do this, unlogged
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) === 'deleted' && \App\Support\Permissions::can('delete_member'))
+                    ->action(fn ($records) => $records->each(function (Profile $record): void {
+                        self::logActivity('profile_deleted_forever', $record, ['matri_id' => $record->matri_id, 'bulk' => true]);
+                        foreach ($record->profilePhotos as $photo) {
+                            if ($photo->photo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($photo->photo_url)) {
+                                \Illuminate\Support\Facades\Storage::disk('public')->delete($photo->photo_url);
+                            }
+                        }
+                        $record->forceDelete();
+                    }))
+                    ->deselectRecordsAfterCompletion()
+                    ->successNotificationTitle('Profiles permanently deleted'),
+
+                // (no bulk "Export" here — privacy check, 4 Nov 2026: it had no exporter and
+                // no permission check; member exports are Members Overview → Export, which
+                // needs export_member_data)
+            ])
+            ->searchPlaceholder('Search by name, matri ID, email, phone...')
+            ->poll('60s');
+    }
+
+    /** The row's More menu: the less-used actions, each with its own staff right. */
+    private static function moreActions(): array
+    {
+        return [
 
                 // Quick Approve
                 \Filament\Actions\Action::make('quickApprove')
@@ -699,6 +812,10 @@ class UserResource extends Resource
                             'is_active' => false,
                         ]);
                         self::logActivity('profile_suspended', $record, ['reason' => $data['suspension_reason']]);
+                        // the reason in the member's notes history too (25 Nov 2026); members never see it
+                        \App\Support\StaffActionLog::note($record->id, 'Suspended'
+                            .(filled($data['suspension_ends_at'] ?? null) ? ' until '.Carbon::parse($data['suspension_ends_at'])->format('j M Y') : '')
+                            .'. Reason (staff only): '.$data['suspension_reason']);
                     })
                     ->successNotificationTitle('User suspended'),
 
@@ -729,6 +846,7 @@ class UserResource extends Resource
                             'is_active' => false,
                         ]);
                         self::logActivity('profile_banned', $record, ['reason' => $data['suspension_reason']]);
+                        \App\Support\StaffActionLog::note($record->id, 'Banned. Reason (staff only): '.$data['suspension_reason']);
                     })
                     ->successNotificationTitle('User banned permanently'),
 
@@ -752,6 +870,7 @@ class UserResource extends Resource
                             'is_active' => true,
                         ]);
                         self::logActivity($previousStatus === 'banned' ? 'profile_unbanned' : 'profile_unsuspended', $record);
+                        \App\Support\StaffActionLog::note($record->id, $previousStatus === 'banned' ? 'Ban lifted.' : 'Suspension lifted.');
                     })
                     ->successNotificationTitle('User restored to active'),
 
@@ -847,8 +966,13 @@ class UserResource extends Resource
                     ->modalHeading('Delete Profile')
                     ->modalDescription(fn (Profile $record): string => "Delete {$record->full_name} ({$record->matri_id})? They'll be removed from listings and moved to \"Deleted Users\", where you can restore them or delete permanently.")
                     ->modalSubmitActionLabel('Delete')
-                    ->action(fn (Profile $record) => $record->delete())
-                    ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('toggle_active'))
+                    ->action(function (Profile $record): void {
+                        $record->delete();
+                        self::logActivity('profile_deleted', $record);
+                    })
+                    // the Delete Member right (25 Nov 2026: it used Activate/Deactivate, and the
+                    // Delete Member switch in Staff Roles did nothing)
+                    ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('delete_member'))
                     ->successNotificationTitle('Profile deleted — restorable from "Deleted Users"'),
 
                 // Restore (for soft-deleted records)
@@ -864,8 +988,9 @@ class UserResource extends Resource
                     ->action(function (Profile $record): void {
                         $record->restore();
                         $record->update(['is_active' => true]);
+                        self::logActivity('profile_restored', $record);
                     })
-                    ->visible(fn (Profile $record): bool => $record->trashed())
+                    ->visible(fn (Profile $record): bool => $record->trashed() && \App\Support\Permissions::can('delete_member'))
                     ->successNotificationTitle('Profile restored'),
 
                 // Permanent delete (for soft-deleted records)
@@ -879,6 +1004,8 @@ class UserResource extends Resource
                     ->modalHeading('Permanently Delete Profile')
                     ->modalDescription(fn (Profile $record) => "Permanently delete {$record->full_name} ({$record->matri_id})? This will delete all their data, photos, interests, and cannot be undone.")
                     ->action(function (Profile $record): void {
+                        // written before the delete: the log keeps the Matri ID of a profile that is gone
+                        self::logActivity('profile_deleted_forever', $record, ['matri_id' => $record->matri_id]);
                         // Delete photos from disk
                         foreach ($record->profilePhotos as $photo) {
                             if ($photo->photo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($photo->photo_url)) {
@@ -887,82 +1014,60 @@ class UserResource extends Resource
                         }
                         $record->forceDelete();
                     })
-                    ->visible(fn (Profile $record): bool => $record->trashed())
+                    // 25 Nov 2026: anyone who could open All Members could do this, unlogged
+                    ->visible(fn (Profile $record): bool => $record->trashed() && \App\Support\Permissions::can('delete_member'))
                     ->successNotificationTitle('Profile permanently deleted'),
-                ])
-                    ->label('More')
-                    ->icon('heroicon-m-ellipsis-horizontal')
-                    ->button()
-                    ->size('sm'),
+        ];
+    }
+
+    /**
+     * Simpler staff screens (owner, 25 Nov 2026): Open · Notes · More. Open is the member page,
+     * where calls are made, and so is clicking the row; Notes is the same box as Log call;
+     * Assign plan and Open in WhatsApp move into More.
+     */
+    private static function simpleRowActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('open')
+                ->label('Open')
+                ->icon('heroicon-o-arrow-top-right-on-square')
+                ->button()
+                ->size('sm')
+                ->url(fn (Profile $record): ?string => self::profileWorkUrl($record)),
+
+            \App\Filament\Actions\LogContactAction::make('notes')->size('sm'),
+
+            \Filament\Actions\ActionGroup::make([
+                \Filament\Actions\ActionGroup::make([
+                    \Filament\Actions\ViewAction::make()->label('Full profile'),
+                    \Filament\Actions\Action::make('assignPlan')
+                        ->label('Assign plan')
+                        ->icon('heroicon-o-credit-card')
+                        ->url(fn (Profile $record): string => \App\Filament\Pages\ChangeMembershipPlan::getUrl(['matri_id' => $record->matri_id]))
+                        ->visible(fn (Profile $record): bool => ! $record->trashed() && \App\Support\Permissions::can('assign_member_plan')),
+                    // for WhatsApp Web or Desktop; writes nothing: Notes records what was sent
+                    \Filament\Actions\Action::make('openWhatsApp')
+                        ->label('Open in WhatsApp')
+                        ->icon('heroicon-o-chat-bubble-left-right')
+                        ->url(fn (Profile $record): ?string => ($number = \App\Support\MemberContacts::whatsappNumber($record)) ? 'https://wa.me/'.ltrim($number, '+') : null)
+                        ->openUrlInNewTab()
+                        ->visible(fn (Profile $record): bool => \App\Support\MemberContacts::whatsappNumber($record) !== null),
+                ])->dropdown(false),
+                \Filament\Actions\ActionGroup::make(self::moreActions())->dropdown(false),
             ])
-            ->bulkActions([
-                \Filament\Actions\BulkAction::make('approveSelected')
-                    ->label('Approve Selected')
-                    ->icon('heroicon-o-check-badge')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->action(fn ($records) => $records->each->update(['is_approved' => true]))
-                    ->deselectRecordsAfterCompletion(),
+                ->label('More')
+                ->icon('heroicon-m-ellipsis-horizontal')
+                ->button()
+                ->size('sm'),
+        ];
+    }
 
-                \Filament\Actions\BulkAction::make('activate')
-                    ->label('Activate Selected')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->action(fn($records) => $records->each->update(['is_active' => true]))
-                    ->deselectRecordsAfterCompletion(),
+    /** "12 members" / "1 member", for the bulk actions' questions. */
+    public static function membersCount($records): string
+    {
+        $n = is_countable($records) ? count($records) : 0;
 
-                \Filament\Actions\BulkAction::make('deactivate')
-                    ->label('Deactivate Selected')
-                    ->icon('heroicon-o-x-circle')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->action(fn($records) => $records->each->update(['is_active' => false]))
-                    ->deselectRecordsAfterCompletion(),
-
-                // Bulk Restore / Delete-Forever — gated to the "Deleted" tab, whose
-                // query is withTrashed()->whereNotNull('deleted_at'). So these can
-                // ONLY ever act on already-soft-deleted profiles, never live members
-                // (fails closed: hidden on every other tab).
-                \Filament\Actions\BulkAction::make('restoreSelected')
-                    ->label('Restore selected')
-                    ->icon('heroicon-o-arrow-uturn-left')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) === 'deleted')
-                    ->action(fn ($records) => $records->each(function (Profile $record): void {
-                        $record->restore();
-                        $record->update(['is_active' => true]);
-                    }))
-                    ->deselectRecordsAfterCompletion()
-                    ->successNotificationTitle('Profiles restored'),
-
-                \Filament\Actions\BulkAction::make('forceDeleteSelected')
-                    ->label('Delete forever')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('Permanently delete selected profiles')
-                    ->modalDescription('This permanently deletes the selected profiles and all their data, photos and interests. This cannot be undone.')
-                    ->modalSubmitActionLabel('Delete forever')
-                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) === 'deleted')
-                    ->action(fn ($records) => $records->each(function (Profile $record): void {
-                        foreach ($record->profilePhotos as $photo) {
-                            if ($photo->photo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($photo->photo_url)) {
-                                \Illuminate\Support\Facades\Storage::disk('public')->delete($photo->photo_url);
-                            }
-                        }
-                        $record->forceDelete();
-                    }))
-                    ->deselectRecordsAfterCompletion()
-                    ->successNotificationTitle('Profiles permanently deleted'),
-
-                // (no bulk "Export" here — privacy check, 4 Nov 2026: it had no exporter and
-                // no permission check; member exports are Members Overview → Export, which
-                // needs export_member_data)
-            ])
-            ->searchPlaceholder('Search by name, matri ID, email, phone...')
-            ->poll('60s');
+        return $n.' '.($n === 1 ? 'member' : 'members');
     }
 
     /**
@@ -1406,6 +1511,7 @@ class UserResource extends Resource
                         // Tab 10: Admin Notes
                         \Filament\Schemas\Components\Tabs\Tab::make('Admin Notes')
                             ->icon('heroicon-o-pencil-square')
+                            ->visible(fn (): bool => \App\Support\Permissions::can('view_member_notes'))
                             ->badge(fn (Profile $record): ?string => $record->profileNotes->count() > 0 ? (string) $record->profileNotes->count() : null)
                             ->schema([
                                 Infolists\Components\RepeatableEntry::make('profileNotes')

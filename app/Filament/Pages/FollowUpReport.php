@@ -107,6 +107,15 @@ class FollowUpReport extends Page
      */
     public function markDoneAction(): Action
     {
+        // simpler staff screens (25 Nov 2026): the same box as Log call, the follow-up ticked done
+        if (\App\Support\AdminModules::simpleStaffScreens()) {
+            return \App\Filament\Actions\LogContactAction::make('markDone', 'call', history: true, followUpDone: true)
+                ->label('Done')
+                ->icon('heroicon-o-check')
+                ->color('success')
+                ->size('sm');
+        }
+
         return Action::make('markDone')
             ->label('Done')
             ->icon('heroicon-o-check')
@@ -168,7 +177,8 @@ class FollowUpReport extends Page
                     }
                 });
             })
-            ->successNotificationTitle('Follow-up completed');
+            ->successNotificationTitle('Follow-up completed')
+            ->visible(fn (): bool => \App\Support\Permissions::can('add_note_to_member'));
     }
 
     /**
@@ -235,7 +245,8 @@ class FollowUpReport extends Page
                     ->with('adminUser')->latest()->get(),
             ]))
             ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Close');
+            ->modalCancelActionLabel('Close')
+            ->visible(fn (): bool => \App\Support\Permissions::can('view_member_notes'));
     }
 
     /**

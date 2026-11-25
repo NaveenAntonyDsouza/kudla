@@ -72,7 +72,14 @@
         </x-filament::section>
     @endif
 
-    @if ($isCaller)
+    @if ($isCaller && $simple)
+        {{-- simpler staff screens (25 Nov 2026): the call in three steps, matching the Log call box --}}
+        <ol style="margin:0;padding-left:1.2rem;font-size:.85rem;display:flex;flex-direction:column;gap:.15rem;">
+            <li>Call the number (Copy puts it on the clipboard).</li>
+            <li>Open the member: ask them to tell you their date of birth and details, fill in what is missing.</li>
+            <li>Press <strong>Log call</strong> and pick what happened. Nobody answered? <strong>No answer</strong> here is enough.</li>
+        </ol>
+    @elseif ($isCaller)
         <p style="{{ $muted }}font-size:.85rem;margin:0;">
             On the call: open the member, ask them to tell you their date of birth and the other details (don't read them out), fill in what is missing,
             and ask for a photo if there is none. At the end press <strong>Call done</strong> and tick what you did — a photo you asked for on your own
@@ -100,6 +107,12 @@
         @endif
     </div>
 
+    @php
+        // the "Given to" column: on the simpler screens only when there is more than one caller
+        $givenTo = ! $simple || $handOut;
+        $cols = 6 + ($givenTo ? 1 : 0) + ($canPick ? 1 : 0);
+        $copyBtn = 'display:inline-flex;align-items:center;padding:.05rem .45rem;margin-left:.3rem;border-radius:.4rem;border:1px solid rgba(127,127,127,.45);background:transparent;color:inherit;font-size:.72rem;font-weight:600;cursor:pointer;';
+    @endphp
     <x-filament::section>
         {{-- managers: tick several calls and give them to one person (or to anyone) --}}
         @if ($canPick && $rows->isNotEmpty())
@@ -115,7 +128,8 @@
                 <span style="{{ $muted }}">The box in the heading ticks every call shown.</span>
             </div>
         @endif
-        <div style="overflow-x:auto;">
+        <div style="overflow-x:auto;"
+            x-data="{ copied: null, copy(text, id) { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(() => { this.copied = id; setTimeout(() => this.copied = null, 1500) }).catch(() => {}) } } }">
             <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
                 <thead>
                     <tr style="opacity:.7;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;">
@@ -131,7 +145,9 @@
                         <th class="vc-wide" style="{{ $th }}">Phone</th>
                         <th class="vc-wide" style="{{ $th }}">Profile</th>
                         <th class="vc-wide" style="{{ $th }}">Status</th>
-                        <th class="vc-wide" style="{{ $th }}">Given to</th>
+                        @if ($givenTo)
+                            <th class="vc-wide" style="{{ $th }}">Given to</th>
+                        @endif
                         <th style="{{ $th }}padding-right:0;"></th>
                     </tr>
                 </thead>
@@ -143,6 +159,7 @@
                             $whats = $p?->contactInfo?->whatsapp_number;
                             $may = $mayWork($row);
                             $late = $isLate($row);
+                            $copy = $simple ? $copyNumber($row) : null;
                         @endphp
                         @continue (! $p)
                         <tr wire:key="vc-{{ $row->id }}" style="border-top:1px solid rgba(127,127,127,.2);">
@@ -158,6 +175,9 @@
                                     @if ($phone)
                                         <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" style="color:inherit;font-weight:600;">{{ $phone }}</a>
                                     @endif
+                                    @if ($copy)
+                                        <button type="button" style="{{ $copyBtn }}" x-on:click="copy(@js($copy), 'n{{ $row->id }}')"><span x-text="copied === 'n{{ $row->id }}' ? 'Copied' : 'Copy'">Copy</span></button>
+                                    @endif
                                     <div style="margin-top:.2rem;"><x-admin.pill :color="$row->color()">{{ $row->label() }}</x-admin.pill></div>
                                     <div style="{{ $muted }}">joined {{ $p->created_at?->diffForHumans() }} · {{ (int) $p->profile_completion_pct }}% filled @if ($row->attempts) · {{ $row->attempts }} {{ $row->attempts === 1 ? 'try' : 'tries' }} @endif @if ($late) · <span style="color:#dc2626;font-weight:600;">waiting {{ $anyoneDays }}+ days</span> @endif</div>
                                 </div>
@@ -171,6 +191,10 @@
                                 @endif
                                 @if ($whats && preg_replace('/[^0-9]/', '', $whats) !== preg_replace('/[^0-9]/', '', (string) $phone))
                                     <div style="{{ $muted }}">WhatsApp {{ $whats }}</div>
+                                @endif
+                                @if ($copy)
+                                    {{-- the WhatsApp number (else the phone), with + and the country code --}}
+                                    <button type="button" style="{{ $copyBtn }}margin-left:0;" x-on:click="copy(@js($copy), 'w{{ $row->id }}')"><span x-text="copied === 'w{{ $row->id }}' ? 'Copied' : 'Copy'">Copy</span></button>
                                 @endif
                             </td>
                             <td class="vc-wide" style="{{ $td }}">
@@ -193,6 +217,7 @@
                                     @endif
                                 </div>
                             </td>
+                            @if ($givenTo)
                             <td class="vc-wide" style="{{ $td }}">
                                 @if ($manages && $row->isOpen())
                                     <select style="{{ $select }}" wire:change="assign({{ $row->id }}, $event.target.value)" aria-label="Give this call to">
@@ -212,9 +237,16 @@
                                     @endif
                                 @endif
                             </td>
+                            @endif
                             <td style="{{ $td }}padding-right:0;white-space:nowrap;">
                                 <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end;">
-                                    @if ($row->isOpen())
+                                    @if ($row->isOpen() && $simple)
+                                        {{-- "Open", not "Call": it opens the member, it does not dial --}}
+                                        <x-filament::button size="xs" tag="a" :href="$callUrl($row)">Open</x-filament::button>
+                                        @if ($may)
+                                            {{ ($this->logNoAnswerAction)(['row' => $row->id]) }}
+                                        @endif
+                                    @elseif ($row->isOpen())
                                         <x-filament::button size="xs" tag="a" :href="$callUrl($row)" icon="heroicon-m-phone">Call</x-filament::button>
                                         @if ($may)
                                             <x-filament::button size="xs" color="gray" wire:click="noAnswer({{ $row->id }})" wire:confirm="No answer from {{ $p->matri_id }}? It comes back on the list tomorrow.">No answer</x-filament::button>
@@ -225,6 +257,10 @@
                                         @endif
                                     @else
                                         <x-filament::button size="xs" color="gray" tag="a" :href="$callUrl($row)">Open</x-filament::button>
+                                        @if ($simple && $manages && $tab === 'check')
+                                            <x-filament::button size="xs" color="success" wire:click="checked({{ $row->id }})"
+                                                wire:confirm="Checked {{ $p->matri_id }}? It leaves Needs a check, and the member's history says you checked it.">Checked</x-filament::button>
+                                        @endif
                                         @if ($may && $row->status !== 'verified')
                                             <x-filament::button size="xs" color="gray" wire:click="reopen({{ $row->id }})">Call again</x-filament::button>
                                         @endif
@@ -234,7 +270,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $canPick ? 8 : 7 }}" style="{{ $td }}padding-left:0;opacity:.7;">
+                            <td colspan="{{ $cols }}" style="{{ $td }}padding-left:0;opacity:.7;">
                                 @switch($tab)
                                     @case('mine') No calls waiting for you. New members are shared out every 10 minutes. @break
                                     @case('anyone') Nothing waiting: every call is with someone, and none has waited {{ $anyoneDays }} days. @break

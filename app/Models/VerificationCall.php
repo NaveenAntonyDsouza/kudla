@@ -28,6 +28,9 @@ class VerificationCall extends Model
         'not_looking' => ['Not looking any more', 'gray'],
     ];
 
+    /** Closed calls a manager looks at under "Needs a check" until they press Checked (owner, 25 Nov 2026). */
+    public const NEEDS_CHECK = ['mismatch', 'not_looking', 'wrong_number'];
+
     protected $fillable = [
         'profile_id',
         'assigned_to',
@@ -40,6 +43,8 @@ class VerificationCall extends Model
         'due_at',
         'done_at',
         'done_by',
+        'checked_at',
+        'checked_by',
     ];
 
     protected function casts(): array
@@ -49,6 +54,7 @@ class VerificationCall extends Model
             'last_attempt_at' => 'datetime',
             'due_at' => 'datetime',
             'done_at' => 'datetime',
+            'checked_at' => 'datetime',
             'attempts' => 'integer',
             'no_answers' => 'integer',
         ];

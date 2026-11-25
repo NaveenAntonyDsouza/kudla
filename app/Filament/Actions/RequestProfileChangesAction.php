@@ -74,6 +74,8 @@ class RequestProfileChangesAction
                 }
 
                 self::logActivity('profile_changes_requested', $record, ['reason' => $reason]);
+                // what the member was asked, in their notes history (25 Nov 2026)
+                \App\Support\StaffActionLog::note($record->id, 'Asked for changes before approval. Told the member: '.$reason);
             })
             ->visible(fn (Profile $record): bool => ! $record->is_approved && Permissions::can('approve_member'))
             ->successNotificationTitle('Sent to the member');

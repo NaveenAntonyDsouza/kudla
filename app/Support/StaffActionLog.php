@@ -57,6 +57,38 @@ final class StaffActionLog
             unset($details['reason']);
         }
         self::record("{$what}_{$status}", $model->profile_id, array_filter($details, fn ($v) => $v !== null && $v !== ''));
+
+        // the reason the member was given also goes into their notes history (25 Nov 2026): it
+        // lived only on the photo or document, where the next staff member would not see it
+        if ($status === 'rejected') {
+            $reason = trim((string) ($what === 'document' ? $model->jathakam_rejection_reason : ($model->rejection_reason ?? '')));
+            $label = ['photo' => 'Photo', 'id_proof' => 'ID proof', 'document' => 'Horoscope / baptism document'][$what] ?? 'Document';
+            self::note($model->profile_id, $label.' rejected.'.($reason !== '' ? ' Told the member: '.$reason : ''));
+        }
+    }
+
+    /**
+     * One line in the member's notes history for a staff action whose reason was kept only on
+     * the profile, on a document or in an email to the member (25 Nov 2026), so whoever works
+     * the member next can see why. Written by the signed-in staff member, without a second
+     * "note added" line here (the action has its own). Never stops the action.
+     */
+    public static function note(?int $profileId, string $text): void
+    {
+        try {
+            $staff = self::staff();
+            if (! $staff || ! $profileId) {
+                return;
+            }
+            ProfileNote::withoutEvents(fn () => ProfileNote::create([
+                'profile_id' => $profileId,
+                'admin_user_id' => $staff->id,
+                'note_type' => 'general',
+                'note' => \Illuminate\Support\Str::limit($text, 1000, ''),
+            ]));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /** Write one Activity Log line for the signed-in staff account, if there is one. */

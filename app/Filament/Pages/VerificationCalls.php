@@ -5,14 +5,19 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\UserResource;
 use App\Models\User;
 use App\Models\VerificationCall;
+use App\Support\AdminModules;
+use App\Support\MemberContacts;
 use App\Support\StaffActivity;
 use App\Support\VerificationCalls as Calls;
 use DomainException;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\View as SchemaView;
 use Livewire\Attributes\Url;
 
 /**
@@ -75,14 +80,20 @@ class VerificationCalls extends Page
     private function tabs(): array
     {
         $user = auth()->user();
+        // simpler staff screens (25 Nov 2026): "Anyone can call" and "Needs a check" only when they have calls
+        $simple = AdminModules::simpleStaffScreens();
         $tabs = [];
         if (Calls::isCaller($user)) {
             $tabs['mine'] = 'My calls';
         }
-        $tabs['anyone'] = 'Anyone can call';
+        if (! $simple || ! Calls::isCaller($user) || Calls::tab($user, 'anyone')->exists()) {
+            $tabs['anyone'] = 'Anyone can call';
+        }
         if (Calls::managesAll($user)) {
             $tabs['all'] = 'Everyone\'s calls';
-            $tabs['check'] = 'Needs a check';
+            if (! $simple || Calls::tab($user, 'check')->exists()) {
+                $tabs['check'] = 'Needs a check';
+            }
         }
         $tabs['done'] = 'Done (30 days)';
 
@@ -153,6 +164,54 @@ class VerificationCalls extends Page
         });
     }
 
+    /**
+     * No answer from the list (simpler staff screens): records the try, and the "we tried to call
+     * you" WhatsApp when she ticks that she sent it from her own WhatsApp. Never ticked for her.
+     */
+    public function logNoAnswerAction(): Action
+    {
+        return Action::make('logNoAnswer')
+            ->label('No answer')
+            ->color('gray')
+            ->size('xs')
+            ->button()
+            ->modalHeading(fn (array $arguments): string => 'No answer · '.($this->row((int) ($arguments['row'] ?? 0))?->profile?->matri_id ?? 'member'))
+            ->modalDescription('Records a try. The call comes back on the list tomorrow at 10; after '.Calls::MAX_NO_ANSWER.' tries without an answer it closes as "could not reach".')
+            ->form(function (array $arguments): array {
+                $profile = $this->row((int) ($arguments['row'] ?? 0))?->profile;
+
+                return $profile ? [
+                    Checkbox::make('sent_whatsapp')->label('I sent them the "we tried to call you" message on WhatsApp'),
+                    SchemaView::make('filament.members.contact-box')->viewData([
+                        'whatsapp' => true,
+                        'number' => MemberContacts::whatsappNumber($profile),
+                        'text' => MemberContacts::readyText($profile, 'missed'),
+                    ]),
+                ] : [];
+            })
+            ->modalSubmitActionLabel('Record no answer')
+            ->action(function (array $arguments, array $data): void {
+                $row = $this->row((int) ($arguments['row'] ?? 0));
+                if ($row?->profile) {
+                    $this->run(fn () => MemberContacts::log(auth()->user(), $row->profile, [
+                        'type' => 'call', 'outcome' => 'no_answer', 'sent_whatsapp' => (bool) ($data['sent_whatsapp'] ?? false),
+                    ]));
+                }
+            });
+    }
+
+    /** Needs a check: a manager has dealt with it (simpler staff screens). */
+    public function checked(int $id): void
+    {
+        if ($row = $this->row($id)) {
+            $this->run(function () use ($row) {
+                Calls::markChecked(auth()->user(), $row);
+
+                return 'Checked: off the list.';
+            });
+        }
+    }
+
     /** The "we tried to call you" WhatsApp link was opened from a row: note it in the member's history. */
     public function loggedWhatsApp(int $id): void
     {
@@ -166,6 +225,17 @@ class VerificationCalls extends Page
     }
 
     protected function getHeaderActions(): array
+    {
+        $actions = $this->managerActions();
+
+        // simpler staff screens: the three manager tools in one menu
+        return AdminModules::simpleStaffScreens()
+            ? [ActionGroup::make($actions)->label('Manage calls')->icon('heroicon-m-chevron-down')->iconPosition('after')->button()->color('gray')
+                ->visible(fn (): bool => Calls::managesAll(auth()->user()))]
+            : $actions;
+    }
+
+    private function managerActions(): array
     {
         $callers = fn (): array => Calls::callersFor(auth()->user())->pluck('name', 'id')->all();
 
@@ -239,8 +309,14 @@ class VerificationCalls extends Page
             ->limit(200)
             ->get();
         $manages = Calls::managesAll($user);
+        $simple = AdminModules::simpleStaffScreens();
+        // handing calls to someone only when there is more than one person to hand them to
+        $manyCallers = ! $simple || Calls::callersFor($user)->count() > 1;
 
         return [
+            'simple' => $simple,
+            'handOut' => $manages && $manyCallers,
+            'copyNumber' => fn (VerificationCall $row): ?string => $row->profile ? MemberContacts::whatsappNumber($row->profile) : null,
             'tabs' => $tabs,
             'counts' => $counts,
             'rows' => $rows,
@@ -253,7 +329,7 @@ class VerificationCalls extends Page
             // for the "Given to" menu: [id => [name, branch]]; a call goes only to its member's branch
             'callers' => $manages ? Calls::callersFor($user)->mapWithKeys(fn (User $c) => [$c->id => [$c->name, $c->branch_id]])->all() : [],
             // ticking several calls: on the lists of calls still to make
-            'canPick' => $manages && in_array($this->tab, ['anyone', 'all'], true),
+            'canPick' => $manages && $manyCallers && in_array($this->tab, ['anyone', 'all'], true),
             'report' => $manages ? Calls::report($user) : null,
             'callUrl' => fn (VerificationCall $row) => UserResource::profileWorkUrl($row->profile),
             'missedUrl' => function (VerificationCall $row): ?string {

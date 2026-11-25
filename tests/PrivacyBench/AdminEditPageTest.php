@@ -122,7 +122,14 @@ it('shows each status button only to staff with that right, and the page only to
         ->assertActionHidden('approve')
         ->assertActionHidden('deactivate')
         ->assertActionHidden('idVerified')
-        ->assertActionVisible('notes');
+        // Notes has its own rights in Staff Roles (25 Nov 2026: nothing checked them before)
+        ->assertActionHidden('notes');
+
+    $noter = editPageStaff('bench_noter', ['view_member' => 'all', 'edit_member' => 'all', 'view_member_notes' => 'all', 'add_note_to_member' => 'all']);
+    $this->actingAs($noter, 'admin');
+    Livewire::test(EditUser::class, ['record' => $p->fresh()->getRouteKey()])
+        ->assertActionVisible('notes')
+        ->assertActionHidden('approve');
 
     $approver = editPageStaff('bench_approver', ['view_member' => 'all', 'edit_member' => 'all', 'approve_member' => 'all']);
     $this->actingAs($approver, 'admin');

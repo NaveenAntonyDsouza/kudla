@@ -489,10 +489,14 @@ it('adds this site\'s own checklist items after the usual ones, and records and 
 
     \App\Models\SiteSetting::setValue(VerificationCalls::EXTRA_TASKS_SETTING, '');
 
-    // a note-only call is allowed, and Staff Activity counts both as calls
+    // a note-only call is allowed, but only the first tick verifies (owner, 25 Nov 2026): it
+    // stays on the list for another call; Staff Activity counts both as calls
     $second = VerificationCall::whereIn('status', VerificationCall::OPEN)->where('assigned_to', $caller->id)->first();
-    VerificationCalls::finishCall($caller, $second, [], 'Wrong time, will ring tomorrow.');
-    expect($second->refresh()->status)->toBe('verified')
+    expect(VerificationCalls::finishCall($caller, $second, [], 'Wrong time, will ring tomorrow.'))->toContain('Not verified yet');
+    expect($second->refresh()->status)->toBe('waiting')
+        ->and($second->attempts)->toBe(1)
+        ->and($second->done_at)->toBeNull()
+        ->and($second->due_at->isFuture())->toBeTrue()
         ->and(VerificationCalls::tasksDone(now()->subDay())['calls'])->toBe(2);
     $week = [\Carbon\CarbonImmutable::now()->subDay(), \Carbon\CarbonImmutable::now()->addDay()];
     expect(collect(StaffActivity::summary($week[0], $week[1], $caller->id))->first()['calls'])->toBe(2);

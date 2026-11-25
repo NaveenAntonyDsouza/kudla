@@ -15,12 +15,17 @@ use App\Models\ProfileNote;
 use App\Models\ReligiousInfo;
 use App\Models\SocialMediaLink;
 use App\Models\VerificationCall;
+use App\Filament\Actions\LogContactAction;
+use App\Filament\Actions\ProfileNotesAction;
 use App\Services\ProfileCompletionService;
+use App\Support\AdminModules;
+use App\Support\MemberContacts;
 use App\Support\Permissions;
 use App\Support\StaffActivity;
 use App\Support\VerificationCalls;
 use App\Traits\LogsAdminActivity;
 use DomainException;
+use Illuminate\Validation\ValidationException;
 use Filament\Actions;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
@@ -121,6 +126,10 @@ class EditUser extends EditRecord
 
     protected function getHeaderActions(): array
     {
+        if (AdminModules::simpleStaffScreens()) {
+            return $this->simpleHeaderActions();
+        }
+
         return [
             // log the call while it happens: the shared Notes popup (history, Type, Note, Follow-up)
             \App\Filament\Actions\ProfileNotesAction::make('notes'),
@@ -210,31 +219,7 @@ class EditUser extends EditRecord
                 'Other members will see this profile, and the member gets the "profile approved" email.')
                 ->visible(fn (): bool => ! $this->record->is_approved && Permissions::can('approve_member')),
 
-            Actions\ActionGroup::make([
-                $this->statusAction('unapprove', 'Mark as pending (unapprove)', 'heroicon-o-clock', 'warning', ['is_approved' => false], 'profile_unapproved', 'Marked as pending',
-                    'Other members stop seeing this profile until it is approved again.')
-                    ->visible(fn (): bool => $this->record->is_approved && Permissions::can('unapprove_member')),
-                $this->statusAction('hide', 'Hide profile', 'heroicon-o-eye-slash', 'gray', ['is_hidden' => true], 'profile_hidden', 'Profile hidden',
-                    'This is the member\'s own "Hide my profile" setting: other members stop seeing the profile. The member can still sign in, and can unhide it.')
-                    ->visible(fn (): bool => ! $this->record->is_hidden && Permissions::can('toggle_active')),
-                $this->statusAction('unhide', 'Unhide profile', 'heroicon-o-eye', 'gray', ['is_hidden' => false], 'profile_unhidden', 'Profile unhidden',
-                    'Turns off the member\'s "Hide my profile" setting: other members can see the profile again (if it is active and approved).')
-                    ->visible(fn (): bool => (bool) $this->record->is_hidden && Permissions::can('toggle_active')),
-                $this->statusAction('idVerified', 'Mark ID proof verified', 'heroicon-o-identification', 'success', ['id_proof_verified' => true], 'profile_id_verified', 'Marked ID proof verified',
-                    'Records that staff checked this member\'s ID proof.')
-                    ->visible(fn (): bool => ! $this->record->id_proof_verified && Permissions::can('id_proof_approval')),
-                $this->statusAction('idUnverified', 'Remove ID proof verified', 'heroicon-o-identification', 'gray', ['id_proof_verified' => false], 'profile_id_unverified', 'ID proof verified mark removed',
-                    'The profile is no longer marked as ID-proof verified.')
-                    ->visible(fn (): bool => (bool) $this->record->id_proof_verified && Permissions::can('id_proof_approval')),
-                $this->statusAction('deactivate', 'Deactivate', 'heroicon-o-x-circle', 'danger', ['is_active' => false], 'profile_deactivated', 'Profile deactivated',
-                    'Other members stop seeing this profile. The member can still sign in.')
-                    ->visible(fn (): bool => $this->record->is_active && Permissions::can('toggle_active')),
-                $this->statusAction('activate', 'Activate', 'heroicon-o-check-circle', 'success', ['is_active' => true], 'profile_activated', 'Profile activated',
-                    fn (): string => $this->record->account_deleted_at
-                        ? 'The member deleted this account; activating it cancels the deletion and the profile shows to other members again.'
-                        : 'Other members can see this profile again (if it is approved, not hidden and not suspended).')
-                    ->visible(fn (): bool => ! $this->record->is_active && Permissions::can('toggle_active')),
-            ])
+            Actions\ActionGroup::make($this->statusItems())
                 ->label('Status')
                 ->icon('heroicon-m-chevron-down')
                 ->iconPosition('after')
@@ -251,6 +236,128 @@ class EditUser extends EditRecord
         ];
     }
 
+    /** The status changes, each with its own staff right: under Status, or in More on the simpler screens. */
+    private function statusItems(): array
+    {
+        return [
+            $this->statusAction('unapprove', 'Mark as pending (unapprove)', 'heroicon-o-clock', 'warning', ['is_approved' => false], 'profile_unapproved', 'Marked as pending',
+                'Other members stop seeing this profile until it is approved again.')
+                ->visible(fn (): bool => $this->record->is_approved && Permissions::can('unapprove_member')),
+            $this->statusAction('hide', 'Hide profile', 'heroicon-o-eye-slash', 'gray', ['is_hidden' => true], 'profile_hidden', 'Profile hidden',
+                'This is the member\'s own "Hide my profile" setting: other members stop seeing the profile. The member can still sign in, and can unhide it.')
+                ->visible(fn (): bool => ! $this->record->is_hidden && Permissions::can('toggle_active')),
+            $this->statusAction('unhide', 'Unhide profile', 'heroicon-o-eye', 'gray', ['is_hidden' => false], 'profile_unhidden', 'Profile unhidden',
+                'Turns off the member\'s "Hide my profile" setting: other members can see the profile again (if it is active and approved).')
+                ->visible(fn (): bool => (bool) $this->record->is_hidden && Permissions::can('toggle_active')),
+            $this->statusAction('idVerified', 'Mark ID proof verified', 'heroicon-o-identification', 'success', ['id_proof_verified' => true], 'profile_id_verified', 'Marked ID proof verified',
+                'Records that staff checked this member\'s ID proof.')
+                ->visible(fn (): bool => ! $this->record->id_proof_verified && Permissions::can('id_proof_approval')),
+            $this->statusAction('idUnverified', 'Remove ID proof verified', 'heroicon-o-identification', 'gray', ['id_proof_verified' => false], 'profile_id_unverified', 'ID proof verified mark removed',
+                'The profile is no longer marked as ID-proof verified.')
+                ->visible(fn (): bool => (bool) $this->record->id_proof_verified && Permissions::can('id_proof_approval')),
+            $this->statusAction('deactivate', 'Deactivate', 'heroicon-o-x-circle', 'danger', ['is_active' => false], 'profile_deactivated', 'Profile deactivated',
+                'Other members stop seeing this profile. The member can still sign in.')
+                ->visible(fn (): bool => $this->record->is_active && Permissions::can('toggle_active')),
+            $this->statusAction('activate', 'Activate', 'heroicon-o-check-circle', 'success', ['is_active' => true], 'profile_activated', 'Profile activated',
+                fn (): string => $this->record->account_deleted_at
+                    ? 'The member deleted this account; activating it cancels the deletion and the profile shows to other members again.'
+                    : 'Other members can see this profile again (if it is approved, not hidden and not suspended).')
+                ->visible(fn (): bool => ! $this->record->is_active && Permissions::can('toggle_active')),
+        ];
+    }
+
+    /**
+     * Simpler staff screens (owner, 25 Nov 2026): Log call and Log WhatsApp, the one box for
+     * writing a contact down (calls were typed as plain notes 13–25 Nov, and the calls list
+     * never moved); Approve and Request changes only for a pending profile; the rest in More.
+     * Call done, Call result, Save and mark checked on call and the WhatsApp links go.
+     */
+    private function simpleHeaderActions(): array
+    {
+        $save = fn (): ?string => $this->saveBeforeContact();
+
+        return [
+            LogContactAction::make('logCall', 'call', history: false, before: $save)
+                ->label('Log call')
+                ->icon('heroicon-o-phone')
+                ->color('success'),
+
+            LogContactAction::make('logWhatsApp', 'whatsapp', history: false, before: $save)
+                ->label('Log WhatsApp')
+                ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                ->color('success')
+                ->outlined(),
+
+            $this->statusAction('approve', 'Approve', 'heroicon-o-check-badge', 'success', ['is_approved' => true], 'profile_approved', 'Profile approved',
+                'Other members will see this profile, and the member gets the "profile approved" email.')
+                ->visible(fn (): bool => ! $this->record->is_approved && Permissions::can('approve_member')),
+
+            \App\Filament\Actions\RequestProfileChangesAction::make(),
+
+            Actions\ActionGroup::make([
+                Actions\ActionGroup::make([
+                    Actions\ViewAction::make()->label('Full profile (interests, plan, logins)'),
+                    Actions\Action::make('assignPlan')
+                        ->label('Assign plan')
+                        ->icon('heroicon-o-credit-card')
+                        ->url(fn (): string => \App\Filament\Pages\ChangeMembershipPlan::getUrl(['matri_id' => $this->record->matri_id]))
+                        ->visible(fn (): bool => Permissions::can('assign_member_plan')),
+                    // for WhatsApp Web or Desktop on this computer; writes nothing: Log WhatsApp records what was sent
+                    Actions\Action::make('openWhatsApp')
+                        ->label('Open in WhatsApp')
+                        ->icon('heroicon-o-chat-bubble-left-right')
+                        ->url(fn (): ?string => ($number = MemberContacts::whatsappNumber($this->record)) ? 'https://wa.me/'.ltrim($number, '+') : null)
+                        ->openUrlInNewTab()
+                        ->visible(fn (): bool => MemberContacts::whatsappNumber($this->record) !== null),
+                ])->dropdown(false),
+                Actions\ActionGroup::make($this->statusItems())->dropdown(false),
+                Actions\ActionGroup::make([\App\Filament\Actions\LoginAsMemberAction::make()])->dropdown(false),
+            ])
+                ->label('More')
+                ->icon('heroicon-m-ellipsis-horizontal')
+                ->button()
+                ->color('gray'),
+        ];
+    }
+
+    /**
+     * Log call / Log WhatsApp save what was typed on the page first. A field that does not
+     * validate never stops the call being written down (ChatGPT's review, 25 Nov 2026): the
+     * changes stay on the screen and the warning says what to fix.
+     */
+    private function saveBeforeContact(): ?string
+    {
+        try {
+            $this->save(shouldRedirect: false, shouldSendSavedNotification: false);
+
+            return null;
+        } catch (ValidationException $e) {
+            return 'Fix these, then press Save: '.collect($e->errors())->flatten()->unique()->take(3)->implode(' ');
+        }
+    }
+
+    /** The member's whole history, from "All notes" on the card (simpler staff screens). */
+    public function notesHistoryAction(): Actions\Action
+    {
+        return Actions\Action::make('notesHistory')
+            ->modalHeading(fn (): string => 'Notes · '.($this->record->full_name ?: $this->record->matri_id))
+            ->modalContent(fn () => view('filament.components.profile-notes-history', [
+                'notes' => ProfileNotesAction::canView() ? $this->record->profileNotes()->with('adminUser')->latest()->get() : collect(),
+            ]))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Close');
+    }
+
+    /** "Put back on my list" on a finished call that was not verified (it was under Call result). */
+    public function verificationReopen(): void
+    {
+        $this->runVerification(function (VerificationCall $row) {
+            VerificationCalls::reopen(auth()->user(), $row);
+
+            return 'Back on the calls list.';
+        });
+    }
+
     /**
      * Save, and the button for the end of a call: it saves what was corrected and records
      * that the details were checked with the member, also when nothing needed changing.
@@ -259,6 +366,11 @@ class EditUser extends EditRecord
      */
     protected function getFormActions(): array
     {
+        // simpler staff screens: Log call saves the details and records the call in one go
+        if (AdminModules::simpleStaffScreens()) {
+            return [$this->getSaveFormAction(), $this->getCancelFormAction()];
+        }
+
         return [
             $this->getSaveFormAction(),
             Actions\Action::make('saveChecked')
@@ -464,7 +576,26 @@ class EditUser extends EditRecord
             ?: $typed($rel?->denomination, $rel?->other_denomination_name, $rel?->denomination === 'Other')
             ?: $rel?->muslim_community;
 
+        // simpler staff screens (25 Nov 2026): numbers to copy into WhatsApp, the language to speak,
+        // and the last three notes in place of the one-line "last call"
+        $simple = AdminModules::simpleStaffScreens();
+        $notesCount = $simple ? ProfileNote::where('profile_id', $profile->id)->count() : 0;
+        $recent = $simple && ProfileNotesAction::canView()
+            ? ProfileNote::where('profile_id', $profile->id)->with('adminUser')->latest()->limit(3)->get()->map(fn (ProfileNote $n) => [
+                'type' => ProfileNote::NOTE_TYPES[$n->note_type] ?? Str::headline($n->note_type ?? 'General'),
+                'color' => ProfileNote::NOTE_TYPE_COLORS[$n->note_type] ?? 'gray',
+                'when' => $n->created_at?->displayTz()->format('j M'),
+                'by' => $n->adminUser?->name,
+                'note' => Str::limit((string) $n->note, 110),
+            ])->all()
+            : null;
+
         return [
+            'simple' => $simple,
+            'copyPhone' => $simple ? MemberContacts::phoneNumber($profile) : null,
+            'copyWhatsApp' => $simple ? MemberContacts::whatsappNumber($profile) : null,
+            'recentNotes' => $recent,
+            'notesCount' => $notesCount,
             'photo' => $profile->primaryPhoto?->thumb_url,
             'matriId' => $profile->matri_id,
             'facts' => collect([
@@ -476,6 +607,7 @@ class EditUser extends EditRecord
                 $edu?->occupation,
                 $worksIn !== '' ? 'works in ' . $worksIn : null,
                 $livesIn ? 'lives in ' . $livesIn : null,
+                $simple && filled($profile->mother_tongue) ? 'mother tongue ' . $profile->mother_tongue : null,
             ])->filter()->values()->all(),
             'pills' => $pills,
             'phone' => $phone !== '' ? $phone : null,
