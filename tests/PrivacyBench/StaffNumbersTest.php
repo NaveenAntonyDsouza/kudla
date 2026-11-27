@@ -204,6 +204,13 @@ it('makes each Waiting now number the count of the list it opens, and shows olde
     MemberContacts::log($this->tara, $this->listed[0], ['type' => 'call', 'outcome' => 'no_answer']);
     expect(collect($card($this->owner, 'calls')['lines'])->pluck(0)->implode(' | '))->toContain('not called yet: '.($all - 1));
 
+    // left 3 days: late, but only for members who joined from the start day, never the old backlog
+    DB::table('verification_calls')->update(['due_at' => now()->subDays(3), 'assigned_at' => now()->subDays(3)]);
+    $lateLine = fn () => collect($card($this->owner, 'calls')['lines'])->first(fn ($l) => str_starts_with($l[0], 'late'));
+    expect($lateLine())->toBe(['late (2+ days): '.$all, 'danger']);
+    SiteSetting::setValue(StaffNumbers::FROM_SETTING, now($this->tz)->addDay()->toDateString());
+    expect($lateLine())->toBeNull();
+
     // follow-ups: the Follow-up Report's two lists
     ProfileNote::create(['profile_id' => $this->listed[0]->id, 'admin_user_id' => $this->tara->id, 'note_type' => 'general', 'note' => 'ring back', 'follow_up_date' => today()->subDays(3)]);
     ProfileNote::create(['profile_id' => $this->listed[1]->id, 'admin_user_id' => $this->tara->id, 'note_type' => 'general', 'note' => 'ring back', 'follow_up_date' => today()]);

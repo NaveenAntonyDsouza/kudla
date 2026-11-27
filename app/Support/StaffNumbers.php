@@ -32,8 +32,9 @@ use Illuminate\Support\Facades\DB;
  *  - members who joined before the "Count new members from" day (FROM_SETTING; Kudla:
  *    1 Dec 2026) are shown apart and left out of the times, so an old backlog does not count
  *    as slow calling;
- *  - calls are late after 2 days and follow-ups after their day (as before); photos and
- *    Contact Inbox messages only show how old they are, never "late";
+ *  - calls are late after 2 days and follow-ups after their day (as before), but only calls
+ *    to members who joined from the start day are counted late; photos and Contact Inbox
+ *    messages only show how old they are, never "late";
  *  - times are the middle value (median), not an average, so a few old calls don't skew them.
  * Nothing is recorded here; it only reads.
  */
@@ -89,12 +90,15 @@ final class StaffNumbers
         }
         $tab = VerificationCalls::managesAll($viewer) ? 'all' : (VerificationCalls::isCaller($viewer) ? 'mine' : 'anyone');
         $list = fn () => VerificationCalls::tab($viewer, $tab)->reorder();
+        $since = self::from();
+        // members who joined from the start day; the old backlog has its own line
+        $newOnly = fn ($q) => $q->when($since, fn ($w) => $w->where('profiles.created_at', '>=', self::stored($since)));
 
         $count = $list()->count();
         $never = $list()->where('verification_calls.attempts', 0);
         $neverCount = (clone $never)->count();
         $due = $list()->where('verification_calls.due_at', '<=', now())->count();
-        $late = $list()->where(fn ($w) => VerificationCalls::lateWhere($w, now()->subDays(VerificationCalls::ANYONE_AFTER_DAYS)))->count();
+        $late = $list()->where(fn ($w) => VerificationCalls::lateWhere($w, now()->subDays(VerificationCalls::ANYONE_AFTER_DAYS)))->tap($newOnly)->count();
 
         $lines = [];
         if ($due) {
@@ -103,11 +107,10 @@ final class StaffNumbers
         if ($late) {
             $lines[] = ['late ('.VerificationCalls::ANYONE_AFTER_DAYS.'+ days): '.number_format($late), 'danger'];
         }
-        $since = self::from();
         if ($neverCount) {
             $lines[] = ['not called yet: '.number_format($neverCount), null];
             // the longest wait among the new members only: the old backlog has its own line
-            $oldest = (clone $never)->when($since, fn ($q) => $q->where('profiles.created_at', '>=', self::stored($since)))->min('profiles.created_at');
+            $oldest = (clone $never)->tap($newOnly)->min('profiles.created_at');
             if ($oldest) {
                 $lines[] = ['longest wait for a first call: '.self::age($oldest), null];
             }
