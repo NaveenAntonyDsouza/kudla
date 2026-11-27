@@ -169,8 +169,15 @@ class ListUsers extends ListRecords
                     ->maxDate(fn (\Filament\Schemas\Components\Utilities\Get $get) => \App\Support\MinimumAge::latestBirthDate($get('gender')))
                     ->helperText(fn (\Filament\Schemas\Components\Utilities\Get $get) => \App\Support\MinimumAge::message($get('gender'))),
                 Forms\Components\TextInput::make('phone')->label('Phone')->tel()->required()->unique('users', 'phone')->maxLength(15),
+                // owner, 27 Nov 2026: who the profile is for, as web sign-up asks
+                Forms\Components\Select::make('created_by')->label('Profile created by (optional)')
+                    ->options(fn (): array => array_combine($l = config('reference_data.created_by_list', []), $l)),
                 Forms\Components\TextInput::make('email')->label('Email (optional)')->email()->unique('users', 'email')->maxLength(255)
                     ->live(onBlur: true),
+                // owner, 27 Nov 2026: staff can give an office-run member their password on the phone
+                Forms\Components\TextInput::make('password')->label('Password (optional)')->password()->revealable()
+                    ->minLength(8)->maxLength(72)
+                    ->helperText('Leave it empty for a random one (the member can use "Forgot password").'),
                 Forms\Components\Toggle::make('send_login')
                     ->label('Email the login details to the member')
                     ->helperText('They then finish their own profile when they first sign in. Leave it off when the office fills the profile in.')
@@ -180,10 +187,11 @@ class ListUsers extends ListRecords
             ->action(function (array $data): void {
                 $email = filled($data['email'] ?? null) ? trim((string) $data['email']) : null;
                 $sendLogin = $email !== null && ! empty($data['send_login']);
-                $password = Str::random(12);
+                $chosen = filled($data['password'] ?? null);
+                $password = $chosen ? (string) $data['password'] : Str::random(12);
                 $autoApprove = SiteSetting::getValue('auto_approve_profiles', '1') === '1';
 
-                $profile = DB::transaction(function () use ($data, $email, $sendLogin, $password, $autoApprove) {
+                $profile = DB::transaction(function () use ($data, $email, $sendLogin, $password, $autoApprove): Profile {
                     $user = User::create([
                         'name' => $data['full_name'],
                         'email' => $email,
@@ -210,7 +218,7 @@ class ListUsers extends ListRecords
                         'full_name' => $data['full_name'],
                         'gender' => $data['gender'],
                         'date_of_birth' => $data['date_of_birth'],
-                        'created_by' => 'staff',
+                        'created_by' => filled($data['created_by'] ?? null) ? $data['created_by'] : 'staff',
                         'creator_name' => auth()->user()?->name,
                         'created_by_staff_id' => auth()->id(),
                         'registration_source' => \App\Support\DeviceDetector::ADMIN,
@@ -228,7 +236,7 @@ class ListUsers extends ListRecords
                         report($e);   // the member can still use "Forgot password"
                     }
                 }
-                \App\Support\StaffActionLog::record('member_registered_by_staff', $profile->id, ['matri_id' => $profile->matri_id, 'login_emailed' => $sendLogin]);
+                \App\Support\StaffActionLog::record('member_registered_by_staff', $profile->id, ['matri_id' => $profile->matri_id, 'login_emailed' => $sendLogin, 'password_set_by_staff' => $chosen]);
 
                 Notification::make()
                     ->title('Added '.$profile->matri_id.'. Fill in the rest of the profile here.')

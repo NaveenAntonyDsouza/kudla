@@ -291,6 +291,21 @@ it('gives the Telecaller role no bulk approve and no delete forever, and adds a 
         ->callAction('addMember', data: ['full_name' => 'Added Web Member', 'gender' => 'male', 'date_of_birth' => '1992-01-01', 'phone' => '9845099902', 'email' => 'added.web@bench.test', 'send_login' => true])
         ->assertHasNoActionErrors();
     $web = Profile::where('full_name', 'Added Web Member')->firstOrFail();
+    expect(\Illuminate\Support\Facades\Hash::check('bench-pass-123', (string) $office->user->password))->toBeFalse();   // left empty: random
+
+    // a password staff chose (owner, 27 Nov 2026): the member can sign in with it; never in the log
+    Livewire::test(ListUsers::class)
+        ->callAction('addMember', data: ['full_name' => 'Added Pass Member', 'gender' => 'female', 'date_of_birth' => '1995-03-03', 'phone' => '9845099903', 'password' => 'Office-pass-77', 'created_by' => 'Mother'])
+        ->assertHasNoActionErrors();
+    $pass = Profile::where('full_name', 'Added Pass Member')->firstOrFail();
+    $log = AdminActivityLog::where('action', 'member_registered_by_staff')->where('model_id', $pass->id)->first();
+    expect(\Illuminate\Support\Facades\Hash::check('Office-pass-77', (string) $pass->user->password))->toBeTrue()
+        ->and($pass->created_by)->toBe('Mother')
+        ->and($log->changes['password_set_by_staff'])->toBeTrue()
+        ->and(json_encode($log->changes))->not->toContain('Office-pass-77');
+    Livewire::test(ListUsers::class)
+        ->callAction('addMember', data: ['full_name' => 'Short Pass', 'gender' => 'male', 'date_of_birth' => '1990-01-01', 'phone' => '9845099904', 'password' => 'short'])
+        ->assertHasActionErrors(['password']);
     expect($web->onboarding_completed)->toBeFalse()->and($web->onboarding_step_completed)->toBe(1);
     Mail::assertSent(\App\Mail\StaffCreatedMemberWelcomeMail::class);
 
