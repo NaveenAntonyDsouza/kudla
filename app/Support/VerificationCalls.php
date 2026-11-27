@@ -447,7 +447,8 @@ final class VerificationCalls
             ->orWhere(fn ($late) => self::lateWhere($late, $cut));
     }
 
-    private static function lateWhere($where, CarbonInterface $cut): void
+    /** Left 2+ days by its caller, as a query condition (also counted on Staff Activity's "Waiting now"). */
+    public static function lateWhere($where, CarbonInterface $cut): void
     {
         $where->where('verification_calls.due_at', '<=', $cut)
             ->where(fn ($given) => $given->whereNull('verification_calls.assigned_at')->orWhere('verification_calls.assigned_at', '<=', $cut));
@@ -572,6 +573,7 @@ final class VerificationCalls
                 'profile_id' => $row->profile_id,
                 'admin_user_id' => $staff->id,
                 'note_type' => 'call',
+                'outcome' => $result,
                 'note' => self::NOTE_PREFIX.' '.$what.($note !== '' ? ' '.$note : ''),
                 'follow_up_date' => $closed && $date ? $date->toDateString() : null,
             ]);
@@ -639,6 +641,7 @@ final class VerificationCalls
                 'profile_id' => $row->profile_id,
                 'admin_user_id' => $staff->id,
                 'note_type' => 'call',
+                'outcome' => 'spoke',
                 'note' => trim(self::NOTE_PREFIX.($verified ? ' spoke to them.' : ' spoke to them, not verified yet.')
                     .($did ? ' '.ucfirst(implode('; ', $did)).'.' : '')
                     .($notes !== '' ? ' '.$notes : '')
@@ -732,6 +735,7 @@ final class VerificationCalls
                 'profile_id' => $profile->getKey(),
                 'admin_user_id' => $staff->id,
                 'note_type' => 'call',
+                'outcome' => 'spoke',
                 'note' => self::NOTE_PREFIX.' details checked with the member. Verified.',
             ]);
         } catch (\Throwable $e) {
@@ -881,9 +885,13 @@ final class VerificationCalls
      * For managers: this week per caller (calls made, verified, could not reach) and what
      * each has open now (due now, waiting 2+ days), plus the list as a whole.
      */
-    public static function report(User $viewer): array
+    public static function report(User $viewer, ?CarbonInterface $from = null, ?CarbonInterface $to = null): array
     {
-        $weekStart = now(StaffActivity::tz())->startOfWeek()->setTimezone(config('app.timezone'));
+        // this week, or (Staff numbers, 27 Nov 2026) the days picked on the calls page
+        $weekStart = $from
+            ? Carbon::instance($from)->setTimezone(config('app.timezone'))
+            : now(StaffActivity::tz())->startOfWeek()->setTimezone(config('app.timezone'));
+        $periodEnd = $to ? Carbon::instance($to)->setTimezone(config('app.timezone')) : now()->addMinute();
         $late = now()->subDays(self::ANYONE_AFTER_DAYS);
         $open = self::rows($viewer)->whereIn('verification_calls.status', VerificationCall::OPEN)
             ->groupBy('verification_calls.assigned_to')
@@ -892,8 +900,10 @@ final class VerificationCalls
                 .'sum(case when verification_calls.due_at <= ? and (verification_calls.assigned_at is null or verification_calls.assigned_at <= ?) then 1 else 0 end) as late', [now(), $late, $late])
             ->get()->keyBy(fn ($r) => (int) $r->who);
         $calls = ProfileNote::query()->where('note_type', 'call')->where('note', 'like', self::NOTE_PREFIX.'%')
-            ->where('created_at', '>=', $weekStart)->groupBy('admin_user_id')->selectRaw('admin_user_id, count(*) as n')->pluck('n', 'admin_user_id');
-        $closed = fn (string $status) => self::rows($viewer)->where('verification_calls.status', $status)->where('verification_calls.done_at', '>=', $weekStart)
+            ->where('created_at', '>=', $weekStart)->where('created_at', '<=', $periodEnd)
+            ->groupBy('admin_user_id')->selectRaw('admin_user_id, count(*) as n')->pluck('n', 'admin_user_id');
+        $closed = fn (string $status) => self::rows($viewer)->where('verification_calls.status', $status)
+            ->where('verification_calls.done_at', '>=', $weekStart)->where('verification_calls.done_at', '<=', $periodEnd)
             ->groupBy('verification_calls.done_by')->select([])->selectRaw('verification_calls.done_by as who, count(*) as n')->pluck('n', 'who');
         $verified = $closed('verified');
         $notReached = $closed('not_reached');
@@ -915,7 +925,7 @@ final class VerificationCalls
 
         return [
             'rows' => $rows,
-            'tasks_this_week' => self::tasksDone($weekStart),
+            'tasks_this_week' => self::tasksDone($weekStart, $periodEnd),
             'unassigned' => (int) ($open[0]->n ?? 0),
             'from' => self::startDate(),
             'total' => (clone $all)->count(),
@@ -929,7 +939,7 @@ final class VerificationCalls
      * ['photo' => 12, 'link' => 9, …]. Read back off the Activity Log lines finishCall
      * writes, so it counts what staff said they did however they did it.
      */
-    public static function tasksDone(CarbonInterface $from): array
+    public static function tasksDone(CarbonInterface $from, ?CarbonInterface $to = null): array
     {
         $done = array_fill_keys(array_keys(self::tasks()), 0);
         $done['calls'] = 0;
@@ -937,6 +947,7 @@ final class VerificationCalls
             $rows = \App\Models\AdminActivityLog::query()
                 ->where('action', 'verification_call_done')
                 ->where('created_at', '>=', $from)
+                ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
                 ->limit(5000)
                 ->pluck('changes');
             foreach ($rows as $changes) {

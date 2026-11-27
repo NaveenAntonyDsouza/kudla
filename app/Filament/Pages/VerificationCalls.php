@@ -46,6 +46,11 @@ class VerificationCalls extends Page
     public array $picked = [];
     public string $giveTo = '';
 
+    /** Staff numbers (27 Nov 2026): the days the top box counts, as on Staff Activity. */
+    public string $reportRange = 'this_week';
+    public ?string $reportFrom = null;
+    public ?string $reportTo = null;
+
     public static function canAccess(): bool
     {
         return Calls::canUse(auth()->user());
@@ -288,7 +293,27 @@ class VerificationCalls extends Page
         // handing calls to someone only when there is more than one person to hand them to
         $manyCallers = ! $simple || Calls::callersFor($user)->count() > 1;
 
+        // Staff numbers (27 Nov 2026): the top box counts the days picked (this week before)
+        $numbers = $manages && \App\Support\StaffNumbers::on();
+        $period = null;
+        if ($numbers) {
+            if (! array_key_exists($this->reportRange, StaffActivity::RANGES)) {
+                $this->reportRange = 'this_week';
+            }
+            $this->reportFrom ??= now(StaffActivity::tz())->startOfWeek()->toDateString();
+            $this->reportTo ??= now(StaffActivity::tz())->toDateString();
+            [$pFrom, $pTo] = StaffActivity::range($this->reportRange, $this->reportFrom, $this->reportTo);
+            $period = [
+                'from' => $pFrom,
+                'to' => $pTo,
+                'label' => $pFrom->isSameDay($pTo) ? $pFrom->format('D j M Y') : $pFrom->format('j M').' – '.$pTo->format('j M Y'),
+            ];
+        }
+
         return [
+            'numbers' => $numbers,
+            'period' => $period,
+            'reportRanges' => StaffActivity::RANGES,
             'simple' => $simple,
             'handOut' => $manages && $manyCallers,
             'copyNumber' => fn (VerificationCall $row): ?string => $row->profile ? MemberContacts::whatsappNumber($row->profile) : null,
@@ -305,7 +330,7 @@ class VerificationCalls extends Page
             'callers' => $manages ? Calls::callersFor($user)->mapWithKeys(fn (User $c) => [$c->id => [$c->name, $c->branch_id]])->all() : [],
             // ticking several calls: on the lists of calls still to make
             'canPick' => $manages && $manyCallers && in_array($this->tab, ['anyone', 'all'], true),
-            'report' => $manages ? Calls::report($user) : null,
+            'report' => $manages ? Calls::report($user, $period['from'] ?? null, $period['to'] ?? null) : null,
             'callUrl' => fn (VerificationCall $row) => UserResource::profileWorkUrl($row->profile),
             'missedUrl' => function (VerificationCall $row): ?string {
                 $digits = MembersWithoutPhoto::whatsappDigits($row->profile);

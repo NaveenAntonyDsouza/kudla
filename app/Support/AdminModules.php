@@ -43,6 +43,14 @@ class AdminModules
      */
     public const SIMPLE_STAFF_SCREENS = 'module_simple_staff_screens_enabled';
 
+    /**
+     * Staff numbers (owner, 27 Nov 2026, Step 1 of the staff analytics plan): a "Waiting now"
+     * strip on Staff Activity, each call answer and newly verified members counted once, team
+     * times to the first call and to verified, and a date choice on the calls page's box.
+     * New: starts off; off = today's Staff Activity page exactly.
+     */
+    public const STAFF_NUMBERS = 'module_staff_numbers_enabled';
+
     /** Assisted service: a relationship manager works a paying member's profile (Nov 2026). */
     public const ASSISTED = 'module_assisted_enabled';
 
@@ -104,6 +112,15 @@ class AdminModules
     {
         try {
             return SiteSetting::getValue(self::SIMPLE_STAFF_SCREENS, '0') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    public static function staffNumbers(): bool
+    {
+        try {
+            return SiteSetting::getValue(self::STAFF_NUMBERS, '0') === '1';
         } catch (\Throwable) {
             return false;
         }

@@ -224,6 +224,7 @@ final class MemberContacts
             'profile_id' => $profile->getKey(),
             'admin_user_id' => $staff->id,
             'note_type' => 'call',
+            'outcome' => $outcome,
             'note' => trim($text.' '.$note),
             'follow_up_date' => ($outcome === 'call_back' ? $at->displayTz() : $date)?->toDateString(),
         ]);

@@ -17,7 +17,22 @@
     </style>
 
     @if ($report)
-        <x-filament::section heading="This week" :description="'On the list: members who joined from '.$from->displayTz()->format('j M Y').'. '.$report['total'].' members, '.$report['verified'].' verified, '.$report['openTotal'].' still to call.'">
+        <x-filament::section :heading="$period ? 'Calls: '.$period['label'] : 'This week'" :description="'On the list: members who joined from '.$from->displayTz()->format('j M Y').'. '.$report['total'].' members, '.$report['verified'].' verified, '.$report['openTotal'].' still to call.'">
+            @if ($period)
+                {{-- Staff numbers (27 Nov 2026): the same days as on Staff Activity --}}
+                <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem;">
+                    @foreach ($reportRanges as $value => $text)
+                        <x-filament::button size="xs" :color="$reportRange === $value ? 'primary' : 'gray'" :outlined="$reportRange !== $value" wire:click="$set('reportRange', '{{ $value }}')">{{ $text }}</x-filament::button>
+                    @endforeach
+                    @if ($reportRange === 'custom')
+                        <span style="display:inline-flex;gap:.4rem;align-items:center;margin-left:.25rem;">
+                            <input type="date" wire:model.live="reportFrom" style="padding:.25rem .45rem;border:1px solid rgba(127,127,127,.4);border-radius:.5rem;background:transparent;color:inherit;font-size:.8rem;">
+                            <span>to</span>
+                            <input type="date" wire:model.live="reportTo" style="padding:.25rem .45rem;border:1px solid rgba(127,127,127,.4);border-radius:.5rem;background:transparent;color:inherit;font-size:.8rem;">
+                        </span>
+                    @endif
+                </div>
+            @endif
             @if ($report['rows']->isEmpty())
                 <p style="font-size:.875rem;">
                     No staff member takes verification calls yet, so every new member waits under <strong>Anyone can call</strong>.
@@ -32,7 +47,7 @@
                                 <th style="{{ $num }}">Open now</th>
                                 <th style="{{ $num }}">Due now</th>
                                 <th style="{{ $num }}">Waiting {{ $anyoneDays }}+ days</th>
-                                <th style="{{ $num }}">Calls this week</th>
+                                <th style="{{ $num }}">{{ $period ? 'Calls' : 'Calls this week' }}</th>
                                 <th style="{{ $num }}">Verified</th>
                                 <th style="{{ $num }}padding-right:0;">Could not reach</th>
                             </tr>
@@ -53,7 +68,7 @@
                             @if ($t && $t['calls'])
                                 <tr style="border-top:1px solid rgba(127,127,127,.2);">
                                     <td style="{{ $td }}padding-left:0;" colspan="7">
-                                        <span style="{{ $muted }}">Of the {{ $t['calls'] }} {{ $t['calls'] === 1 ? 'call' : 'calls' }} recorded this week:</span>
+                                        <span style="{{ $muted }}">Of the {{ $t['calls'] }} {{ $t['calls'] === 1 ? 'call' : 'calls' }} recorded {{ $period ? 'in these days' : 'this week' }}:</span>
                                         @foreach (\App\Support\VerificationCalls::taskShort() as $key => $label)
                                             <span style="margin-left:.5rem;">{{ $label }} <strong>{{ $t[$key] ?? 0 }}</strong>@if (! $loop->last) ·@endif</span>
                                         @endforeach

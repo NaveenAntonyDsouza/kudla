@@ -65,20 +65,34 @@ class StaffActivity extends Page
 
     protected function getViewData(): array
     {
-        if (! array_key_exists($this->range, Activity::RANGES)) {
-            $this->range = 'today';
-        }
         // whatever the browser sends, someone without the right sees only themselves
         $only = static::seesEveryone() ? null : (int) auth()->id();
         $selected = $only ?? $this->staffId;
+
+        // Staff numbers (27 Nov 2026): "Waiting now", each call answer, team times. Off: the page as before.
+        $numbers = \App\Support\StaffNumbers::on();
+        $ranges = $numbers ? Activity::RANGES : array_diff_key(Activity::RANGES, ['last_week' => true]);
+        if (! array_key_exists($this->range, $ranges)) {
+            $this->range = 'today';
+        }
 
         [$from, $to] = Activity::range($this->range, $this->from, $this->to);
         $rows = Activity::summary($from, $to, $only);
         $names = collect($rows)->pluck('name', 'staff_id');
 
         return [
+            'numbers' => $numbers,
+            'waiting' => $numbers ? \App\Support\StaffNumbers::waiting(auth()->user()) : [],
+            // the team's own cards count a member two staff members called once
+            'team' => $numbers ? Activity::team($from, $to, $only) : null,
+            // how long new members wait: the whole team's figure, for whoever sees everyone
+            'speed' => $numbers && $only === null ? \App\Support\StaffNumbers::speed($from, $to) : null,
+            'since' => $numbers ? \App\Support\StaffNumbers::from() : null,
+            'assistedOn' => \App\Support\AdminModules::assisted(),
+            'inboxOn' => $numbers && \App\Filament\Pages\WhatsAppInbox::shouldRegisterNavigation(),
+            'answers' => \App\Support\MemberContacts::OUTCOMES,
             'everyone' => $only === null,
-            'ranges' => Activity::RANGES,
+            'ranges' => $ranges,
             'periodLabel' => $from->isSameDay($to) ? $from->format('D j M Y') : $from->format('j M').' – '.$to->format('j M Y'),
             'rows' => $rows,
             'totals' => $this->totals($rows),

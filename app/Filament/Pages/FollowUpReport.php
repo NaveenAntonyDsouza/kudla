@@ -49,12 +49,27 @@ class FollowUpReport extends Page
         return 'danger';
     }
 
-    public function getOverdueFollowUps()
+    /** Follow-ups due before today and not done (also counted on Staff Activity's "Waiting now"). */
+    public static function overdueQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return ProfileNote::query()
             ->pendingFollowUp()
             ->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts()) // exclude follow-ups whose member was deleted (by staff or by the member)
-            ->where('follow_up_date', '<', today())
+            ->where('follow_up_date', '<', today());
+    }
+
+    /** Follow-ups due today and not done (also counted on Staff Activity's "Waiting now"). */
+    public static function todayQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return ProfileNote::query()
+            ->pendingFollowUp()
+            ->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts()) // exclude follow-ups whose member was deleted (by staff or by the member)
+            ->whereDate('follow_up_date', today());
+    }
+
+    public function getOverdueFollowUps()
+    {
+        return static::overdueQuery()
             ->with(['profile.primaryPhoto', 'profile.user', 'adminUser'])
             ->orderBy('follow_up_date')
             ->get();
@@ -62,10 +77,7 @@ class FollowUpReport extends Page
 
     public function getTodayFollowUps()
     {
-        return ProfileNote::query()
-            ->pendingFollowUp()
-            ->whereHas('profile', fn ($p) => $p->withoutDeletedAccounts()) // exclude follow-ups whose member was deleted (by staff or by the member)
-            ->whereDate('follow_up_date', today())
+        return static::todayQuery()
             ->with(['profile.primaryPhoto', 'profile.user', 'adminUser'])
             ->orderBy('follow_up_date')
             ->get();

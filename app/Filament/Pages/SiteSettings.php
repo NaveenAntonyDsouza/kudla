@@ -57,6 +57,8 @@ class SiteSettings extends Page implements HasForms
             AdminModules::RECOMMENDATIONS => ($settings[AdminModules::RECOMMENDATIONS] ?? '0') === '1',
             AdminModules::VERIFICATION_CALLS => ($settings[AdminModules::VERIFICATION_CALLS] ?? '0') === '1',
             AdminModules::SIMPLE_STAFF_SCREENS => ($settings[AdminModules::SIMPLE_STAFF_SCREENS] ?? '0') === '1',
+            AdminModules::STAFF_NUMBERS => ($settings[AdminModules::STAFF_NUMBERS] ?? '0') === '1',
+            \App\Support\StaffNumbers::FROM_SETTING => ($settings[\App\Support\StaffNumbers::FROM_SETTING] ?? '') ?: null,
             // already working before they had a switch: not set means on
             AdminModules::ASSISTED => ($settings[AdminModules::ASSISTED] ?? '1') === '1',
             AdminModules::STAFF_ACTIVITY => ($settings[AdminModules::STAFF_ACTIVITY] ?? '1') === '1',
@@ -217,6 +219,16 @@ class SiteSettings extends Page implements HasForms
                         Forms\Components\Toggle::make(AdminModules::STAFF_ACTIVITY)
                             ->label('Staff activity')
                             ->helperText('Calls, WhatsApp messages, follow-ups and member work per staff member and per day (Insights → Staff Activity). Staff without the Activity Log right see only their own work, as "My Activity".'),
+
+                        Forms\Components\Toggle::make(AdminModules::STAFF_NUMBERS)
+                            ->label('Staff numbers: waiting now and call answers')
+                            ->helperText('On Staff Activity: a "Waiting now" strip (calls, follow-ups, photos, Contact Inbox, WhatsApp, profiles to approve, each opening its list), every call answer counted on its own, members verified and added, Contact Inbox replies, and how long new members wait for their first call. The calls page\'s top box gets a date choice. Off: today\'s Staff Activity page.'),
+
+                        Forms\Components\DatePicker::make(\App\Support\StaffNumbers::FROM_SETTING)
+                            ->label('Count new members from')
+                            ->native(false)
+                            ->displayFormat('j M Y')
+                            ->helperText('For Staff numbers: members who joined before this day are shown apart ("from before"), and are left out of the time to a first call, so an old backlog does not count as slow calling. Empty: every member counts.'),
 
                         Forms\Components\Toggle::make(AdminModules::LOGIN_AS_MEMBER)
                             ->label('Login as member')
@@ -591,6 +603,7 @@ class SiteSettings extends Page implements HasForms
             'whatsapp_button_enabled', 'photo_via_whatsapp', 'blog_enabled', 'hide_phone_whatsapp',
             AdminModules::BRANCHES, AdminModules::LEADS, AdminModules::STAFF_TARGETS,
             AdminModules::ADVERTISEMENTS, AdminModules::RECOMMENDATIONS, AdminModules::VERIFICATION_CALLS, AdminModules::SIMPLE_STAFF_SCREENS,
+            AdminModules::STAFF_NUMBERS,
             AdminModules::ASSISTED, AdminModules::STAFF_ACTIVITY, AdminModules::LOGIN_AS_MEMBER, AdminModules::PAYMENT_INSIGHTS,
             AdminModules::LAST_SEEN, AdminModules::ACTIVE_FIRST, AdminModules::REFUSED_ADDRESSES, AdminModules::PHOTO_BAR_MORE, AdminModules::PHOTO_POPUP, AdminModules::WAITING_POPUP, AdminModules::PLANS_POPUP, AdminModules::CHANNEL_POPUP,
             AdminModules::SUGGESTED_PREFS, AdminModules::FULL_NAME_PAID,

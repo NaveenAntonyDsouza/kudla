@@ -5,10 +5,13 @@ namespace App\Support;
 use App\Models\AdminActivityLog;
 use App\Models\LoginAsSession;
 use App\Models\LoginHistory;
+use App\Models\Profile;
 use App\Models\ProfileNote;
 use App\Models\ProfilePhoto;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\VerificationCall;
+use App\Models\WhatsAppMessage;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -38,6 +41,8 @@ final class StaffActivity
         'today' => 'Today',
         'yesterday' => 'Yesterday',
         'this_week' => 'This week',
+        // Staff numbers (27 Nov 2026): the page shows it only when that switch is on
+        'last_week' => 'Last week',
         'last_7' => 'Last 7 days',
         'this_month' => 'This month',
         'last_month' => 'Last month',
@@ -61,6 +66,7 @@ final class StaffActivity
         [$start, $end] = match ($range) {
             'yesterday' => [$today->subDay(), $today->subDay()],
             'this_week' => [$today->startOfWeek(), $today],
+            'last_week' => [$today->startOfWeek()->subWeek(), $today->startOfWeek()->subDay()],
             'last_7' => [$today->subDays(6), $today],
             'this_month' => [$today->startOfMonth(), $today],
             'last_month' => [$today->subMonthNoOverflow()->startOfMonth(), $today->subMonthNoOverflow()->endOfMonth()->startOfDay()],
@@ -182,9 +188,33 @@ final class StaffActivity
             'login_as_minutes' => (int) $by('login_as')->sum('minutes'),
             'sign_ins' => $by('sign_in')->count(),
         ];
+        // Staff numbers (27 Nov 2026): each answer, from the answer saved on the call note
+        // (empty on notes from before 28 Nov 2026: "answer not saved"); the rest are only
+        // collected while the switch is on, so with it off they stay 0
+        $calls = $by('call');
+        $row['members_called'] = $calls->pluck('member')->filter()->unique()->count();
+        foreach (array_keys(MemberContacts::OUTCOMES) as $answer) {
+            $row[$answer] = $calls->where('outcome', $answer)->count();
+        }
+        $row['answer_not_saved'] = $calls->whereNull('outcome')->count();
+        $row['verified'] = $by('verified')->count();
+        $row['members_added'] = $by('member_added')->count();
+        $row['contact_replies'] = $by('contact_reply')->count();
+        $row['wa_sent'] = $by('wa_sent')->count();
         $row['total'] = $events->where('work', true)->count();
 
         return $row;
+    }
+
+    /**
+     * The same counts for everyone together (or only $onlyStaffId): a member two staff
+     * members called counts once here, unlike adding up the rows (Staff numbers' cards).
+     */
+    public static function team(CarbonImmutable $from, CarbonImmutable $to, ?int $onlyStaffId = null): array
+    {
+        $ids = self::staff()->when($onlyStaffId, fn ($c) => $c->where('id', $onlyStaffId))->pluck('id')->all();
+
+        return self::count(self::events($from, $to, $ids));
     }
 
     /** Range in the time zone the database rows are written in. */
@@ -220,7 +250,7 @@ final class StaffActivity
         ProfileNote::query()
             ->whereIn('admin_user_id', $staffIds)
             ->whereBetween('created_at', [$a, $b])
-            ->get(['admin_user_id', 'profile_id', 'note_type', 'note', 'follow_up_date', 'created_at'])
+            ->get(array_merge(['admin_user_id', 'profile_id', 'note_type', 'note', 'follow_up_date', 'created_at'], self::hasOutcome() ? ['outcome'] : []))
             ->each(function (ProfileNote $n) use ($events, $event) {
                 if (str_starts_with((string) $n->note, self::PLAN_NOTE_PREFIX) && ($n->note_type ?? 'general') === 'general') {
                     return; // the Change Plan page's own note: counted as a plan below
@@ -232,7 +262,8 @@ final class StaffActivity
                     in_array($type, self::CONTACT_TYPES, true) => 'other_contact',
                     default => 'general_note',
                 };
-                $events->push($event($n->admin_user_id, $kind, $n->getRawOriginal('created_at'), $n->profile_id));
+                $events->push($event($n->admin_user_id, $kind, $n->getRawOriginal('created_at'), $n->profile_id,
+                    $kind === 'call' ? ['outcome' => $n->getAttribute('outcome') ?: null] : []));
                 if ($n->follow_up_date) {
                     $events->push($event($n->admin_user_id, 'followup_set', $n->getRawOriginal('created_at'), $n->profile_id));
                 }
@@ -311,6 +342,59 @@ final class StaffActivity
             ->get(['user_id', 'logged_in_at'])
             ->each(fn (LoginHistory $h) => $events->push($event($h->user_id, 'sign_in', $h->getRawOriginal('logged_in_at'))));
 
+        if (StaffNumbers::on()) {
+            self::numbersEvents($events, $event, $staffIds, $a, $b);
+        }
+
         return $events;
+    }
+
+    /**
+     * Staff numbers (27 Nov 2026), each from the one place it is kept, so nothing counts twice:
+     * members verified (the calls list: one row per member, by who finished it), members added
+     * (the profile's "added by staff" mark, deleted profiles too: the work was done), Contact
+     * Inbox replies (the reply's Activity Log line; opening or closing a message is not a reply),
+     * WhatsApp sent from the WhatsApp Inbox (kept apart from the WhatsApp staff log in Notes).
+     */
+    private static function numbersEvents(Collection $events, \Closure $event, array $staffIds, string $a, string $b): void
+    {
+        VerificationCall::query()
+            ->where('status', 'verified')
+            ->whereIn('done_by', $staffIds)
+            ->whereBetween('done_at', [$a, $b])
+            ->get(['done_by', 'profile_id', 'done_at'])
+            ->each(fn (VerificationCall $v) => $events->push($event((int) $v->done_by, 'verified', $v->getRawOriginal('done_at'), $v->profile_id)));
+
+        Profile::withTrashed()
+            ->whereIn('created_by_staff_id', $staffIds)
+            ->whereBetween('created_at', [$a, $b])
+            ->get(['id', 'created_by_staff_id', 'created_at'])
+            ->each(fn (Profile $p) => $events->push($event((int) $p->created_by_staff_id, 'member_added', $p->getRawOriginal('created_at'), $p->id)));
+
+        AdminActivityLog::query()
+            ->whereIn('admin_user_id', $staffIds)
+            ->where('action', 'contact_replied')
+            ->whereBetween('created_at', [$a, $b])
+            ->get(['admin_user_id', 'created_at'])
+            ->each(fn (AdminActivityLog $l) => $events->push($event((int) $l->admin_user_id, 'contact_reply', $l->getRawOriginal('created_at'))));
+
+        try {
+            WhatsAppMessage::query()
+                ->where('direction', WhatsAppMessage::OUT)
+                ->whereIn('sent_by', $staffIds)
+                ->whereBetween('created_at', [$a, $b])
+                ->get(['sent_by', 'created_at'])
+                ->each(fn (WhatsAppMessage $m) => $events->push($event((int) $m->sent_by, 'wa_sent', $m->getRawOriginal('created_at'))));
+        } catch (\Throwable) {
+            // no WhatsApp inbox on this site
+        }
+    }
+
+    /** profile_notes.outcome exists (it is added by a migration on 28 Nov 2026). */
+    private static function hasOutcome(): bool
+    {
+        static $has = null;
+
+        return $has ??= \Illuminate\Support\Facades\Schema::hasColumn('profile_notes', 'outcome');
     }
 }

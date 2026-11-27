@@ -12,6 +12,8 @@ class ProfileNote extends Model
         'profile_id',
         'admin_user_id',
         'note_type',
+        // a call's answer (MemberContacts::OUTCOMES keys), from 28 Nov 2026; empty on older notes
+        'outcome',
         'note',
         'follow_up_date',
         'follow_up_completed_at',
