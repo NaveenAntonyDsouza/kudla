@@ -194,11 +194,13 @@ it('marks the member\'s follow-up done from the same box, and needs a note for a
         ->and(fn () => MemberContacts::log($this->tara, $t, ['type' => 'fax', 'note' => 'x']))->toThrow(DomainException::class);
 });
 
-it('makes the member page one Log call box that saves the details too, and never loses a call to a field that does not validate', function () {
+it('makes the member page one Notes box that saves the details too, and never loses a call to a field that does not validate', function () {
     $t = $this->bench->m['T'];
+    // one Notes button (owner, 27 Nov 2026), in place of Log call and Log WhatsApp
     Livewire::test(EditUser::class, ['record' => $t->fresh()->getRouteKey()])
-        ->assertActionVisible('logCall')
-        ->assertActionVisible('logWhatsApp')
+        ->assertActionVisible('notes')
+        ->assertActionDoesNotExist('logCall')
+        ->assertActionDoesNotExist('logWhatsApp')
         ->assertActionDoesNotExist('vc_done')
         ->assertDontSee('Save and mark checked on call')
         ->assertSee('Ask them to tell you their date of birth')
@@ -208,7 +210,7 @@ it('makes the member page one Log call box that saves the details too, and never
     // the call is recorded, and an edit typed on the page is saved with it
     Livewire::test(EditUser::class, ['record' => $t->fresh()->getRouteKey()])
         ->fillForm(['about_me' => 'Edited during the call'])
-        ->callAction('logCall', data: ['type' => 'call', 'outcome' => 'no_answer'])
+        ->callAction('notes', data: ['type' => 'call', 'outcome' => 'no_answer'])
         ->assertHasNoActionErrors()
         ->assertNotified();
     expect(($this->row)('T')->no_answers)->toBe(1)->and($t->fresh()->about_me)->toBe('Edited during the call');
@@ -216,7 +218,7 @@ it('makes the member page one Log call box that saves the details too, and never
     // a required field left empty: the call is still recorded, the edit is not saved, and she is told
     Livewire::test(EditUser::class, ['record' => $t->fresh()->getRouteKey()])
         ->fillForm(['full_name' => ''])
-        ->callAction('logCall', data: ['type' => 'call', 'outcome' => 'no_answer'])
+        ->callAction('notes', data: ['type' => 'call', 'outcome' => 'no_answer'])
         ->assertNotified('The call is saved, but your changes to the profile are not');
     expect(($this->row)('T')->no_answers)->toBe(2)->and($t->fresh()->full_name)->toBe('Bench T');
 
@@ -227,7 +229,7 @@ it('makes the member page one Log call box that saves the details too, and never
         ->assertSee('Save and mark checked on call');
 });
 
-it('shows a caller her own calls once, records No answer from the list, and hides hand-out controls with one caller', function () {
+it('shows a caller her own calls once, records No answer from the list\'s Notes, and hides hand-out controls with one caller', function () {
     DB::table('verification_calls')->update(['due_at' => now()->subDays(5), 'assigned_at' => now()->subDays(5)]);   // all of them late
     VerificationCalls::forget();
     expect(VerificationCalls::tab($this->tara, 'anyone')->count())->toBe(0);   // her late calls are under My calls only
@@ -239,8 +241,10 @@ it('shows a caller her own calls once, records No answer from the list, and hide
         ->assertDontSee('Given to');
 
     $row = ($this->row)('T');
+    // Notes on the row (owner, 27 Nov 2026: one Notes button instead of No answer)
     Livewire::test(VerificationCallsPage::class)
-        ->callAction('logNoAnswer', data: ['sent_whatsapp' => true], arguments: ['row' => $row->id])
+        ->assertSee('Notes')
+        ->callAction('notes', data: ['type' => 'call', 'outcome' => 'no_answer', 'sent_whatsapp' => true], arguments: ['profile' => $row->profile_id])
         ->assertNotified();
     expect($row->refresh()->no_answers)->toBe(1)
         ->and(ProfileNote::where('profile_id', $row->profile_id)->where('note_type', 'whatsapp')->count())->toBe(1);

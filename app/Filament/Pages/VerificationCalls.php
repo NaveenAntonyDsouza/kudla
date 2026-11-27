@@ -12,12 +12,10 @@ use App\Support\VerificationCalls as Calls;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\View as SchemaView;
 use Livewire\Attributes\Url;
 
 /**
@@ -165,39 +163,16 @@ class VerificationCalls extends Page
     }
 
     /**
-     * No answer from the list (simpler staff screens): records the try, and the "we tried to call
-     * you" WhatsApp when she ticks that she sent it from her own WhatsApp. Never ticked for her.
+     * Notes on each row (simpler staff screens; owner, 27 Nov 2026: one Notes button instead of
+     * No answer): the same box as on the member page, Call already chosen, the member's history
+     * above it. "No answer" is one of its answers, with the unticked "I sent the WhatsApp" tick.
      */
-    public function logNoAnswerAction(): Action
+    public function notesAction(): Action
     {
-        return Action::make('logNoAnswer')
-            ->label('No answer')
+        return \App\Filament\Actions\LogContactAction::make('notes', 'call', history: true, nextCall: false)
+            ->label('Notes')
             ->color('gray')
-            ->size('xs')
-            ->button()
-            ->modalHeading(fn (array $arguments): string => 'No answer · '.($this->row((int) ($arguments['row'] ?? 0))?->profile?->matri_id ?? 'member'))
-            ->modalDescription('Records a try. The call comes back on the list tomorrow at 10; after '.Calls::MAX_NO_ANSWER.' tries without an answer it closes as "could not reach".')
-            ->form(function (array $arguments): array {
-                $profile = $this->row((int) ($arguments['row'] ?? 0))?->profile;
-
-                return $profile ? [
-                    Checkbox::make('sent_whatsapp')->label('I sent them the "we tried to call you" message on WhatsApp'),
-                    SchemaView::make('filament.members.contact-box')->viewData([
-                        'whatsapp' => true,
-                        'number' => MemberContacts::whatsappNumber($profile),
-                        'text' => MemberContacts::readyText($profile, 'missed'),
-                    ]),
-                ] : [];
-            })
-            ->modalSubmitActionLabel('Record no answer')
-            ->action(function (array $arguments, array $data): void {
-                $row = $this->row((int) ($arguments['row'] ?? 0));
-                if ($row?->profile) {
-                    $this->run(fn () => MemberContacts::log(auth()->user(), $row->profile, [
-                        'type' => 'call', 'outcome' => 'no_answer', 'sent_whatsapp' => (bool) ($data['sent_whatsapp'] ?? false),
-                    ]));
-                }
-            });
+            ->size('xs');
     }
 
     /** Needs a check: a manager has dealt with it (simpler staff screens). */

@@ -267,26 +267,18 @@ class EditUser extends EditRecord
     }
 
     /**
-     * Simpler staff screens (owner, 25 Nov 2026): Log call and Log WhatsApp, the one box for
-     * writing a contact down (calls were typed as plain notes 13–25 Nov, and the calls list
-     * never moved); Approve and Request changes only for a pending profile; the rest in More.
-     * Call done, Call result, Save and mark checked on call and the WhatsApp links go.
+     * Simpler staff screens (owner, 25 Nov 2026): "Notes · N", the one box for writing a
+     * contact down (calls were typed as plain notes 13–25 Nov, and the calls list never
+     * moved; owner 27 Nov: one Notes button instead of Log call and Log WhatsApp), with the
+     * member's history above it; Approve and Request changes only for a pending profile; the
+     * rest in More. Call done, Call result, Save and mark checked on call and the WhatsApp
+     * links go.
      */
     private function simpleHeaderActions(): array
     {
-        $save = fn (): ?string => $this->saveBeforeContact();
-
         return [
-            LogContactAction::make('logCall', 'call', history: false, before: $save)
-                ->label('Log call')
-                ->icon('heroicon-o-phone')
+            LogContactAction::make('notes', 'call', history: true, before: fn (): ?string => $this->saveBeforeContact())
                 ->color('success'),
-
-            LogContactAction::make('logWhatsApp', 'whatsapp', history: false, before: $save)
-                ->label('Log WhatsApp')
-                ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                ->color('success')
-                ->outlined(),
 
             $this->statusAction('approve', 'Approve', 'heroicon-o-check-badge', 'success', ['is_approved' => true], 'profile_approved', 'Profile approved',
                 'Other members will see this profile, and the member gets the "profile approved" email.')
@@ -334,18 +326,6 @@ class EditUser extends EditRecord
         } catch (ValidationException $e) {
             return 'Fix these, then press Save: '.collect($e->errors())->flatten()->unique()->take(3)->implode(' ');
         }
-    }
-
-    /** The member's whole history, from "All notes" on the card (simpler staff screens). */
-    public function notesHistoryAction(): Actions\Action
-    {
-        return Actions\Action::make('notesHistory')
-            ->modalHeading(fn (): string => 'Notes · '.($this->record->full_name ?: $this->record->matri_id))
-            ->modalContent(fn () => view('filament.components.profile-notes-history', [
-                'notes' => ProfileNotesAction::canView() ? $this->record->profileNotes()->with('adminUser')->latest()->get() : collect(),
-            ]))
-            ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Close');
     }
 
     /** "Put back on my list" on a finished call that was not verified (it was under Call result). */
@@ -579,7 +559,6 @@ class EditUser extends EditRecord
         // simpler staff screens (25 Nov 2026): numbers to copy into WhatsApp, the language to speak,
         // and the last three notes in place of the one-line "last call"
         $simple = AdminModules::simpleStaffScreens();
-        $notesCount = $simple ? ProfileNote::where('profile_id', $profile->id)->count() : 0;
         $recent = $simple && ProfileNotesAction::canView()
             ? ProfileNote::where('profile_id', $profile->id)->with('adminUser')->latest()->limit(3)->get()->map(fn (ProfileNote $n) => [
                 'type' => ProfileNote::NOTE_TYPES[$n->note_type] ?? Str::headline($n->note_type ?? 'General'),
@@ -595,7 +574,6 @@ class EditUser extends EditRecord
             'copyPhone' => $simple ? MemberContacts::phoneNumber($profile) : null,
             'copyWhatsApp' => $simple ? MemberContacts::whatsappNumber($profile) : null,
             'recentNotes' => $recent,
-            'notesCount' => $notesCount,
             'photo' => $profile->primaryPhoto?->thumb_url,
             'matriId' => $profile->matri_id,
             'facts' => collect([

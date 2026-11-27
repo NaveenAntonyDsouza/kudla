@@ -77,7 +77,7 @@
         <ol style="margin:0;padding-left:1.2rem;font-size:.85rem;display:flex;flex-direction:column;gap:.15rem;">
             <li>Call the number (Copy puts it on the clipboard).</li>
             <li>Open the member: ask them to tell you their date of birth and details, fill in what is missing.</li>
-            <li>Press <strong>Log call</strong> and pick what happened. Nobody answered? <strong>No answer</strong> here is enough.</li>
+            <li>Press <strong>Notes</strong> and pick what happened, here or on the member's page. Nobody answered? Pick <strong>No answer</strong>.</li>
         </ol>
     @elseif ($isCaller)
         <p style="{{ $muted }}font-size:.85rem;margin:0;">
@@ -244,7 +244,7 @@
                                         {{-- "Open", not "Call": it opens the member, it does not dial --}}
                                         <x-filament::button size="xs" tag="a" :href="$callUrl($row)">Open</x-filament::button>
                                         @if ($may)
-                                            {{ ($this->logNoAnswerAction)(['row' => $row->id]) }}
+                                            {{ ($this->notesAction)(['profile' => $p->id]) }}
                                         @endif
                                     @elseif ($row->isOpen())
                                         <x-filament::button size="xs" tag="a" :href="$callUrl($row)" icon="heroicon-m-phone">Call</x-filament::button>

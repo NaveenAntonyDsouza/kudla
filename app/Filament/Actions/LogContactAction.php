@@ -23,8 +23,9 @@ use Filament\Schemas\Components\View as SchemaView;
 
 /**
  * The one box for writing down a contact with a member (simpler staff screens, owner
- * 25 Nov 2026): "Log call" and "Log WhatsApp" on the member page, "Notes" on All Members
- * and the View page, "Done" on the Follow-up Report. What it was (call, WhatsApp, email,
+ * 25 Nov 2026): "Notes" everywhere (owner, 27 Nov 2026: one button instead of No answer,
+ * Log call and Log WhatsApp) — on the calls list, the member page, All Members and the
+ * View page — and "Done" on the Follow-up Report. What it was (call, WhatsApp, email,
  * met in person, other), what happened, the call checklist on a new member's verification
  * call, a note and one "call again / follow up on" day. The rules: App\Support\MemberContacts.
  * Nothing is sent to the member from here.
@@ -32,12 +33,13 @@ use Filament\Schemas\Components\View as SchemaView;
 class LogContactAction
 {
     /**
-     * @param  string|null  $type  what it was, picked when the box opens ('call', 'whatsapp'), or null
-     * @param  bool  $history  the member's notes above the form (the lists, the Follow-up Report)
+     * @param  string|null  $type  what it was, picked when the box opens ('call'), or null
+     * @param  bool  $history  the member's notes above the form
      * @param  Closure|null  $before  runs first; the member page saves its form there and returns a warning when it could not
      * @param  bool  $followUpDone  "mark the follow-up done" ticked when the box opens (the Follow-up Report)
+     * @param  bool  $nextCall  offer "Next call →" after a call (not on the calls list itself)
      */
-    public static function make(string $name = 'notes', ?string $type = null, bool $history = true, ?Closure $before = null, bool $followUpDone = false): Action
+    public static function make(string $name = 'notes', ?string $type = null, bool $history = true, ?Closure $before = null, bool $followUpDone = false, bool $nextCall = true): Action
     {
         return Action::make($name)
             ->label(function (?Profile $record, array $arguments): string {
@@ -50,17 +52,11 @@ class LogContactAction
             ->color('warning')
             ->button()
             ->modalWidth('2xl')
-            ->modalHeading(function (?Profile $record, array $arguments) use ($type): string {
+            ->modalHeading(function (?Profile $record, array $arguments): string {
                 $profile = self::profile($record, $arguments);
-                $who = $profile ? ($profile->matri_id.($profile->full_name ? ' · '.$profile->full_name : '')) : 'Member';
 
-                return match ($type) {
-                    'call' => 'Log call · '.$who,
-                    'whatsapp' => 'Log WhatsApp · '.$who,
-                    default => 'Notes · '.$who,
-                };
+                return 'Notes · '.($profile ? ($profile->matri_id.($profile->full_name ? ' · '.$profile->full_name : '')) : 'Member');
             })
-            ->modalDescription(fn (): ?string => $type === 'whatsapp' ? 'Send the message from your WhatsApp first, then save what you sent here. Nothing is sent from here.' : null)
             ->modalContent(function (?Profile $record, array $arguments) use ($history) {
                 $profile = self::profile($record, $arguments);
                 if (! $history || ! $profile || ! ProfileNotesAction::canView()) {
@@ -73,10 +69,10 @@ class LogContactAction
             })
             ->fillForm(fn (): array => ['type' => $type, 'complete_follow_up' => $followUpDone])
             ->form(fn (?Profile $record, array $arguments): array => ProfileNotesAction::canAdd() ? self::schema(self::profile($record, $arguments)) : [])
-            ->modalSubmitActionLabel($type === 'whatsapp' ? 'I sent it: save' : 'Save')
+            ->modalSubmitActionLabel('Save')
             ->modalSubmitAction(fn ($action) => ProfileNotesAction::canAdd() ? $action : false)
             ->visible(fn (): bool => ProfileNotesAction::canView() || ProfileNotesAction::canAdd())
-            ->action(function (?Profile $record, array $arguments, array $data, Action $action) use ($before): void {
+            ->action(function (?Profile $record, array $arguments, array $data, Action $action) use ($before, $nextCall): void {
                 $profile = self::profile($record, $arguments);
                 $staff = auth()->user();
                 if (! $profile || ! $staff || ! ProfileNotesAction::canAdd()) {
@@ -95,7 +91,7 @@ class LogContactAction
                 }
 
                 $done = Notification::make()->title($message)->success();
-                if ($wasOnList && ($next = self::nextCallUrl($profile))) {
+                if ($nextCall && $wasOnList && ($next = self::nextCallUrl($profile))) {
                     $done->persistent()->actions([
                         Action::make('nextCall')->label('Next call →')->button()->url($next),
                     ]);
@@ -211,6 +207,8 @@ class LogContactAction
             SchemaView::make('filament.members.contact-box')
                 ->viewData(fn (Get $get): array => [
                     'whatsapp' => true,
+                    // a WhatsApp is recorded after it was sent, never sent from here
+                    'hint' => $get('type') === 'whatsapp' ? 'Send it from your WhatsApp first, then save what you sent. Nothing is sent from here.' : null,
                     'number' => MemberContacts::whatsappNumber($profile),
                     'text' => MemberContacts::readyText($profile, $get('type') === 'whatsapp' ? $get('whatsapp_kind') : 'missed'),
                 ])

@@ -31,6 +31,9 @@
 
     @if (! empty($whatsapp))
         <div style="{{ $box }}">
+            @if (! empty($hint))
+                <span style="opacity:.75;">{{ $hint }}</span>
+            @endif
             @if (! empty($number))
                 <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;">
                     <span style="opacity:.7;">Their WhatsApp</span>

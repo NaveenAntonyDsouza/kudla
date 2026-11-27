@@ -35,7 +35,7 @@
                     {{-- the stored date of birth is not shown here: they say it, staff don't read it out (25 Nov 2026) --}}
                     <div>
                         Ask them to tell you their date of birth and the details below, without reading them out.
-                        Fill in what is missing, then press <strong>Log call</strong> and pick what happened.
+                        Fill in what is missing, then press <strong>Notes</strong> and pick what happened.
                     </div>
                 @elseif ($v['open'] && $v['may'])
                     <div>
@@ -117,14 +117,11 @@
         @endif
 
         @if ($simple)
-            {{-- the last three notes, and the whole history one click away (the Notes box was the only place before) --}}
+            {{-- the last three notes; the whole history is in the Notes box at the top --}}
             <div style="display:flex;flex-direction:column;gap:.3rem;font-size:.8125rem;">
                 <div style="display:flex;flex-wrap:wrap;align-items:center;gap:.3rem 1rem;">
                     @if (is_array($recentNotes ?? null))
                         <span style="font-weight:600;">Recent notes</span>
-                        @if ($notesCount)
-                            <button type="button" wire:click="mountAction('notesHistory')" style="{{ $smallBtn }}margin-left:0;">All notes ({{ $notesCount }})</button>
-                        @endif
                     @endif
                     @if ($followUp)
                         <span @if ($followUp['late']) style="color:#dc2626;font-weight:600;" @endif><span style="{{ $followUp['late'] ? '' : $muted }}">Follow-up {{ $followUp['late'] ? 'was due' : 'due' }}</span> {{ $followUp['date'] }}</span>
@@ -141,7 +138,7 @@
                             <span>{{ $n['note'] }}</span>
                         </div>
                     @empty
-                        <span style="{{ $muted }}">No notes yet. Log call writes the first one.</span>
+                        <span style="{{ $muted }}">No notes yet. Notes, at the top, writes the first one.</span>
                     @endforelse
                 @endif
             </div>

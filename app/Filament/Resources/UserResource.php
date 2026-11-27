@@ -1035,7 +1035,7 @@ class UserResource extends Resource
                 ->size('sm')
                 ->url(fn (Profile $record): ?string => self::profileWorkUrl($record)),
 
-            \App\Filament\Actions\LogContactAction::make('notes')->size('sm'),
+            \App\Filament\Actions\LogContactAction::make('notes', 'call')->size('sm'),
 
             \Filament\Actions\ActionGroup::make([
                 \Filament\Actions\ActionGroup::make([

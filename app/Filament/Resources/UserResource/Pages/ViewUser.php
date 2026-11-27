@@ -19,7 +19,7 @@ class ViewUser extends ViewRecord
         if (\App\Support\AdminModules::simpleStaffScreens()) {
             return [
                 Actions\EditAction::make()->label('Open member page'),
-                \App\Filament\Actions\LogContactAction::make('notes'),
+                \App\Filament\Actions\LogContactAction::make('notes', 'call'),
                 $this->approveAction(),
                 \App\Filament\Actions\RequestProfileChangesAction::make(),
                 Actions\ActionGroup::make([
